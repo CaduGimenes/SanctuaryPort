@@ -9,11 +9,14 @@ body:
         wrong update version, wrong folder selected). Check the README's setup section before
         filing, it covers the folder layout the launcher expects.
 
+        **Never attach game files** (eboot.bin, PKGs, sce_module...) or links to them: issues with
+        game files are deleted. The log and screenshots are enough.
+
   - type: input
     id: version
     attributes:
       label: Port version
-      placeholder: v2.1.7
+      placeholder: v0.1.0
     validations:
       required: true
 
@@ -21,7 +24,7 @@ body:
     id: game_version
     attributes:
       label: Game build / update version
-      description: e.g. 01.00 + update 01.07, region (CUSA07671 US, CUSA05670 EU)
+      description: e.g. CUSA00243 (Brazil) + update 01.47, or CUSA00242 (US) 01.00
     validations:
       required: true
 

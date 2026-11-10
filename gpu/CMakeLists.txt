@@ -261,7 +261,7 @@ if (WIN32)
     add_executable(sanctuary-gpu-capabilities ../tools/gpu_capabilities.c ../packaging/windows/sanctuary-gpu-capabilities.rc)
     target_include_directories(sanctuary-gpu-capabilities PRIVATE shadps4)
     target_link_libraries(sanctuary-gpu-capabilities PRIVATE Vulkan::Vulkan)
-    # The game with the launcher's saved settings, no launcher window.
+    # "Play SanctuaryPort.exe": the game with the launcher's saved settings, no launcher window.
     add_executable(sanctuary-play WIN32 ../packaging/windows/play.c ../packaging/windows/play.rc)
     target_compile_options(sanctuary-play PRIVATE -municode)
     target_link_options(sanctuary-play PRIVATE -municode)

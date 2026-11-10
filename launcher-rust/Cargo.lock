@@ -3500,7 +3500,7 @@ dependencies = [
 
 [[package]]
 name = "sanctuaryport-launcher"
-version = "3.1.0"
+version = "0.1.0"
 dependencies = [
  "ab_glyph_rasterizer",
  "aes",

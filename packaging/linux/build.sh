@@ -1,43 +1,33 @@
 #!/usr/bin/env bash
-# Builds dist/knack-x86_64.AppImage from the Linux build (run `bash build.sh` in the repo root first).
-# Libraries are bundled with their dependencies, except the ones that must come from the host
-# (glibc, Vulkan loader and drivers, X11/Wayland, GL). The Tk launcher is frozen with PyInstaller, so
-# players need no Python. Needs: ldd, patchelf, curl (appimagetool), python-pyinstaller, tk, pillow, iced-x86.
+# Builds dist/SanctuaryPort-x86_64.AppImage from the Linux build (run `bash build.sh` in the repo
+# root first; the launcher is built here). Libraries are bundled with their dependencies, except the
+# ones that must come from the host (glibc, Vulkan loader and drivers, X11/Wayland, GL). The game
+# starts from run.sh like a source checkout, with SANCTUARY_PREBUILT=1: players need python3 (every
+# desktop distro and SteamOS have it). Needs: ldd, patchelf, curl (appimagetool), cargo.
 set -euo pipefail
 cd -- "$(dirname -- "$0")/../.."
 [[ -f out/sanctuary-probe && -f out/gpu/libsanctuarygpu.so ]] || { echo 'Build first: bash build.sh' >&2; exit 1; }
+# From launcher-rust/, so rustup uses the version its rust-toolchain.toml pins.
+(cd launcher-rust && cargo build --release)
 
 appdir=out/AppDir
 rm -rf "$appdir"
 share=$appdir/usr/share/sanctuary
-mkdir -p "$share/bin/gpu" "$appdir/usr/lib"
+mkdir -p "$share/bin/gpu" "$appdir/usr/lib" "$share/launcher" "$share/assets"
 
 install -m755 out/sanctuary-probe out/sanctuary-gpu-capabilities "$share/bin/"
 install -m755 out/gpu/libsanctuarygpu.so "$share/bin/gpu/"
-cp run.py "$share/"
+install -m755 launcher-rust/target/release/sanctuaryport-launcher "$share/sanctuaryport-launcher"
+strip "$share/sanctuaryport-launcher"
+install -m755 run.sh "$share/run.sh"
+cp run.py LICENSE README.md COMO_JOGAR.md "$share/"
 cp -r scripts patches "$share/"
-mkdir -p "$share/launcher"
-# The icon of the AppImage, the launcher and the game window: packaging/linux/sanctuary.png when it
-# exists (a local choice), else the launcher's own.
-icon=launcher/sanctuary.png
-[[ -f packaging/linux/sanctuary.png ]] && icon=packaging/linux/sanctuary.png
-install -m644 "$icon" "$share/launcher/sanctuary.png"
-install -m644 launcher/Cinzel-Black.ttf "$share/launcher/Cinzel-Black.ttf"
-install -m644 launcher/OFL-Cinzel.txt "$share/launcher/OFL-Cinzel.txt"
-
-# The launcher also runs run.py (--run) and the preparation scripts (--script) itself, as on
-# Windows: the standard modules those scripts import come along as hidden imports.
-# iced-x86 (pip install iced-x86==1.21.0): scripts/isa_rewrite.py, CPUs without MOVBE/BMI1/LZCNT.
-hidden=()
-for module in argparse base64 collections hashlib json re shutil struct tempfile xml.etree.ElementTree \
-              urllib.request iced_x86; do
-    hidden+=(--hidden-import "$module")
+cp -r assets/glyphs "$share/assets/"
+# launcher/sanctuaryport.png marks the port folder for the launcher (paths::default_port_dir).
+for file in sanctuaryport.png sanctuary.png Cinzel-Black.ttf OFL-Cinzel.txt; do
+    install -m644 "launcher/$file" "$share/launcher/$file"
 done
-python3 -c 'import iced_x86' || { echo 'Need iced-x86: pip install iced-x86==1.21.0' >&2; exit 1; }
-python3 -m PyInstaller --noconfirm --clean --log-level WARN --windowed --name sanctuary-launcher \
-    --distpath out/pyi-dist --workpath out/pyi-work --specpath out/pyi-work \
-    --paths "$PWD/scripts" "${hidden[@]}" "$PWD/launcher/sanctuary_launcher_win.py"
-cp -r out/pyi-dist/sanctuary-launcher/. "$share/"
+icon=launcher/sanctuary.png
 find "$share" -name __pycache__ -prune -exec rm -r {} +
 install -m755 packaging/linux/AppRun "$appdir/AppRun"
 install -m644 packaging/linux/sanctuary.desktop "$appdir/sanctuary.desktop"
@@ -61,6 +51,7 @@ bundle() {
 }
 bundle out/gpu/libsanctuarygpu.so
 bundle out/sanctuary-probe
+bundle "$share/sanctuaryport-launcher"
 # libstdc++/libgcc/libz come from the build host: the same glibc generation as the one that runs
 # the AppImage is assumed, and a newer libstdc++ than Mesa's is the safe direction.
 for name in libstdc++.so.6 libgcc_s.so.1; do
@@ -71,7 +62,7 @@ find "$appdir/usr/lib" -name '*.so*' -exec strip --strip-unneeded {} + 2>/dev/nu
 
 # The newest glibc symbol in the bundle is the oldest glibc players can have. Built on a rolling
 # distro it follows the host's and the AppImage stops starting on SteamOS, Debian and Fedora (#291):
-# release builds come from .github/workflows/linux-appimage.yml (Ubuntu 24.04). SANCTUARY_MAX_GLIBC
+# release builds come from .github/workflows/release.yml (Ubuntu 24.04). SANCTUARY_MAX_GLIBC
 # raises the limit for local builds.
 max_glibc=${SANCTUARY_MAX_GLIBC:-2.39}
 need=$(find "$appdir" -type f \( -name '*.so*' -o -perm -u+x \) -exec objdump -T {} + 2>/dev/null |
@@ -81,6 +72,14 @@ if [[ $(printf '%s\n' "$need" "$max_glibc" | sort -V | tail -1) != "$max_glibc" 
     exit 1
 fi
 echo "Minimum glibc: $need"
+
+forbidden=$(find "$appdir" \( -iname eboot.bin -o -iname sce_module -o -iname sce_sys -o -iname savedata \
+    -o -iname '*.pkg' -o -iname '*.sprx' -o -iname '*.prx' -o -iname sanctuary.ini -o -iname settings.json \) -print)
+if [[ -n $forbidden ]]; then
+    echo "Package holds files that must not ship:" >&2
+    echo "$forbidden" >&2
+    exit 1
+fi
 
 tool=${APPIMAGETOOL:-$(command -v appimagetool || true)}
 if [[ -z $tool ]]; then
@@ -92,6 +91,6 @@ if [[ -z $tool ]]; then
 fi
 mkdir -p dist
 # Written aside and moved over: replacing a running AppImage in place fails ("Text file busy").
-ARCH=x86_64 "$tool" --appimage-extract-and-run "$appdir" dist/knack-x86_64.AppImage.new
-mv -f dist/knack-x86_64.AppImage.new dist/knack-x86_64.AppImage
-ls -lh dist/knack-x86_64.AppImage
+ARCH=x86_64 "$tool" --appimage-extract-and-run "$appdir" dist/SanctuaryPort-x86_64.AppImage.new
+mv -f dist/SanctuaryPort-x86_64.AppImage.new dist/SanctuaryPort-x86_64.AppImage
+ls -lh dist/SanctuaryPort-x86_64.AppImage

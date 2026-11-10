@@ -1,9 +1,9 @@
 [Desktop Entry]
 Type=Application
-Name=Knack
-Comment=PC port of Knack (bring your own game dump)
+Name=SanctuaryPort
+Comment=Native PC port of Diablo III (PS4); bring your own game dump
 Exec=AppRun
 Icon=sanctuary
 Categories=Game;
 Terminal=false
-StartupWMClass=sanctuary
+StartupWMClass=sanctuaryport

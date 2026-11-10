@@ -299,13 +299,15 @@ fn checks(state: &mut State, declined: Option<&str>) -> Task<Message> {
     start(state)
 }
 
-/// What PLAY needs from the port folder and does not find: run.sh and the probe it starts (`bin/`
+/// What PLAY needs from the port folder and does not find: its runner (run.sh, run.py on
+/// Windows) and the probe it starts (`bin/`
 /// in a package, `out/` in a checkout). An exe moved out of its package or a package half extracted
 /// lack it; PLAY says so instead of failing inside the runner.
 pub fn missing_port_files(paths: &Paths) -> Vec<String> {
     let mut missing = Vec::new();
-    if !paths.port_dir.join("run.sh").is_file() {
-        missing.push("run.sh".to_string());
+    let runner = crate::core::launch::runner_file(cfg!(windows));
+    if !paths.port_dir.join(runner).is_file() {
+        missing.push(runner.to_string());
     }
     if paths.find_tool("sanctuary-probe").is_none() {
         let file = if cfg!(windows) {
@@ -357,9 +359,13 @@ fn spawn(state: &mut State) -> Task<Message> {
     state.log.clear();
     let run_log = RunLog::open(&state.paths.run_log_path(&state.store.text("user_dir")));
     let env = launch_environment(state);
-    // SanctuaryPort: the game starts from the port's run.sh (missing_port_files says so before).
+    // The game starts from the port's runner (missing_port_files says so before).
     let command = state.launch_command.clone().ok_or_else(|| {
-        std::io::Error::new(std::io::ErrorKind::NotFound, "run.sh is missing from the port folder")
+        let runner = crate::core::launch::runner_file(cfg!(windows));
+        std::io::Error::new(
+            std::io::ErrorKind::NotFound,
+            format!("{runner} is missing from the port folder"),
+        )
     });
     let started = command.map_err(LaunchError::from).and_then(|command| {
         spawn_game(Launch {

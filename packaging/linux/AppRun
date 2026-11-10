@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
-# AppImage entry point: starts the frozen Tk launcher. The launcher picks the game folder, runs
-# run.py and handles --play (the game without a window, for Steam and shortcuts).
-# Usage: knack-x86_64.AppImage [--play]
+# AppImage entry point: starts the SanctuaryPort launcher. PLAY runs run.sh from the image with the
+# prebuilt runtime; --play starts the game with the saved settings, without the window (Steam,
+# shortcuts). Saves, settings and the prepared game go to SANCTUARY_DATA_DIR.
+# Usage: SanctuaryPort-x86_64.AppImage [--play]
 set -euo pipefail
 here=$(dirname -- "$(readlink -f -- "$0")")
 share=$here/usr/share/sanctuary
 
 export LD_LIBRARY_PATH="$here/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
-export SANCTUARY_DATA_DIR=${SANCTUARY_DATA_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/sanctuary}
+export SANCTUARY_DATA_DIR=${SANCTUARY_DATA_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/sanctuaryport}
+export SANCTUARY_PREBUILT=1
 mkdir -p "$SANCTUARY_DATA_DIR"
 
 cd -- "$share"
-exec "$share/sanctuary-launcher" "$@"
+exec "$share/sanctuaryport-launcher" "$@"

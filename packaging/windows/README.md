@@ -1,13 +1,29 @@
-# sanctuary on Windows
+# SanctuaryPort on Windows
 
 The port builds and runs natively on 64-bit Windows 10 (1903+) / 11 with the same sources as
 on Linux. Players: see `README-Windows.txt` (it ships in the package).
 
 ## Build
 
+### From Linux (cross-compiling)
+
+```bash
+rustup target add x86_64-pc-windows-gnu      # once; also needs x86_64-w64-mingw32-gcc
+bash packaging/windows/package.sh            # dist/SanctuaryPort-windows/ and .zip
+```
+
+`packaging/windows/cross-build.sh` (which `package.sh` runs) downloads the MSYS2 CLANG64
+libraries once into `out/win/root` (`msys2_fetch.py`) and builds the executables into
+`out/win/build` with the host clang and lld (`cross-toolchain.cmake`). It needs clang, lld,
+llvm-windres, cmake, ninja, pkg-config, glslang, zstd and bsdtar; nothing is installed on the
+system and the Linux build in `out/` is not touched. The result runs under Wine too
+(`WINEPREFIX=$PWD/out/win/wineprefix wine dist/SanctuaryPort-windows/bin/sanctuary-probe.exe --cpu-features`).
+
+### On Windows (MSYS2)
+
 Install [MSYS2](https://www.msys2.org) (`winget install MSYS2.MSYS2`), open the
 **MSYS2 CLANG64** shell and install the toolchain and libraries (the counterpart of
-`shell.nix`):
+`shell.nix`), plus [Rust](https://rustup.rs) for the launcher:
 
 ```bash
 pacman -S --needed git patch \
@@ -15,59 +31,29 @@ pacman -S --needed git patch \
   mingw-w64-clang-x86_64-{vulkan-headers,vulkan-loader,vulkan-memory-allocator,glslang} \
   mingw-w64-clang-x86_64-{sdl3,fmt,boost,robin-map,xxhash,ffmpeg,zydis} \
   mingw-w64-clang-x86_64-{spirv-tools,spirv-headers,spirv-cross}
-```
-
-magic_enum, miniz and xbyak (not packaged by MSYS2) are submodules under `gpu/third_party/`.
-Before packaging, also install Windows Python 3.10+ from python.org with Tk support; the
-packaging script uses it to create its private Python environment.
-Then, in the repository, build with MSYS2 CLANG64:
-
-```bash
 git submodule update --init --recursive
 bash build.sh                      # out/sanctuary-probe.exe, out/sanctuary-gpu-capabilities.exe
-bash packaging/windows/package.sh  # dist/knack-windows/ and .zip: Knack.exe + DLLs
+bash packaging/windows/package.sh  # dist/SanctuaryPort-windows/ and .zip
 ```
 
-For a source launcher, install Windows Python 3.10+ from python.org with Tk support. In
-PowerShell at the repository root:
+### What the package holds
 
-```powershell
-python -m pip install pillow iced-x86==1.21.0
-python launcher/sanctuary_launcher_win.py
-```
+- `SanctuaryPort.exe`: the Rust launcher (`launcher-rust/`). PLAY runs `run.py` with the
+  package's Python (`python\python.exe -u run.py`; `launcher-rust/src/core/launch.rs`
+  `port_command`), where Linux runs `bash run.sh`.
+- `python\`: python.org's embeddable Python 3.12 with Pillow (window icon) and `iced-x86`
+  (`scripts/isa_rewrite.py`, CPUs without MOVBE, BMI1 or LZCNT), from `fetch_python.py`. Its
+  `python312._pth` adds the port folder and `scripts\`; players install nothing.
+- `bin\`: `sanctuary-probe.exe` (the game; the GPU library is linked in), and
+  `sanctuary-gpu-capabilities.exe` with every DLL they load.
+- `Play SanctuaryPort.exe` (`play.c`): runs `SanctuaryPort.exe --play` from its folder and waits
+  for it, for a desktop shortcut or Steam.
+- `run.py`, `scripts\`, `patches\`, `assets\` (the Xbox button icons) and `launcher\`.
 
-Choose the game folder in the launcher. For platform-specific tests, see
-[Tests in the root README](https://github.com/FelipePrado0/sanctuary_pc#tests): Windows uses Ninja
-test targets; `bash build.sh --test` runs additional runtime tests only on Linux.
-
-`run.py` is the Windows `run.sh` (same variables; works from a plain Windows Python too).
-The package freezes the launcher with PyInstaller (a private venv in `out/pyenv`, from a
-python.org Python) into `Knack.exe`, which also runs `run.py` (`--run`), the preparation
-scripts (`--script`) and the game without the window (`--play`): players need no Python.
-The venv also receives `iced-x86`, which `scripts/isa_rewrite.py` uses for CPUs without MOVBE,
-BMI1 or LZCNT.
-`Play Knack.exe` (`packaging/windows/play.c`) is a small native program that runs
-`Knack.exe --play` from its folder and waits for it, for players who want to start the
-game directly with the saved settings.
 `scripts/patches.py` identifies the game by title ID or title and finds built-in patch sites by
 signature, rather than requiring one `eboot.bin` hash. Each unmatched patch is skipped and
-reported; this is not a guarantee that every game build works. See the root README for tested
-builds.
-From a source tree, `run.py` adds `C:\msys64\clang64\bin` (or `$MSYS2_ROOT`) to `PATH` for DLLs.
-
-FSR 1 and temporal upscaling (FSR 3.1, FSR 4, TAA and DLSS) are disabled in the current launcher
-and game settings path. RCAS sharpening remains available. The DLSS bridge and FSR asset tools
-remaining in the tree are experimental development code, not supported player setup steps.
-See [the historical research notes](../../docs/upscaler.md) for context.
-
-See the [feature availability table](https://github.com/FelipePrado0/sanctuary_pc#feature-availability)
-for differences between published packages and current source builds, including Discord Rich Presence.
-
-The launcher texts are written in English with the Russian beside them; the other languages
-are in `launcher/sanctuary_lang.py` (one list per language in the order of `KEYS`; a missing or
-empty text falls back to English). The icon (`launcher/sanctuary.ico`/`.png`) is drawn by
-`packaging/windows/make_icon.py` and built into `Knack.exe`, `sanctuary-probe.exe` (the game
-window) and `sanctuary-gpu-capabilities.exe`.
+reported. From a source tree, `run.py` adds `C:\msys64\clang64\bin` (or `$MSYS2_ROOT`) to
+`PATH` for DLLs.
 
 ## What is different from Linux
 

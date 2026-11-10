@@ -95,6 +95,37 @@ impl GameHandle {
     }
 }
 
+/// The file in the port folder that prepares and starts the game: `run.sh` on Linux and macOS,
+/// `run.py` on Windows (no bash there).
+pub fn runner_file(windows: bool) -> &'static str {
+    if windows {
+        "run.py"
+    } else {
+        "run.sh"
+    }
+}
+
+/// The command PLAY runs from the port folder, or `None` without its runner. Linux and macOS:
+/// `bash run.sh`. Windows: `run.py` with the Python the package ships (`python/python.exe`), or
+/// in a source checkout the `python` found on PATH; `-u` so the log shows each line at once.
+pub fn port_command(port_dir: &Path, windows: bool) -> Option<Vec<String>> {
+    let runner = port_dir.join(runner_file(windows));
+    if !runner.is_file() {
+        return None;
+    }
+    let runner = runner.to_string_lossy().into_owned();
+    if !windows {
+        return Some(vec!["bash".to_string(), runner]);
+    }
+    let shipped = port_dir.join("python").join("python.exe");
+    let python = if shipped.is_file() {
+        shipped.to_string_lossy().into_owned()
+    } else {
+        "python".to_string()
+    };
+    Some(vec![python, "-u".to_string(), runner])
+}
+
 /// Starts the game with stdin closed and stdout and stderr merged into one pipe. A thread reads
 /// that pipe and sends the events; it writes the run log, and when the game fails after printing
 /// a line with a known cause it adds the advice for it to the log. The run log is finished on
@@ -159,4 +190,37 @@ pub fn spawn_game(launch: Launch<'_>) -> Result<GameHandle, LaunchError> {
         let _ = tx.send(GameEvent::Exited(Exit { code, hint }));
     });
     Ok(GameHandle { pid, events, job })
+}
+
+#[cfg(test)]
+#[allow(clippy::unwrap_used)]
+mod port_command_tests {
+    use super::*;
+
+    #[test]
+    fn linux_runs_run_sh_and_windows_run_py() {
+        let dir = tempfile::tempdir().unwrap();
+        let port = dir.path();
+        assert_eq!(port_command(port, false), None);
+        assert_eq!(port_command(port, true), None);
+        std::fs::write(port.join("run.sh"), b"").unwrap();
+        let sh = port.join("run.sh").to_string_lossy().into_owned();
+        assert_eq!(port_command(port, false), Some(vec!["bash".to_string(), sh]));
+        assert_eq!(port_command(port, true), None); // Windows needs run.py
+        std::fs::write(port.join("run.py"), b"").unwrap();
+        let py = port.join("run.py").to_string_lossy().into_owned();
+        assert_eq!(
+            port_command(port, true),
+            Some(vec!["python".to_string(), "-u".to_string(), py.clone()])
+        );
+        std::fs::create_dir_all(port.join("python")).unwrap();
+        std::fs::write(port.join("python").join("python.exe"), b"").unwrap();
+        let shipped = port.join("python").join("python.exe").to_string_lossy().into_owned();
+        assert_eq!(
+            port_command(port, true),
+            Some(vec![shipped, "-u".to_string(), py])
+        );
+        assert_eq!(runner_file(false), "run.sh");
+        assert_eq!(runner_file(true), "run.py");
+    }
 }

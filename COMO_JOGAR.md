@@ -6,13 +6,34 @@ Souls – Ultimate Evil Edition* 1.00 (CUSA00242). O código original do jogo ro
 bibliotecas do sistema do PS4, e os gráficos do PS4 são traduzidos para Vulkan. Não há emulação
 de CPU.
 
-> **Nenhum arquivo do jogo vem junto.** Você precisa da sua própria cópia, tirada do seu PS4.
-> Este projeto não tem ligação com a Blizzard nem com a Sony.
+> [!IMPORTANT]
+> **O SanctuaryPort é só o port: o jogo não vem junto e não é distribuído aqui.** Este
+> repositório e os downloads trazem apenas o programa que recompila e executa o código do PS4, a
+> parte que traduz os gráficos e o launcher. Nenhum arquivo do Diablo III (executável, dados,
+> PKGs, chaves ou artes) faz parte do código ou de qualquer download, e nenhum será fornecido.
+> Para jogar, você precisa da sua própria cópia, tirada de um PS4 seu.
+>
+> Este projeto não tem ligação com a Blizzard nem com a Sony. Diablo é marca registrada da
+> Blizzard Entertainment, Inc.
 
-## Compilar (Linux)
+## Baixar
 
-Precisa de compilador C/C++ (clang ou gcc), CMake, Ninja, SDL3, Vulkan, Python 3.10+ com Pillow e
-Rust 1.87+ (para o launcher). No Ubuntu 24.04, `bash packaging/linux/ci-deps.sh` instala tudo.
+Pegue a versão mais nova em [Releases](https://github.com/CaduGimenes/SanctuaryPort/releases):
+
+- **Linux:** `SanctuaryPort-x86_64.AppImage`. Dê permissão de execução e abra. Precisa de uma
+  distribuição com glibc 2.39 ou mais nova (SteamOS, Ubuntu 24.04+, Debian 13, Fedora 40+...),
+  do `python3` e de uma placa de vídeo com Vulkan 1.3. Saves e configurações ficam em
+  `~/.local/share/sanctuaryport`.
+- **Windows:** `SanctuaryPort-windows.zip`. Extraia e abra o `SanctuaryPort.exe` (instruções
+  no `README-Windows.txt`). O Python já vem dentro da pasta.
+
+Depois siga **Instalar o jogo** abaixo com a sua cópia.
+
+## Compilar a partir do código (Linux)
+
+Só é preciso se você não usar os downloads. Precisa de compilador C/C++ (clang ou gcc), CMake,
+Ninja, SDL3, Vulkan, Python 3.10+ e do [rustup](https://rustup.rs) para o launcher. No Ubuntu
+24.04, `bash packaging/linux/ci-deps.sh` instala tudo.
 
 ```bash
 git clone --recursive https://github.com/CaduGimenes/SanctuaryPort.git
@@ -23,8 +44,10 @@ cargo build --release --manifest-path launcher-rust/Cargo.toml
 
 ## Instalar o jogo
 
-1. Tenha os arquivos PKG do seu jogo (o jogo base, a atualização e, se tiver, as DLCs).
-2. Abra o launcher (`launcher-rust/target/release/sanctuaryport-launcher`), vá em **Jogo** e use
+1. Tenha os arquivos PKG do **seu** jogo, tirados do seu PS4 (o jogo base, a atualização e, se
+   tiver, as DLCs). Este projeto não fornece o jogo nem ajuda a consegui-lo.
+2. Abra o launcher (o AppImage, o `SanctuaryPort.exe` ou, compilando,
+   `launcher-rust/target/release/sanctuaryport-launcher`), vá em **Jogo** e use
    **Instalar a partir de PKG** escolhendo todos eles. O jogo vai para `~/Games/PS4/CUSA00243`,
    a atualização para `~/Games/PS4/CUSA00243-UPDATE` e as DLCs para `addcont/`. O launcher já
    configura as pastas.
@@ -84,6 +107,8 @@ Nome do herói: ao criar, digite no teclado e aperte Enter (ou ✕ / A no contro
   inglês, francês e espanhol. Se o idioma escolhido não existir no jogo, o port usa o português
   (ou o primeiro disponível).
 - Somente offline (sem PSN e sem co-op online).
-- Testado no Linux. O código compila para Windows, mas esse caminho ainda não foi testado.
+- Testado no Linux. A versão para Windows foi conferida no Wine até abrir a janela do jogo, mas
+  ainda não foi jogada num PC com Windows.
+- Ainda não tem: tela ultrawide (21:9). Em 720p ou menos, alguns nomes de teclas no HUD somem.
 
 Detalhes técnicos: [docs/DIABLO3.md](docs/DIABLO3.md).

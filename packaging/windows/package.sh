@@ -1,62 +1,75 @@
 #!/usr/bin/env bash
-# Builds dist/knack-windows/ (and dist/knack-windows.zip): Knack.exe (the launcher, frozen
-# with PyInstaller so players need no Python), sanctuary-probe.exe with the MSYS2 CLANG64 DLLs it needs,
-# the preparation scripts and run.py. Run from an MSYS2 CLANG64 shell after `bash build.sh`.
-# Freezing uses a Windows Python 3.10+ (python.org; WINPYTHON overrides) and a private venv in
-# out/pyenv with PyInstaller and Pillow (the game icon and the Steam pictures need it). The
-# temporal upscalers are off, so neither the FSR 4 assets nor the
-# DLSS runtime are packaged.
+# Builds dist/SanctuaryPort-windows/ and dist/SanctuaryPort-windows.zip: SanctuaryPort.exe (the
+# Rust launcher), "Play SanctuaryPort.exe", bin/ (sanctuary-probe.exe and the DLLs it loads),
+# python/ (python.org's embeddable Python with Pillow and iced-x86, which runs run.py: players
+# install nothing), run.py, scripts/, patches/, assets/ and launcher/.
+#
+# From Linux: cross-compiles first (packaging/windows/cross-build.sh) and needs the Rust target
+# x86_64-pc-windows-gnu (rustup target add x86_64-pc-windows-gnu) and x86_64-w64-mingw32-gcc.
+# From an MSYS2 CLANG64 shell: after `bash build.sh`, with cargo on PATH.
 set -euo pipefail
 cd -- "$(dirname -- "$0")/../.."
-source ./msys2-env.sh
-[[ -f out/sanctuary-probe.exe && -f out/sanctuary-gpu-capabilities.exe && -f out/sanctuary-play.exe ]] || { echo 'Build first: bash build.sh' >&2; exit 1; }
+name=SanctuaryPort-windows
 
-# A Windows Python (not MSYS2's) for PyInstaller.
-python=${WINPYTHON:-}
-if [[ -z $python ]]; then
-    for candidate in /c/Python3*/python.exe "${LOCALAPPDATA:-/c/Users/$USER/AppData/Local}"/Programs/Python/Python3*/python.exe; do
-        [[ -x $candidate ]] && python=$candidate
-    done
-fi
-[[ -n $python ]] || { echo 'Need a Windows Python 3 (python.org) or WINPYTHON=path\to\python.exe' >&2; exit 1; }
-# Windows Python needs USERPROFILE (some MSYS2 shells start without it).
-export USERPROFILE=${USERPROFILE:-$(cygpath -w "/c/Users/$(id -un)")}
-if [[ ! -x out/pyenv/Scripts/python.exe ]]; then
-    "$python" -m venv out/pyenv
-fi
-out/pyenv/Scripts/python.exe -m pip install -q --disable-pip-version-check pyinstaller pillow iced-x86==1.21.0
-# The scripts run inside Knack.exe (--script): the standard modules they import come along.
-hidden=()
-for module in argparse base64 collections hashlib json re shutil socket struct tempfile threading uuid \
-              xml.etree.ElementTree urllib.request ctypes.wintypes iced_x86; do
-    hidden+=(--hidden-import "$module")
-done
-out/pyenv/Scripts/python.exe -m PyInstaller --noconfirm --clean --log-level WARN --windowed --copy-metadata pillow \
-    --name "Knack" --icon "$(cygpath -w "$PWD/launcher/sanctuary.ico")" --distpath out/pyi-dist \
-    --workpath out/pyi-work --specpath out/pyi-work --paths "$(cygpath -w "$PWD/scripts")" "${hidden[@]}" \
-    "$(cygpath -w "$PWD/launcher/sanctuary_launcher_win.py")"
+case $(uname -s) in
+MINGW*|MSYS*)
+    source ./msys2-env.sh
+    [[ -f out/sanctuary-probe.exe && -f out/sanctuary-gpu-capabilities.exe && -f out/sanctuary-play.exe ]] ||
+        { echo 'Build first: bash build.sh' >&2; exit 1; }
+    exes=out
+    dlls=${MSYS2_ROOT:-/c/msys64}/clang64/bin
+    (cd launcher-rust && cargo build --release)
+    launcher=launcher-rust/target/release/sanctuaryport-launcher.exe
+    ;;
+*)
+    bash packaging/windows/cross-build.sh
+    exes=out/win/build
+    dlls=out/win/root/clang64/bin
+    # The builder's home folder stays out of the launcher's panic paths.
+    CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER=${CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER:-x86_64-w64-mingw32-gcc} \
+    CARGO_TARGET_X86_64_PC_WINDOWS_GNU_RUSTFLAGS="--remap-path-prefix=$HOME=~" \
+        bash -c "cd launcher-rust && cargo build --release --target x86_64-pc-windows-gnu"
+    launcher=launcher-rust/target/x86_64-pc-windows-gnu/release/sanctuaryport-launcher.exe
+    ;;
+esac
 
-# The package is assembled in a fresh staging folder and zipped from there; dist/knack-windows
-# (a playable copy that may hold saves and settings) is only refreshed afterwards.
-dest=out/stage/knack-windows
+# The package is assembled in a fresh staging folder and zipped from there; dist/$name (a
+# playable copy that may hold saves and settings) is only refreshed afterwards.
+dest=out/stage/$name
 rm -rf -- out/stage
-mkdir -p "$dest/bin" "$dest/launcher"
-cp -r "out/pyi-dist/Knack/." "$dest/"
-llvm-strip -o "$dest/Play Knack.exe" out/sanctuary-play.exe
-cp launcher/sanctuary.ico launcher/sanctuary.png launcher/Cinzel-Black.ttf launcher/OFL-Cinzel.txt "$dest/launcher/"
-# The executables without debug information (out/ keeps the symbols for crash reports).
+mkdir -p "$dest/bin"
+llvm-strip -o "$dest/SanctuaryPort.exe" "$launcher"
+llvm-strip -o "$dest/Play SanctuaryPort.exe" "$exes/sanctuary-play.exe"
+# The executables without debug information (the build folder keeps the symbols).
 for exe in sanctuary-probe.exe sanctuary-gpu-capabilities.exe; do
-    llvm-strip --strip-debug -o "$dest/bin/$exe" "out/$exe"
+    llvm-strip --strip-debug -o "$dest/bin/$exe" "$exes/$exe"
 done
-# Every DLL the executables load from the CLANG64 tree (SDL3, FFmpeg, Vulkan loader, ...).
-ldd "$dest/bin/sanctuary-probe.exe" "$dest/bin/sanctuary-gpu-capabilities.exe" |
-    awk '/\/clang64\/bin\// {print $3}' | sort -u | while read -r dll; do
-        cp -u "$dll" "$dest/bin/"
-    done
+# Every DLL the executables load from the CLANG64 tree (SDL3, FFmpeg, Vulkan loader...), found
+# through their import tables, recursively.
+declare -A seen
+queue=("$dest/bin/sanctuary-probe.exe" "$dest/bin/sanctuary-gpu-capabilities.exe")
+while ((${#queue[@]})); do
+    file=${queue[0]}
+    queue=("${queue[@]:1}")
+    while read -r dll; do
+        key=${dll,,}
+        [[ -n ${seen[$key]:-} ]] && continue
+        seen[$key]=1
+        found=$(find "$dlls" -maxdepth 1 -iname "$dll" -print -quit)
+        if [[ -n $found ]]; then
+            cp "$found" "$dest/bin/"
+            queue+=("$found")
+        fi
+    done < <(llvm-objdump -p "$file" | awk '/DLL Name:/ {print $3}')
+done
+python3 -I packaging/windows/fetch_python.py out/win/cache "$dest/python"
+mkdir -p "$dest/launcher" "$dest/assets"
+cp launcher/sanctuaryport.png launcher/sanctuary.png launcher/sanctuary.ico launcher/Cinzel-Black.ttf \
+    launcher/OFL-Cinzel.txt "$dest/launcher/"
+cp -r assets/glyphs "$dest/assets/"
 cp -r scripts patches "$dest/"
-cp run.py LICENSE README.md packaging/windows/README-Windows.txt "$dest/"
+cp run.py LICENSE README.md COMO_JOGAR.md packaging/windows/README-Windows.txt "$dest/"
 find "$dest" -name __pycache__ -prune -exec rm -r {} +
-[[ -f $dest/scripts/discord_presence.py ]] || { echo 'scripts/discord_presence.py is missing from the package' >&2; exit 1; }
 # No game files and nothing a player made (saves, shader caches built from the game's shaders,
 # settings, logs) may ship: stop when one is found.
 forbidden=$(find "$dest" \( -iname eboot.bin -o -iname sce_module -o -iname sce_sys -o -iname savedata \
@@ -69,21 +82,20 @@ if [[ -n $forbidden ]]; then
     exit 1
 fi
 mkdir -p dist
-rm -f dist/knack-windows.zip
-(cd out/stage && powershell -NoProfile -Command \
-    "Compress-Archive -Path knack-windows -DestinationPath ../../dist/knack-windows.zip")
+rm -f "dist/$name.zip"
+python3 -I - "out/stage" "$name" "dist/$name.zip" <<'EOF'
+import sys, zipfile
+from pathlib import Path
+stage, name, out = Path(sys.argv[1]), sys.argv[2], sys.argv[3]
+with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
+    for path in sorted((stage / name).rglob('*')):
+        archive.write(path, path.relative_to(stage))
+EOF
 
-# Refresh dist/knack-windows, keeping what players create there (saves, settings, mods), and
-# only while nothing runs from it: deleting a running launcher's files breaks it.
-play=dist/knack-windows
-running=$(powershell -NoProfile -Command \
-    "@(Get-Process | Where-Object { \$_.Path -like '$(cygpath -w "$PWD/$play")\\*' }).Count" | tr -d '\r')
-if [[ ${running:-0} != 0 ]]; then
-    echo "dist/knack-windows is in use ($running processes): not refreshed; the zip is ready." >&2
-else
-    mkdir -p "$play"
-    find "$play" -mindepth 1 -maxdepth 1 ! -name user ! -name mods ! -name sanctuary.ini \
-        ! -name mods.json ! -name patches.json -exec rm -rf {} +
-    cp -r "$dest/." "$play/"
-fi
-du -sh "$dest" dist/knack-windows.zip
+# Refresh dist/$name, keeping what players create there (saves, settings, mods).
+play=dist/$name
+mkdir -p "$play"
+find "$play" -mindepth 1 -maxdepth 1 ! -name user ! -name mods ! -name sanctuary.ini \
+    ! -name settings.json ! -name mods.json ! -name patches.json -exec rm -rf {} +
+cp -r "$dest/." "$play/"
+du -sh "$dest" "dist/$name.zip"

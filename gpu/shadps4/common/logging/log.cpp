@@ -8,7 +8,7 @@
 #include <spdlog/sinks/async_sink.h>
 #include <spdlog/sinks/dup_filter_sink.h>
 #ifdef _WIN32
-#include <Windows.h>
+#include <windows.h>
 #endif
 
 #include "common/assert.h"

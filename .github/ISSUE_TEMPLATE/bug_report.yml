@@ -11,8 +11,8 @@ body:
     id: version
     attributes:
       label: Port version
-      description: Shown in the launcher title bar (e.g. v2.1.7)
-      placeholder: v2.1.7
+      description: Shown in the launcher title bar (e.g. v0.1.0)
+      placeholder: v0.1.0
     validations:
       required: true
 

@@ -178,12 +178,10 @@ impl State {
     /// `new` over `host`: the tests give it a fake so nothing reaches GitHub or the browser.
     pub fn with_host(paths: Paths, host: Arc<dyn ReleaseHost>) -> State {
         let (store, unreadable) = Store::load(&paths);
-        // SanctuaryPort: PLAY runs the port's run.sh (game profiles, the Diablo III runtime
-        // switches) instead of the SpartanPort runner built into the launcher.
-        let run_sh = paths.port_dir.join("run.sh");
-        let launch_command = run_sh
-            .is_file()
-            .then(|| vec!["bash".to_string(), run_sh.to_string_lossy().into_owned()]);
+        // PLAY runs the port's runner (game profiles, the Diablo III runtime switches): run.sh,
+        // or run.py on Windows.
+        let launch_command =
+            crate::core::launch::port_command(&paths.port_dir, cfg!(windows));
         // What the load found at `config_file`.
         let config = paths.config_file();
         let settings_file = if unreadable.contains(&config) {

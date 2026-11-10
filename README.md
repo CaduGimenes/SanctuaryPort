@@ -16,9 +16,27 @@ processor, a runtime replaces the PS4 system libraries, and the PS4 GPU commands
 Vulkan by a video core derived from [shadPS4](https://github.com/shadps4-emu/shadPS4). There is no
 CPU emulator.
 
-> **No game files are included.** You need your own copy of the game, dumped from your own PS4.
-> This project is not affiliated with Blizzard Entertainment or Sony Interactive Entertainment.
-> Diablo is a trademark of Blizzard Entertainment, Inc.
+> [!IMPORTANT]
+> **SanctuaryPort is the port only — the game is not included and is not distributed here.**
+> This repository and its releases hold the runtime that recompiles and runs the PS4 code, the
+> GPU translation layer and the launcher. No Diablo III files (executables, data, PKGs, keys or
+> artwork) are part of the source or of any download, and none will be provided. To play, you
+> need your own copy of the game, dumped from a PS4 you own.
+>
+> This project is not affiliated with or endorsed by Blizzard Entertainment or Sony Interactive
+> Entertainment. Diablo is a trademark of Blizzard Entertainment, Inc.
+
+## Download
+
+Get the latest build from the [Releases](https://github.com/CaduGimenes/SanctuaryPort/releases):
+
+- **Linux:** `SanctuaryPort-x86_64.AppImage` — make it executable and run it. Needs a distro
+  with glibc 2.39 or newer (SteamOS, Ubuntu 24.04+, Debian 13, Fedora 40+...), `python3`, and
+  a GPU with Vulkan 1.3. Saves and settings go to `~/.local/share/sanctuaryport`.
+- **Windows:** `SanctuaryPort-windows.zip` — extract it and open `SanctuaryPort.exe`
+  (instructions in `README-Windows.txt`). Python comes inside the folder.
+
+Then follow [Getting your game ready](#getting-your-game-ready) with your own dump.
 
 ## Status
 
@@ -35,7 +53,7 @@ CPU emulator.
 | ✅ Languages | whatever your dump ships: Portuguese (Brazil) and Spanish in the Brazilian release; English, French and Spanish in the US one |
 | ✅ Render resolution 480p–4K | resolution patches; FSR 1 upscaling and RCAS sharpening |
 | ✅ Updates | the 1.47 update (Eternal Collection) from its own folder; the base game is never changed |
-| ⚠️ Windows | the code base builds for Windows, but this port has only been played on Linux |
+| ⚠️ Windows | packaged and checked under Wine up to the game window; not yet played on a real Windows PC |
 | ❌ Online play / PSN | offline only |
 
 ## The launcher
@@ -44,17 +62,18 @@ CPU emulator.
 [SpartanPort](https://github.com/FelipePrado0/SpartanPort)'s launcher:
 
 - **Home** with your game's own key art (`sce_sys/pic1.png`, read from your dump; nothing is shipped);
-- **Graphics / Performance**: resolution, window mode, monitor, VSync, upscalers, frame limit;
+- **Graphics / Performance**: render resolution, window mode, FSR 1 upscaling, frame limit;
 - **Game**: game folder, language, saves, and **installation from PKG** (base game and add-ons);
 - **Controls** (keyboard, mouse and gamepad mapping, button icon style), **Advanced**, **Log**.
 
 Its interface follows your system language (English, Portuguese and many more).
 
-## Building (Linux)
+## Building from source (Linux)
 
 You need a C/C++ toolchain (clang or gcc), CMake, Ninja, SDL3, the Vulkan headers and loader,
-Python 3.10+ with Pillow, and Rust 1.87+ for the launcher. On Ubuntu 24.04,
-`bash packaging/linux/ci-deps.sh` installs everything; with Nix, `nix-shell`.
+Python 3.10+ (Pillow optional, for the window icon) and [rustup](https://rustup.rs) for the
+launcher (it installs the Rust version `launcher-rust/rust-toolchain.toml` pins). On Ubuntu
+24.04, `bash packaging/linux/ci-deps.sh` installs everything; with Nix, `nix-shell`.
 
 ```bash
 git clone --recursive https://github.com/CaduGimenes/SanctuaryPort.git
@@ -64,11 +83,19 @@ bash build.sh            # if CMake cannot find vk_mem_alloc.h:
 cargo build --release --manifest-path launcher-rust/Cargo.toml
 ```
 
+Packages: `bash packaging/linux/build.sh` makes the AppImage (release builds come from
+[.github/workflows/release.yml](.github/workflows/release.yml) on Ubuntu 24.04), and
+`bash packaging/windows/package.sh` cross-compiles the Windows zip from Linux — see
+[packaging/windows/README.md](packaging/windows/README.md), which also covers building on Windows
+with MSYS2.
+
 ## Getting your game ready
 
-1. Dump **Diablo III: Reaper of Souls – Ultimate Evil Edition** from your own PS4 as fake PKG
-   files (base game and, if you have them, the add-ons).
-2. Start the launcher (`launcher-rust/target/release/sanctuaryport-launcher`), open **Game** and
+1. Dump **Diablo III** (the Brazilian CUSA00243 release with its 01.47 update, or the US
+   CUSA00242 *Ultimate Evil Edition*) from your own PS4 as fake PKG files: base game, update and,
+   if you have them, the add-ons. This project does not provide the game or help obtaining it.
+2. Start the launcher (the AppImage, `SanctuaryPort.exe`, or
+   `launcher-rust/target/release/sanctuaryport-launcher` from source), open **Game** and
    choose **Install from PKG** with the game, its update and add-ons. The game goes to
    `~/Games/PS4/<TITLE_ID>`, the update to `<TITLE_ID>-UPDATE` and the add-ons to `addcont/`;
    the launcher sets the folders. The same works from a terminal:
@@ -100,6 +127,8 @@ SANCTUARY_GAME_DIR=~/Games/PS4/CUSA00243 SANCTUARY_PATCH_DIR=~/Games/PS4/CUSA002
 ## Known issues
 
 - The analog stick icons still read L3/R3 with Xbox icons on; Nintendo letters are not drawn yet.
+- At 720p and below some HUD key labels can disappear.
+- Ultrawide (21:9) is not supported yet.
 
 ## How it works
 
@@ -124,4 +153,5 @@ SanctuaryPort stands on the work of others:
 ## License
 
 [GPL-2.0](LICENSE), like the projects it derives from. Third-party code under `gpu/third_party/`
-and `third_party/` keeps its own licenses.
+and `third_party/` keeps its own licenses. The license covers this project's code only; it grants
+nothing over Diablo III, which belongs to its owners.
