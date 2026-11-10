@@ -190,6 +190,8 @@ static File *get(int fd) {
     return &files[fd];
 }
 /* GOW3_AUDIO_TRACE=1: sound file opens and failed reads (missing game sounds). */
+/* GOW3_FILE_TRACE=1: every open, stat and read of guest files (diagnostics). */
+static int file_trace(void) { static int v=-1; if (v<0) { const char *e=getenv("GOW3_FILE_TRACE"); v=e && e[0]=='1'; } return v; }
 static int audio_trace(void) { static int v=-1; if (v<0) { const char *e=getenv("GOW3_AUDIO_TRACE"); v=e && e[0]=='1'; } return v; }
 /* Game mounts (including linked mod overlays) are read-only. Saves use other mounts. */
 static int game_path(const char *p) {
@@ -245,6 +247,7 @@ static int64_t do_open(const char *guest,int flags,int mode) {
     snprintf(files[fd].path,sizeof(files[fd].path),"%s",guest);
     ++opens;
     pthread_mutex_unlock(&lock);
+    if (file_trace()) printf("File trace: open(%s, flags 0x%x) -> fd %d, %lld bytes\n",guest,flags,fd,(long long)s.st_size);
     if (audio_trace() && strstr(guest,"sound/")) printf("Audio trace: open(%s) -> fd %d, %lld bytes\n",guest,fd,(long long)s.st_size);
     const char *mod_trace=getenv("GOW3_MOD_TRACE"), *mod_root=getenv("GOW3_MODS_DIR");
     if (mod_trace && mod_trace[0]=='1' && mod_root) {
@@ -299,6 +302,7 @@ static int64_t do_read(int fd,void *buffer,uint64_t size) {
     if (h<0) return -EBADF;
     touch_for_write(buffer,size);
     ssize_t n=host_read(h,buffer,size);
+    if (file_trace()) printf("File trace: read(fd %d, %llu into %p) -> %lld\n",fd,(unsigned long long)size,buffer,(long long)n);
     if (n<0) { if (audio_trace()) printf("Audio trace: read(fd %d, %llu) failed, errno %d\n",fd,(unsigned long long)size,errno); return -errno; }
     __atomic_add_fetch(&reads,1,__ATOMIC_RELAXED); __atomic_add_fetch(&bytes_read,(uint64_t)n,__ATOMIC_RELAXED);
     return n;
@@ -308,6 +312,7 @@ static int64_t do_pread(int fd,void *buffer,uint64_t size,int64_t offset) {
     if (h<0) return -EBADF;
     touch_for_write(buffer,size);
     ssize_t n=pread(h,buffer,size,offset);
+    if (file_trace()) printf("File trace: pread(fd %d, %llu @%lld into %p) -> %lld\n",fd,(unsigned long long)size,(long long)offset,buffer,(long long)n);
     if (n<0) { if (audio_trace()) printf("Audio trace: pread(fd %d, %llu @%lld) failed, errno %d\n",fd,(unsigned long long)size,(long long)offset,errno); return -errno; }
     __atomic_add_fetch(&reads,1,__ATOMIC_RELAXED); __atomic_add_fetch(&bytes_read,(uint64_t)n,__ATOMIC_RELAXED);
     return n;
@@ -361,7 +366,8 @@ static int64_t do_stat(const char *guest,GuestStat *out) {
     int e=translate(guest,path,sizeof(path));
     if (e) return -e;
     if (!out) return -EFAULT;
-    if (host_stat(path,&s)) return -errno;
+    if (host_stat(path,&s)) { int err=errno; if (file_trace()) printf("File trace: stat(%s) -> errno %d\n",guest,err); return -err; }
+    if (file_trace()) printf("File trace: stat(%s) -> %lld bytes\n",guest,(long long)s.st_size);
     convert_stat(&s,out); return 0;
 }
 static int64_t do_getdents(int fd,char *buffer,uint64_t size,int64_t *basep) {

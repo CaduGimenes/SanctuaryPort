@@ -225,6 +225,8 @@ public:
 
     /// Reuploads image contents.
     void RefreshImage(Image& image);
+    /// SanctuaryPort: GOW3_GLYPH_ATLAS cells over the texture they belong to.
+    void PatchGlyphs(Image& image);
 
     /// Retrieves the sampler that matches the provided S# descriptor.
     /// extra_lod_bias: gow3, added to the S#'s bias (reduced scene rendering).

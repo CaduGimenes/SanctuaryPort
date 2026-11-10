@@ -21,8 +21,7 @@
 
 #define USER_ID 1
 #define USER_NAME "Player"
-#define USER2_ID 2 /* split-screen player 2 (#80): logged in while runtime_pad_second_user() */
-#define USER2_NAME "Player 2"
+#define MAX_USER_ID 4 /* local co-op players 2..4 are logged in per runtime_pad_users() */
 #define ORBIS_OK 0
 #define USER_INVALID_ARGUMENT ((int32_t)0x80960005)
 #define USER_NO_EVENT ((int32_t)0x80960007)
@@ -51,26 +50,35 @@ static int new_id(void) { pthread_mutex_lock(&lock); int id=next_id++; pthread_m
 static void note(const char *what) { printf("Runtime: %s\n",what); }
 
 /* ---- UserService ---- */
-static int login_event_pending=1, user2_reported;
+static int login_event_pending=1;
+static unsigned users_reported; /* bit N: the game knows user N (2..4) is logged in */
 static ABI int32_t user_initialize(const void *params) { (void)params; note("UserService initialized (user 1 logged in)"); return 0; }
 static ABI int32_t user_terminate(void) { return 0; }
 static ABI int32_t user_initial(int32_t *id) { if (!id) return USER_INVALID_ARGUMENT; *id=USER_ID; return 0; }
 static ABI int32_t user_list(int32_t *ids) {
     if (!ids) return USER_INVALID_ARGUMENT;
-    const int present=runtime_pad_second_user();
+    const unsigned mask=runtime_pad_users();
     pthread_mutex_lock(&lock);
-    user2_reported=present; /* the game knows it now */
+    users_reported=mask; /* the game knows it now */
     pthread_mutex_unlock(&lock);
-    ids[0]=USER_ID; ids[1]=present ? USER2_ID : -1; ids[2]=ids[3]=-1; return 0;
+    ids[0]=USER_ID;
+    for (int u=2;u<=MAX_USER_ID;++u) ids[u-1]=mask & (1u<<u) ? u : -1;
+    return 0;
 }
-/* 1 when user 2 logged in or out since the game last heard; *present is the new state. */
-static int user2_changed(int *present) {
-    *present=runtime_pad_second_user();
+/* The next user (2..4) that logged in or out since the game last heard: its id, *login 1 for a
+ * login; 0 when none changed. */
+static int user_changed(int *login) {
+    const unsigned mask=runtime_pad_users();
     pthread_mutex_lock(&lock);
-    const int changed=*present!=user2_reported; user2_reported=*present;
+    const unsigned diff=mask^users_reported;
+    int user=0;
+    for (int u=2;u<=MAX_USER_ID && !user;++u) if (diff & (1u<<u)) user=u;
+    if (user) users_reported^=1u<<user;
     pthread_mutex_unlock(&lock);
-    if (changed) printf("Runtime: user 2 logged %s\n",*present ? "in" : "out");
-    return changed;
+    if (!user) return 0;
+    *login=(mask>>user)&1;
+    printf("Runtime: user %d logged %s\n",user,*login ? "in" : "out");
+    return user;
 }
 /* The game learns about logins from a callback (sceUserServiceRegisterEventCallback). The pad
  * module calls runtime_user_events from player 1's pad read, about twice a second, and the
@@ -92,14 +100,16 @@ void runtime_user_events(void) {
     UserEventCallback callback=user_callback; void *arg=user_callback_arg;
     pthread_mutex_unlock(&lock);
     if (!callback || ++calls%30) return;
-    int present;
-    if (!user2_changed(&present)) return;
-    const int32_t event[2]={present ? 0 : 1,USER2_ID}; /* LOGIN / LOGOUT */
-    callback(event,arg);
+    int login, user;
+    while ((user=user_changed(&login))) {
+        const int32_t event[2]={login ? 0 : 1,user}; /* LOGIN / LOGOUT */
+        callback(event,arg);
+    }
 }
 static ABI int32_t user_name(int32_t id,char *name,uint64_t size) {
-    if ((id!=USER_ID && id!=USER2_ID) || !name) return USER_INVALID_ARGUMENT;
-    const char *text=id==USER_ID ? USER_NAME : USER2_NAME;
+    if (id<USER_ID || id>MAX_USER_ID || !name) return USER_INVALID_ARGUMENT;
+    char text[16];
+    if (id==USER_ID) strcpy(text,USER_NAME); else snprintf(text,sizeof text,"Player %d",id);
     if (strlen(text)+1>size) return (int32_t)0x8096000a; /* BUFFER_TOO_SHORT */
     strcpy(name,text); return 0;
 }
@@ -109,10 +119,11 @@ static ABI int32_t user_event(int32_t *event) {
     int pending=login_event_pending; login_event_pending=0;
     pthread_mutex_unlock(&lock);
     if (pending) { event[0]=0; event[1]=USER_ID; return 0; } /* LOGIN */
-    /* User 2 logs in and out with the second gamepad. */
-    int present;
-    if (!user2_changed(&present)) return USER_NO_EVENT;
-    event[0]=present ? 0 : 1; event[1]=USER2_ID; /* LOGIN / LOGOUT */
+    /* Users 2..4 log in and out with their gamepads. */
+    int login;
+    const int user=user_changed(&login);
+    if (!user) return USER_NO_EVENT;
+    event[0]=login ? 0 : 1; event[1]=user; /* LOGIN / LOGOUT */
     return 0;
 }
 
@@ -641,7 +652,42 @@ static ABI int32_t mouse_close(int32_t handle) { (void)handle; return 0; }
 static ABI int32_t audio_in_open(void) { return AUDIO_IN_NOT_OPENED; }
 
 
+/* ---- Diablo III (CUSA00242): offline answers for the remaining PSN/network imports ---- */
+/* No party service: initialisation succeeds, no party ever exists. */
+static ABI int32_t party_ok(void) { return 0; }
+/* Common dialogs that need PSN report "not available"; nothing is ever shown. */
+#define COMMON_DIALOG_NOT_SUPPORTED ((int32_t)0x80B80004)
+static ABI int32_t dialog_unavailable(void) { return COMMON_DIALOG_NOT_SUPPORTED; }
+/* sceNetCtlGetResult(eventType, int *errorCode): the last connection attempt failed (no network). */
+static ABI int32_t netctl_result(int32_t event,int32_t *error) { (void)event; if (error) *error=(int32_t)0x80412102; return 0; }
+/* Voice chat has no ports: attribute queries fail, settings are accepted. */
+static ABI int32_t voice_no_port(void) { return (int32_t)0x8082000A; }
+
 static const RuntimeExport exports[]={
+    /* Diablo III offline set */
+    {"sceNpPartyInitialize",party_ok}, {"sceNpPartyTerminate",party_ok},
+    {"sceNpPartyRegisterHandler",party_ok}, {"sceNpPartyCheckCallback",party_ok},
+    {"sceGameCustomDataDialogOpen",dialog_unavailable}, {"sceGameCustomDataDialogGetResult",dialog_unavailable},
+    {"sceInvitationDialogOpen",dialog_unavailable}, {"sceInvitationDialogGetResult",dialog_unavailable},
+    {"sceHttpCreateConnection",http_object}, {"sceHttpCreateRequest2",http_object},
+    {"sceHttpRemoveRequestHeader",ok_void}, {"sceNetResolverAbort",ok_void},
+    {"sceNetCtlGetResult",netctl_result},
+    {"sceNpGetAccountCountry",np_signed_out}, {"sceNpInGameMessagePrepare",np_signed_out},
+    {"sceNpInGameMessageSendData",np_signed_out},
+    {"sceNpMatching2GetUserInfoList",np_signed_out}, {"sceNpMatching2SignalingGetConnectionInfo",np_signed_out},
+    {"sceNpScoreGetFriendsRanking",np_signed_out}, {"sceNpScoreGetFriendsRankingAsync",np_signed_out},
+    {"sceNpScoreGetRankingByNpId",np_signed_out},
+    {"sceNpTusGetData",np_signed_out}, {"sceNpTusGetDataVUser",np_signed_out},
+    {"sceNpTusGetMultiSlotVariableVUser",np_signed_out}, {"sceNpTusSetData",np_signed_out},
+    {"sceNpTusSetDataVUser",np_signed_out},
+    {"sceNpLookupCreateRequest",np_request_ctx}, {"sceNpWordFilterCreateTitleCtx",np_request},
+    {"sceNpWordFilterCreateAsyncRequest",np_request_ctx}, {"sceNpWordFilterCensorComment",np_signed_out},
+    {"sceNpWordFilterPollAsync",np_poll},
+    {"sceNpWebApiCreateServicePushEventFilter",np_signed_out}, {"sceNpWebApiDeleteServicePushEventFilter",ok_void},
+    {"sceNpWebApiRegisterServicePushEventCallback",np_signed_out},
+    {"sceNpWebApiUnregisterServicePushEventCallback",ok_void},
+    {"sceSystemServiceShowDisplaySafeAreaSettings",ok_void},
+    {"sceVoiceGetPortAttr",voice_no_port}, {"sceVoiceSetMuteFlag",ok_void}, {"sceVoiceSetVolume",ok_void},
     {"sceUserServiceInitialize",user_initialize}, {"sceUserServiceTerminate",user_terminate},
     {"sceUserServiceGetInitialUser",user_initial}, {"sceUserServiceGetLoginUserIdList",user_list},
     {"sceUserServiceGetUserName",user_name}, {"sceUserServiceGetEvent",user_event},

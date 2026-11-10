@@ -97,6 +97,9 @@ def launch_prefix(env):
     variable), GameMode a command that starts the game."""
     if WINDOWS:
         return []
+    if env.get('GOW3_LAUNCH_PREFIX'):  # development: e.g. "gdb -q -batch -x script --args"
+        import shlex
+        return shlex.split(env['GOW3_LAUNCH_PREFIX'])
     if env.get('GOW3_MANGOHUD') == '1':
         env.setdefault('MANGOHUD', '1')
     if env.get('GOW3_GAMEMODE') == '1':
@@ -144,6 +147,33 @@ def glyph_mounts(env, probe, game, out):
     return [part for guest, path in mounts.items() for part in ('--mount', f'{guest}={path}')], style
 
 
+def d3_glyph_atlas(env, probe):
+    """Diablo III's button icons are in its own archives (CPKs), not WADs: with an Xbox style the
+    GPU core draws Xbox cells over its PlayStation button atlas (assets/glyphs/d3_xbox.spg,
+    GOW3_GLYPH_ATLAS). The style follows GOW3_GLYPH_STYLE like glyph_mounts; only xbox is drawn
+    so far (auto picks it for an Xbox-style gamepad). Returns the style."""
+    choice = env.get('GOW3_GLYPH_STYLE', 'off')
+    if choice not in ('auto', 'xbox'):
+        return None
+    atlas = PORT / 'assets' / 'glyphs' / 'd3_xbox.spg'
+    try:
+        import glyphs
+        pad = ''
+        if choice == 'auto':
+            pad = subprocess.run([str(probe), '--gamepad'], stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                                 text=True, timeout=15, creationflags=no_console()).stdout
+        style, _faces, name = glyphs.resolve(choice, pad)
+    except Exception as error:  # noqa: BLE001  (icons only)
+        print(f'Glyphs: {error}; the game keeps its own button icons', flush=True)
+        return None
+    if style != 'xbox' or not atlas.is_file():
+        print('Glyphs: the game keeps its own (PlayStation) button icons', flush=True)
+        return None
+    env['GOW3_GLYPH_ATLAS'] = str(atlas)
+    print(f'Glyphs: xbox{f" ({name})" if name else ""}, drawn over the game\'s button atlas', flush=True)
+    return 'xbox'
+
+
 def pause_menu_args(game, out, mounts):
     """Probe arguments for the copy of R_UI.WAD with the pause menu's Exit to Desktop row
     (scripts/pause_menu.py), made from the glyphs' copy when `mounts` has one. The probe mounts it
@@ -167,6 +197,7 @@ def main():
     # As run.sh: relative paths (GOW3_GAME_DIR, GOW3_DATA_DIR, fsr4_shaders/) are from the port.
     os.chdir(PORT)
     env = os.environ
+    caller_env = set(os.environ)  # what the caller set, before gow3.ini and profiles add theirs
     data = Path(env.get('GOW3_DATA_DIR', PORT))
     out = data / 'out'
     out.mkdir(parents=True, exist_ok=True)
@@ -196,7 +227,8 @@ def main():
     graphics, reverted = graphics_options.prepare(env['GOW3_CONFIG'], out / 'graphics_state.json', extra_resolutions)
     if reverted:
         print('Graphics: the last restart never reached the game; previous options restored', flush=True)
-    env.update(graphics_options.environment(graphics))
+    for key, value in graphics_options.environment(graphics).items():  # the environment wins (A/B tests)
+        env.setdefault(key, value)
     if not env.get('GOW3_FSR411_DIR') and not (PORT / 'fsr4_411').is_dir() and (data / 'fsr4_411').is_dir():
         env['GOW3_FSR411_DIR'] = str(data / 'fsr4_411')
 
@@ -243,7 +275,9 @@ def main():
         if profile['name']:
             print(f'Game profile: {profile["name"]} ({", ".join(profile["modules"])})', flush=True)
         for name, value in profile.get('env', {}).items():
-            env.setdefault(name, value)
+            # The profile overrides gow3.ini's graphics options; the caller's environment wins.
+            if name not in caller_env:
+                env[name] = value
         run_script('link_modules.py', game, '--out', out, '--modules', *profile['modules'])
         if WINDOWS:  # function starts for the loader's red-zone protection (src/redzone.cpp)
             run_script('function_starts.py', game, '--out', out, '--modules', *profile['modules'])
@@ -256,6 +290,11 @@ def main():
             if code == 0:
                 isa_args = ['--isa-rewrite', str(out / 'isa-rewrite.bin')]
         run_script('content_profile.py', game, '--out', out, '--sku', env.get('GOW3_CONTENT_SKU', 'full'))
+        # Add-ons installed beside the game, as <game folder>/../addcont/<TITLE_ID>/<label>.
+        title = game_profiles.title_id(game)
+        addcont = original_game.parent / 'addcont' / (title or '')
+        if title and 'GOW3_ADDCONT_DIR' not in env and addcont.is_dir():
+            env['GOW3_ADDCONT_DIR'] = str(addcont)
 
         from patches import game_profile_for, patch_requirements, patch_status, selected_patches
         profile = game_profile_for(game)
@@ -265,8 +304,11 @@ def main():
         # an application id the desktop entry matches, so the shell shows the same icon.
         icon_file = game / 'sce_sys' / 'icon0.png'
         if not WINDOWS:
-            env.setdefault('SDL_APP_ID', 'gow3')
-            if (PORT / 'launcher' / 'gow3.png').is_file():
+            # Games with their own profile (Diablo III...) keep their icon0.png and an app id of
+            # their own; the launcher icon belongs to the port's original game.
+            own = game_profiles.title_id(game) == 'CUSA00242'
+            env.setdefault('SDL_APP_ID', 'diablo3' if own else 'gow3')
+            if not own and (PORT / 'launcher' / 'gow3.png').is_file():
                 icon_file = PORT / 'launcher' / 'gow3.png'
         try:
             from PIL import Image
@@ -322,7 +364,10 @@ def main():
         print(f'Engine frame rate: {engine_fps} FPS'
               + ('' if engine_fps > 60 or graphics['engine_fps'] == '60' else
                  ' (the frame rate patch was not found in this eboot.bin)'), flush=True)
-        glyph_args, glyph_style = glyph_mounts(env, probe, game, out)
+        if game_profiles.title_id(game) == 'CUSA00242':
+            glyph_args, glyph_style = [], d3_glyph_atlas(env, probe)
+        else:
+            glyph_args, glyph_style = glyph_mounts(env, probe, game, out)
         if glyph_style:  # the in-game menu names the buttons the same way
             env['GOW3_GLYPHS'] = glyph_style
             derived.append('GOW3_GLYPHS')

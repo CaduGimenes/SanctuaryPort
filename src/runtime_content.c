@@ -1,5 +1,6 @@
 /* Offline AppContent provider for the configured base-game profile.
  * No package/DLC mounting, downloads, entitlement or license emulation. */
+#include <dirent.h>
 #include "runtime.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -76,14 +77,48 @@ static ABI int32_t param_int(uint32_t id,int32_t *out) {
     printf("Runtime: AppContent parameter %u = %d\n",id,*out);
     return 0;
 }
+/* Add-ons: GOW3_ADDCONT_DIR holds one folder per entitlement label (16 characters), as the
+ * PS4 installs them. Diablo III's packs are entitlement-only (license + config, no data), so
+ * listing them is enough; they are reported installed, as shadPS4 does. */
+typedef struct { char label[17]; uint8_t pad[3]; uint32_t status; } AddcontInfo;
+_Static_assert(sizeof(AddcontInfo)==24,"OrbisAppContentAddcontInfo layout");
+#define ADDCONT_INSTALLED 4
+static char addon_labels[32][17];
+static uint32_t addon_count, addons_scanned;
+static void scan_addons(void) {
+    if (addons_scanned) return;
+    addons_scanned=1;
+    const char *dir=getenv("GOW3_ADDCONT_DIR");
+    DIR *d=dir && *dir ? opendir(dir) : NULL;
+    for (struct dirent *e; d && (e=readdir(d)) && addon_count<32;) {
+        if (strlen(e->d_name)!=16) continue;
+        memcpy(addon_labels[addon_count],e->d_name,16); addon_labels[addon_count][16]=0;
+        printf("Runtime: AppContent add-on %s\n",addon_labels[addon_count]);
+        ++addon_count;
+    }
+    if (d) closedir(d);
+}
 static ABI int32_t addon_list(uint32_t service,void *list,uint32_t capacity,uint32_t *hits) {
     require_initialized();
     if (service) { fputs("STOP: nonzero AppContent service label unsupported\n",stderr); exit(21); }
     if ((!capacity || !list) && !hits) return PARAMETER;
-    /* No add-ons are mounted by this provider. Never touch unused list slots. */
-    if (hits) *hits=0;
+    scan_addons();
+    uint32_t n=0;
+    if (list) for (; n<capacity && n<addon_count; ++n) {
+        AddcontInfo *info=(AddcontInfo *)list+n;
+        memset(info,0,sizeof(*info));
+        memcpy(info->label,addon_labels[n],17);
+        info->status=ADDCONT_INSTALLED;
+    }
+    if (hits) *hits=list ? n : addon_count;
     ++lists; return 0;
 }
+/* Entitlement-only packs have nothing to mount. */
+#define ADDCONT_NOT_MOUNTED ((int32_t)0x80D90007)
+static ABI int32_t addon_mount(uint32_t service,const void *label,char *mount_point) {
+    (void)service; (void)label; (void)mount_point; return ADDCONT_NOT_MOUNTED;
+}
+static ABI int32_t addon_unmount(const char *mount_point) { (void)mount_point; return 0; }
 uintptr_t runtime_content_resolve(const char *name) {
     if (!strcmp(name,"g8cM39EUZ6o#libSceSysmodule")) return (uintptr_t)module_load;
     if (!strcmp(name,"hHrGoGoNf+s#libSceSysmodule")) return (uintptr_t)module_load_internal_arg;
@@ -92,6 +127,8 @@ uintptr_t runtime_content_resolve(const char *name) {
     if (!strcmp(name,"R9lA82OraNs#libSceAppContent")) return (uintptr_t)content_init;
     if (!strcmp(name,"99b82IKXpH4#libSceAppContent")) return (uintptr_t)param_int;
     if (!strcmp(name,"xnd8BJzAxmk#libSceAppContent")) return (uintptr_t)addon_list;
+    if (!strcmp(name,"VANhIWcqYak#libSceAppContent")) return (uintptr_t)addon_mount;
+    if (!strcmp(name,"3rHWaV-1KC4#libSceAppContent")) return (uintptr_t)addon_unmount;
     return 0;
 }
 void runtime_content_report(void) {

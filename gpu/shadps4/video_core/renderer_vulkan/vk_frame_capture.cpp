@@ -230,7 +230,19 @@ void FrameCapture::BeginPass(const VideoCore::ImageInfo* const* colors, u32 num_
     display = display && targets.size() == 1;
     const bool new_pass = !(pass_open && !entries.empty() && !entries.back().compute &&
                             entries.back().colors == targets);
+    // Diablo III: GOW3_CAPTURE_DISPLAY_PASSES=N keeps recording across N display-buffer passes
+    // (the scene composite and the UI both write the display buffer within one frame).
+    static const int display_passes = [] {
+        const char* v = std::getenv("GOW3_CAPTURE_DISPLAY_PASSES");
+        return v ? std::max(1, std::atoi(v)) : 1;
+    }();
+    static int display_seen = 0;
+    if (display && new_pass && state.load(std::memory_order_relaxed) == Recording &&
+        ++display_seen < display_passes) {
+        display = false; // recorded as an ordinary pass below
+    }
     if (display && new_pass) {
+        display_seen = 0;
         if (state.load(std::memory_order_relaxed) == Recording) {
             Write(last_presented.load(std::memory_order_relaxed));
             entries.clear();

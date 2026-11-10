@@ -164,7 +164,40 @@ static ABI int32_t rtc_add_ticks(uint64_t *out, const uint64_t *tick, int64_t ad
 }
 static ABI int32_t rtc_add_seconds(uint64_t *out, const uint64_t *tick, int64_t add) { return rtc_add_ticks(out,tick,add*1000000); }
 
+/* Win32 FILETIME: 100 ns intervals since 1601-01-01; the tick of 1601-01-01 is 584388 days. */
+#define FILETIME_EPOCH_TICKS (UINT64_C(584388)*TICKS_PER_DAY)
+static ABI int32_t rtc_set_win32_filetime(uint64_t *tick, uint64_t filetime) {
+    if (!tick) return ERR_INVALID_POINTER;
+    *tick=filetime/10+FILETIME_EPOCH_TICKS; return 0;
+}
+static ABI int32_t rtc_get_win32_filetime(const uint64_t *tick, uint64_t *filetime) {
+    if (!tick || !filetime) return ERR_INVALID_POINTER;
+    if (*tick<FILETIME_EPOCH_TICKS) return ERR_INVALID_YEAR;
+    *filetime=(*tick-FILETIME_EPOCH_TICKS)*10; return 0;
+}
+/* sceRtcParseDateTime(tick*, text): "YYYY-MM-DD[T ]hh:mm:ss[.frac][Z|+hh:mm]" (UTC result). */
+static ABI int32_t rtc_parse_date_time(uint64_t *tick, const char *text) {
+    if (!tick || !text) return ERR_INVALID_POINTER;
+    int y,mo,d,h=0,mi=0,s=0,n=0; char sep=0;
+    if (sscanf(text,"%d-%d-%d%c%d:%d:%d%n",&y,&mo,&d,&sep,&h,&mi,&s,&n)<3) return (int32_t)0x80B50012;
+    if (y<1 || y>9999) return ERR_INVALID_YEAR;
+    if (mo<1 || mo>12) return ERR_INVALID_MONTH;
+    if (d<1 || d>days_in_month(y,mo)) return ERR_INVALID_DAY;
+    DateTime t={(uint16_t)y,(uint16_t)mo,(uint16_t)d,(uint16_t)h,(uint16_t)mi,(uint16_t)s,0};
+    uint64_t value=to_tick(&t);
+    const char *p=n ? text+n : "";
+    if (*p=='.') { uint32_t us=0,scale=100000; for (++p; *p>='0' && *p<='9'; ++p) { us+=(uint32_t)(*p-'0')*scale; scale/=10; } value+=us; }
+    if (*p=='+' || *p=='-') {
+        int oh=0,om=0; sscanf(p+1,"%d:%d",&oh,&om);
+        int64_t off=((int64_t)oh*60+om)*60000000;
+        value=(uint64_t)((int64_t)value-(*p=='+' ? off : -off));
+    }
+    *tick=value; return 0;
+}
+
 static const RuntimeExport exports[]={
+    {"sceRtcSetWin32FileTime",rtc_set_win32_filetime}, {"sceRtcGetWin32FileTime",rtc_get_win32_filetime},
+    {"sceRtcParseDateTime",rtc_parse_date_time},
     {"sceRtcGetCurrentClockLocalTime",rtc_current_local}, {"sceRtcGetCurrentClock",rtc_current_clock},
     {"sceRtcGetCurrentTick",rtc_current_tick}, {"sceRtcGetCurrentNetworkTick",rtc_current_tick},
     {"sceRtcConvertUtcToLocalTime",rtc_utc_to_local}, {"sceRtcConvertLocalTimeToUtc",rtc_local_to_utc},

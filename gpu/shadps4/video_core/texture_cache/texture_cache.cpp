@@ -1,11 +1,14 @@
 // SPDX-FileCopyrightText: Copyright 2024-2026 shadPS4 Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include <cstdio>
+#include <cstring>
 #include <filesystem>
 #include <xxhash.h>
 #include "video_core/amdgpu/liverpool.h"
 
 #include "gow3_toggles.h"
+#include "common/alignment.h"
 #include "common/assert.h"
 #include "common/debug.h"
 #include "common/div_ceil.h"
@@ -1387,6 +1390,130 @@ ImageView& TextureCache::FindDepthTarget(ImageId image_id, const ImageDesc& desc
     return image.FindView(desc.view_info, false);
 }
 
+// SanctuaryPort: controller glyphs. GOW3_GLYPH_ATLAS=<file> names cells drawn over a game
+// texture after each upload of it (Diablo III: Xbox buttons over the PlayStation ones of its
+// button atlas). File (little-endian): "SPG1", u32 width, height, vk::Format, u64 XXH3 of the
+// guest bytes (0: any), u32 cell count; per cell u32 mip, x, y, w, h (texels, multiples of 4)
+// and its BC blocks, row by row. Only the cells change: the rest is the game's own texture.
+namespace {
+struct GlyphCell {
+    u32 mip, x, y, w, h;
+    std::vector<u8> blocks;
+};
+struct GlyphAtlas {
+    bool loaded = false;
+    u32 width = 0, height = 0;
+    vk::Format format = vk::Format::eUndefined;
+    u64 guest_hash = 0;
+    std::vector<GlyphCell> cells;
+};
+const GlyphAtlas& LoadGlyphAtlas() {
+    static const GlyphAtlas atlas = [] {
+        GlyphAtlas a;
+        const char* path = std::getenv("GOW3_GLYPH_ATLAS");
+        if (!path || !*path) {
+            return a;
+        }
+        FILE* f = std::fopen(path, "rb");
+        if (!f) {
+            std::fprintf(stderr, "Glyphs: cannot open %s\n", path);
+            return a;
+        }
+        char magic[4];
+        u32 head[3];
+        u64 hash;
+        u32 count;
+        bool ok = std::fread(magic, 1, 4, f) == 4 && !std::memcmp(magic, "SPG1", 4) &&
+                  std::fread(head, 4, 3, f) == 3 && std::fread(&hash, 8, 1, f) == 1 &&
+                  std::fread(&count, 4, 1, f) == 1 && count < 4096;
+        for (u32 i = 0; ok && i < count; ++i) {
+            GlyphCell c;
+            u32 r[5];
+            ok = std::fread(r, 4, 5, f) == 5 && r[2] % 4 == 0 && r[3] % 4 == 0 && r[4] % 4 == 0;
+            if (!ok) {
+                break;
+            }
+            c.mip = r[0], c.x = r[1], c.y = r[2], c.w = r[3], c.h = r[4];
+            c.blocks.resize(size_t(c.w / 4) * (c.h / 4) * 16);
+            ok = std::fread(c.blocks.data(), 1, c.blocks.size(), f) == c.blocks.size();
+            a.cells.push_back(std::move(c));
+        }
+        std::fclose(f);
+        if (!ok) {
+            std::fprintf(stderr, "Glyphs: %s is not a glyph atlas\n", path);
+            return GlyphAtlas{};
+        }
+        a.loaded = true;
+        a.width = head[0], a.height = head[1], a.format = vk::Format(head[2]), a.guest_hash = hash;
+        std::printf("Glyphs: %zu cells for a %ux%u texture from %s\n", a.cells.size(), a.width,
+                    a.height, path);
+        return a;
+    }();
+    return atlas;
+}
+} // namespace
+
+void TextureCache::PatchGlyphs(Image& image) {
+    const GlyphAtlas& atlas = LoadGlyphAtlas();
+    if (!atlas.loaded || image.info.size.width != atlas.width ||
+        image.info.size.height != atlas.height || image.info.pixel_format != atlas.format) {
+        return;
+    }
+    const u64 hash = XXH3_64bits(std::bit_cast<const u8*>(image.info.guest_address),
+                                 image.info.guest_size);
+    static bool logged = false;
+    if (!logged) {
+        logged = true;
+        std::printf("Glyphs: candidate %#llx, %u mips, guest hash %016llx%s\n",
+                    static_cast<unsigned long long>(image.info.guest_address),
+                    image.info.resources.levels, static_cast<unsigned long long>(hash),
+                    atlas.guest_hash && hash != atlas.guest_hash ? " (not the atlas)" : "");
+    }
+    if (atlas.guest_hash && hash != atlas.guest_hash) {
+        return;
+    }
+    u64 total = 0;
+    for (const auto& c : atlas.cells) {
+        if (c.mip < image.info.resources.levels) {
+            total += Common::AlignUp(c.blocks.size(), 16);
+        }
+    }
+    if (!total) {
+        return;
+    }
+    const auto staging = runtime.GetStagingPool().Request(total, MemoryType::HostUncached, 16);
+    boost::container::small_vector<vk::BufferImageCopy, 64> copies;
+    u64 at = 0;
+    for (const auto& c : atlas.cells) {
+        if (c.mip >= image.info.resources.levels) {
+            continue;
+        }
+        std::memcpy(staging.mapped + at, c.blocks.data(), c.blocks.size());
+        copies.push_back({
+            .bufferOffset = staging.offset + at,
+            .bufferRowLength = 0,
+            .bufferImageHeight = 0,
+            .imageSubresource{
+                .aspectMask = vk::ImageAspectFlagBits::eColor,
+                .mipLevel = c.mip,
+                .baseArrayLayer = 0,
+                .layerCount = 1,
+            },
+            .imageOffset = {s32(c.x), s32(c.y), 0},
+            .imageExtent = {c.w, c.h, 1},
+        });
+        at += Common::AlignUp(c.blocks.size(), 16);
+    }
+    staging.Flush();
+    runtime.UploadImage(&image, staging.buffer, copies);
+    static bool told = false;
+    if (!told) {
+        told = true;
+        std::printf("Glyphs: %zu cells drawn over the texture at %#llx\n", copies.size(),
+                    static_cast<unsigned long long>(image.info.guest_address));
+    }
+}
+
 void TextureCache::RefreshImage(Image& image) {
     if (False(image.flags & ImageFlagBits::Dirty) || image.info.guest_samples > 1) {
         return;
@@ -1474,6 +1601,7 @@ void TextureCache::RefreshImage(Image& image) {
     }
 
     runtime.UploadImage(&image, buffer, image_copies);
+    PatchGlyphs(image);
 }
 
 vk::Sampler TextureCache::GetSampler(const AmdGpu::Sampler& sampler,

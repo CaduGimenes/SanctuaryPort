@@ -26,7 +26,8 @@
 #define ERR_ALREADY_OPENED ((int32_t)0x80920004)
 #define ERR_NOT_INITIALIZED ((int32_t)0x80920005)
 #define PAD_HANDLE 1
-#define PAD2_HANDLE 2 /* user 2: split-screen (#80) */
+/* Users 2..MAX_PLAYERS are local co-op players on further gamepads; user N's handle is N. */
+#define MAX_PLAYERS 4
 
 enum {
     BTN_L3=0x2, BTN_R3=0x4, BTN_OPTIONS=0x8, BTN_UP=0x10, BTN_RIGHT=0x20, BTN_DOWN=0x40, BTN_LEFT=0x80,
@@ -67,8 +68,8 @@ _Static_assert(__builtin_offsetof(PadData,timestamp)==80,"OrbisPadData timestamp
 _Static_assert(sizeof(ControllerInfo)==28,"OrbisPadControllerInformation layout");
 
 static pthread_mutex_t lock=PTHREAD_MUTEX_INITIALIZER;
-static int initialized, opened, opened2, sdl_ready;
-static SDL_Gamepad *gamepad, *gamepad2;
+static int initialized, opened_user[MAX_PLAYERS+1], sdl_ready;
+static SDL_Gamepad *gamepad, *extra_pad[MAX_PLAYERS+1]; /* [2..MAX_PLAYERS] */
 static size_t reads;
 static uint8_t connected_count;
 
@@ -127,22 +128,32 @@ static SDL_Gamepad *current_gamepad(void) {
     }
     return gamepad;
 }
-/* Player 2's gamepad: the first connected one that is not player 1's; called under lock. */
-static SDL_Gamepad *second_gamepad(void) {
+/* Players 2..4 keep the gamepad they got; a gamepad that connects goes to the lowest free player
+ * after player 1's. Called under lock. */
+static void refresh_extra_pads(void) {
     SDL_Gamepad *first=current_gamepad();
-    if (gamepad2 && !SDL_GamepadConnected(gamepad2)) { SDL_CloseGamepad(gamepad2); gamepad2=NULL; }
-    if (!gamepad2 && first) {
-        int count=0;
-        SDL_JoystickID *ids=SDL_GetGamepads(&count);
-        for (int i=0;ids && i<count && !gamepad2;++i) {
-            if (ids[i]==SDL_GetGamepadID(first)) continue;
-            gamepad2=SDL_OpenGamepad(ids[i]);
-            if (gamepad2) printf("Runtime: gamepad connected for player 2: %s\n",SDL_GetGamepadName(gamepad2));
+    for (int u=2;u<=MAX_PLAYERS;++u)
+        if (extra_pad[u] && !SDL_GamepadConnected(extra_pad[u])) {
+            printf("Runtime: gamepad of player %d disconnected\n",u);
+            SDL_CloseGamepad(extra_pad[u]); extra_pad[u]=NULL;
         }
-        SDL_free(ids);
+    if (!first) return;
+    int count=0;
+    SDL_JoystickID *ids=SDL_GetGamepads(&count);
+    for (int i=0;ids && i<count;++i) {
+        int used=ids[i]==SDL_GetGamepadID(first);
+        for (int u=2;u<=MAX_PLAYERS && !used;++u) used=extra_pad[u] && SDL_GetGamepadID(extra_pad[u])==ids[i];
+        if (used) continue;
+        for (int u=2;u<=MAX_PLAYERS;++u) {
+            if (extra_pad[u]) continue;
+            extra_pad[u]=SDL_OpenGamepad(ids[i]);
+            if (extra_pad[u]) printf("Runtime: gamepad connected for player %d: %s\n",u,SDL_GetGamepadName(extra_pad[u]));
+            break;
+        }
     }
-    return gamepad2;
+    SDL_free(ids);
 }
+static SDL_Gamepad *extra_gamepad(int user) { refresh_extra_pads(); return extra_pad[user]; }
 /* Button sources: a host button or key and the PS4 button it presses. The defaults below can be
  * changed per PS4 button with GOW3_PAD_MAP (gamepad) and GOW3_KEY_MAP (keyboard), e.g.
  * GOW3_KEY_MAP="cross=Q,square=Left Shift" or GOW3_PAD_MAP="cross=b,circle=a": comma-separated
@@ -537,11 +548,11 @@ static void read_gamepad(SDL_Gamepad *g, PadData *d) {
  * tokens, re-read when it changes: button names (cross circle square triangle l1 r1 l2 r2 l3 r3
  * options touchpad touchpad_left touchpad_right up down left right) are held while listed;
  * touchpad is the left side; lx= ly= rx= ry= (0..255) override the sticks; shot saves a
- * screenshot (as F12, without taking the focus); tokens after p2 are player 2's (user 2 then
- * stays logged in, as with a second gamepad). An empty file releases everything. */
+ * screenshot (as F12, without taking the focus); tokens after p2, p3 or p4 are that player's (the
+ * user then stays logged in, as with a further gamepad). An empty file releases everything. */
 typedef struct { uint32_t buttons; int stick[4]; } Injected;
-static Injected injected={0,{-1,-1,-1,-1}}, injected2={0,{-1,-1,-1,-1}};
-static int injected2_seen;
+static Injected injected={0,{-1,-1,-1,-1}}, injected_user[MAX_PLAYERS+1];
+static int injected_seen[MAX_PLAYERS+1];
 static int replay_armed;      /* 1 while a GOW3_PAD_REPLAY recording plays, 2 once it ended */
 static uint64_t replay_start; /* 0: (re)start at the next sample */
 static void read_inject(void) {
@@ -564,13 +575,16 @@ static void read_inject(void) {
     FILE *f=fopen(path,"r");
     if (!f) return;
     static const char *sticks[]={"lx=","ly=","rx=","ry="};
-    injected=injected2=(Injected){0,{-1,-1,-1,-1}};
+    injected=(Injected){0,{-1,-1,-1,-1}};
+    for (int u=2;u<=MAX_PLAYERS;++u) injected_user[u]=injected;
     Injected *target=&injected;
     char token[64];
     while (fscanf(f,"%63s",token)==1) {
         if (!strcmp(token,"replay") && replay_armed!=1) { replay_armed=1; replay_start=0; } /* GOW3_PAD_REPLAY */
         if (!strcmp(token,"shot")) gow3gpu_request_screenshot();
-        if (!strcmp(token,"p2")) { target=&injected2; injected2_seen=1; }
+        if (token[0]=='p' && token[1]>='2' && token[1]<='0'+MAX_PLAYERS && !token[2]) {
+            const int u=token[1]-'0'; target=&injected_user[u]; injected_seen[u]=1;
+        }
         for (size_t i=0;i<sizeof(ps_names)/sizeof(*ps_names);++i) if (!strcmp(token,ps_names[i].name)) target->buttons|=ps_names[i].ps;
         for (int i=0;i<4;++i) if (!strncmp(token,sticks[i],3)) { int v=atoi(token+3); target->stick[i]=v<0 ? 0 : v>255 ? 255 : v; }
     }
@@ -754,53 +768,56 @@ static void sample(PadData *d) {
     }
 }
 
-static void sample_second(PadData *d) {
+static void sample_extra(int user, PadData *d) {
     neutral(d);
     read_inject();
-    SDL_Gamepad *g=second_gamepad();
-    d->connected=g || injected2_seen;
+    SDL_Gamepad *g=extra_gamepad(user);
+    const Injected *in=&injected_user[user];
+    d->connected=g || injected_seen[user];
     if (gow3gpu_overlay_captures_input()) return;
     load_button_maps();
     read_gamepad(g,d);
-    d->buttons|=injected2.buttons;
+    d->buttons|=in->buttons;
     if (d->buttons & (CLICK_LEFT|CLICK_RIGHT)) d->buttons|=BTN_TOUCHPAD; /* no touch surface to aim */
     d->buttons&=~(CLICK_LEFT|CLICK_RIGHT|DODGE|RAGE|GRAB);
-    if (injected2.buttons & BTN_L2) d->l2=255;
-    if (injected2.buttons & BTN_R2) d->r2=255;
+    if (in->buttons & BTN_L2) d->l2=255;
+    if (in->buttons & BTN_R2) d->r2=255;
     uint8_t *axes[4]={&d->left_x,&d->left_y,&d->right_x,&d->right_y};
-    for (int i=0;i<4;++i) if (injected2.stick[i]>=0) *axes[i]=(uint8_t)injected2.stick[i];
+    for (int i=0;i<4;++i) if (in->stick[i]>=0) *axes[i]=(uint8_t)in->stick[i];
 }
-/* User 2 is logged in while a second gamepad is connected, or the pad file has p2 tokens. */
-int runtime_pad_second_user(void) {
+/* Users 2..4 logged in, as bit N for user N: each is while its gamepad is connected, or while the
+ * pad file has its pN tokens. */
+unsigned runtime_pad_users(void) {
     pthread_mutex_lock(&lock);
-    if (sdl_ready>0 || SDL_WasInit(SDL_INIT_VIDEO)) second_gamepad(); /* never the first SDL init */
+    if (sdl_ready>0 || SDL_WasInit(SDL_INIT_VIDEO)) refresh_extra_pads(); /* never the first SDL init */
     read_inject();
-    const int present=gamepad2 || injected2_seen;
+    unsigned mask=0;
+    for (int u=2;u<=MAX_PLAYERS;++u) if (extra_pad[u] || injected_seen[u]) mask|=1u<<u;
     pthread_mutex_unlock(&lock);
-    return present;
+    return mask;
 }
 
-static int valid(int32_t handle) { return handle==PAD_HANDLE ? opened : handle==PAD2_HANDLE ? opened2 : 0; }
+static int valid(int32_t handle) { return handle>=1 && handle<=MAX_PLAYERS && opened_user[handle]; }
 static ABI int32_t pad_init(void) { pthread_mutex_lock(&lock); initialized=1; pthread_mutex_unlock(&lock); return 0; }
 volatile int runtime_pad_opened;
 static ABI int32_t pad_open(int32_t user, int32_t type, int32_t index, const void *param) {
     (void)param;
     if (!initialized) return ERR_NOT_INITIALIZED;
-    if (user!=1 && user!=2) return ERR_INVALID_ARG;
+    if (user<1 || user>MAX_PLAYERS) return ERR_INVALID_ARG;
     if (type!=0 && type!=2) return ERR_INVALID_ARG; /* standard / special port */
     if (index) return ERR_INVALID_ARG;
-    int *flag=user==1 ? &opened : &opened2;
+    int *flag=&opened_user[user];
     pthread_mutex_lock(&lock);
     int already=*flag; *flag=1;
     pthread_mutex_unlock(&lock);
     if (already) return ERR_ALREADY_OPENED;
-    puts(user==1 ? "Runtime: pad opened for user 1 (SDL gamepad or keyboard)"
-                 : "Runtime: pad opened for user 2 (second gamepad)");
-    return user==1 ? PAD_HANDLE : PAD2_HANDLE;
+    if (user==1) puts("Runtime: pad opened for user 1 (SDL gamepad or keyboard)");
+    else printf("Runtime: pad opened for user %d (gamepad %d)\n",user,user);
+    return user; /* PAD_HANDLE for user 1 */
 }
 static ABI int32_t pad_close(int32_t handle) {
     if (!valid(handle)) return ERR_INVALID_HANDLE;
-    *(handle==PAD_HANDLE ? &opened : &opened2)=0; return 0;
+    opened_user[handle]=0; return 0;
 }
 static ABI int32_t pad_read_state(int32_t handle, PadData *data) {
     if (!valid(handle)) return ERR_INVALID_HANDLE;
@@ -808,9 +825,9 @@ static ABI int32_t pad_read_state(int32_t handle, PadData *data) {
     pthread_mutex_lock(&lock);
     const int first=handle==PAD_HANDLE;
     if (first) { sample(data); if (++reads>=30) runtime_pad_opened=1; }
-    else sample_second(data);
+    else sample_extra(handle,data);
     pthread_mutex_unlock(&lock);
-    if (first) runtime_user_events(); /* user 2 logging in or out (split-screen) */
+    if (first) runtime_user_events(); /* users 2..4 logging in or out (local co-op) */
     return 0;
 }
 /* Buffered read: the port samples once per call, so one entry is returned. */
@@ -837,7 +854,7 @@ static ABI int32_t pad_vibration(int32_t handle, const uint8_t *param) {
     if (!valid(handle)) return ERR_INVALID_HANDLE;
     if (!param) return ERR_INVALID_ARG;
     pthread_mutex_lock(&lock);
-    SDL_Gamepad *g=handle==PAD2_HANDLE ? second_gamepad() : current_gamepad();
+    SDL_Gamepad *g=handle==PAD_HANDLE ? current_gamepad() : extra_gamepad(handle);
     /* The menu's vibration strength scales the game's motors (0: off). */
     const unsigned percent=(unsigned)gow3gpu_vibration_percent();
     if (g) SDL_RumbleGamepad(g,(uint16_t)(param[0]*257u*percent/100u),(uint16_t)(param[1]*257u*percent/100u),1000);

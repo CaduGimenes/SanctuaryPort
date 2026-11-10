@@ -1,0 +1,745 @@
+//! The Game page: folders, save backups, the game language, audio, cheats and the game patches.
+//!
+//! Every read of the disk happens in `refresh_backups` and `refresh_game_patches`, which
+//! `follow` calls; `view` only draws what they stored in the state.
+
+use std::collections::BTreeSet;
+use std::path::{Path, PathBuf};
+
+use iced::widget::{button, column, pick_list, row as layout, text};
+use iced::{Center, Element, Left, Right, Task};
+use serde_json::{Map, Value};
+
+use crate::core::i18n::{tr, tr_fmt};
+use crate::core::options::{AUDIO_CHANNELS, LANGUAGES};
+use crate::core::patches::{builtin_xml, game_patch_metas, selectable, PatchMeta};
+use crate::core::save_backup::{list_backups, restore, KEEP};
+use crate::core::save_restore;
+use crate::core::settings::mark_default_patches_offered;
+use crate::core::trophy_sound::{self, TrophySound};
+use crate::ui::app::{Message, State};
+use crate::ui::follow::{follow, Cause};
+use crate::ui::pages::controls::ini_number;
+use crate::ui::play::{refuse_while_live, LiveAction};
+use crate::ui::theme;
+use crate::ui::widgets::{
+    checkbox, folder, min_width, row, section, select, slider, toggle_row, Modal, SELECT_MIN,
+    SELECT_TEXT,
+};
+
+/// The notes under the Audio rows (#968); the translation tables key on these texts.
+pub const VOLUME_NOTE: &str = "Master volume of the game's audio. 100% is the game's own mix; more is louder, with a soft limiter so loud scenes do not clip. Also in the in-game menu.";
+pub const SPEAKERS_NOTE: &str = "Layout the game's 7.1 mix is sent in. Automatic follows your sound device: stereo, 5.1 or 7.1. Applied when the game starts.";
+
+/// The note under the Game language row; the translation tables key on this text.
+pub const LANGUAGE_NOTE: &str = "Used on the game's first start. After that, the game keeps its own text and speech languages in its settings save: change them in the game, in Options → Game Settings → Game Text and Options → Audio → Speech.";
+
+/// The in-game menu's cheats in its order, which F10 + 1 to 8 follows: (ini key, label, note).
+const CHEATS: [(&str, &str, &str); 8] = [
+    ("cheat_health", "Infinite health", "Health stays full. Only Kratos is protected. Turning it off does not undo past refills."),
+    ("cheat_magic", "Infinite magic", "Magic stays full."),
+    ("cheat_item", "Infinite item meter", "The item meter (bow, Helios' head, boots) stays full."),
+    ("cheat_rage", "Infinite Rage of Sparta", "Rage of Sparta stays full."),
+    ("cheat_orbs", "Max red orbs", "Red orbs stay at the maximum."),
+    ("cheat_very_hard", "Unlock Very Hard", "Select Very Hard without completing the game. Does not change existing save difficulty. In-game: enable before opening New Game."),
+    ("cheat_double_jumps", "Infinite Double Jumps", "Repeat air jumps without landing. Also available in the in-game Cheats menu."),
+    ("auto_qte", "Automatic QTE", "Quick-time prompts answer themselves: single presses, repeated presses, holds and stick rotations."),
+];
+
+/// The in-game menu's multipliers, 0.1x to 100x: (ini key, label, note).
+const MULTIPLIERS: [(&str, &str, &str); 6] = [
+    (
+        "red_orb_multiplier",
+        "Red orbs",
+        "Red orbs gained. Orbs you have and prices stay the same.",
+    ),
+    (
+        "green_orb_multiplier",
+        "Green orbs (health)",
+        "Health from each green orb. The bar stays within its maximum.",
+    ),
+    (
+        "blue_orb_multiplier",
+        "Blue orbs (magic)",
+        "Magic from each blue orb. The bar stays within its maximum.",
+    ),
+    (
+        "gold_orb_multiplier",
+        "Gold orbs (Rage of Sparta)",
+        "Rage of Sparta from each gold orb. The bar stays within its maximum.",
+    ),
+    (
+        "damage_dealt",
+        "Damage dealt",
+        "Damage Kratos does to enemies.",
+    ),
+    ("damage_taken", "Damage taken", "Damage Kratos takes."),
+];
+
+const MULTIPLIER_MIN: f32 = 0.1;
+const MULTIPLIER_MAX: f32 = 100.0;
+/// Slider positions: the multiplier follows them on a logarithmic scale, as the in-game slider.
+const MULTIPLIER_STEPS: f32 = 1000.0;
+
+fn multiplier_text(value: f32) -> String {
+    format!("{:.3}", value.clamp(MULTIPLIER_MIN, MULTIPLIER_MAX))
+}
+
+/// A multiplier as the in-game menu shows it: a logarithmic 0.1x to 100x slider and a 1x button.
+fn multiplier<'a>(key: &'static str, value: f32) -> Element<'a, Message> {
+    let value = if value.is_finite() {
+        value.clamp(MULTIPLIER_MIN, MULTIPLIER_MAX)
+    } else {
+        1.0
+    };
+    let span = (MULTIPLIER_MAX / MULTIPLIER_MIN).ln();
+    let position = (value / MULTIPLIER_MIN).ln() / span * MULTIPLIER_STEPS;
+    let track = iced::widget::slider(0.0..=MULTIPLIER_STEPS, position, move |at: f32| {
+        let chosen = MULTIPLIER_MIN * (at / MULTIPLIER_STEPS * span).exp();
+        Message::Set(key.to_string(), Value::String(multiplier_text(chosen)))
+    })
+    .width(220.0);
+    let one = button(text("1x"))
+        .style(theme::button_flat)
+        .on_press(Message::Set(
+            key.to_string(),
+            Value::String(multiplier_text(1.0)),
+        ));
+    layout![track, text(format!("{value:.2}x")), one]
+        .spacing(10)
+        .align_y(Center)
+        .into()
+}
+
+/// Turn off all cheats: the original game, every cheat off and every multiplier 1x (#1135).
+pub(crate) fn cheats_off(state: &mut State) -> Task<Message> {
+    let mut changed = Vec::new();
+    for (key, _, _) in CHEATS {
+        if state.store.set(key, Value::Bool(false)) {
+            changed.push(key);
+        }
+    }
+    for (key, _, _) in MULTIPLIERS {
+        if state.store.set(key, Value::String(multiplier_text(1.0))) {
+            changed.push(key);
+        }
+    }
+    follow(state, Cause::Keys(&changed))
+}
+
+/// The trophy sound of the saves folder (`follow`, when the folder changes).
+pub(crate) fn refresh_trophy_sound(state: &mut State) {
+    state.trophy_sound = trophy_sound::read(&user_dir(state));
+}
+
+/// Game patches of the current dump.
+#[derive(Debug, Clone, Default)]
+pub struct PatchesView {
+    /// The title ID of the game the patches belong to; `None` without a known game.
+    pub title_id: Option<String>,
+    /// The patches the page offers, in file order.
+    pub selectable: Vec<PatchMeta>,
+    /// The names that are ticked.
+    pub chosen: BTreeSet<String>,
+    /// The game version the patches are for.
+    pub version: String,
+    /// The patch file the list came from.
+    pub xml_name: String,
+}
+
+/// What the save backups row can do.
+#[derive(Debug, Clone)]
+pub enum BackupMessage {
+    Refresh,
+    Choose(String),
+    Restore,
+    RestoreConfirmed,
+    /// The restore finished: the backup it made of the replaced saves, or why it failed.
+    Restored(Result<Option<String>, String>),
+}
+
+/// The dialog title of a folder key's `Browse…`.
+pub fn browse_prompt(key: &str) -> &'static str {
+    match key {
+        "update_dir" => "Choose the folder of the update (eboot.bin, sce_sys)",
+        "user_dir" => "Choose the saves folder",
+        "mods_dir" => "Choose the mods folder",
+        "patches_dir" => "Choose the patches folder",
+        _ => "Choose the folder with eboot.bin",
+    }
+}
+
+fn user_dir(state: &State) -> PathBuf {
+    state.paths.user_dir(&state.store.text("user_dir"))
+}
+
+// --- Save backups ---
+
+/// Lists the backups of the saves folder and chooses the newest.
+pub(crate) fn refresh_backups(state: &mut State) {
+    if state.restoring_saves {
+        return;
+    }
+    state.backup_details = save_restore::list(&user_dir(state), &state.paths.port_dir);
+    state.backups = state.backup_details.iter().map(|s| s.key.clone()).collect();
+    // Keep empty automatic directories visible as before; restoring one safely refuses it.
+    for name in list_backups(&user_dir(state)) {
+        if !state.backups.contains(&name) {
+            state.backups.push(name);
+        }
+    }
+    state.backup_choice = state.backups.first().cloned().unwrap_or_default();
+}
+
+/// Replaces the saves with backup `name`; returns the name of the backup of the replaced saves.
+pub fn restore_saves(user_dir: &Path, name: &str) -> Result<Option<String>, String> {
+    restore(user_dir, name, None)
+        .map(|safety| {
+            safety.and_then(|path| path.file_name().map(|n| n.to_string_lossy().into_owned()))
+        })
+        .map_err(|error| error.to_string())
+}
+
+/// Applies a save backups event.
+pub fn backup_update(state: &mut State, message: BackupMessage) -> Task<Message> {
+    let lang = state.lang.clone();
+    match message {
+        BackupMessage::Refresh if !state.restoring_saves => refresh_backups(state),
+        BackupMessage::Choose(name) if !state.restoring_saves => state.backup_choice = name,
+        BackupMessage::Refresh | BackupMessage::Choose(_) => {}
+        BackupMessage::Restore => {
+            if state.restoring_saves {
+                return Task::none();
+            }
+            let name = state.backup_choice.clone();
+            if name.is_empty() {
+                return Task::none();
+            }
+            if refuse_while_live(state, LiveAction::RestoreSaves) {
+                return Task::none();
+            }
+            let mut text = tr_fmt(
+                &lang,
+                "Replace the current saves with the backup {}? The current saves are backed up first.",
+                &[&name],
+            );
+            if let Some(snapshot) = state.backup_details.iter().find(|s| s.key == name) {
+                text += &format!("\n\n{}", snapshot.path.display());
+                if state
+                    .installation
+                    .title_id()
+                    .is_some_and(|id| !snapshot.titles.is_empty() && !snapshot.titles.contains(id))
+                {
+                    text += &format!("\n\n{}", tr(&lang, "This backup is for a different game ID and may be incompatible. Game IDs will not be changed."));
+                }
+            }
+            state.modal = Some(Modal::confirm(
+                text,
+                Message::Backup(BackupMessage::RestoreConfirmed),
+            ));
+        }
+        BackupMessage::RestoreConfirmed => {
+            if state.restoring_saves || refuse_while_live(state, LiveAction::RestoreSaves) {
+                return Task::none();
+            }
+            state.modal = None;
+            state.restoring_saves = true;
+            let user = user_dir(state);
+            let port = state.paths.port_dir.clone();
+            let name = state.backup_choice.clone();
+            return crate::ui::tasks::blocking_or(move || {
+                save_restore::restore(&user, &port, &name, None)
+                    .map(|path| path.map(|p| p.display().to_string()))
+                    .map_err(|e| e.to_string())
+            }, Err("Save restore stopped unexpectedly. Check the before-restore backup before trying again.".to_string()))
+                .map(|result| Message::Backup(BackupMessage::Restored(result)));
+        }
+        BackupMessage::Restored(Ok(safety)) => {
+            state.restoring_saves = false;
+            // Every view of the saves folder follows, the trophies included; the backups are
+            // listed again, which moves the choice: name the backup first.
+            let name = state.backup_choice.clone();
+            let saves = follow(state, Cause::Keys(&["user_dir"]));
+            let mut body = tr_fmt(&lang, "Saves restored from {}.", &[&name]);
+            if let Some(safety) = safety {
+                body += &tr_fmt(&lang, " Previous saves: {}.", &[&safety]);
+            }
+            state.modal = Some(Modal::info(body));
+            return saves;
+        }
+        BackupMessage::Restored(Err(error)) => {
+            state.restoring_saves = false;
+            state.modal = Some(Modal::error(tr_fmt(
+                &lang,
+                "Could not restore: {}",
+                &[&error],
+            )));
+        }
+    }
+    Task::none()
+}
+
+// --- Game patches ---
+
+fn saved_choice(state: &State, title_id: &str) -> Option<BTreeSet<String>> {
+    let list = state
+        .store
+        .json("game_patches")?
+        .get(title_id)?
+        .as_array()?;
+    Some(
+        list.iter()
+            .filter_map(|name| name.as_str().map(str::to_string))
+            .collect(),
+    )
+}
+
+/// The page's selection into the settings: the whole list for this game, in file order, without
+/// the resolution and frame rate patches (the start adds those from `gow3.ini`).
+pub fn store_game_patches(state: &mut State) {
+    let Some(title_id) = state.patches.title_id.clone() else {
+        return;
+    };
+    let names: Vec<Value> = state
+        .patches
+        .selectable
+        .iter()
+        .filter(|meta| state.patches.chosen.contains(&meta.name))
+        .map(|meta| Value::String(meta.name.clone()))
+        .collect();
+    let mut all = match state.store.json("game_patches") {
+        Some(Value::Object(map)) => map.clone(),
+        _ => Map::new(),
+    };
+    all.insert(title_id.clone(), Value::Array(names));
+    state.store.set("game_patches", Value::Object(all));
+    let mut offered = Map::new();
+    if let Some(saved) = state.store.json("patches_offered") {
+        offered.insert("patches_offered".into(), saved.clone());
+    }
+    mark_default_patches_offered(&mut offered, &title_id);
+    if let Some(list) = offered.remove("patches_offered") {
+        state.store.set("patches_offered", list);
+    }
+}
+
+/// Reads the built-in patches of the game in `state.installation` into `state.patches`, keeping
+/// the selection of the game that was shown until now.
+pub(crate) fn refresh_game_patches(state: &mut State) {
+    store_game_patches(state);
+    let (title_id, profile) = (
+        state.installation.title_id().map(str::to_string),
+        state.installation.profile(),
+    );
+    let (Some(title_id), Some(profile)) = (title_id, profile) else {
+        state.patches = PatchesView::default();
+        return;
+    };
+    let xml = builtin_xml(&state.paths, profile);
+    let metas = game_patch_metas(&xml, profile.app_version).unwrap_or_default();
+    let chosen = saved_choice(state, &title_id).unwrap_or_else(|| {
+        metas
+            .iter()
+            .filter(|meta| meta.enabled_by_default)
+            .map(|meta| meta.name.clone())
+            .collect()
+    });
+    state.patches = PatchesView {
+        title_id: Some(title_id),
+        selectable: selectable(&metas),
+        chosen,
+        version: profile.app_version.to_string(),
+        xml_name: xml
+            .file_name()
+            .map(|name| name.to_string_lossy().into_owned())
+            .unwrap_or_default(),
+    };
+}
+
+/// Ticks or unticks a patch.
+pub fn patch_toggled(state: &mut State, name: &str, on: bool) {
+    if on {
+        state.patches.chosen.insert(name.to_string());
+    } else {
+        state.patches.chosen.remove(name);
+    }
+    store_game_patches(state);
+}
+
+// --- View ---
+
+/// A folder row with its note under it.
+pub fn folder_row<'a>(state: &State, key: &str, label: &str, note: &str) -> Element<'a, Message> {
+    let value = state.store.text(key);
+    // Python `open_path`: an empty saves folder opens `DATA_DIR/user`; an unset game or update
+    // folder has nothing to open.
+    let open = if key == "user_dir" {
+        Some(state.paths.user_dir(&value))
+    } else {
+        (!value.is_empty()).then(|| PathBuf::from(&value))
+    };
+    column![
+        folder(state.rtl, key, label, &value, "", open, &state.lang),
+        text(note.to_string()).size(13).style(theme::text_muted)
+    ]
+    .spacing(2)
+    .align_x(if state.rtl { Right } else { Left })
+    .into()
+}
+
+fn backups_row(state: &State) -> Element<'_, Message> {
+    let lang = state.lang.as_str();
+    let choose = min_width(
+        SELECT_MIN,
+        pick_list(
+            state.backups.clone(),
+            (!state.backup_choice.is_empty()).then(|| state.backup_choice.clone()),
+            |name| Message::Backup(BackupMessage::Choose(name)),
+        )
+        .text_size(SELECT_TEXT)
+        .style(theme::pick_list_dark),
+    );
+    let restore = button(text(tr(lang, "Restore")))
+        .style(theme::button_flat)
+        .on_press(Message::Backup(BackupMessage::Restore));
+    let refresh = button(text(tr(lang, "Refresh")))
+        .style(theme::button_flat)
+        .on_press(Message::Backup(BackupMessage::Refresh));
+    let controls = row(
+        state.rtl,
+        &tr(lang, "Save backups"),
+        layout![choose, restore, refresh]
+            .spacing(6)
+            .align_y(Center)
+            .into(),
+        Some(&tr_fmt(
+            lang,
+            "Automatic backups keep the last {} starts. Before-restore backups are kept separately and are never automatically deleted.",
+            &[&KEEP.to_string()],
+        )),
+    );
+    let mut body = column![controls].spacing(4);
+    if let Some(snapshot) = state
+        .backup_details
+        .iter()
+        .find(|s| s.key == state.backup_choice)
+    {
+        let titles = snapshot
+            .titles
+            .iter()
+            .cloned()
+            .collect::<Vec<_>>()
+            .join(", ");
+        body = body.push(
+            text(tr_fmt(
+                lang,
+                "{} · {} files · {} bytes · Game IDs: {}",
+                &[
+                    &tr(lang, snapshot.source.label()),
+                    &snapshot.files.to_string(),
+                    &snapshot.bytes.to_string(),
+                    &titles,
+                ],
+            ))
+            .size(12),
+        );
+        body = body.push(
+            text(format!(
+                "{}\n{}",
+                snapshot.time_label(),
+                snapshot.path.display()
+            ))
+            .size(12),
+        );
+        if state
+            .installation
+            .title_id()
+            .is_some_and(|id| !snapshot.titles.is_empty() && !snapshot.titles.contains(id))
+        {
+            body = body.push(text(tr(lang, "This backup is for a different game ID and may be incompatible. Game IDs will not be changed.")).size(12));
+        }
+    }
+    body.into()
+}
+
+/// Renders translated built-in patch labels with original names as toggle identities.
+fn patches_section(state: &State) -> Element<'_, Message> {
+    let lang = state.lang.as_str();
+    let mut body = column![section(state.rtl, &tr(lang, "Game patches"))].spacing(2);
+    let patches = &state.patches;
+    let Some(title_id) = patches.title_id.as_deref() else {
+        return body
+            .push(text(tr(lang, "No built-in patches for this game.")).style(theme::text_muted))
+            .into();
+    };
+    body = body.push(
+        text(tr_fmt(
+            lang,
+            "{} · version {} · {}. Resolution and frame rate patches follow Performance.",
+            &[title_id, &patches.version, &patches.xml_name],
+        ))
+        .style(theme::text_muted),
+    );
+    for meta in &patches.selectable {
+        let label = match &meta.author {
+            Some(author) => format!("{}  ({author})", tr(lang, &meta.name)),
+            None => tr(lang, &meta.name),
+        };
+        let name = meta.name.clone();
+        let note = meta.note.as_deref().map(|note| tr(lang, note));
+        body = body.push(toggle_row(
+            state.rtl,
+            &label,
+            patches.chosen.contains(&meta.name),
+            Some(move |on| Message::PatchToggled(name.clone(), on)),
+            note.as_deref(),
+        ));
+    }
+    body.into()
+}
+
+/// Cheats, multipliers, the button that turns them all off and the trophy sound.
+fn cheats_section<'a>(state: &State) -> Element<'a, Message> {
+    let lang = state.lang.as_str();
+    let mut body = column![section(state.rtl, &tr(lang, "Cheats"))].spacing(2);
+    for (key, label, note) in CHEATS {
+        body = body.push(checkbox(
+            state.rtl,
+            key,
+            &tr(lang, label),
+            state.store.flag(key),
+            Some(&tr(lang, note)),
+        ));
+    }
+    body = body.push(section(state.rtl, &tr(lang, "Multipliers")));
+    for (key, label, note) in MULTIPLIERS {
+        body = body.push(row(
+            state.rtl,
+            &tr(lang, label),
+            multiplier(key, ini_number(state, key)),
+            Some(&tr(lang, note)),
+        ));
+    }
+    body = body.push(row(
+        state.rtl,
+        "",
+        button(text(tr(lang, "Turn off all cheats")))
+            .style(theme::button_flat)
+            .on_press(Message::CheatsOff)
+            .into(),
+        Some(&tr(
+            lang,
+            "Turns off every cheat and sets every multiplier back to 1x: the game as it was made. In game, hold F10 and press 1 to 8 to switch the cheats above, in their order.",
+        )),
+    ));
+    let sound = state.trophy_sound;
+    body = body.push(section(state.rtl, &tr(lang, "Trophy notifications")));
+    body = body.push(toggle_row(
+        state.rtl,
+        &tr(lang, "Mute the trophy sound"),
+        sound.muted,
+        Some(move |muted| Message::TrophySound(TrophySound { muted, ..sound })),
+        Some(&tr(
+            lang,
+            "The chime of an unlocked trophy. Also in the in-game menu (Insert): Trophies > Notifications.",
+        )),
+    ));
+    let volume = iced::widget::slider(0.0..=100.0, sound.volume as f32, move |v: f32| {
+        Message::TrophySound(TrophySound {
+            volume: v.round() as u32,
+            ..sound
+        })
+    })
+    .step(1.0_f32)
+    .width(220.0);
+    body = body.push(row(
+        state.rtl,
+        &tr(lang, "Trophy sound volume"),
+        layout![volume, text(format!("{} %", sound.volume))]
+            .spacing(10)
+            .align_y(Center)
+            .into(),
+        None,
+    ));
+    body.into()
+}
+
+pub fn view(state: &State) -> Element<'_, Message> {
+    let lang = state.lang.as_str();
+    let hint = |english: &str| tr(lang, english);
+    let language = state.store.text("language");
+    let default_saves = state.paths.user_dir("").display().to_string();
+    // The Python marks a row that needs a new start of the game with a small `restart` note.
+    let speakers_label = format!("{}  ·  {}", tr(lang, "Speakers"), tr(lang, "restart"));
+
+    column![
+        install_section(state),
+        section(state.rtl, &tr(lang, "Folders")),
+        folder_row(
+            state,
+            "game_dir",
+            &tr(lang, "Game folder"),
+            &hint(
+                "Your own dump of the game (eboot.bin, sce_module, sce_sys): SanctuaryPort, any region and version."
+            ),
+        ),
+        folder_row(
+            state,
+            "update_dir",
+            &tr(lang, "Update folder (optional)"),
+            &hint(
+                "Only if the update is dumped apart from the game: it is laid over the game folder without changing either. Leave empty when the game folder already has the update."
+            ),
+        ),
+        folder_row(
+            state,
+            "user_dir",
+            &tr(lang, "Saves folder"),
+            &tr_fmt(
+                lang,
+                "Empty: {} (shader caches are kept there too).",
+                &[&default_saves],
+            ),
+        ),
+        section(state.rtl, &tr(lang, "Saves")),
+        backups_row(state),
+        section(state.rtl, &tr(lang, "Language")),
+        row(
+            state.rtl,
+            &tr(lang, "Game language"),
+            select("language", LANGUAGES, &language, lang),
+            Some(&hint(LANGUAGE_NOTE)),
+        ),
+        section(state.rtl, &tr(lang, "Audio")),
+        row(
+            state.rtl,
+            &tr(lang, "Volume"),
+            slider(
+                "master_volume",
+                0.0,
+                200.0,
+                "%",
+                ini_number(state, "master_volume")
+            ),
+            Some(&hint(VOLUME_NOTE)),
+        ),
+        row(
+            state.rtl,
+            &speakers_label,
+            select(
+                "audio_channels",
+                AUDIO_CHANNELS,
+                &state.store.text("audio_channels"),
+                lang
+            ),
+            Some(&hint(SPEAKERS_NOTE)),
+        ),
+        // SanctuaryPort: no cheats or patches (those were God of War III's).
+    ]
+    .spacing(2)
+    .into()
+}
+
+// --- SanctuaryPort: install from PKG ---
+
+/// The state of a PKG install, shared between its thread and the view.
+#[derive(Debug, Default)]
+pub struct PkgStatus {
+    pub running: bool,
+    /// What the row shows: the file and percent, or the result.
+    pub text: String,
+    /// The game folder an install wrote; the next tick sets it as the game folder.
+    pub installed_game: Option<std::path::PathBuf>,
+}
+
+/// Where PKGs install: `~/Games/PS4` (the game in `<TITLE_ID>`, add-ons in `addcont/`).
+pub fn pkg_games_dir() -> std::path::PathBuf {
+    std::env::var_os("HOME")
+        .map(std::path::PathBuf::from)
+        .unwrap_or_default()
+        .join("Games")
+        .join("PS4")
+}
+
+/// Installs `files` one after the other in a thread: games first, then add-ons.
+pub fn start_pkg_install(state: &mut State, files: Vec<std::path::PathBuf>) {
+    use crate::core::pkg_install;
+    if files.is_empty() {
+        return;
+    }
+    let status = state.pkg_install.clone();
+    if let Ok(mut s) = status.lock() {
+        if s.running {
+            return;
+        }
+        s.running = true;
+        s.text = tr(&state.lang, "Reading the PKG files…");
+    }
+    let lang = state.lang.clone();
+    std::thread::spawn(move || {
+        let games = pkg_games_dir();
+        let mut jobs: Vec<_> = files
+            .into_iter()
+            .filter_map(|f| pkg_install::read_info(&f).ok().map(|i| (f, i)))
+            .collect();
+        jobs.sort_by_key(|(_, info)| !info.is_game());
+        let count = jobs.len();
+        let mut result = Vec::new();
+        let mut game_dir = None;
+        for (n, (file, info)) in jobs.into_iter().enumerate() {
+            let target = pkg_install::target_dir(&info, &games);
+            let name = info.content_id.clone();
+            let shared = status.clone();
+            let mut progress = |done: u64, total: u64, current: &str| {
+                if let Ok(mut s) = shared.lock() {
+                    let percent = if total == 0 { 100 } else { done * 100 / total };
+                    s.text = format!("{}/{count} · {name} · {percent}% · {current}", n + 1);
+                }
+                true
+            };
+            match pkg_install::install(&file, &target, &mut progress) {
+                Ok(_) => {
+                    if info.is_game() {
+                        game_dir = Some(target.clone());
+                    }
+                    result.push(format!("✓ {name}"));
+                }
+                Err(e) => result.push(format!("✗ {name}: {e}")),
+            }
+        }
+        if let Ok(mut s) = status.lock() {
+            s.running = false;
+            s.installed_game = game_dir;
+            s.text = format!("{} {}", tr(&lang, "Install finished:"), result.join("  "));
+        }
+    });
+}
+
+fn install_section(state: &State) -> Element<'_, Message> {
+    let lang = state.lang.as_str();
+    let (running, text) = state
+        .pkg_install
+        .lock()
+        .map(|s| (s.running, s.text.clone()))
+        .unwrap_or_default();
+    let mut button = iced::widget::button(iced::widget::text(tr(lang, "Install from PKG…")))
+        .style(theme::button_flat);
+    if !running {
+        button = button.on_press(Message::InstallPkg);
+    }
+    let note = if text.is_empty() {
+        tr_fmt(
+            lang,
+            "Your own game and add-on PKG files: they are installed into {} and the game folder is set.",
+            &[&pkg_games_dir().display().to_string()],
+        )
+    } else {
+        text
+    };
+    column![
+        section(state.rtl, &tr(lang, "Installation")),
+        row(state.rtl, &tr(lang, "Game and add-ons"), button.into(), Some(&note)),
+    ]
+    .spacing(2)
+    .into()
+}

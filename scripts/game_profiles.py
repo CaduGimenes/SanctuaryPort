@@ -45,6 +45,18 @@ PROFILES = {
     'CUSA00006': {'name': 'Knack', 'modules': ('libc.prx', 'libSceFios2.prx'), 'env': KNACK_ENV},
     'CUSA00202': {'name': 'Knack', 'modules': ('libc.prx', 'libSceFios2.prx'), 'env': KNACK_ENV},
     'CUSA00004': {'name': 'Knack', 'modules': ('libc.prx', 'libSceFios2.prx'), 'env': KNACK_ENV},
+    # Diablo III: Reaper of Souls - Ultimate Evil Edition (US 1.00, the development target).
+    # Deferred image readbacks hide the 3D scenes (hero creation renders black or blown out):
+    # the engine reads render targets back on the CPU in the same frame.
+    'CUSA00242': {'name': 'Diablo III', 'modules': ('libc.prx', 'libSceFios2.prx'),
+                  # The draw-preparation workers (4096 | 8192) read resource descriptors before the
+                  # game has written them, as in Knack: the world rendered as a flat grey screen.
+                  'env': {'GOW3_DEFERRED_READBACK': '0', 'GOW3_STALE_READBACK': '0',
+                          'GOW3_DISABLED_OPTIMIZATIONS': str(4096 | 8192),
+                          # The engine waits for GPU idle after every frame (sceGnmSubmitDone); with
+                          # a FIFO swapchain that wait includes the display's vsync and three
+                          # vblanks pass per frame (19.8 FPS). Mailbox presents keep it at 60.
+                          'GOW3_VSYNC': '0'}},
 }
 DEFAULT = {'name': None, 'modules': ('libc.prx', 'libSceFios2.prx')}
 

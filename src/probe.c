@@ -35,6 +35,7 @@
 #include <execinfo.h>
 #include <sys/syscall.h>
 #include <sys/uio.h>
+#include <sys/prctl.h>
 #endif
 
 typedef struct { uint64_t address, size, flags; } Segment;
@@ -367,7 +368,123 @@ static uint64_t patch_tcb_loads(const Segment *segments, uint64_t count) {
 /* ucontext gregs of IsaRegs.gpr (x86 numbering). */
 static const int isa_gregs[16]={REG_RAX,REG_RCX,REG_RDX,REG_RBX,REG_RSP,REG_RBP,REG_RSI,REG_RDI,
                                 REG_R8,REG_R9,REG_R10,REG_R11,REG_R12,REG_R13,REG_R14,REG_R15};
+#ifndef _WIN32
+/* GOW3_TRACE_CALLS=0x657db0,0x65c420 (development): logs calls of guest functions that start
+ * with push %rbp. The byte is replaced with int3 and the push is done by the trap handler. */
+#define CALL_TRACE_MAX 32
+static uint64_t call_trace_offset[CALL_TRACE_MAX];
+static unsigned call_trace_hits[CALL_TRACE_MAX], call_trace_count, call_trace_limit = 12;
+static void call_trace_install(void) {
+    const char *list = getenv("GOW3_TRACE_CALLS");
+    if (!list || !*list) return;
+    const char *limit = getenv("GOW3_TRACE_LIMIT");
+    if (limit) call_trace_limit = (unsigned)strtoul(limit, NULL, 0);
+    while (*list && call_trace_count < CALL_TRACE_MAX) {
+        char *end;
+        uint64_t offset = strtoull(list, &end, 16);
+        if (end == list) break;
+        if (offset < image_size && image[offset] == 0x55) {
+            uintptr_t page = ((uintptr_t)image + offset) & ~(uintptr_t)4095;
+            mprotect((void *)page, 4096, PROT_READ | PROT_WRITE | PROT_EXEC);
+            image[offset] = 0xcc;
+            call_trace_offset[call_trace_count++] = offset;
+        } else {
+            printf("Call trace: 0x%" PRIx64 " does not start with push %%rbp, skipped\n", offset);
+        }
+        list = *end ? end + 1 : end;
+    }
+    printf("Call trace: %u functions\n", call_trace_count);
+}
+static int call_trace_trap(greg_t *g) {
+    uint64_t offset = (uint64_t)((uintptr_t)g[REG_RIP] - 1 - (uintptr_t)image);
+    for (unsigned i = 0; i < call_trace_count; ++i) {
+        if (call_trace_offset[i] != offset) continue;
+        unsigned hit = __atomic_add_fetch(&call_trace_hits[i], 1, __ATOMIC_RELAXED);
+        if (hit <= call_trace_limit) {
+            char line[256];
+            uintptr_t ret = *(uintptr_t *)g[REG_RSP];
+            snprintf(line, sizeof(line), "Call trace: 0x%" PRIx64 " #%u rdi=%llx rsi=%llx rdx=%llx rcx=%llx from 0x%lx\n",
+                     offset, hit, (unsigned long long)g[REG_RDI], (unsigned long long)g[REG_RSI],
+                     (unsigned long long)g[REG_RDX], (unsigned long long)g[REG_RCX],
+                     (unsigned long)(ret - (uintptr_t)image));
+            { ssize_t w_ = write(1, line, strlen(line)); (void)w_; }
+            /* GOW3_TRACE_DUMP=1: the first bytes at rcx and the value of r8/r9 (buffers, sizes). */
+            const char *dump = getenv("GOW3_TRACE_DUMP");
+            uint64_t p = (uint64_t)g[REG_RCX];
+            if (dump && dump[0] == '1' && p >= 0x1000000000ull && p < 0x2000000000ull) {
+                const unsigned char *b = (const unsigned char *)p;
+                int n = snprintf(line, sizeof(line), "  r8=%llx r9=%llx [rcx]:", (unsigned long long)g[REG_R8], (unsigned long long)g[REG_R9]);
+                for (int k = 0; k < 24; ++k) n += snprintf(line + n, sizeof(line) - (size_t)n, " %02x", b[k]);
+                line[n++] = '\n';
+                { ssize_t w_ = write(1, line, (size_t)n); (void)w_; }
+            }
+        }
+        g[REG_RSP] -= 8;                                 /* the replaced push %rbp */
+        *(uint64_t *)g[REG_RSP] = (uint64_t)g[REG_RBP];
+        return 1;
+    }
+    return 0;
+}
+/* GOW3_TRACE_POINTS=0x67b1d8,0x6654d9 (development): logs the registers at any instruction.
+ * The original byte is put back for one single step (trap flag), then the int3 returns. */
+static uint64_t point_offset[CALL_TRACE_MAX];
+static unsigned char point_byte[CALL_TRACE_MAX];
+static unsigned point_hits[CALL_TRACE_MAX], point_count;
+static __thread int point_pending = -1;
+static void point_install(void) {
+    const char *list = getenv("GOW3_TRACE_POINTS");
+    if (!list || !*list) return;
+    while (*list && point_count < CALL_TRACE_MAX) {
+        char *end;
+        uint64_t offset = strtoull(list, &end, 16);
+        if (end == list) break;
+        if (offset < image_size) {
+            uintptr_t page = ((uintptr_t)image + offset) & ~(uintptr_t)4095;
+            mprotect((void *)page, 8192, PROT_READ | PROT_WRITE | PROT_EXEC);
+            point_byte[point_count] = image[offset];
+            image[offset] = 0xcc;
+            point_offset[point_count++] = offset;
+        }
+        list = *end ? end + 1 : end;
+    }
+    printf("Trace points: %u\n", point_count);
+}
+static int point_trap(greg_t *g) {
+    if (point_pending >= 0) {                      /* the single step after a point */
+        image[point_offset[point_pending]] = 0xcc;
+        point_pending = -1;
+        g[REG_EFL] &= ~(greg_t)0x100;
+        return 1;
+    }
+    uint64_t offset = (uint64_t)((uintptr_t)g[REG_RIP] - 1 - (uintptr_t)image);
+    for (unsigned i = 0; i < point_count; ++i) {
+        if (point_offset[i] != offset) continue;
+        unsigned hit = __atomic_add_fetch(&point_hits[i], 1, __ATOMIC_RELAXED);
+        if (hit <= call_trace_limit) {
+            char line[256];
+            snprintf(line, sizeof(line), "Trace point: 0x%" PRIx64 " #%u rax=%llx rdi=%llx rsi=%llx rdx=%llx rcx=%llx\n",
+                     offset, hit, (unsigned long long)g[REG_RAX], (unsigned long long)g[REG_RDI],
+                     (unsigned long long)g[REG_RSI], (unsigned long long)g[REG_RDX], (unsigned long long)g[REG_RCX]);
+            { ssize_t w_ = write(1, line, strlen(line)); (void)w_; }
+        }
+        image[offset] = point_byte[i];
+        g[REG_RIP] -= 1;
+        g[REG_EFL] |= 0x100;
+        point_pending = (int)i;
+        return 1;
+    }
+    return 0;
+}
+static void call_trace_report(void) {
+    for (unsigned i = 0; i < call_trace_count; ++i)
+        printf("Call trace: 0x%" PRIx64 " called %u times\n", call_trace_offset[i], call_trace_hits[i]);
+}
+#endif
 static void fault(int sig, siginfo_t *info, void *context) {
+#ifndef _WIN32
+    if (sig == SIGTRAP && call_trace_count && call_trace_trap(((ucontext_t *)context)->uc_mcontext.gregs)) return;
+    if (sig == SIGTRAP && point_count && point_trap(((ucontext_t *)context)->uc_mcontext.gregs)) return;
+#endif
     if (sig == SIGTRAP && isa_table) {
         /* An int3 ISA site (RIP is past the CC byte); any other trap ends in the report below. */
         greg_t *g = ((ucontext_t *)context)->uc_mcontext.gregs;
@@ -414,6 +531,19 @@ static void fault(int sig, siginfo_t *info, void *context) {
         snprintf(line, sizeof(line), "Fault (signal %d) at RIP %p, address %p\n", sig, (void *)rip, info->si_addr);
     { ssize_t written_=write(2, line, strlen(line)); (void)written_; }
     if (gpu_enabled) gow3gpu_dump_guest_writes(context);
+#ifndef _WIN32
+    call_trace_report();
+#endif
+#ifndef _WIN32
+    /* GOW3_FAULT_WAIT=1 (development): keep the process stopped so a debugger can attach. */
+    { const char *w = getenv("GOW3_FAULT_WAIT");
+      if (w && w[0] == '1') {
+          prctl(PR_SET_PTRACER, PR_SET_PTRACER_ANY, 0, 0, 0);
+          snprintf(line, sizeof(line), "Fault wait: attach with gdb -p %d\n", (int)getpid());
+          { ssize_t w_=write(2, line, strlen(line)); (void)w_; }
+          for (;;) pause();
+      } }
+#endif
     /* Host call chain (frames with unwind info; guest frames end it). */
     void *frames[32];
     int depth = backtrace(frames, 32);
@@ -1181,6 +1311,10 @@ int main(int argc, char **argv) {
             if (result) fail("module initializer failed");
         }
     }
+#ifndef _WIN32
+    call_trace_install();
+    point_install();
+#endif
     printf("Entering original x86-64 code at guest offset 0x%" PRIx64 "\n", entry);
 #ifdef _WIN32
     atexit(report_exit_caller); /* registered last, so it runs first */
