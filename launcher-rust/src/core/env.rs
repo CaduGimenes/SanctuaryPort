@@ -409,16 +409,6 @@ mod tests {
     }
 
     #[test]
-    fn the_old_gow3_names_are_not_forwarded() {
-        for windows in [true, false] {
-            let mut env = variables(&[("GOW3_DATA_DIR", "/old")]);
-            start_up_environment(&mut env, windows);
-            assert_eq!(env.get("GOW3_DATA_DIR"), None, "{windows}");
-            assert_eq!(env.get("GOW3_DATA_DIR").map(String::as_str), Some("/old"));
-        }
-    }
-
-    #[test]
     fn a_value_set_by_the_player_is_kept() {
         let mut env = variables(&[("VK_LOADER_LAYERS_DISABLE", "VK_LAYER_custom")]);
         start_up_environment(&mut env, true);

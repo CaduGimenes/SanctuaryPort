@@ -97,6 +97,7 @@ extern volatile int runtime_pad_opened; /* the game read the pad 30 times: it go
 int runtime_pad_describe(void);
 unsigned runtime_pad_users(void); /* bit N: user N (2..4) logged in */
 void runtime_user_events(void);
+unsigned runtime_content_addons_ready(void); /* add-ons listed, once AppContent is up */
 uintptr_t runtime_rtc_resolve(const char *name);
 const char *runtime_file_user_dir(void);
 void runtime_savedata_configure(const char *title);

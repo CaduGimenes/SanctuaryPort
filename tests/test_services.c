@@ -19,8 +19,10 @@ int gow3gpu_choice_begin(const char *title, const char *const *items, const char
 int gow3gpu_choice_poll(void) { return choice_next; }
 int runtime_savedata_param(int32_t user, const char *dir, void *param) { (void)user; (void)dir; (void)param; return -1; }
 int runtime_savedata_icon(int32_t user, const char *dir, char *out, size_t size) { (void)user; (void)dir; (void)out; (void)size; return -1; }
-static int second_pad;
-int runtime_pad_second_user(void) { return second_pad; }
+static unsigned pad_users; /* bit N: user N's gamepad is connected */
+unsigned runtime_pad_users(void) { return pad_users; }
+static unsigned addons_ready;
+unsigned runtime_content_addons_ready(void) { return addons_ready; }
 static struct { int count; int32_t event[2]; } heard;
 static ABI void heard_event(const int32_t *event, void *arg) {
     assert(arg==&heard);
@@ -101,31 +103,51 @@ int main(void) {
     assert(trophy_unlock_state(1,1,flags,&count)==0 && flags[1]==2u && !flags[0] && count==2);
     assert(trophy_unlock_state(1,1,NULL,&count)==TROPHY_INVALID && trophy_release(0)==TROPHY_INVALID);
 
-    /* Users: 1 logs in at start; 2 logs in and out with the second gamepad (split-screen). */
+    /* Users: 1 logs in at start; 2..4 log in and out with their own gamepads (local co-op). */
     int32_t event[2], ids[4];
     char name[17];
     assert(user_event(event)==0 && event[0]==0 && event[1]==USER_ID);
     assert(user_event(event)==USER_NO_EVENT);
-    assert(user_list(ids)==0 && ids[0]==USER_ID && ids[1]==-1);
-    second_pad=1;
-    assert(user_event(event)==0 && event[0]==0 && event[1]==USER2_ID);
+    assert(user_list(ids)==0 && ids[0]==USER_ID && ids[1]==-1 && ids[2]==-1 && ids[3]==-1);
+    pad_users=1u<<2;
+    assert(user_event(event)==0 && event[0]==0 && event[1]==2);
     assert(user_event(event)==USER_NO_EVENT);
-    assert(user_list(ids)==0 && ids[1]==USER2_ID);
-    assert(user_name(USER2_ID,name,sizeof name)==0 && !strcmp(name,"Player 2"));
-    second_pad=0;
-    assert(user_event(event)==0 && event[0]==1 && event[1]==USER2_ID);
+    assert(user_list(ids)==0 && ids[1]==2 && ids[2]==-1);
+    assert(user_name(2,name,sizeof name)==0 && !strcmp(name,"Player 2"));
+    pad_users|=(1u<<3)|(1u<<4); /* two more at once: one event each, lowest first */
+    assert(user_event(event)==0 && event[0]==0 && event[1]==3);
+    assert(user_event(event)==0 && event[0]==0 && event[1]==4);
+    assert(user_event(event)==USER_NO_EVENT);
+    assert(user_list(ids)==0 && ids[1]==2 && ids[2]==3 && ids[3]==4);
+    assert(user_name(4,name,sizeof name)==0 && !strcmp(name,"Player 4"));
+    assert(user_name(5,name,sizeof name)==USER_INVALID_ARGUMENT);
+    pad_users=(1u<<2)|(1u<<4);
+    assert(user_event(event)==0 && event[0]==1 && event[1]==3);
+    pad_users=0;
+    assert(user_event(event)==0 && event[0]==1 && event[1]==2);
+    assert(user_event(event)==0 && event[0]==1 && event[1]==4);
     assert(user_event(event)==USER_NO_EVENT);
     /* The callback hears the same, from player 1's pad reads (every 30th). */
     assert(user_register_callback(heard_event,&heard)==0);
-    second_pad=1;
+    pad_users=1u<<2;
     for (int i=0;i<30;++i) runtime_user_events();
-    assert(heard.count==1 && heard.event[0]==0 && heard.event[1]==USER2_ID);
+    assert(heard.count==1 && heard.event[0]==0 && heard.event[1]==2);
     for (int i=0;i<60;++i) runtime_user_events();
     assert(heard.count==1);
-    second_pad=0;
+    pad_users=0;
     for (int i=0;i<30;++i) runtime_user_events();
     assert(heard.count==2 && heard.event[0]==1);
     assert(user_unregister_callback()==0);
+
+    /* One entitlement update event once add-ons can be listed (Diablo III 1.47), then none. */
+    unsigned char status[12]; int32_t sys_event[64]; int32_t pending;
+    assert(system_status(status)==0 && (memcpy(&pending,status,4),pending)==0);
+    assert(system_event(sys_event)==SYSTEM_NO_EVENT);
+    addons_ready=2;
+    assert(system_status(status)==0 && (memcpy(&pending,status,4),pending)==1);
+    assert(system_event(sys_event)==0 && sys_event[0]==0x10000003);
+    assert(system_status(status)==0 && (memcpy(&pending,status,4),pending)==0);
+    assert(system_event(sys_event)==SYSTEM_NO_EVENT && system_event(NULL)==SYSTEM_PARAMETER);
 
     float ratio=0; assert(safe_area(&ratio)==0 && ratio==1.0f && safe_area(NULL)==SYSTEM_PARAMETER);
     puts("services test: ok");

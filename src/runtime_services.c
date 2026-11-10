@@ -147,12 +147,34 @@ static ABI int32_t system_param(int32_t id,int32_t *value) {
     }
     return 0;
 }
+/* System events. One ENTITLEMENT_UPDATE is sent once AppContent is up and add-ons are installed:
+ * Diablo III 1.47 lists its add-ons (and so unlocks the Necromancer) only on that event, which a
+ * PS4 sends when the licenses are loaded; 1.00 listed them at start on its own. */
+#define EVENT_ENTITLEMENT_UPDATE 0x10000003
+static int entitlement_event_sent;
+static int pending_event(void) {
+    pthread_mutex_lock(&lock);
+    const int pending=!entitlement_event_sent;
+    pthread_mutex_unlock(&lock);
+    return pending && runtime_content_addons_ready() ? EVENT_ENTITLEMENT_UPDATE : 0;
+}
 static ABI int32_t system_status(unsigned char *status) {
     if (!status) return SYSTEM_PARAMETER;
-    memset(status,0,12); /* event_num=0, no overlay, foreground, normal CPU mode */
+    memset(status,0,12); /* no overlay, foreground, normal CPU mode */
+    const int32_t events=pending_event() ? 1 : 0;
+    memcpy(status,&events,4); /* event_num */
     return 0;
 }
-static ABI int32_t system_event(void *event) { (void)event; return SYSTEM_NO_EVENT; }
+static ABI int32_t system_event(void *event) {
+    if (!event) return SYSTEM_PARAMETER;
+    const int32_t type=pending_event();
+    if (!type) return SYSTEM_NO_EVENT;
+    pthread_mutex_lock(&lock); entitlement_event_sent=1; pthread_mutex_unlock(&lock);
+    memset(event,0,256);
+    memcpy(event,&type,4);
+    note("SystemService: entitlement update event sent (installed add-ons)");
+    return 0;
+}
 static ABI int32_t hide_splash(void) { note("SystemService: splash screen hidden"); return 0; }
 static ABI int32_t safe_area(float *info) { if (!info) return SYSTEM_PARAMETER; *info=1.0f; return 0; } /* full screen */
 static ABI int32_t disable_music_player(void) { return 0; }
@@ -663,7 +685,15 @@ static ABI int32_t netctl_result(int32_t event,int32_t *error) { (void)event; if
 /* Voice chat has no ports: attribute queries fail, settings are accepted. */
 static ABI int32_t voice_no_port(void) { return (int32_t)0x8082000A; }
 
+/* sceNetGetMemoryPoolStats / sceSslGetMemoryPoolStats(ctx, stats): an empty, unused pool. */
+static ABI int32_t pool_stats(int32_t ctx,void *stats) { (void)ctx; if (stats) memset(stats,0,24); return 0; }
+
 static const RuntimeExport exports[]={
+    /* Diablo III 1.47 (CUSA00243 update): the account-id ("A") and newer variants */
+    {"sceNpPartyRegisterHandlerA",party_ok}, {"sceNpGetParentalControlInfoA",np_signed_out},
+    {"sceHttpCreateRequestWithURL2",http_object}, {"sceHttpParseResponseHeader",http_fail},
+    {"sceNetGetMemoryPoolStats",pool_stats}, {"sceSslGetMemoryPoolStats",pool_stats},
+    {"sceScreenShotSetParam",ok_void}, {"scePthreadCancel",ok_void},
     /* Diablo III offline set */
     {"sceNpPartyInitialize",party_ok}, {"sceNpPartyTerminate",party_ok},
     {"sceNpPartyRegisterHandler",party_ok}, {"sceNpPartyCheckCallback",party_ok},

@@ -58,6 +58,12 @@ PROFILES = {
                           # vblanks pass per frame (19.8 FPS). Mailbox presents keep it at 60.
                           'GOW3_VSYNC': '0'}},
 }
+# Diablo III: Reaper of Souls - Ultimate Evil Edition, Brazilian release (Portuguese and Spanish
+# text; usually played with its 1.47 update in GOW3_PATCH_DIR): the same engine and needs.
+# Its updates ship the game's own PSN toolkit (libSceNpToolkit2.prx, as WipEout): linked when present.
+PROFILES['CUSA00243'] = {**PROFILES['CUSA00242'],
+                         'modules': ('libc.prx', 'libSceFios2.prx', 'libSceNpToolkit2.prx')}
+DIABLO3_TITLES = ('CUSA00242', 'CUSA00243')
 DEFAULT = {'name': None, 'modules': ('libc.prx', 'libSceFios2.prx')}
 
 

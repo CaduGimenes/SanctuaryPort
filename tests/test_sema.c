@@ -1,5 +1,7 @@
 #define _GNU_SOURCE
 #include "runtime.h"
+/* The probe owns the guest image; these tests load none. */
+unsigned char *runtime_image_base(void) { return NULL; }
 #include <stdlib.h>
 
 /* The settings menu of the GPU library restarts through probe.c, which tests do not link. */
@@ -116,6 +118,34 @@ static void cancellation(void) {
     assert(pthread_join(second,NULL)==0 && (uint32_t)b.result==0x8002000d);
     assert((uint32_t)poll_sem(id,1)==0x80020003);
 }
+/* POSIX semaphores (Diablo III 1.47): the guest's sem_t holds the runtime's pointer. */
+typedef struct { int64_t sec, nsec; } GuestTime;
+static void *posted_later(void *sem) {
+    struct timespec pause={0,50000000}; nanosleep(&pause,NULL);
+    assert(((int32_t (ABI *)(void *))runtime_resolve("IKP8typ0QUk#libkernel",0))(sem)==0);
+    return NULL;
+}
+static void posix_semaphores(void) {
+    int32_t (ABI *init)(void *,int32_t,uint32_t)=(void *)runtime_resolve("pDuPEf3m4fI#libkernel",0);
+    int32_t (ABI *destroy)(void *)=(void *)runtime_resolve("cDW233RAwWo#libkernel",0);
+    int32_t (ABI *post)(void *)=(void *)runtime_resolve("IKP8typ0QUk#libkernel",0);
+    int32_t (ABI *wait)(void *)=(void *)runtime_resolve("YCV5dGGBcCo#libkernel",0);
+    int32_t (ABI *trywait)(void *)=(void *)runtime_resolve("WBWzsRifCEA#libkernel",0);
+    int32_t (ABI *timedwait)(void *,const GuestTime *)=(void *)runtime_resolve("w5IHyvahg-o#libkernel",0);
+    assert(init && destroy && post && wait && trywait && timedwait);
+    void *sem=NULL;
+    assert(init(&sem,0,1)==0 && sem);
+    assert(trywait(&sem)==0 && trywait(&sem)==-1);
+    struct timespec now; clock_gettime(CLOCK_REALTIME,&now);
+    GuestTime soon={now.tv_sec,now.tv_nsec+20000000};
+    if (soon.nsec>=1000000000) { soon.sec++; soon.nsec-=1000000000; }
+    assert(timedwait(&sem,&soon)==-1);           /* nothing posted: times out */
+    assert(post(&sem)==0 && wait(&sem)==0);
+    pthread_t t; assert(pthread_create(&t,NULL,posted_later,&sem)==0);
+    assert(wait(&sem)==0);                        /* woken by the other thread's post */
+    assert(pthread_join(t,NULL)==0);
+    assert(destroy(&sem)==0 && sem==NULL && destroy(&sem)==-1 && post(NULL)==-1);
+}
 int main(int argc,char **argv) {
     setup();
     if (argc>1 && !strcmp(argv[1],"--priority")) {
@@ -129,7 +159,7 @@ int main(int argc,char **argv) {
     }
     if (argc>1 && !strcmp(argv[1],"--concurrency")) concurrency();
     else if (argc>1 && !strcmp(argv[1],"--cancel-delete")) cancellation();
-    else lifecycle();
+    else { lifecycle(); posix_semaphores(); }
     puts("PASS: semaphore contracts");
     return 0;
 }

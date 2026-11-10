@@ -159,6 +159,52 @@ static ABI int32_t sem_delete(uint32_t id) {
     pthread_mutex_unlock(&lock);
     return 0;
 }
+/* POSIX semaphores (sem_init ... sem_destroy, Diablo III 1.47): the guest's sem_t holds a pointer
+ * to a host counter. They return 0, or -1 (errno is not reported). */
+typedef struct { pthread_mutex_t lock; pthread_cond_t more; uint32_t count; } PosixSem;
+typedef struct { int64_t sec, nsec; } SemTimespec;
+static ABI int32_t posix_sem_init(PosixSem **sem,int32_t shared,uint32_t value) {
+    (void)shared;
+    if (!sem) return -1;
+    PosixSem *p=calloc(1,sizeof(*p));
+    if (!p) return -1;
+    pthread_mutex_init(&p->lock,NULL); pthread_cond_init(&p->more,NULL);
+    p->count=value; *sem=p;
+    return 0;
+}
+static ABI int32_t posix_sem_destroy(PosixSem **sem) {
+    if (!sem || !*sem) return -1;
+    pthread_cond_destroy(&(*sem)->more); pthread_mutex_destroy(&(*sem)->lock);
+    free(*sem); *sem=NULL;
+    return 0;
+}
+static ABI int32_t posix_sem_post(PosixSem **sem) {
+    if (!sem || !*sem) return -1;
+    PosixSem *p=*sem;
+    pthread_mutex_lock(&p->lock); ++p->count; pthread_cond_signal(&p->more); pthread_mutex_unlock(&p->lock);
+    return 0;
+}
+/* abs: CLOCK_REALTIME deadline, NULL waits forever; try: no wait at all. */
+static int32_t posix_sem_take(PosixSem **sem,const SemTimespec *abs,int try) {
+    if (!sem || !*sem) return -1;
+    PosixSem *p=*sem;
+    int result=0;
+    pthread_mutex_lock(&p->lock);
+    while (!p->count && !result) {
+        if (try) result=-1;
+        else if (abs) {
+            const struct timespec end={(time_t)abs->sec,(long)abs->nsec};
+            if (pthread_cond_timedwait(&p->more,&p->lock,&end)==ETIMEDOUT && !p->count) result=-1;
+        } else pthread_cond_wait(&p->more,&p->lock);
+    }
+    if (!result) --p->count;
+    pthread_mutex_unlock(&p->lock);
+    return result;
+}
+static ABI int32_t posix_sem_wait(PosixSem **sem) { return posix_sem_take(sem,NULL,0); }
+static ABI int32_t posix_sem_trywait(PosixSem **sem) { return posix_sem_take(sem,NULL,1); }
+static ABI int32_t posix_sem_timedwait(PosixSem **sem,const SemTimespec *abs) { return posix_sem_take(sem,abs,0); }
+
 /* Read-only test/diagnostic snapshot, not exposed to guest code. */
 unsigned runtime_sema_waiters(uint32_t id) {
     pthread_mutex_lock(&lock);
@@ -174,6 +220,12 @@ uintptr_t runtime_sema_resolve(const char *name) {
     if (!strcmp(name,"12wOHk8ywb0#libkernel")) return (uintptr_t)sem_poll;
     if (!strcmp(name,"4DM06U2BNEY#libkernel")) return (uintptr_t)sem_cancel;
     if (!strcmp(name,"R1Jvn8bSCW8#libkernel")) return (uintptr_t)sem_delete;
+    if (!strcmp(name,"pDuPEf3m4fI#libkernel")) return (uintptr_t)posix_sem_init;
+    if (!strcmp(name,"cDW233RAwWo#libkernel")) return (uintptr_t)posix_sem_destroy;
+    if (!strcmp(name,"IKP8typ0QUk#libkernel")) return (uintptr_t)posix_sem_post;
+    if (!strcmp(name,"YCV5dGGBcCo#libkernel")) return (uintptr_t)posix_sem_wait;
+    if (!strcmp(name,"WBWzsRifCEA#libkernel")) return (uintptr_t)posix_sem_trywait;
+    if (!strcmp(name,"w5IHyvahg-o#libkernel")) return (uintptr_t)posix_sem_timedwait;
     return 0;
 }
 void runtime_sema_report(void) {

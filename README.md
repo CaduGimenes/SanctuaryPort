@@ -9,8 +9,9 @@
 
 ---
 
-SanctuaryPort runs the PlayStation 4 version of **Diablo III: Reaper of Souls – Ultimate Evil
-Edition** (CUSA00242) natively on a PC. The game's original x86-64 code runs directly on your
+SanctuaryPort runs the PlayStation 4 version of **Diablo III** natively on a PC: the Brazilian
+release (CUSA00243) with its 1.47 update, which is the **Eternal Collection** (2.7.7, with the
+Necromancer), and the US *Reaper of Souls – Ultimate Evil Edition* 1.00 (CUSA00242). The game's original x86-64 code runs directly on your
 processor, a runtime replaces the PS4 system libraries, and the PS4 GPU commands are translated to
 Vulkan by a video core derived from [shadPS4](https://github.com/shadps4-emu/shadPS4). There is no
 CPU emulator.
@@ -21,7 +22,7 @@ CPU emulator.
 
 ## Status
 
-**Playable.** Tested on Linux (AMD Radeon 780M, Mesa) with the US v1.00 dump:
+**Playable.** Tested on Linux (AMD Radeon 780M, Mesa) with the Brazilian 1.47 and US 1.00 dumps:
 
 | | |
 |---|---|
@@ -31,7 +32,8 @@ CPU emulator.
 | ✅ **Xbox button icons** in the game's prompts and HUD | optional, drawn over the game's own icons |
 | ✅ DLC entitlements | from your own add-on packages |
 | ✅ Install straight from your PKG files | in the launcher, no external tools |
-| ✅ Languages | English, French, Spanish (Latin America); Portuguese (Brazil) needs the BR release's files |
+| ✅ Languages | whatever your dump ships: Portuguese (Brazil) and Spanish in the Brazilian release; English, French and Spanish in the US one |
+| ✅ Updates | the 1.47 update (Eternal Collection) from its own folder; the base game is never changed |
 | ⚠️ Windows | the code base builds for Windows, but this port has only been played on Linux |
 | ❌ Online play / PSN | offline only |
 
@@ -66,8 +68,9 @@ cargo build --release --manifest-path launcher-rust/Cargo.toml
 1. Dump **Diablo III: Reaper of Souls – Ultimate Evil Edition** from your own PS4 as fake PKG
    files (base game and, if you have them, the add-ons).
 2. Start the launcher (`launcher-rust/target/release/sanctuaryport-launcher`), open **Game** and
-   choose **Install from PKG**. It extracts the game into a folder of your choice (for example
-   `~/Games/PS4/CUSA00242`) and the add-ons next to it. The same works from a terminal:
+   choose **Install from PKG** with the game, its update and add-ons. The game goes to
+   `~/Games/PS4/<TITLE_ID>`, the update to `<TITLE_ID>-UPDATE` and the add-ons to `addcont/`;
+   the launcher sets the folders. The same works from a terminal:
 
    ```bash
    launcher-rust/target/release/sanctuaryport-launcher --install-pkg <file.pkg> ~/Games/PS4
@@ -80,7 +83,7 @@ cargo build --release --manifest-path launcher-rust/Cargo.toml
 Press **PLAY** in the launcher, or from a terminal:
 
 ```bash
-GOW3_GAME_DIR=~/Games/PS4/CUSA00242 bash run.sh
+GOW3_GAME_DIR=~/Games/PS4/CUSA00243 GOW3_PATCH_DIR=~/Games/PS4/CUSA00243-UPDATE bash run.sh
 ```
 
 - **Gamepads** (Xbox, DualSense, DualShock 4, anything SDL recognises) work out of the box.

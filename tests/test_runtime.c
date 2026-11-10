@@ -1,5 +1,7 @@
 #define _GNU_SOURCE
 #include "runtime.h"
+/* The probe owns the guest image; these tests load none. */
+unsigned char *runtime_image_base(void) { return NULL; }
 #include <stdlib.h>
 
 /* The settings menu of the GPU library restarts through probe.c, which tests do not link. */

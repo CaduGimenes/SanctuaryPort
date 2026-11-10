@@ -1589,3 +1589,14 @@
 {"uFxVYJEkcmc#libSceNpTus","sceNpTusGetMultiSlotVariableVUser"},
 {"ur5SShyG0dk#libSceNpUtility","sceNpWordFilterPollAsync"},
 {"zNGh-zoQTD0#libSceHttp","sceHttpRemoveRequestHeader"},
+/* Added by tools/add_import_names.py for CUSA00243-UPDATE */
+{"How7B8Oet6k#libkernel","scePthreadGetname"},
+{"PI7jIZj4pcE#libSceRandom","sceRandomGetRandomNumber"},
+/* Diablo III 1.47 (CUSA00243 update), names from the PS4 NID database */
+{"G7KlmIYFIZc#libSceScreenShot","sceScreenShotSetParam"},
+{"qBDmpCyGssE#libkernel","scePthreadCancel"},
+{"m9L3O6yst-U#libSceNpManager","sceNpGetParentalControlInfoA"},
+{"+v4fVHMwFWc#libSceNpParty","sceNpPartyRegisterHandlerA"},
+{"Cnp77podkCU#libSceHttp","sceHttpCreateRequestWithURL2"},
+{"hPTXo3bICzI#libSceHttp","sceHttpParseResponseHeader"},
+{"-PoIzr3PEk0#libSceSsl","sceSslGetMemoryPoolStats"},

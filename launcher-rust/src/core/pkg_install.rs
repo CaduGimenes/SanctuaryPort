@@ -73,6 +73,8 @@ pub struct PkgInfo {
     pub pfs_offset: u64,
     pub pfs_size: u64,
     pub pfs_flags: u64,
+    /// param.sfo CATEGORY ("gd" game, "gp" patch, "ac" add-on); empty when it has none.
+    pub category: String,
     entries: Vec<Entry>,
 }
 
@@ -81,6 +83,36 @@ impl PkgInfo {
     pub fn is_game(&self) -> bool {
         matches!(self.content_type, 0x1A | 0x1C)
     }
+
+    /// An update (patch): installed beside the game, never over it. Fake patch PKGs often keep
+    /// the game's content type (0x1A), so param.sfo's CATEGORY ("gp") decides too.
+    pub fn is_patch(&self) -> bool {
+        self.content_type == 0x1C || self.category.starts_with("gp")
+    }
+}
+
+/// CATEGORY of a param.sfo, or "".
+fn sfo_category(sfo: &[u8]) -> String {
+    if sfo.len() < 20 || &sfo[..4] != b"\0PSF" {
+        return String::new();
+    }
+    let (keys, data, count) = (le32(sfo, 8) as usize, le32(sfo, 12) as usize, le32(sfo, 16) as usize);
+    for i in 0..count {
+        let e = 20 + i * 16;
+        if e + 16 > sfo.len() {
+            break;
+        }
+        let key_at = keys + u16::from_le_bytes([sfo[e], sfo[e + 1]]) as usize;
+        let (len, at) = (le32(sfo, e + 4) as usize, data + le32(sfo, e + 12) as usize);
+        let key_end = sfo[key_at.min(sfo.len())..].iter().position(|&c| c == 0).map_or(sfo.len(), |n| key_at + n);
+        if sfo.get(key_at..key_end) == Some(b"CATEGORY".as_slice()) {
+            return sfo
+                .get(at..at + len)
+                .map(|v| String::from_utf8_lossy(v).trim_end_matches('\0').to_string())
+                .unwrap_or_default();
+        }
+    }
+    String::new()
 }
 
 #[derive(Debug, Clone)]
@@ -134,7 +166,16 @@ pub fn read_info(pkg: &Path) -> Result<PkgInfo> {
             }
         }
     }
+    let mut category = String::new();
+    if let Some(sfo) = entries.iter().find(|e| e.name.as_deref() == Some("param.sfo")) {
+        let mut blob = vec![0u8; sfo.size as usize];
+        f.seek(SeekFrom::Start(u64::from(sfo.offset)))?;
+        if f.read_exact(&mut blob).is_ok() {
+            category = sfo_category(&blob);
+        }
+    }
     Ok(PkgInfo {
+        category,
         title_id: content_id[7..16].to_string(),
         label: content_id[20..36].to_string(),
         content_id,
@@ -516,7 +557,9 @@ impl<F: FnMut(u64, u64, &str) -> bool> Progress for F {
 /// Where a PKG installs: a game into `games_dir/<TITLE_ID>`, an add-on into
 /// `games_dir/addcont/<TITLE_ID>/<label>`.
 pub fn target_dir(info: &PkgInfo, games_dir: &Path) -> PathBuf {
-    if info.is_game() {
+    if info.is_patch() {
+        games_dir.join(format!("{}-UPDATE", info.title_id))
+    } else if info.is_game() {
         games_dir.join(&info.title_id)
     } else {
         games_dir.join("addcont").join(&info.title_id).join(&info.label)
@@ -584,7 +627,13 @@ fn install_pfs(pkg: &Path, info: &PkgInfo, target: &Path, progress: &mut dyn Pro
     let inner = Pfs::read(&mut inner_img)?;
     let mut entries = Vec::new();
     inner.walk(&mut inner_img, 0, "", &mut entries)?;
-    let entries: Vec<_> = entries.into_iter().filter(|(p, _)| p.starts_with("/uroot/")).collect();
+    // Development: SP_PKG_ONLY=<text> extracts only the files whose path contains it (the
+    // language packs of another region's dump, say).
+    let only = std::env::var("SP_PKG_ONLY").ok().filter(|s| !s.is_empty());
+    let entries: Vec<_> = entries
+        .into_iter()
+        .filter(|(p, _)| p.starts_with("/uroot/") && only.as_ref().is_none_or(|o| p.contains(o.as_str())))
+        .collect();
     let total: u64 = entries.iter().map(|(_, i)| i.size).sum();
     let mut done = 0u64;
     let mut buf = vec![0u8; 0x10000];
@@ -601,7 +650,16 @@ fn install_pfs(pkg: &Path, info: &PkgInfo, target: &Path, progress: &mut dyn Pro
         let mut written = 0u64;
         while written < node.size {
             let n = (node.size - written).min(buf.len() as u64) as usize;
-            reader.read_at(written, &mut buf[..n])?;
+            if let Err(error) = reader.read_at(written, &mut buf[..n]) {
+                if only.is_none() {
+                    return Err(error);
+                }
+                // Development filter: a file that cannot be read (a truncated PKG) is skipped.
+                eprintln!("skipped {relative}: {error}");
+                done += node.size - written;
+                written = u64::MAX;
+                break;
+            }
             w.write_all(&buf[..n])?;
             written += n as u64;
             done += n as u64;
@@ -613,6 +671,10 @@ fn install_pfs(pkg: &Path, info: &PkgInfo, target: &Path, progress: &mut dyn Pro
         }
         w.flush()?;
         drop(w);
+        if written == u64::MAX {
+            let _ = fs::remove_file(&part);
+            continue;
+        }
         fs::rename(&part, &out)?;
     }
     write_sce_sys(pkg, info, target)?;
@@ -643,6 +705,50 @@ fn write_sce_sys(pkg: &Path, info: &PkgInfo, target: &Path) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// A param.sfo with one UTF-8 key/value: CATEGORY = value.
+    fn sfo(value: &str) -> Vec<u8> {
+        let key = b"CATEGORY\0";
+        let data = format!("{value}\0").into_bytes();
+        let (keys, values) = (20 + 16, 20 + 16 + key.len());
+        let mut out = b"\0PSF".to_vec();
+        out.extend(1u32.to_le_bytes().map(|_| 0)); // version (unused)
+        out.extend((keys as u32).to_le_bytes());
+        out.extend((values as u32).to_le_bytes());
+        out.extend(1u32.to_le_bytes());
+        out.extend(0u16.to_le_bytes()); // key offset
+        out.extend(0x0204u16.to_le_bytes()); // utf-8
+        out.extend((data.len() as u32).to_le_bytes());
+        out.extend((data.len() as u32).to_le_bytes());
+        out.extend(0u32.to_le_bytes()); // data offset
+        out.extend(key);
+        out.extend(data);
+        out
+    }
+
+    #[test]
+    fn param_sfo_category_tells_patches_apart() {
+        assert_eq!(sfo_category(&sfo("gp")), "gp");
+        assert_eq!(sfo_category(&sfo("gd")), "gd");
+        assert_eq!(sfo_category(b"not a sfo at all"), "");
+        let mut info = PkgInfo {
+            content_id: "UP0002-CUSA00243_00-D3ULTIMATEEVIL00".into(),
+            title_id: "CUSA00243".into(),
+            label: "D3ULTIMATEEVIL00".into(),
+            content_type: 0x1A,
+            pfs_offset: 0,
+            pfs_size: 0,
+            pfs_flags: 0,
+            category: "gp".into(),
+            entries: Vec::new(),
+        };
+        let games = Path::new("/games");
+        assert!(info.is_patch() && info.is_game());
+        assert_eq!(target_dir(&info, games), games.join("CUSA00243-UPDATE"));
+        info.category = "gd".into();
+        assert!(!info.is_patch());
+        assert_eq!(target_dir(&info, games), games.join("CUSA00243"));
+    }
 
     #[test]
     fn xts_tweak_doubling_carries() {

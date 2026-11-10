@@ -1,7 +1,8 @@
 # SanctuaryPort — Diablo III (PS4) no PC
 
-Port nativo da versão de PS4 de **Diablo III: Reaper of Souls – Ultimate Evil Edition**
-(CUSA00242). O código original do jogo roda direto no seu processador, um runtime substitui as
+Port nativo da versão de PS4 de **Diablo III**: a versão brasileira (CUSA00243) com a
+atualização 1.47, que é a **Eternal Collection** (com o Necromante), e a americana *Reaper of
+Souls – Ultimate Evil Edition* 1.00 (CUSA00242). O código original do jogo roda direto no seu processador, um runtime substitui as
 bibliotecas do sistema do PS4, e os gráficos do PS4 são traduzidos para Vulkan. Não há emulação
 de CPU.
 
@@ -22,10 +23,11 @@ cargo build --release --manifest-path launcher-rust/Cargo.toml
 
 ## Instalar o jogo
 
-1. Tenha os arquivos PKG do seu jogo (o jogo base e, se tiver, as DLCs).
+1. Tenha os arquivos PKG do seu jogo (o jogo base, a atualização e, se tiver, as DLCs).
 2. Abra o launcher (`launcher-rust/target/release/sanctuaryport-launcher`), vá em **Jogo** e use
-   **Instalar a partir de PKG**. Ele extrai o jogo numa pasta (por exemplo
-   `~/Games/PS4/CUSA00242`) e as DLCs ao lado.
+   **Instalar a partir de PKG** escolhendo todos eles. O jogo vai para `~/Games/PS4/CUSA00243`,
+   a atualização para `~/Games/PS4/CUSA00243-UPDATE` e as DLCs para `addcont/`. O launcher já
+   configura as pastas.
 
 Se você já tem o jogo extraído, é só apontar o launcher para a pasta que tem o `eboot.bin`.
 
@@ -34,7 +36,7 @@ Se você já tem o jogo extraído, é só apontar o launcher para a pasta que te
 Clique em **JOGAR** no launcher, ou pelo terminal:
 
 ```bash
-GOW3_GAME_DIR=~/Games/PS4/CUSA00242 bash run.sh
+GOW3_GAME_DIR=~/Games/PS4/CUSA00243 GOW3_PATCH_DIR=~/Games/PS4/CUSA00243-UPDATE bash run.sh
 ```
 
 Os saves ficam em `user/savedata/`, com uma cópia de segurança em `user/savedata_backups/` a cada
@@ -78,8 +80,9 @@ Nome do herói: ao criar, digite no teclado e aperte Enter (ou ✕ / A no contro
 
 - Funciona: tela de título, criação de herói, cinemáticas, Ato I, mundo a 60 FPS, salvar e
   continuar, DLCs, áudio, co-op local, sessões de mais de 20 minutos sem travar.
-- Idiomas: inglês, francês e espanhol (América Latina). O português do Brasil precisa dos arquivos
-  `ptBR_*.cpk` da versão brasileira do jogo.
+- Idiomas: os que o seu jogo traz. A versão brasileira tem português e espanhol; a americana tem
+  inglês, francês e espanhol. Se o idioma escolhido não existir no jogo, o port usa o português
+  (ou o primeiro disponível).
 - Somente offline (sem PSN e sem co-op online).
 - Testado no Linux. O código compila para Windows, mas esse caminho ainda não foi testado.
 

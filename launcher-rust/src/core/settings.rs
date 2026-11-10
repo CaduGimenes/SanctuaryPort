@@ -269,12 +269,12 @@ mod tests {
         // Missing: the defaults, nothing to report.
         let (settings, file) = read_app_settings(&paths);
         assert_eq!(file, SettingsFile::Missing);
-        assert_eq!(settings.get_str("ui_language"), "en");
+        assert_eq!(settings.get_str("ui_language"), ""); // follows the system language
         for broken in ["{not json", "[1, 2]", ""] {
             fs::write(paths.config_file(), broken).unwrap();
             let (settings, file) = read_app_settings(&paths);
             assert_eq!(file, SettingsFile::Unreadable, "{broken:?}");
-            assert_eq!(settings.get_str("ui_language"), "en", "{broken:?}");
+            assert_eq!(settings.get_str("ui_language"), "", "{broken:?}");
             assert_eq!(fs::read_to_string(paths.config_file()).unwrap(), broken);
         }
         fs::write(paths.config_file(), r#"{"ui_language": "pt"}"#).unwrap();

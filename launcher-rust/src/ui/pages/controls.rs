@@ -27,7 +27,7 @@ use crate::core::gpu::connected_gamepad;
 use crate::core::i18n::{tr, tr_fmt};
 use crate::core::ini::INI_DEFAULTS;
 use crate::core::options::{D3_GLYPH_STYLES, 
-    AIM_STYLES, GLYPH_KEYS, GLYPH_STYLES, KEY_COLORS, KEY_COLOR_STYLES, MENU_CONFIRM_STYLES,
+    AIM_STYLES, MENU_CONFIRM_STYLES,
     STICK_PROMPTS,
 };
 use crate::core::pad_model::PadModel;
@@ -42,7 +42,7 @@ use crate::ui::theme::{self, palette};
 use crate::ui::widgets::button_icon::game_button;
 use crate::ui::widgets::pad_diagram::input_glyph;
 use crate::ui::widgets::{
-    button_icon, checkbox, min_width, row, section, select, select_pairs_small, slider, SELECT_MIN,
+    button_icon, checkbox, min_width, row, section, select, slider, SELECT_MIN,
     SELECT_TEXT,
 };
 
@@ -83,9 +83,6 @@ pub const ACTION_NAMES: &[(&str, &str)] = &[
     ("look_right", "Right stick right"),
 ];
 
-const GLYPH_HINT: &str = "Replaces the PlayStation button icons inside the game with the ones of your controller. Works on a copy of up to three game files in the port's data folder (about 410 MB); your game folder is never changed. Applied when the game starts.";
-const SWITCH_CHECK: &str = "Switch attacks on L1 + d-pad and L1 + Cross";
-const SWITCH_HINT: &str = "L1 + a d-pad direction switches to that weapon with its switch attack (the weapon in Kratos' hands does its attack again). L1 + Cross does the switch attack of the weapon in his hands instead of cycling to the next weapon. The d-pad alone switches as before. Applied when the game starts.";
 const RAGE_CHECK: &str = "Rage of Sparta on one input (L3 + R3 together)";
 const KEY_NOTE: &str = "Click a box, then press a key, click a mouse button or turn the wheel (it gives up after {} seconds). An input already used by another button swaps with it; the arrow puts one button back on its default. Rage of Sparta presses L3 and R3 together: tick the box above it to use one input instead of two. Grab presses L1 and Circle together. Dodge evades the way you are moving, or back when standing still. Touchpad right opens the game's pause menu. Insert always opens the port's menu and cannot be bound. Applied when the game starts.";
 const STICK_HINT: &str = "Keyboard: enter the rotation with your movement inputs. With default keys, the sequences are A W D / D W A, D S A / A S D and D S A W / A S D W. Remapping movement changes these inputs too. Adaptive mouse: draw the turn with the mouse.";
@@ -94,7 +91,6 @@ const DISTANCE_HINT: &str =
 const AIM_STYLE_HINT: &str = "Aiming with the mouse while L2 is held (Head of Helios, Bow of Apollo). Relative: the stick follows the movement and goes back to neutral when the mouse stops. Absolute: where the mouse was when L2 was pressed is the centre, and the stick points from it to the mouse. Also in the in-game menu.";
 const SENSITIVITY_HINT: &str = "Aiming with the mouse while L2 is held: lower needs more mouse movement for the same stick, higher less. Also in the in-game menu.";
 const MOUSE_LOCK_HINT: &str = "While you play, the mouse stays in the game window, so a click cannot land on another monitor or app. The in-game menu and switching windows get it back. Also in the in-game menu.";
-const FREE_CAMERA_HINT: &str = "Experimental. The right stick or the mouse turns the camera all the way around Kratos and Kratos moves the way the camera looks; L1 + right stick dodges. In play, the Free camera key (G by default) or a tap of R3 on the gamepad switches it off and on, for boss fights; quick-time events and the game's camera cuts go back to the game's camera. Also in the in-game menu.";
 const VIBRATION_HINT: &str = "Strength of the gamepad's vibration; 0% turns it off.";
 const CONFIRM_HINT: &str = "Which button confirms choices in save/load dialogs and menu lists. Default: Cross confirms, Circle cancels. Swapped: Circle confirms, Cross cancels. Does not change gameplay or combat controls.";
 const PAD_NOTE: &str = "Touchpad right opens the game's pause menu. Touchpad left (photo mode) is L1 + Touchpad right, or a button of its own if you choose one. R3+L2 always opens the port's menu. Applied when the game starts.";
@@ -108,8 +104,6 @@ const BOX_WIDTH: f32 = 144.0;
 const ALTERNATIVE_EMPTY: &str = "(alternative)";
 const SECOND_ALTERNATIVE_EMPTY: &str = "(2nd alternative)";
 const ALTERNATIVE_NOTE: &str = "The second and third boxes of a row are alternative inputs for the same button: keep Square on the left mouse button for combat and add J and Keypad 4 for the minigames, for example. \"Clear input\" empties the main box, the × button next to a box empties that alternative, and the arrow puts the row back on its default with no alternatives.";
-const KEY_COLORS_HINT: &str = "Colour of the key labels of Cross, Circle, Square and Triangle on the keyboard icons, the Muses' lyre included; every other icon keeps its colour. PlayStation colors are the symbols' own colours; Custom picks one for each button. Applied when the game starts.";
-const GLYPH_KEYS_HINT: &str = "Which input the keyboard icons in the game show for a button that has an alternative: its main key, its alternative key on every icon, or its alternative key only on the Muses' lyre while the other icons keep the main key. A button without an alternative always shows its main input. Applied when the game starts.";
 
 /// The device whose table the page shows; both keep working in the game.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -1257,70 +1251,3 @@ fn d3_glyph_style(state: &State) -> String {
     if D3_GLYPH_STYLES.iter().any(|c| c.value == style) { style } else { "off".into() }
 }
 
-/// Whether the in-game icons can draw the keyboard: the keyboard style, and "match my controller"
-/// while no gamepad is connected.
-fn draws_the_keyboard(state: &State) -> bool {
-    matches!(
-        state.store.text("glyph_style").as_str(),
-        "keyboard" | "auto"
-    )
-}
-
-/// How the key labels of the face buttons are coloured, with a box for each button when the
-/// colours are custom.
-fn glyph_key_colors_rows<'a>(state: &State, lang: &str) -> Element<'a, Message> {
-    if !draws_the_keyboard(state) {
-        return space().height(0).into();
-    }
-    let style = state.store.text("glyph_key_colors");
-    let mut rows = column![row(
-        state.rtl,
-        &tr(lang, "Key colors"),
-        select("glyph_key_colors", KEY_COLOR_STYLES, &style, lang),
-        Some(&tr(lang, KEY_COLORS_HINT)),
-    )]
-    .spacing(2);
-    if style == "custom" {
-        let palette: Vec<(String, String)> = KEY_COLORS
-            .iter()
-            .map(|choice| (choice.value.to_string(), tr(lang, choice.en)))
-            .collect();
-        let boxes = ["cross", "circle", "square", "triangle"].map(|button| {
-            let key = format!("glyph_color_{button}");
-            column![
-                text(tr(lang, button_name(button)))
-                    .size(12)
-                    .style(theme::text_muted),
-                select_pairs_small(&key, &palette, &state.store.text(&key)),
-            ]
-            .spacing(2)
-            .into()
-        });
-        rows = rows.push(row(
-            state.rtl,
-            &tr(lang, "Face button colors"),
-            layout(boxes).spacing(10).into(),
-            None,
-        ));
-    }
-    rows.into()
-}
-
-/// Which input the keyboard icons show, for the styles that can draw the keyboard (the keyboard
-/// style, and "match my controller" while no gamepad is connected).
-fn glyph_keys_row<'a>(state: &State, lang: &str) -> Element<'a, Message> {
-    if !draws_the_keyboard(state) {
-        return space().height(0).into();
-    }
-    row(
-        state.rtl,
-        &tr(lang, "Keys on the icons"),
-        select(
-            "glyph_keys",
-            GLYPH_KEYS,
-            &state.store.text("glyph_keys"),
-            lang,
-        ),
-        Some(&tr(lang, GLYPH_KEYS_HINT)),
-    )
-}

@@ -147,6 +147,24 @@ def glyph_mounts(env, probe, game, out):
     return [part for guest, path in mounts.items() for part in ('--mount', f'{guest}={path}')], style
 
 
+D3_LANGUAGE_PACKS = {'17': 'ptBR', '1': 'enUS', '20': 'esMX', '2': 'frFR'}  # system language -> CPK prefix
+
+
+def d3_language(env, game):
+    """Diablo III shows the text of the language packs it finds in CPKs/ (the US release: enUS,
+    frFR, esMX; the Brazilian one: ptBR, esMX). A language whose pack is missing becomes the first
+    one the dump has (Portuguese first), rather than a game without text."""
+    cpks = Path(game) / 'CPKs'
+    have = {code for code, pack in D3_LANGUAGE_PACKS.items() if (cpks / f'{pack}_Common.cpk').exists()}
+    wanted = env.get('GOW3_LANGUAGE', '1')
+    if not have or wanted in have:
+        return
+    chosen = next(code for code in D3_LANGUAGE_PACKS if code in have)
+    env['GOW3_LANGUAGE'] = chosen
+    print(f'Language: {D3_LANGUAGE_PACKS.get(wanted, wanted)} is not in this dump; using {D3_LANGUAGE_PACKS[chosen]}',
+          flush=True)
+
+
 def d3_glyph_atlas(env, probe):
     """Diablo III's button icons are in its own archives (CPKs), not WADs: with an Xbox style the
     GPU core draws Xbox cells over its PlayStation button atlas (assets/glyphs/d3_xbox.spg,
@@ -252,6 +270,7 @@ def main():
     game = Path(env.get('GOW3_GAME_DIR', PORT.parent / 'CUSA01623'))
     if not (game / 'eboot.bin').is_file():
         fail(f'No eboot.bin in {game} (set GOW3_GAME_DIR).')
+    base_game = game  # the dump itself, also when an update is laid over it below
     update_view = None
     if env.get('GOW3_PATCH_DIR'):
         import game_update
@@ -291,14 +310,21 @@ def main():
                 isa_args = ['--isa-rewrite', str(out / 'isa-rewrite.bin')]
         run_script('content_profile.py', game, '--out', out, '--sku', env.get('GOW3_CONTENT_SKU', 'full'))
         # Add-ons installed beside the game, as <game folder>/../addcont/<TITLE_ID>/<label>.
+        # Diablo III's regions share add-ons: the Brazilian release's PKGs carry US content ids.
         title = game_profiles.title_id(game)
-        addcont = original_game.parent / 'addcont' / (title or '')
-        if title and 'GOW3_ADDCONT_DIR' not in env and addcont.is_dir():
-            env['GOW3_ADDCONT_DIR'] = str(addcont)
+        titles = [title] + [t for t in game_profiles.DIABLO3_TITLES if t != title] \
+            if title in game_profiles.DIABLO3_TITLES else [title]
+        for candidate in titles if title else []:
+            addcont = Path(base_game).resolve().parent / 'addcont' / candidate
+            if 'GOW3_ADDCONT_DIR' not in env and addcont.is_dir():
+                env['GOW3_ADDCONT_DIR'] = str(addcont)
+                print(f'Add-ons: {addcont}', flush=True)
 
         from patches import game_profile_for, patch_requirements, patch_status, selected_patches
         profile = game_profile_for(game)
         engine_fps = 60
+        if game_profiles.title_id(game) in game_profiles.DIABLO3_TITLES:
+            d3_language(env, game)
         # The window shows the game's icon (BMP: the format SDL loads without extra libraries); on
         # Linux the launcher's own icon (the AppImage ships the one chosen when it was built) and
         # an application id the desktop entry matches, so the shell shows the same icon.
@@ -306,7 +332,7 @@ def main():
         if not WINDOWS:
             # Games with their own profile (Diablo III...) keep their icon0.png and an app id of
             # their own; the launcher icon belongs to the port's original game.
-            own = game_profiles.title_id(game) == 'CUSA00242'
+            own = game_profiles.title_id(game) in game_profiles.DIABLO3_TITLES
             env.setdefault('SDL_APP_ID', 'diablo3' if own else 'gow3')
             if not own and (PORT / 'launcher' / 'gow3.png').is_file():
                 icon_file = PORT / 'launcher' / 'gow3.png'
@@ -364,7 +390,7 @@ def main():
         print(f'Engine frame rate: {engine_fps} FPS'
               + ('' if engine_fps > 60 or graphics['engine_fps'] == '60' else
                  ' (the frame rate patch was not found in this eboot.bin)'), flush=True)
-        if game_profiles.title_id(game) == 'CUSA00242':
+        if game_profiles.title_id(game) in game_profiles.DIABLO3_TITLES:
             glyph_args, glyph_style = [], d3_glyph_atlas(env, probe)
         else:
             glyph_args, glyph_style = glyph_mounts(env, probe, game, out)

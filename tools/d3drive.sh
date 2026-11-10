@@ -11,7 +11,7 @@ cd -- "$(dirname -- "$0")/.."
 log=$1 script=$2
 pad=$(mktemp)
 : > "$pad"
-GOW3_PAD_FILE=$pad GOW3_GAME_DIR=${GOW3_GAME_DIR:-$HOME/Games/PS4/CUSA00242} bash run.sh > "$log" 2>&1 &
+GOW3_PAD_FILE=$pad GOW3_GAME_DIR=${GOW3_GAME_DIR:-$HOME/Games/PS4/CUSA00243} GOW3_PATCH_DIR=${GOW3_PATCH_DIR-$HOME/Games/PS4/CUSA00243-UPDATE} bash run.sh > "$log" 2>&1 &
 game=$!
 start=$(date +%s.%N)
 while read -r at tokens; do

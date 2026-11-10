@@ -100,8 +100,9 @@ static void scan_addons(void) {
 }
 static ABI int32_t addon_list(uint32_t service,void *list,uint32_t capacity,uint32_t *hits) {
     require_initialized();
-    if (service) { fputs("STOP: nonzero AppContent service label unsupported\n",stderr); exit(21); }
     if ((!capacity || !list) && !hits) return PARAMETER;
+    /* Other service labels (Diablo III 1.47 asks for label 1 too) have no add-ons here. */
+    if (service) { if (hits) *hits=0; ++lists; return 0; }
     scan_addons();
     uint32_t n=0;
     if (list) for (; n<capacity && n<addon_count; ++n) {
@@ -119,6 +120,12 @@ static ABI int32_t addon_mount(uint32_t service,const void *label,char *mount_po
     (void)service; (void)label; (void)mount_point; return ADDCONT_NOT_MOUNTED;
 }
 static ABI int32_t addon_unmount(const char *mount_point) { (void)mount_point; return 0; }
+/* Add-ons the game can list once AppContent is initialized (for the system's entitlement event). */
+unsigned runtime_content_addons_ready(void) {
+    if (!initialized) return 0;
+    scan_addons();
+    return addon_count;
+}
 uintptr_t runtime_content_resolve(const char *name) {
     if (!strcmp(name,"g8cM39EUZ6o#libSceSysmodule")) return (uintptr_t)module_load;
     if (!strcmp(name,"hHrGoGoNf+s#libSceSysmodule")) return (uintptr_t)module_load_internal_arg;

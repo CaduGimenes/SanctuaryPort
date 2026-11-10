@@ -212,15 +212,15 @@ int main(void) {
     usleep(220000);
     data=read_pad();
     assert(data.buttons==0 && data.touch_count==0);
-    /* Split-screen: a second gamepad logs user 2 in; its pad reads only that gamepad. */
-    assert(!runtime_pad_second_user());
+    /* Local co-op: a second gamepad logs user 2 in; its pad reads only that gamepad. */
+    assert(runtime_pad_users()==0);
     desc.name="gow3 test controller 2";
     SDL_JoystickID id2=SDL_AttachVirtualJoystick(&desc);
     assert(id2!=0);
     SDL_Joystick *joystick2=SDL_OpenJoystick(id2);
     assert(joystick2);
     pump();
-    assert(runtime_pad_second_user());
+    assert(runtime_pad_users()==(1u<<2));
     assert(pad_open(2,0,0,NULL)==2 && pad_open(2,0,0,NULL)==ERR_ALREADY_OPENED);
     assert(SDL_SetJoystickVirtualButton(joystick2,SDL_GAMEPAD_BUTTON_SOUTH,true));
     assert(SDL_SetJoystickVirtualAxis(joystick2,SDL_GAMEPAD_AXIS_LEFTX,-32768));
@@ -231,11 +231,37 @@ int main(void) {
     data=read_pad();
     assert(!(data.buttons & BTN_CROSS) && data.left_x==128);
     assert(SDL_SetJoystickVirtualButton(joystick2,SDL_GAMEPAD_BUTTON_SOUTH,false));
+    /* Users 3 and 4: one more gamepad each, in the order they connect; each reads its own. */
+    desc.name="gow3 test controller 3";
+    SDL_JoystickID id3=SDL_AttachVirtualJoystick(&desc);
+    desc.name="gow3 test controller 4";
+    SDL_JoystickID id4=SDL_AttachVirtualJoystick(&desc);
+    assert(id3 && id4);
+    SDL_Joystick *joystick3=SDL_OpenJoystick(id3), *joystick4=SDL_OpenJoystick(id4);
+    assert(joystick3 && joystick4);
+    pump();
+    assert(runtime_pad_users()==((1u<<2)|(1u<<3)|(1u<<4)));
+    assert(pad_open(3,0,0,NULL)==3 && pad_open(4,0,0,NULL)==4 && pad_open(5,0,0,NULL)==ERR_INVALID_ARG);
+    assert(SDL_SetJoystickVirtualButton(joystick4,SDL_GAMEPAD_BUTTON_NORTH,true));
+    pump();
+    PadData third, fourth;
+    assert(pad_read_state(3,&third)==0 && pad_read_state(4,&fourth)==0);
+    assert(third.connected && !(third.buttons & BTN_TRIANGLE));
+    assert(fourth.connected && (fourth.buttons & BTN_TRIANGLE));
+    assert(SDL_SetJoystickVirtualButton(joystick4,SDL_GAMEPAD_BUTTON_NORTH,false));
+    SDL_CloseJoystick(joystick3);
+    assert(SDL_DetachVirtualJoystick(id3));
+    pump();
+    assert(runtime_pad_users()==((1u<<2)|(1u<<4)));  /* player 4 keeps its gamepad */
+    SDL_CloseJoystick(joystick4);
+    assert(SDL_DetachVirtualJoystick(id4));
+    pump();
+    assert(pad_close(3)==0 && pad_close(4)==0);
     SDL_CloseJoystick(joystick2);
     assert(SDL_DetachVirtualJoystick(id2));
     pump();
     assert(pad_read_state(2,&second)==0 && !second.connected && second.buttons==0);
-    assert(!runtime_pad_second_user());
+    assert(runtime_pad_users()==0);
     assert(pad_close(2)==0 && pad_read_state(2,&second)==ERR_INVALID_HANDLE);
     SDL_CloseJoystick(joystick);
     if (gamepad) SDL_CloseGamepad(gamepad);

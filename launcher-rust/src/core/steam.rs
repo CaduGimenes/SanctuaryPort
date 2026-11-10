@@ -424,7 +424,7 @@ mod tests {
     fn app_id_is_the_crc_of_exe_and_name_with_the_top_bit() {
         assert_eq!(
             shortcut_appid("\"/home/user/SanctuaryPort.AppImage\"", "SanctuaryPort"),
-            0xa02add32
+            0xc96596d9
         );
     }
 

@@ -205,6 +205,16 @@ static ABI int32_t posix_cond_init(GuestCond **c, void **a) { return posix_resul
 static ABI int32_t posix_cond_destroy(GuestCond **c) { return posix_result(cond_destroy(c)); }
 static ABI int32_t posix_cond_wait(GuestCond **c, GuestMutex **m) { return posix_result(cond_wait(c, m)); }
 static ABI int32_t posix_cond_timedwait(GuestCond **c, GuestMutex **m, const GuestTimespec *t) { return posix_result(cond_abs_timedwait(c, m, t)); }
+/* pthread_mutex_timedlock(mutex, absolute CLOCK_REALTIME deadline): errno values. */
+static ABI int32_t posix_mutex_timedlock(GuestMutex **m, const GuestTimespec *abs) {
+    int32_t e = ensure_mutex(m);
+    if (e) return posix_result(e);
+    if (!abs) return EINVAL;
+    const struct timespec end = {(time_t)abs->sec, (long)abs->nsec};
+    const int r = pthread_mutex_timedlock(&(*m)->native, &end);
+    if (!r) ++locks;
+    return r;
+}
 static ABI int32_t posix_cond_signal(GuestCond **c) { return posix_result(cond_signal(c)); }
 static ABI int32_t posix_cond_broadcast(GuestCond **c) { return posix_result(cond_broadcast(c)); }
 static ABI int32_t condattr_init(void **attr) {
@@ -242,6 +252,7 @@ uintptr_t runtime_mutex_resolve(const char *name) {
     if (!strcmp(name,"ttHNfU+qDBU#libkernel")) return (uintptr_t)posix_mutex_init;
     if (!strcmp(name,"ltCfaGr2JGE#libkernel")) return (uintptr_t)posix_mutex_destroy;
     if (!strcmp(name,"7H0iTOciTLo#libkernel")) return (uintptr_t)posix_mutex_lock;
+    if (!strcmp(name,"Io9+nTKXZtA#libkernel")) return (uintptr_t)posix_mutex_timedlock;
     if (!strcmp(name,"K-jXhbt2gn4#libkernel")) return (uintptr_t)posix_mutex_trylock;
     if (!strcmp(name,"2Z+PpY6CaJg#libkernel")) return (uintptr_t)posix_mutex_unlock;
     if (!strcmp(name, "F8bUHwAG284#libkernel")) return (uintptr_t)attr_init;

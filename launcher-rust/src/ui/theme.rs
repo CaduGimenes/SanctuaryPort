@@ -1,7 +1,7 @@
 //! Palette, fonts, widget styles, the zoom rule and the right-to-left mirror of the launcher.
 
 use iced::alignment::Horizontal;
-use iced::font::{Family, Weight};
+use iced::font::Family;
 use iced::widget::{button, checkbox, container, pick_list, text, text_input};
 use iced::{Background, Border, Color, Font, Padding, Size, Theme};
 

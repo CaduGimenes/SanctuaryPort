@@ -1,7 +1,29 @@
 # Diablo III (CUSA00242) — technical notes
 
-Diablo III: Reaper of Souls – Ultimate Evil Edition, PS4, US v1.00. This file covers what the port
-adds on top of the shared runtime (`src/`), GPU core (`gpu/`) and launcher (`launcher-rust/`).
+Diablo III on PS4: the Brazilian release CUSA00243 with its 1.47 update (Eternal Collection, client
+2.7.7) and the US Reaper of Souls – Ultimate Evil Edition 1.00 (CUSA00242). This file covers what
+the port adds on top of the shared runtime (`src/`), GPU core (`gpu/`) and launcher
+(`launcher-rust/`).
+
+## Versions
+
+- **CUSA00243 + 1.47** (the main target): the update is a separate folder (`GOW3_PATCH_DIR`) laid
+  over the base game by `scripts/game_update.py`. Its eboot needs the game's own PSN toolkit
+  (`libSceNpToolkit2.prx`, linked from the update's `sce_module`, as WipEout does), POSIX
+  semaphores (`src/runtime_sema.c`), `pthread_mutex_timedlock` and a few more offline answers.
+- **CUSA00242 1.00**: the first target; everything above works on it too.
+
+Add-ons: the Brazilian release's add-on PKGs carry US content ids, so they install under
+`addcont/CUSA00242`; `run.py` looks there for either title. 1.47 lists its add-ons (and unlocks the
+Necromancer, `NECROMANCER00003`) only when the system sends ENTITLEMENT_UPDATE (0x10000003) or
+ADDCONTENT_INSTALL (0x10000009): its system event loop (`sceSystemServiceReceiveEvent`) creates the
+add-on refresh job, which calls `sceAppContentGetAddcontInfoList` for service labels 0 and 1 and
+sets one ownership bit per known label. The runtime sends one ENTITLEMENT_UPDATE once AppContent is
+initialized and add-ons are installed (`src/runtime_services.c`).
+
+Both share their saves (the game keeps them under `CUSA00242`); 1.47 upgrades a 1.00 save after
+asking. Update PKGs keep the game's content type (0x1A): the installer tells them apart by
+param.sfo's CATEGORY `gp` and installs them into `<TITLE_ID>-UPDATE`.
 
 ## Game profile
 
@@ -58,9 +80,10 @@ re-extracts an outer PFS image correctly and can `--verify` an existing extracti
 
 ## Languages
 
-The eboot supports English (1), French (2), Spanish – Latin America (20) and Portuguese – Brazil
-(17). The US release ships `enUS_`, `esMX_` and `frFR_` packs; Portuguese also needs the
-`ptBR_*.cpk` packs of the Brazilian release.
+The game shows the language packs it finds in `CPKs/`: the Brazilian release ships `ptBR_` and
+`esMX_`, the US one `enUS_`, `frFR_` and `esMX_`. `run.py` (`d3_language`) replaces a system
+language (`GOW3_LANGUAGE`: 1 English, 2 French, 17 Portuguese – Brazil, 20 Spanish – Latin
+America) whose pack is missing with the first one the dump has, Portuguese first.
 
 ## Debugging
 
@@ -81,7 +104,8 @@ offsets + `0x400000`.
 
 `tools/d3drive.sh LOG SCRIPT` plays a timed button script and takes screenshots: lines are
 `<seconds> <tokens...>`, `-` releases everything, `end` stops the game. Cross at 10, 22, 34 and 46 s
-reaches the world in about a minute with a saved hero.
+reaches the world in about a minute with a saved hero. The main menu takes input about 10 s after
+'press any button' (it is still loading); earlier presses are lost.
 
 ## Reverse-engineering helpers (`tools/re/`)
 

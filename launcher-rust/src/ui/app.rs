@@ -495,14 +495,19 @@ pub fn update(state: &mut State, message: Message) -> Task<Message> {
         Message::Tick(at) => {
             tick(state, at);
             // A finished PKG install sets the game folder it wrote.
-            let installed = state
+            let (game, update) = state
                 .pkg_install
                 .lock()
-                .ok()
-                .and_then(|mut status| status.installed_game.take());
-            if let Some(dir) = installed {
-                state.store.set("game_dir", Value::String(dir.display().to_string()));
-                return follow(state, Cause::Keys(&["game_dir"]));
+                .map(|mut status| (status.installed_game.take(), status.installed_update.take()))
+                .unwrap_or_default();
+            if game.is_some() || update.is_some() {
+                if let Some(dir) = game {
+                    state.store.set("game_dir", Value::String(dir.display().to_string()));
+                }
+                if let Some(dir) = update {
+                    state.store.set("update_dir", Value::String(dir.display().to_string()));
+                }
+                return follow(state, Cause::Keys(&["game_dir", "update_dir"]));
             }
             if state
                 .window_unconfirmed

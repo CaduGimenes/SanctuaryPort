@@ -16,14 +16,14 @@ use crate::core::patches::{builtin_xml, game_patch_metas, selectable, PatchMeta}
 use crate::core::save_backup::{list_backups, restore, KEEP};
 use crate::core::save_restore;
 use crate::core::settings::mark_default_patches_offered;
-use crate::core::trophy_sound::{self, TrophySound};
+use crate::core::trophy_sound::{self};
 use crate::ui::app::{Message, State};
 use crate::ui::follow::{follow, Cause};
 use crate::ui::pages::controls::ini_number;
 use crate::ui::play::{refuse_while_live, LiveAction};
 use crate::ui::theme;
 use crate::ui::widgets::{
-    checkbox, folder, min_width, row, section, select, slider, toggle_row, Modal, SELECT_MIN,
+    folder, min_width, row, section, select, slider, Modal, SELECT_MIN,
     SELECT_TEXT,
 };
 
@@ -78,37 +78,9 @@ const MULTIPLIERS: [(&str, &str, &str); 6] = [
 
 const MULTIPLIER_MIN: f32 = 0.1;
 const MULTIPLIER_MAX: f32 = 100.0;
-/// Slider positions: the multiplier follows them on a logarithmic scale, as the in-game slider.
-const MULTIPLIER_STEPS: f32 = 1000.0;
 
 fn multiplier_text(value: f32) -> String {
     format!("{:.3}", value.clamp(MULTIPLIER_MIN, MULTIPLIER_MAX))
-}
-
-/// A multiplier as the in-game menu shows it: a logarithmic 0.1x to 100x slider and a 1x button.
-fn multiplier<'a>(key: &'static str, value: f32) -> Element<'a, Message> {
-    let value = if value.is_finite() {
-        value.clamp(MULTIPLIER_MIN, MULTIPLIER_MAX)
-    } else {
-        1.0
-    };
-    let span = (MULTIPLIER_MAX / MULTIPLIER_MIN).ln();
-    let position = (value / MULTIPLIER_MIN).ln() / span * MULTIPLIER_STEPS;
-    let track = iced::widget::slider(0.0..=MULTIPLIER_STEPS, position, move |at: f32| {
-        let chosen = MULTIPLIER_MIN * (at / MULTIPLIER_STEPS * span).exp();
-        Message::Set(key.to_string(), Value::String(multiplier_text(chosen)))
-    })
-    .width(220.0);
-    let one = button(text("1x"))
-        .style(theme::button_flat)
-        .on_press(Message::Set(
-            key.to_string(),
-            Value::String(multiplier_text(1.0)),
-        ));
-    layout![track, text(format!("{value:.2}x")), one]
-        .spacing(10)
-        .align_y(Center)
-        .into()
 }
 
 /// Turn off all cheats: the original game, every cheat off and every multiplier 1x (#1135).
@@ -462,108 +434,6 @@ fn backups_row(state: &State) -> Element<'_, Message> {
     body.into()
 }
 
-/// Renders translated built-in patch labels with original names as toggle identities.
-fn patches_section(state: &State) -> Element<'_, Message> {
-    let lang = state.lang.as_str();
-    let mut body = column![section(state.rtl, &tr(lang, "Game patches"))].spacing(2);
-    let patches = &state.patches;
-    let Some(title_id) = patches.title_id.as_deref() else {
-        return body
-            .push(text(tr(lang, "No built-in patches for this game.")).style(theme::text_muted))
-            .into();
-    };
-    body = body.push(
-        text(tr_fmt(
-            lang,
-            "{} · version {} · {}. Resolution and frame rate patches follow Performance.",
-            &[title_id, &patches.version, &patches.xml_name],
-        ))
-        .style(theme::text_muted),
-    );
-    for meta in &patches.selectable {
-        let label = match &meta.author {
-            Some(author) => format!("{}  ({author})", tr(lang, &meta.name)),
-            None => tr(lang, &meta.name),
-        };
-        let name = meta.name.clone();
-        let note = meta.note.as_deref().map(|note| tr(lang, note));
-        body = body.push(toggle_row(
-            state.rtl,
-            &label,
-            patches.chosen.contains(&meta.name),
-            Some(move |on| Message::PatchToggled(name.clone(), on)),
-            note.as_deref(),
-        ));
-    }
-    body.into()
-}
-
-/// Cheats, multipliers, the button that turns them all off and the trophy sound.
-fn cheats_section<'a>(state: &State) -> Element<'a, Message> {
-    let lang = state.lang.as_str();
-    let mut body = column![section(state.rtl, &tr(lang, "Cheats"))].spacing(2);
-    for (key, label, note) in CHEATS {
-        body = body.push(checkbox(
-            state.rtl,
-            key,
-            &tr(lang, label),
-            state.store.flag(key),
-            Some(&tr(lang, note)),
-        ));
-    }
-    body = body.push(section(state.rtl, &tr(lang, "Multipliers")));
-    for (key, label, note) in MULTIPLIERS {
-        body = body.push(row(
-            state.rtl,
-            &tr(lang, label),
-            multiplier(key, ini_number(state, key)),
-            Some(&tr(lang, note)),
-        ));
-    }
-    body = body.push(row(
-        state.rtl,
-        "",
-        button(text(tr(lang, "Turn off all cheats")))
-            .style(theme::button_flat)
-            .on_press(Message::CheatsOff)
-            .into(),
-        Some(&tr(
-            lang,
-            "Turns off every cheat and sets every multiplier back to 1x: the game as it was made. In game, hold F10 and press 1 to 8 to switch the cheats above, in their order.",
-        )),
-    ));
-    let sound = state.trophy_sound;
-    body = body.push(section(state.rtl, &tr(lang, "Trophy notifications")));
-    body = body.push(toggle_row(
-        state.rtl,
-        &tr(lang, "Mute the trophy sound"),
-        sound.muted,
-        Some(move |muted| Message::TrophySound(TrophySound { muted, ..sound })),
-        Some(&tr(
-            lang,
-            "The chime of an unlocked trophy. Also in the in-game menu (Insert): Trophies > Notifications.",
-        )),
-    ));
-    let volume = iced::widget::slider(0.0..=100.0, sound.volume as f32, move |v: f32| {
-        Message::TrophySound(TrophySound {
-            volume: v.round() as u32,
-            ..sound
-        })
-    })
-    .step(1.0_f32)
-    .width(220.0);
-    body = body.push(row(
-        state.rtl,
-        &tr(lang, "Trophy sound volume"),
-        layout![volume, text(format!("{} %", sound.volume))]
-            .spacing(10)
-            .align_y(Center)
-            .into(),
-        None,
-    ));
-    body.into()
-}
-
 pub fn view(state: &State) -> Element<'_, Message> {
     let lang = state.lang.as_str();
     let hint = |english: &str| tr(lang, english);
@@ -650,6 +520,8 @@ pub struct PkgStatus {
     pub text: String,
     /// The game folder an install wrote; the next tick sets it as the game folder.
     pub installed_game: Option<std::path::PathBuf>,
+    /// The update folder an install wrote; the next tick sets it as the update folder.
+    pub installed_update: Option<std::path::PathBuf>,
 }
 
 /// Where PKGs install: `~/Games/PS4` (the game in `<TITLE_ID>`, add-ons in `addcont/`).
@@ -682,10 +554,12 @@ pub fn start_pkg_install(state: &mut State, files: Vec<std::path::PathBuf>) {
             .into_iter()
             .filter_map(|f| pkg_install::read_info(&f).ok().map(|i| (f, i)))
             .collect();
-        jobs.sort_by_key(|(_, info)| !info.is_game());
+        // The game first, then its update, then the add-ons.
+        jobs.sort_by_key(|(_, info)| (!info.is_game(), info.is_patch()));
         let count = jobs.len();
         let mut result = Vec::new();
         let mut game_dir = None;
+        let mut update_dir = None;
         for (n, (file, info)) in jobs.into_iter().enumerate() {
             let target = pkg_install::target_dir(&info, &games);
             let name = info.content_id.clone();
@@ -699,7 +573,9 @@ pub fn start_pkg_install(state: &mut State, files: Vec<std::path::PathBuf>) {
             };
             match pkg_install::install(&file, &target, &mut progress) {
                 Ok(_) => {
-                    if info.is_game() {
+                    if info.is_patch() {
+                        update_dir = Some(target.clone());
+                    } else if info.is_game() {
                         game_dir = Some(target.clone());
                     }
                     result.push(format!("✓ {name}"));
@@ -710,6 +586,7 @@ pub fn start_pkg_install(state: &mut State, files: Vec<std::path::PathBuf>) {
         if let Ok(mut s) = status.lock() {
             s.running = false;
             s.installed_game = game_dir;
+            s.installed_update = update_dir;
             s.text = format!("{} {}", tr(&lang, "Install finished:"), result.join("  "));
         }
     });

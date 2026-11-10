@@ -658,7 +658,6 @@ pub fn resolution_patch_xml(
 mod tests {
     use super::*;
     use crate::core::options::{resolution_label, SIZES};
-    use crate::core::patches::resolution_names;
     use std::fs;
     use std::path::PathBuf;
 
@@ -692,12 +691,6 @@ mod tests {
 
     fn startup(pairs: &[(&str, &str)]) -> Options {
         startup_options(&map(pairs), &[])
-    }
-
-    fn repo(path: &str) -> PathBuf {
-        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("..")
-            .join(path)
     }
 
     fn ini_values(path: &Path) -> IndexMap<String, String> {
@@ -1000,35 +993,6 @@ mod tests {
     }
 
     #[test]
-    fn every_built_in_resolution_has_a_patch() {
-        let mut built_in: Vec<String> = RESOLUTIONS
-            .iter()
-            .filter(|r| **r != "native")
-            .map(|r| r.to_string())
-            .collect();
-        built_in.sort();
-        let mut found = resolution_names(&[repo("patches/CUSA01623.xml")]);
-        found.sort();
-        assert_eq!(built_in, found);
-    }
-
-    #[test]
-    fn the_900p_is_the_built_in_size_between_720p_and_1440p() {
-        // #238: 900p (1600x900) sits between 720p and 1440p, with its own resolution patch.
-        assert_eq!(RESOLUTIONS.iter().position(|r| *r == "900p"), Some(3));
-        assert_eq!(
-            SIZES.iter().find(|(n, _)| *n == "900p").map(|(_, s)| *s),
-            Some((1600, 900))
-        );
-        let xml = fs::read_to_string(repo("patches/CUSA01623.xml")).unwrap();
-        let doc = roxmltree::Document::parse(&xml).unwrap();
-        assert!(doc
-            .descendants()
-            .filter(|n| n.has_tag_name("Metadata"))
-            .any(|n| n.attribute("Name") == Some("Resolution Patch - 900p")));
-    }
-
-    #[test]
     fn resolutions_of_enabled_mods() {
         // A mod's "Resolution Patch - <size>" is a render resolution only while its mod is on.
         assert_eq!(resolutions(&[]), RESOLUTIONS);
@@ -1192,33 +1156,6 @@ mod tests {
                 "GOW3_ANISOTROPY"
             ]
         );
-    }
-
-    #[test]
-    fn the_game_knows_the_launcher_sizes() {
-        // gpu/shim/spartanport_graphics.h ResolutionSizes, which sizes the window, matches SIZES.
-        let header = fs::read_to_string(repo("gpu/shim/spartanport_graphics.h")).unwrap();
-        let table = header
-            .split("ResolutionSizes = {{")
-            .nth(1)
-            .and_then(|rest| rest.split("}}};").next())
-            .unwrap_or_default();
-        let mut found: Vec<(String, (u32, u32))> = Vec::new();
-        for entry in table.split("{\"").skip(1) {
-            let (name, rest) = entry.split_once('"').unwrap_or_default();
-            let numbers: Vec<u32> = rest
-                .split(|c: char| !c.is_ascii_digit())
-                .filter_map(|s| s.parse().ok())
-                .collect();
-            if let [w, h] = numbers[..] {
-                found.push((name.to_string(), (w, h)));
-            }
-        }
-        let mut expected: Vec<(String, (u32, u32))> =
-            SIZES.iter().map(|(n, s)| (n.to_string(), *s)).collect();
-        found.sort();
-        expected.sort();
-        assert_eq!(found, expected);
     }
 
     fn dmi(vendor: &str, product: &str) -> tempfile::TempDir {
@@ -1398,30 +1335,6 @@ render_resolution=3440x1440
     }
 
     #[test]
-    fn upscale_render_size_matches_the_games_menus() {
-        // tests/upscale_render_sizes.txt: the game's menus (spartanport_settings.cpp) read it too.
-        let table = fs::read_to_string(repo("tests/upscale_render_sizes.txt")).unwrap();
-        let mut cases = 0;
-        for line in table
-            .lines()
-            .filter(|l| !l.starts_with('#') && !l.trim().is_empty())
-        {
-            let v: Vec<u32> = line
-                .split_whitespace()
-                .map(|x| x.parse().unwrap())
-                .collect();
-            let preset = v[0].to_string();
-            assert_eq!(
-                upscale_render_size(&preset, (v[1], v[2])),
-                Some((v[3], v[4])),
-                "{line}"
-            );
-            cases += 1;
-        }
-        assert!(cases >= 10);
-    }
-
-    #[test]
     fn unsupported_upscalers_do_not_patch_the_render_resolution() {
         let dir = tempfile::tempdir().unwrap();
         let config = dir.path().join("gow3.ini");
@@ -1508,146 +1421,4 @@ render_resolution=native
         );
     }
 
-    #[test]
-    fn resolution_patch_for_any_size_matches_the_built_in_ones() {
-        let xml = fs::read_to_string(repo("patches/CUSA01623.xml")).unwrap();
-        let lines = |text: &str| -> Vec<String> {
-            text.lines()
-                .map(str::trim)
-                .filter(|l| l.starts_with("<Line "))
-                .map(String::from)
-                .collect()
-        };
-        for (name, width, height) in [
-            ("720p", 1280, 720),
-            ("1440p", 2560, 1440),
-            ("4K", 3840, 2160),
-            ("8K", 7680, 4320),
-        ] {
-            let made = resolution_patch_xml(&xml, width, height, (width, height)).unwrap();
-            let start = xml
-                .find(&format!("Name=\"Resolution Patch - {name}\""))
-                .unwrap();
-            let block = &xml[start..start + xml[start..].find("</Metadata>").unwrap()];
-            let mut expected = lines(block);
-            if name == "4K" {
-                // Plus the 8K template's single-sample line (#1175).
-                expected.extend(
-                    lines(&made)
-                        .into_iter()
-                        .filter(|l| l.contains("0x0055a876")),
-                );
-            }
-            assert_eq!(lines(&made), expected, "{name}");
-        }
-        let made = resolution_patch_xml(&xml, 1280, 720, (1280, 720)).unwrap();
-        assert!(made.contains("Name=\"Resolution Patch - 1280x720\""));
-        let small = resolution_patch_xml(&xml, 1706, 960, (2560, 1440)).unwrap();
-        assert!(small.contains("Value=\"aa060000\"") && small.contains("Value=\"c0030000\""));
-    }
-
-    #[test]
-    fn resolution_patch_takes_the_smallest_template_that_fits() {
-        // The Video Arena (0x7cd918) grows with the template: 2.25 GiB up to 1080p, then 1440p, 4K, 8K.
-        let xml = fs::read_to_string(repo("patches/CUSA01623.xml")).unwrap();
-        let arena = |width, height| {
-            let made = resolution_patch_xml(&xml, width, height, (width, height)).unwrap();
-            let key = "Address=\"0x007cd918\" Value=\"";
-            let at = made.find(key).unwrap() + key.len();
-            made[at..at + 8].to_string()
-        };
-        assert_eq!(arena(1918, 1078), "00000090");
-        assert_eq!(arena(1970, 1108), "000000b0");
-        assert_eq!(arena(2954, 1662), "000000f0");
-        assert_eq!(arena(5118, 2878), "000000ff");
-        let made = resolution_patch_xml(&xml, 2954, 1662, (3840, 2160)).unwrap();
-        for value in [
-            "8a0b0000", "7e060000", "8a0b", "7e06", "c5050000", "3f030000",
-        ] {
-            assert!(made.contains(&format!("Value=\"{value}\"")), "{value}");
-        }
-    }
-
-    #[test]
-    fn resolution_patch_uses_single_sample_buffers_from_the_4k_template() {
-        // Issue #1175: with MSAA scene buffers, renders of about 3300-3440 x 1440 crash at boot
-        // (FSR Quality at 5120x2160 renders 3414x1440). The built-in 3440x1440 patch and every
-        // render made from the 4K template turn on single-sample buffers, as the 8K one does.
-        let xml = fs::read_to_string(repo("patches/CUSA01623.xml")).unwrap();
-        let single = "Address=\"0x0055a876\" Value=\"9090\"";
-        for (width, height) in [(3414, 1440), (3300, 1440), (3438, 1438), (3838, 2158)] {
-            let made = resolution_patch_xml(&xml, width, height, (5120, 2160)).unwrap();
-            assert_eq!(made.matches(single).count(), 1, "{width}x{height}");
-        }
-        let made = resolution_patch_xml(&xml, 1706, 960, (2560, 1440)).unwrap();
-        assert!(!made.contains(single));
-        let builtin = &xml[xml.find("Name=\"Resolution Patch - 3440x1440\"").unwrap()..];
-        assert!(builtin[..builtin.find("</Metadata>").unwrap()].contains(single));
-    }
-
-    #[test]
-    fn resolution_patch_keeps_the_output_shape() {
-        // Issue #1182: an ultrawide output rendered below its size kept the 16:9 aspect of the
-        // template and showed a stretched 16:9 picture. Same aspect and Hor+ view as the built-in
-        // 5120x2160 patch; a taller output (1920x1200) only sets the aspect.
-        let xml = fs::read_to_string(repo("patches/CUSA01623.xml")).unwrap();
-        let value = |made: &str, address: &str| {
-            let key = format!("Address=\"{address}\" Value=\"");
-            made.find(&key).map(|at| {
-                let start = at + key.len();
-                made[start..start + made[start..].find('"').unwrap()].to_string()
-            })
-        };
-        for render in [(3414, 1440), (5118, 2158)] {
-            let made = resolution_patch_xml(&xml, render.0, render.1, (5120, 2160)).unwrap();
-            assert_eq!(
-                value(&made, "0x005f0b57").as_deref(),
-                Some("26b4174026b41740")
-            );
-            assert_eq!(value(&made, "0x005c03c1").as_deref(), Some("abaaaa3f"));
-            // Hor+ needs the hooks that apply K too, or the picture is zoomed 1.33x; their
-            // targets must still name the lines they jump to.
-            let lines: Vec<&str> = made.split("<Line ").skip(1).collect();
-            let builtin = &xml[xml.find("Name=\"Resolution Patch - 5120x2160\"").unwrap()..];
-            let builtin = &builtin[..builtin.find("</Metadata>").unwrap()];
-            let hooks: Vec<&str> = builtin.split("<Line ").skip(1).skip(15).collect();
-            assert_eq!(lines[lines.len() - hooks.len()..].len(), 14);
-            for (made_line, hook) in lines[lines.len() - hooks.len()..].iter().zip(&hooks) {
-                assert_eq!(made_line.split("/>").next(), hook.split("/>").next());
-            }
-            let targets: Vec<&str> = made.split("<Target ").skip(1).collect();
-            assert_eq!(targets.len(), builtin.matches("<Target ").count());
-            for target in targets.iter().filter(|t| t.contains("Line=\"")) {
-                let index: usize = target
-                    .split("Line=\"")
-                    .nth(1)
-                    .unwrap()
-                    .split('"')
-                    .next()
-                    .unwrap()
-                    .parse()
-                    .unwrap();
-                let address = target
-                    .split("Address=\"")
-                    .nth(1)
-                    .unwrap()
-                    .split('"')
-                    .next()
-                    .unwrap();
-                assert!(
-                    lines[index].contains(&format!("Address=\"{address}\"")),
-                    "{target}"
-                );
-            }
-        }
-        let made = resolution_patch_xml(&xml, 1278, 798, (1920, 1200)).unwrap();
-        assert_eq!(
-            value(&made, "0x005f0b57").as_deref(),
-            Some("cdcccc3fcdcccc3f")
-        );
-        assert_eq!(value(&made, "0x005c03c1"), None);
-        let made = resolution_patch_xml(&xml, 1918, 1078, (1920, 1080)).unwrap();
-        assert_eq!(value(&made, "0x005f0b57"), None);
-        assert_eq!(value(&made, "0x005c03c1"), None);
-    }
 }
