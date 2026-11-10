@@ -9,8 +9,8 @@
 static int capture;
 static int vibration_percent=100;
 static uint16_t rumble_low, rumble_high;
-int gow3gpu_overlay_captures_input(void) { return capture; }
-int gow3gpu_vibration_percent(void) { return vibration_percent; }
+int sanctuarygpu_overlay_captures_input(void) { return capture; }
+int sanctuarygpu_vibration_percent(void) { return vibration_percent; }
 
 static bool SDLCALL record_rumble(void *userdata, uint16_t low, uint16_t high) {
     (void)userdata;
@@ -19,12 +19,12 @@ static bool SDLCALL record_rumble(void *userdata, uint16_t low, uint16_t high) {
     return true;
 }
 void runtime_user_events(void) {}
-int gow3gpu_stick_deadzone_percent(void) { return 0; }
-void gow3gpu_request_screenshot(void) {}
-int gow3gpu_mouse_prompt_distance(void) { return 0; }
-void gow3gpu_mouse_pause_key(void) {}
-int gow3gpu_mouse_aim_style(void) { return 0; }
-int gow3gpu_mouse_aim_sensitivity(void) { return 100; }
+int sanctuarygpu_stick_deadzone_percent(void) { return 0; }
+void sanctuarygpu_request_screenshot(void) {}
+int sanctuarygpu_mouse_prompt_distance(void) { return 0; }
+void sanctuarygpu_mouse_pause_key(void) {}
+int sanctuarygpu_mouse_aim_style(void) { return 0; }
+int sanctuarygpu_mouse_aim_sensitivity(void) { return 100; }
 uintptr_t runtime_lookup(const RuntimeExport *table, size_t count, const char *name) {
     (void)table; (void)count; (void)name;
     return 0;
@@ -51,11 +51,11 @@ static void pump(void) { SDL_UpdateJoysticks(); SDL_UpdateGamepads(); }
 int main(void) {
     const char *tmp=getenv("TMPDIR") ? getenv("TMPDIR") : getenv("TEMP") ? getenv("TEMP") : "/tmp";
     char path[1024];
-    snprintf(path,sizeof(path),"%s/gow3-pad-test-XXXXXX",tmp);
+    snprintf(path,sizeof(path),"%s/sanctuary-pad-test-XXXXXX",tmp);
     int fd=mkstemp(path);
     assert(fd>=0);
     close(fd);
-    setenv("GOW3_PAD_FILE",path,1);
+    setenv("SANCTUARY_PAD_FILE",path,1);
     setenv("SDL_VIDEODRIVER","dummy",1);
     /* Only the virtual test controller is a gamepad, whatever is plugged in. */
     SDL_SetHint(SDL_HINT_GAMECONTROLLER_IGNORE_DEVICES_EXCEPT,"0x1d50/0x6189");
@@ -64,8 +64,8 @@ int main(void) {
 
     /* A click without a touch surface (Back, Tab, Backspace, the pad file) plays like a finger:
      * the touch comes first, the button CLICK_LEAD_US later, and the touch stays CLICK_TAIL_US
-     * after the release. God of War III opens photo mode on the release of a left click with
-     * the finger still down; a touch that appears and vanishes with the button is ignored. */
+     * after the release. Games may act on the release of a click with the finger still down
+     * and ignore a touch that appears and vanishes with the button. */
     inject(path,"cross l3 touchpad_left");
     PadData data=read_pad();
     assert((data.buttons & (BTN_CROSS|BTN_L3))==(BTN_CROSS|BTN_L3));
@@ -137,7 +137,7 @@ int main(void) {
     desc.nbuttons=SDL_GAMEPAD_BUTTON_COUNT;
     desc.button_mask=(1u<<SDL_GAMEPAD_BUTTON_COUNT)-1;
     desc.axis_mask=(1u<<SDL_GAMEPAD_AXIS_COUNT)-1;
-    desc.name="gow3 test controller";
+    desc.name="sanctuary test controller";
     desc.vendor_id=0x1d50;
     desc.product_id=0x6189;
     desc.ntouchpads=1;
@@ -214,7 +214,7 @@ int main(void) {
     assert(data.buttons==0 && data.touch_count==0);
     /* Local co-op: a second gamepad logs user 2 in; its pad reads only that gamepad. */
     assert(runtime_pad_users()==0);
-    desc.name="gow3 test controller 2";
+    desc.name="sanctuary test controller 2";
     SDL_JoystickID id2=SDL_AttachVirtualJoystick(&desc);
     assert(id2!=0);
     SDL_Joystick *joystick2=SDL_OpenJoystick(id2);
@@ -232,9 +232,9 @@ int main(void) {
     assert(!(data.buttons & BTN_CROSS) && data.left_x==128);
     assert(SDL_SetJoystickVirtualButton(joystick2,SDL_GAMEPAD_BUTTON_SOUTH,false));
     /* Users 3 and 4: one more gamepad each, in the order they connect; each reads its own. */
-    desc.name="gow3 test controller 3";
+    desc.name="sanctuary test controller 3";
     SDL_JoystickID id3=SDL_AttachVirtualJoystick(&desc);
-    desc.name="gow3 test controller 4";
+    desc.name="sanctuary test controller 4";
     SDL_JoystickID id4=SDL_AttachVirtualJoystick(&desc);
     assert(id3 && id4);
     SDL_Joystick *joystick3=SDL_OpenJoystick(id3), *joystick4=SDL_OpenJoystick(id4);

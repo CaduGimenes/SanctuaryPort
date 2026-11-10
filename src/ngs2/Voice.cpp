@@ -264,8 +264,8 @@ static void AddWaveformBlocks(Ngs2Voice& voice, const Ngs2SamplerVoiceWaveformBl
             if (vag.num_samples == 0 && vag.data_size == 0) continue;
             auto decoded = std::make_shared<const std::vector<std::int16_t>>(
                 DecodeVag(static_cast<const std::uint8_t*>(param.data) + vag.data_offset, vag.data_size, voice.channels));
-            // GOW3_NGS2_DUMP_VAG=<folder> (diagnostics): the first 40 blocks, raw and decoded.
-            static const char* dump = std::getenv("GOW3_NGS2_DUMP_VAG");
+            // SANCTUARY_NGS2_DUMP_VAG=<folder> (diagnostics): the first 40 blocks, raw and decoded.
+            static const char* dump = std::getenv("SANCTUARY_NGS2_DUMP_VAG");
             static int dumped = 0;
             if (dump && dumped < 40) {
                 const std::string base = std::string(dump) + "/vag" + std::to_string(dumped++) + "_" + std::to_string(voice.sampleRate);

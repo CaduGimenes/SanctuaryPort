@@ -31,23 +31,20 @@ use sanctuaryport_launcher::ui::widgets;
 use sanctuaryport_launcher::ui::widgets::modal::{Modal, ModalKind, ModalMessage};
 
 /// The page order of the Global Constraints.
-const ORDER: [Page; 8] = [
+const ORDER: [Page; 7] = [
     Page::Home,
     Page::Graphics,
     Page::Performance,
     Page::Game,
-    Page::Trophies,
     Page::Controls,
     Page::Advanced,
     Page::Log,
 ];
 
 /// The pages whose drawer takes 72 % of the window (R95 adds Performance).
-const WIDE: [Page; 5] = [
+const WIDE: [Page; 3] = [
     Page::Performance,
-    Page::Trophies,
     Page::Controls,
-    Page::Mods,
     Page::Log,
 ];
 
@@ -160,7 +157,7 @@ fn escape_closes() {
 fn dialog(kind: ModalKind) -> Option<Modal> {
     Some(Modal {
         kind,
-        title: "SpartanPort".into(),
+        title: "SanctuaryPort".into(),
         text: "Install version 9.9.9 now?".into(),
     })
 }
@@ -177,7 +174,7 @@ fn keys_do_nothing_under_a_dialog() {
                 build: None,
             },
             published: String::new(),
-            url: "https://example.invalid/SpartanPort.zip".into(),
+            url: "https://example.invalid/SanctuaryPort.zip".into(),
             page: String::new(),
         })),
         no: Message::Modal(ModalMessage::Dismiss),
@@ -249,8 +246,8 @@ fn arrows_cycle_pages_in_order() {
 fn home_tab_closes_the_drawer() {
     let dir = tempfile::tempdir().unwrap();
     let mut state = state_in(dir.path());
-    click(&mut state, "Mods");
-    assert_eq!(state.drawer, DrawerState::Open(Page::Mods));
+    click(&mut state, "Controls");
+    assert_eq!(state.drawer, DrawerState::Open(Page::Controls));
     click(&mut state, "Home");
     assert_eq!(state.drawer, DrawerState::Closed);
     assert_eq!(state.page, Page::Home);
@@ -403,25 +400,17 @@ fn a_red_hairline_tops_the_bar_and_edges_the_drawer() {
 }
 
 /// The drawer subtitles of the mockup (`launcher-mockup-v13.html`), without its sample counts.
-const SUBTITLES: [(Page, &str); 8] = [
+const SUBTITLES: [(Page, &str); 6] = [
     (
         Page::Graphics,
-        "Stored in spartanport.ini; the in-game menu (Insert or R3+L2) changes the same values.",
+        "Stored in sanctuary.ini; the in-game menu (Insert or R3+L2) changes the same values.",
     ),
     (
         Page::Performance,
         "Frame rate, shaders and GPU data paths. Applied when the game starts.",
     ),
-    (Page::Game, "Your game dump, saves and the game patches."),
-    (
-        Page::Trophies,
-        "The trophies this port recorded while you played.",
-    ),
+    (Page::Game, "Your game dump, saves and language."),
     (Page::Controls, "Keyboard, mouse and gamepad mapping."),
-    (
-        Page::Mods,
-        "Change textures, sounds and text. Your game files stay untouched.",
-    ),
     (
         Page::Advanced,
         "Launcher options, diagnostics and system tools.",

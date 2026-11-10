@@ -15,12 +15,14 @@ use sanctuaryport_launcher::ui::app::{self, Message, State};
 use sanctuaryport_launcher::ui::pages::Page;
 use sanctuaryport_launcher::ui::theme;
 
-fn render(state: &State, out: &PathBuf, name: &str) {
+fn render(state: &State, out: &std::path::Path, name: &str) {
     let settings = Settings {
         fonts: theme::font_bytes().map(Cow::Borrowed).to_vec(),
         ..Settings::default()
     };
-    let mut ui = Simulator::with_size(settings, Size::new(1280.0, 800.0), app::view(state));
+    // SP_PREVIEW_HEIGHT: a taller window shows every row of a page without scrolling.
+    let height = std::env::var("SP_PREVIEW_HEIGHT").ok().and_then(|h| h.parse().ok()).unwrap_or(800.0);
+    let mut ui = Simulator::with_size(settings, Size::new(1280.0, height), app::view(state));
     let snapshot = ui.snapshot(&theme::theme()).unwrap();
     let scratch = tempfile::tempdir().unwrap();
     assert!(snapshot.matches_image(scratch.path().join("render.png")).unwrap());
@@ -36,7 +38,7 @@ fn preview_pages() {
     std::fs::create_dir_all(&out).unwrap();
     let port = PathBuf::from(env!("CARGO_MANIFEST_DIR")).parent().unwrap().to_path_buf();
     let paths = Paths::from_env(&port, &|name| {
-        (name == "GOW3_PORT_DIR").then(|| port.display().to_string())
+        (name == "SANCTUARY_PORT_DIR").then(|| port.display().to_string())
     });
     let mut state = State::new(paths);
     state.lang = std::env::var("SP_PREVIEW_LANG").unwrap_or_else(|_| "pt".into());

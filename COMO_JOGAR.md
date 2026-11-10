@@ -36,7 +36,7 @@ Se você já tem o jogo extraído, é só apontar o launcher para a pasta que te
 Clique em **JOGAR** no launcher, ou pelo terminal:
 
 ```bash
-GOW3_GAME_DIR=~/Games/PS4/CUSA00243 GOW3_PATCH_DIR=~/Games/PS4/CUSA00243-UPDATE bash run.sh
+SANCTUARY_GAME_DIR=~/Games/PS4/CUSA00243 SANCTUARY_PATCH_DIR=~/Games/PS4/CUSA00243-UPDATE bash run.sh
 ```
 
 Os saves ficam em `user/savedata/`, com uma cópia de segurança em `user/savedata_backups/` a cada

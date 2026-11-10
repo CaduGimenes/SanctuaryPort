@@ -526,8 +526,10 @@ fn skip_puts_the_aspect_back_with_the_resolution() {
     let mut state = at_step(dir.path(), Step::Video);
     let resolution = |state: &State| state.store.text("render_resolution");
     assert_eq!(state.aspect, "16:9");
-    assert!(performance::aspect_options(&state).contains(&"21:9".to_string()));
-    let _ = app::update(&mut state, Message::Aspect("21:9".into()));
+    let _ = app::update(
+        &mut state,
+        Message::Set("render_resolution".into(), serde_json::json!("1440p")),
+    );
     assert_ne!(resolution(&state), "native");
     setup(&mut state, SetupMessage::Skip);
     assert_eq!(resolution(&state), "native");

@@ -8,7 +8,7 @@
 #define _GNU_SOURCE
 #define _CRT_RAND_S /* rand_s */
 #include "runtime.h"
-#include "gpu/gow3gpu.h"
+#include "gpu/sanctuarygpu.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -159,10 +159,10 @@ static ABI int32_t ef_cancel(EventFlag *handle, uint64_t bits, int32_t *waiters)
 }
 
 /* ---- Small kernel and libc queries ---- */
-/* Base PS4, or PS4 Pro with GOW3_NEO=1 (games then pick their Pro render path and resolution). */
+/* Base PS4, or PS4 Pro with SANCTUARY_NEO=1 (games then pick their Pro render path and resolution). */
 static ABI int32_t is_neo_mode(void) {
     static int neo=-1;
-    if (neo<0) { const char *v=getenv("GOW3_NEO"); neo=v && *v=='1'; if (neo) puts("Runtime: reporting a PS4 Pro (Neo mode)"); }
+    if (neo<0) { const char *v=getenv("SANCTUARY_NEO"); neo=v && *v=='1'; if (neo) puts("Runtime: reporting a PS4 Pro (Neo mode)"); }
     return neo;
 }
 static ABI int32_t get_cpumode(void) { return 0; }        /* SCE_KERNEL_CPUMODE_6CPU */
@@ -407,7 +407,7 @@ static ABI int32_t temp_space(const MountPoint *mount, uint64_t *kb) {
     *kb=1048576; return 0;
 }
 
-/* ---- PngDec (Knack): FFmpeg decodes (gow3gpu_png_decode); the header is read here. The handle
+/* ---- PngDec (Knack): FFmpeg decodes (sanctuarygpu_png_decode); the header is read here. The handle
  * is the game's work memory holding the create parameters. 8-bit RGBA/BGRA output only. ---- */
 #define PNG_INVALID_ADDR ((int32_t)0x80690001)
 #define PNG_INVALID_SIZE ((int32_t)0x80690002)
@@ -475,7 +475,7 @@ static ABI int32_t png_decode(PngState *handle, const PngDecodeParam *param, Png
     if (r) return r;
     if (header.width>handle->max_width) return PNG_INVALID_SIZE;
     uint32_t pitch=param->pitch ? param->pitch : header.width*4, width, height;
-    if (!gow3gpu_png_decode(param->png,param->png_size,param->image,param->image_size,pitch,&width,&height))
+    if (!sanctuarygpu_png_decode(param->png,param->png_size,param->image,param->image_size,pitch,&width,&height))
         return PNG_DECODE_ERROR;
     /* No alpha channel and no tRNS: alpha is the caller's value. RGBA, or BGRA (format 1). */
     int fill=(header.color_space==2 || header.color_space==3 || header.color_space==4) && !(header.flags&2);
@@ -697,7 +697,7 @@ static const RuntimeExport exports[]={
     {"scePngDecQueryMemorySize",png_memory_size}, {"scePngDecCreate",png_create}, {"scePngDecDelete",png_delete},
     {"scePngDecParseHeader",png_parse}, {"scePngDecDecode",png_decode},
 };
-/* MediEvil native output (GOW3_UE4_SETRES=WxH, run.py): the base PS4 renderer makes its buffers at
+/* MediEvil native output (SANCTUARY_UE4_SETRES=WxH, run.py): the base PS4 renderer makes its buffers at
  * the display size at start and only a live r.SetRes change resizes them (the debug menu's
  * Cinematic button). After about 10 s of play this sets the game's own r.SetRes console variable
  * as UE4's FSystemResolution::RequestResolutionChange does (0x2765ef1): flags = GetFlags()
@@ -736,7 +736,7 @@ void runtime_ue4_request_setres(const char *text) {
     __atomic_store_n(&ue4_request_pending,1,__ATOMIC_RELEASE);
 }
 
-/* MediEvil native output (GOW3_UE4_SETRES=WxH, run.py): the base PS4 renderer makes its buffers at
+/* MediEvil native output (SANCTUARY_UE4_SETRES=WxH, run.py): the base PS4 renderer makes its buffers at
  * the display size at start and only a live r.SetRes change resizes them (the debug menu's
  * Cinematic button). After about 10 s of play this sets the game's own r.SetRes console variable
  * as UE4's FSystemResolution::RequestResolutionChange does (0x2765ef1): flags = GetFlags()
@@ -755,7 +755,7 @@ void runtime_ue4_setres_poll(void) {
     if (automatic_done) return;
     if (++reads<600) return; /* the main menu, with the game viewport up */
     automatic_done=1;
-    const char *want=getenv("GOW3_UE4_SETRES");
+    const char *want=getenv("SANCTUARY_UE4_SETRES");
     if (want && *want) ue4_setres(want);
 }
 

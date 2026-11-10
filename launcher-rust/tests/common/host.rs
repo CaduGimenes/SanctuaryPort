@@ -186,7 +186,7 @@ impl Host for FakeHost {
     }
 
     fn this_process(&self) -> (PathBuf, u32) {
-        (PathBuf::from("spartanport-launcher"), 4242)
+        (PathBuf::from("sanctuaryport-launcher"), 4242)
     }
 
     fn physical_memory_mb(&self) -> Option<u64> {

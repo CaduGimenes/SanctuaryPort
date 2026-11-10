@@ -5,14 +5,13 @@
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 
+use sanctuaryport_launcher::core::env::{environment_of, game_environment};
 use sanctuaryport_launcher::core::i18n::{launcher_language, system_language};
 use sanctuaryport_launcher::core::installation::Installation;
 use sanctuaryport_launcher::core::paths::Paths;
 use sanctuaryport_launcher::core::platform;
 use sanctuaryport_launcher::core::release::ReleaseId;
 use sanctuaryport_launcher::core::settings::load_app_settings;
-use sanctuaryport_launcher::core::voice_swap;
-use sanctuaryport_launcher::runner::{self, RunContext};
 use sanctuaryport_launcher::startup::{self, Route};
 use sanctuaryport_launcher::{ui, APP_NAME};
 
@@ -34,14 +33,6 @@ fn main() {
     let (route, context) = startup::start(&args, &exe_dir, std::env::vars_os(), cfg!(windows));
     match route {
         Route::Version => println!("{APP_NAME} {}", ReleaseId::this().plain()),
-        Route::Run { args } => {
-            let run = RunContext {
-                context: &context,
-                args,
-                out: &mut std::io::stdout(),
-            };
-            std::process::exit(runner::run(run))
-        }
         Route::Play => {
             // As the Python `main`: the start-up steps and the settings first.
             startup::apply_to_process(&context);
@@ -56,23 +47,28 @@ fn main() {
             .verdict()
             .passes()
             {
-                // SanctuaryPort: the port's run.sh (game profiles) when it is there.
+                // SanctuaryPort: the port's run.sh (game profiles) when it is there, with the
+                // environment PLAY gives it (update folder, language, icons, key maps...).
                 let run_sh = paths.port_dir.join("run.sh");
                 if run_sh.is_file() {
+                    let lang = launcher_language(&settings.get_str("ui_language"), system_language);
+                    let env = game_environment(
+                        &settings,
+                        paths,
+                        &lang,
+                        &environment_of(std::env::vars_os()),
+                        cfg!(windows),
+                    );
                     let status = std::process::Command::new("bash")
                         .arg(&run_sh)
                         .current_dir(&paths.port_dir)
-                        .env("GOW3_GAME_DIR", settings.get_str("game_dir"))
+                        .env_clear()
+                        .envs(&env)
                         .status();
                     std::process::exit(status.ok().and_then(|s| s.code()).unwrap_or(1));
                 }
-                let run = RunContext {
-                    context: &context,
-                    // The Python's `--play` starts the runner without arguments.
-                    args: Vec::new(),
-                    out: &mut std::io::stdout(),
-                };
-                std::process::exit(runner::play(run, &settings, paths));
+eprintln!("{} not found: the game starts from the port's run.sh.", run_sh.display());
+                std::process::exit(1);
             }
             open_window(context.paths);
         }
@@ -82,17 +78,6 @@ fn main() {
                 system_language,
             );
             std::process::exit(startup::install_update(&exe_dir, &target, pid, &lang))
-        }
-        Route::VoiceSwap { args } => {
-            // As the AppImage runs from a mount, `OWD` is the folder the player typed paths in.
-            let base = std::env::var_os("OWD");
-            let code = voice_swap::main(
-                &args,
-                base.as_deref().map(Path::new),
-                &mut std::io::stdout(),
-                &mut std::io::stderr(),
-            );
-            std::process::exit(code)
         }
         Route::Launcher => {
             // Before the folders below are read from the environment.
@@ -145,7 +130,7 @@ fn install_pkg_cli(pkg: &Path, games: &Path) -> i32 {
     eprintln!("{} ({:#x}) -> {}", info.content_id, info.content_type, target.display());
     let mut last = 0u64;
     let mut progress = |done: u64, total: u64, file: &str| {
-        let percent = if total == 0 { 100 } else { done * 100 / total };
+        let percent = (done * 100).checked_div(total).unwrap_or(100);
         if percent != last {
             last = percent;
             eprintln!("{percent:3}% {file}");

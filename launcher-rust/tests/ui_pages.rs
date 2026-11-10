@@ -4,15 +4,14 @@
 mod common;
 
 use common::{
-    browsed, click, dump_with_patches, gpu_rows, load_mods, load_trophies, make_mod, messages,
-    open, sfo, state, state_with_trophies, two_displays, write_mod_patch, ARC_LAPTOP,
+    browsed, click, dump_with_patches, gpu_rows, messages,
+    open, state, two_displays, ARC_LAPTOP,
 };
 use sanctuaryport_launcher::core::env::game_environment;
 use sanctuaryport_launcher::core::gpu::{display_label, parse_display_list};
 use sanctuaryport_launcher::core::options::DISPLAY_MODES;
 use sanctuaryport_launcher::core::pad_model::PadModel;
 use sanctuaryport_launcher::ui::app::{self, Message};
-use sanctuaryport_launcher::ui::follow::{follow, Cause};
 use sanctuaryport_launcher::ui::pages::{performance, Page};
 use sanctuaryport_launcher::ui::widgets::{self, select_message};
 
@@ -21,9 +20,6 @@ fn graphics_rows_change_the_right_keys() {
     let dir = tempfile::tempdir().unwrap();
     let mut state = state(dir.path());
     open(&mut state, Page::Graphics);
-    assert_eq!(state.store.text("vsync"), "1");
-    click(&mut state, "VSync");
-    assert_eq!(state.store.text("vsync"), "0");
     assert!(!state.store.flag("hdr"));
     click(&mut state, "Allow HDR output");
     assert!(state.store.flag("hdr"));
@@ -35,23 +31,11 @@ fn graphics_rows_change_the_right_keys() {
     let _ = app::update(&mut state, pick);
     assert_eq!(state.store.text("display_mode"), "borderless");
     assert!(state.store.json("display_mode").is_none());
-    #[cfg(windows)]
-    {
-        let pick = select_message(
-            "upscaler",
-            sanctuaryport_launcher::core::options::UPSCALERS,
-            "en",
-            "FSR 4.1 (AMD driver)",
-        )
-        .unwrap();
-        let _ = app::update(&mut state, pick);
-        assert_eq!(state.store.text("upscaler"), "fsr411");
-    }
 }
 
 #[test]
 fn a_stored_string_zero_shows_checked_like_the_game_gets_it() {
-    // Python truthiness: "0" is a non-empty string, so the game gets SPARTAN_HDR=1, and the box
+    // Python truthiness: "0" is a non-empty string, so the game gets SANCTUARY_HDR=1, and the box
     // shows what the game gets.
     let dir = tempfile::tempdir().unwrap();
     std::fs::write(dir.path().join("settings.json"), r#"{"hdr": "0"}"#).unwrap();
@@ -70,7 +54,7 @@ fn a_stored_string_zero_shows_checked_like_the_game_gets_it() {
         &indexmap::IndexMap::new(),
         true,
     );
-    assert_eq!(env["SPARTAN_HDR"], "1");
+    assert_eq!(env["SANCTUARY_HDR"], "1");
 }
 
 #[test]
@@ -110,8 +94,6 @@ fn ini_migrates_legacy_display_preferences_and_then_takes_precedence() {
 
 #[test]
 fn glyph_style_ini_overrides_legacy_launcher_choice() {
-    use sanctuaryport_launcher::core::graphics_options;
-
     let dir = tempfile::tempdir().unwrap();
     std::fs::write(
         dir.path().join("settings.json"),
@@ -123,11 +105,6 @@ fn glyph_style_ini_overrides_legacy_launcher_choice() {
     std::fs::write(state.paths.ini_path(), "glyph_style=keyboard\n").unwrap();
     let state = common::state(dir.path());
     assert_eq!(state.store.text("glyph_style"), "keyboard");
-    let options = graphics_options::startup_options(&state.store.ini().values, &[]);
-    assert_eq!(
-        graphics_options::environment(&options)["SPARTAN_GLYPH_STYLE"],
-        "keyboard"
-    );
 }
 
 /// The window of `state` at `width` × `height` with `page` open, once the drawer has stopped.
@@ -168,8 +145,6 @@ fn every_row_control_ends_on_the_same_right_edge() {
         let tr = |english: &str| sanctuaryport_launcher::core::i18n::tr(lang, english);
         let labels = [
             tr("Display mode"),
-            tr("Monitor"),
-            tr("VSync"),
             tr("Allow HDR output"),
             format!("{}  ·  {}", tr("Anisotropic filtering"), tr("restart")),
             tr("Show performance overlay"),
@@ -349,22 +324,6 @@ fn open_makes_a_missing_folder_first() {
     assert_eq!(task.units(), 1, "then it opens");
 }
 
-#[test]
-fn an_empty_folder_setting_opens_the_data_folder_one() {
-    let dir = tempfile::tempdir().unwrap();
-    let mut state = state(dir.path());
-    state.lang = "en".into();
-    let _ = app::update(&mut state, Message::ShowPage(Page::Mods));
-    // The Mods folder row comes first; its setting is empty.
-    assert_eq!(state.store.text("mods_dir"), "");
-    let sent = tall_messages(&state, "Open");
-    let expected = state.paths.mods_dir("");
-    assert!(
-        matches!(sent.as_slice(), [Message::OpenFolder(path)] if *path == expected),
-        "{sent:?}"
-    );
-}
-
 fn set(state: &mut app::State, key: &str, value: &str) {
     let _ = app::update(state, Message::Set(key.into(), value.into()));
 }
@@ -375,29 +334,18 @@ fn values(pairs: &[(String, String)]) -> Vec<&str> {
 
 #[test]
 fn aspect_follows_and_filters_the_render_resolution() {
+    // SanctuaryPort: Diablo III's resolution patches are 16:9 only.
     let dir = tempfile::tempdir().unwrap();
     let mut state = state(dir.path());
     assert_eq!(state.store.text("render_resolution"), "native");
     assert_eq!(state.aspect, "16:9");
-    let _ = app::update(&mut state, Message::Aspect("16:10".into()));
-    assert_eq!(state.store.text("render_resolution"), "1920x1200");
+    assert_eq!(performance::aspect_options(&state), ["16:9"]);
     assert_eq!(
         values(&performance::aspect_resolution_options(&state)),
-        [
-            "1280x800",
-            "1440x900",
-            "1920x1200",
-            "2560x1600",
-            "2880x1800"
-        ]
+        ["native", "480p", "720p", "900p", "1440p", "1800p", "4K"]
     );
-    set(&mut state, "render_resolution", "3440x1440");
-    assert_eq!(state.aspect, "21:9");
-    assert!(performance::aspect_options(&state).contains(&"4:3".to_string()));
-    // Confirmed in game: not beta, so no suffix.
-    let options = performance::aspect_resolution_options(&state);
-    let label = options.iter().find(|(v, _)| v == "3440x1440").unwrap();
-    assert_eq!(label.1, "3440 × 1440");
+    set(&mut state, "render_resolution", "1440p");
+    assert_eq!(state.aspect, "16:9");
 }
 
 #[test]
@@ -560,52 +508,6 @@ fn performance_page_offers_the_choice() {
     );
 }
 
-#[test]
-fn a_saved_mod_resolution_stays_chosen_while_its_mod_is_on() {
-    let dir = tempfile::tempdir().unwrap();
-    let mut state = state(dir.path());
-    let builtin = performance::resolution_options(&state).len();
-    let patches = state.paths.mods_dir("").join("Ultrawide").join("patches");
-    std::fs::create_dir_all(&patches).unwrap();
-    // 3440x1440 is built in: the mod adds nothing new and the saved size stays chosen.
-    write_mod_patch(&patches, "3440x1440");
-    set(&mut state, "render_resolution", "3440x1440");
-    let _ = follow(&mut state, Cause::Keys(&["mods_dir"]));
-    assert_eq!(performance::resolution_options(&state).len(), builtin);
-    assert_eq!(state.store.text("render_resolution"), "3440x1440");
-
-    // A size that is not built in carries the (mod) label while its mod is on.
-    write_mod_patch(&patches, "3840x1080");
-    set(&mut state, "render_resolution", "3840x1080");
-    let _ = follow(&mut state, Cause::Keys(&["mods_dir"]));
-    let options = performance::resolution_options(&state);
-    assert_eq!(options.len(), builtin + 1);
-    let label = options.iter().find(|(v, _)| v == "3840x1080").unwrap();
-    assert_eq!(label.1, "3840 × 1080 · 32:9 (mod)");
-    assert_eq!(state.store.text("render_resolution"), "3840x1080");
-    assert_eq!(state.aspect, "32:9");
-    let listed = performance::aspect_resolution_options(&state);
-    let label = listed.iter().find(|(v, _)| v == "3840x1080").unwrap();
-    assert_eq!(label.1, "3840 × 1080 (mod)");
-    // Unticked on the Mods page: the size is gone from the list.
-    std::fs::write(
-        state.paths.mods_json(),
-        r#"{"disabled": ["Ultrawide"], "order": []}"#,
-    )
-    .unwrap();
-    let _ = follow(&mut state, Cause::Keys(&["mods_dir"]));
-    assert_eq!(performance::resolution_options(&state).len(), builtin);
-    // Ticked again, then "Load mods" off.
-    std::fs::remove_file(state.paths.mods_json()).unwrap();
-    let _ = follow(&mut state, Cause::Keys(&["mods_dir"]));
-    assert_eq!(performance::resolution_options(&state).len(), builtin + 1);
-    let _ = app::update(
-        &mut state,
-        Message::Set("mods_enabled".into(), false.into()),
-    );
-    assert_eq!(performance::resolution_options(&state).len(), builtin);
-}
-
 // --- Game page (Task 26) ---
 
 use sanctuaryport_launcher::core::i18n::tr;
@@ -622,7 +524,7 @@ fn choosing_the_game_folder_refreshes_title_and_patches() {
     let dump = dump_with_patches(dir.path());
     browsed(&mut state, "game_dir", &dump);
     assert_eq!(state.store.text("game_dir"), dump.display().to_string());
-    assert_eq!(state.patches.title_id.as_deref(), Some("CUSA01623"));
+    assert_eq!(state.patches.title_id.as_deref(), Some("CUSA00243"));
     let names: Vec<&str> = state
         .patches
         .selectable
@@ -631,9 +533,9 @@ fn choosing_the_game_folder_refreshes_title_and_patches() {
         .collect();
     assert_eq!(names, ["Fix Alpha"]);
     assert!(state.patches.chosen.contains("Fix Alpha"));
-    assert_eq!(state.patches.version, "01.02");
-    assert_eq!(state.patches.xml_name, "CUSA01623.xml");
-    assert_eq!(home::chips(&state)[1], "✓ CUSA01623 · v01.02");
+    assert_eq!(state.patches.version, "01.47");
+    assert_eq!(state.patches.xml_name, "Diablo_III.xml");
+    assert_eq!(home::chips(&state)[1], "✓ CUSA00243 · v01.47");
     // Cancelling the dialog changes nothing.
     let _ = app::update(&mut state, Message::Browsed("game_dir".into(), None));
     assert_eq!(state.store.text("game_dir"), dump.display().to_string());
@@ -646,7 +548,7 @@ fn a_long_folder_stays_on_one_line_in_its_field() {
     let dir = tempfile::tempdir().unwrap();
     let mut state = state(dir.path());
     state.lang = "en".into();
-    let folder = r"C:\Users\Someone\Documents\My Games\GOW III\God.of.War.III.Remastered.PS4-CUSA01623\CUSA01623";
+    let folder = r"C:\Users\Someone\Documents\My Games\Diablo III\Diablo.III.Eternal.Collection.PS4-CUSA00243\CUSA00243";
     state.store.set("game_dir", folder.into());
     let mut ui = settled(&mut state, Page::Game, 1280.0, 800.0);
     let field = ui.find(folder).unwrap();
@@ -697,7 +599,7 @@ fn typing_a_folder_sets_it_like_browse() {
     // The refresh of a browsed folder: the Home reads the dump.
     assert_eq!(
         sanctuaryport_launcher::ui::home::chips(&state)[1],
-        "✓ CUSA01623 · v01.02"
+        "✓ CUSA00243 · v01.47"
     );
 }
 
@@ -714,42 +616,6 @@ fn click_tall(state: &mut app::State, label: &str) {
     for message in sent {
         let _ = app::update(state, message);
     }
-}
-
-#[test]
-fn unchecking_a_patch_lands_in_game_patches() {
-    let dir = tempfile::tempdir().unwrap();
-    let mut state = state(dir.path());
-    state.lang = "en".into();
-    browsed(&mut state, "game_dir", &dump_with_patches(dir.path()));
-    open(&mut state, Page::Game);
-    click_tall(&mut state, "Fix Alpha  (Ann)");
-    assert!(!state.patches.chosen.contains("Fix Alpha"));
-    let saved = state.store.json("game_patches").unwrap();
-    assert_eq!(saved["CUSA01623"], serde_json::json!([]));
-    click_tall(&mut state, "Fix Alpha  (Ann)");
-    let saved = state.store.json("game_patches").unwrap();
-    assert_eq!(saved["CUSA01623"], serde_json::json!(["Fix Alpha"]));
-}
-
-/// Chinese labels toggle the original patch name in persisted game settings.
-#[test]
-fn chinese_patch_labels_keep_the_original_saved_identity() {
-    let dir = tempfile::tempdir().unwrap();
-    let mut state = state(dir.path());
-    browsed(&mut state, "game_dir", &dump_with_patches(dir.path()));
-    open(&mut state, Page::Game);
-    state.lang = "zh".into();
-    state.patches.selectable[0].name = "Skip Intro".into();
-    state.patches.chosen.clear();
-    state.patches.chosen.insert("Skip Intro".into());
-    click_tall(&mut state, "跳过开场标志  (Ann)");
-    assert!(!state.patches.chosen.contains("Skip Intro"));
-    click_tall(&mut state, "跳过开场标志  (Ann)");
-    assert_eq!(
-        state.store.json("game_patches").unwrap()["CUSA01623"],
-        serde_json::json!(["Skip Intro"])
-    );
 }
 
 #[test]
@@ -852,37 +718,7 @@ fn brazilian_portuguese_label_is_translated_in_portuguese_and_spanish() {
     assert_eq!(tr("id", "Portuguese (Brazil)"), "Portugis (Brasil)");
 }
 
-#[test]
-fn the_note_names_the_game_menus() {
-    let note = game::LANGUAGE_NOTE;
-    assert!(note.contains("Options → Game Settings → Game Text"));
-    assert!(note.contains("Options → Audio → Speech"));
-    assert!(note.starts_with("Used on the game's first start."));
-}
-
-#[test]
-fn the_note_uses_the_game_menu_names_of_each_language() {
-    let names = [
-        ("pt", "Texto de jogo", "Falas"),
-        ("es", "Texto del juego", "Diálogos"),
-        ("pl", "Tekst gry", "Dialogi"),
-        ("fr", "Texte du jeu", "Voix"),
-        ("de", "Spieltext", "Sprachausgabe"),
-        ("it", "Testo di gioco", "Dialoghi"),
-    ];
-    for (language, text, speech) in names {
-        let translated = tr(language, game::LANGUAGE_NOTE);
-        assert!(translated.contains(text), "{language}: {translated}");
-        assert!(translated.contains(speech), "{language}: {translated}");
-    }
-}
-
-// --- Trophies page (Task 27) ---
-
-use sanctuaryport_launcher::core::i18n::trophy_text;
-use sanctuaryport_launcher::core::trophies::TROPHY_COUNT;
-use sanctuaryport_launcher::ui::pages::trophies::{Filter, TrophiesMessage};
-
+/// Whether `label` is on the page of a tall window.
 fn tall_has(state: &app::State, label: &str) -> bool {
     let mut ui = iced_test::simulator::Simulator::with_size(
         iced::Settings::default(),
@@ -890,146 +726,6 @@ fn tall_has(state: &app::State, label: &str) -> bool {
         app::view(state),
     );
     ui.find(label).is_ok()
-}
-
-#[test]
-fn trophies_page_lists_35_cards_from_a_test_package() {
-    let dir = tempfile::tempdir().unwrap();
-    let mut state = state_with_trophies(dir.path());
-    open(&mut state, Page::Trophies);
-    load_trophies(&mut state);
-    assert_eq!(state.trophies.icons.len(), TROPHY_COUNT);
-    assert_eq!(state.trophies.locked_icons.len(), TROPHY_COUNT);
-    assert_eq!(state.trophies.tiers.len(), TROPHY_COUNT);
-    assert_eq!(
-        state.trophies.unlocked.iter().copied().collect::<Vec<_>>(),
-        [0, 3]
-    );
-    assert!(!state.trophies.loading);
-    assert!(tall_has(&state, "2 of 35 unlocked"));
-    assert!(tall_has(&state, &trophy_text("en", 0).0));
-    assert!(tall_has(&state, &trophy_text("en", TROPHY_COUNT - 1).0));
-    assert!(tall_has(
-        &state,
-        "Only trophies unlocked with this port are listed; the ones earned on a PlayStation are not known to it."
-    ));
-}
-
-#[test]
-fn trophies_page_without_a_package_says_so() {
-    let dir = tempfile::tempdir().unwrap();
-    let mut state = state(dir.path());
-    state.lang = "en".into();
-    open(&mut state, Page::Trophies);
-    load_trophies(&mut state);
-    assert!(state.trophies.icons.is_empty());
-    assert!(tall_has(
-        &state,
-        "No trophy list: choose the game folder on the Game page (its sce_sys/trophy/trophy00.trp is read)."
-    ));
-}
-
-#[test]
-fn filter_unlocked_hides_locked() {
-    let dir = tempfile::tempdir().unwrap();
-    let mut state = state_with_trophies(dir.path());
-    open(&mut state, Page::Trophies);
-    load_trophies(&mut state);
-    let (first, second, other) = (
-        trophy_text("en", 0).0,
-        trophy_text("en", 3).0,
-        trophy_text("en", 1).0,
-    );
-    let _ = app::update(
-        &mut state,
-        Message::Trophies(TrophiesMessage::Filter(Filter::Unlocked)),
-    );
-    assert!(tall_has(&state, &first) && tall_has(&state, &second));
-    assert!(!tall_has(&state, &other));
-    let _ = app::update(
-        &mut state,
-        Message::Trophies(TrophiesMessage::Filter(Filter::Locked)),
-    );
-    assert!(!tall_has(&state, &first) && !tall_has(&state, &second));
-    assert!(tall_has(&state, &other));
-    // A reload keeps the chosen filter.
-    load_trophies(&mut state);
-    assert_eq!(state.trophies.filter, Filter::Locked);
-}
-
-#[test]
-fn reset_asks_and_relocks() {
-    let dir = tempfile::tempdir().unwrap();
-    let mut state = state_with_trophies(dir.path());
-    open(&mut state, Page::Trophies);
-    // Nothing unlocked is known before the first load.
-    let _ = app::update(&mut state, Message::Trophies(TrophiesMessage::Reset));
-    let none = state.modal.clone().unwrap();
-    assert!(matches!(none.kind, ModalKind::Info));
-    assert_eq!(none.text, "No trophy is unlocked.");
-
-    load_trophies(&mut state);
-    let _ = app::update(&mut state, Message::Trophies(TrophiesMessage::Reset));
-    let asked = state.modal.clone().unwrap();
-    assert!(matches!(
-        &asked.kind,
-        ModalKind::YesNo {
-            yes: Message::Trophies(TrophiesMessage::ResetConfirmed),
-            no: Message::Modal(ModalMessage::Dismiss)
-        }
-    ));
-    assert_eq!(
-        asked.text,
-        "Lock all 2 unlocked trophies again? A copy is kept as trophies.dat.bak."
-    );
-    let dat = state.paths.user_dir("").join("trophies.dat");
-    assert!(dat.is_file());
-
-    let _ = app::update(
-        &mut state,
-        Message::Trophies(TrophiesMessage::ResetConfirmed),
-    );
-    assert!(state.modal.is_none());
-    // The reset runs on its own thread: wait for the file to move.
-    for _ in 0..200 {
-        if !dat.exists() {
-            break;
-        }
-        std::thread::sleep(std::time::Duration::from_millis(25));
-    }
-    assert!(!dat.exists());
-    assert!(dat.with_file_name("trophies.dat.bak").is_file());
-    let _ = app::update(
-        &mut state,
-        Message::Trophies(TrophiesMessage::ResetDone(Ok(2))),
-    );
-    load_trophies(&mut state);
-    assert!(state.trophies.unlocked.is_empty());
-    assert!(tall_has(&state, "0 of 35 unlocked"));
-
-    let _ = app::update(
-        &mut state,
-        Message::Trophies(TrophiesMessage::ResetDone(Err("disk full".into()))),
-    );
-    let failed = state.modal.clone().unwrap();
-    assert!(matches!(failed.kind, ModalKind::Error));
-    assert_eq!(failed.text, "Could not reset the trophies: disk full");
-}
-
-#[test]
-fn opening_the_page_and_the_buttons_start_a_load() {
-    let dir = tempfile::tempdir().unwrap();
-    let mut state = state(dir.path());
-    state.lang = "en".into();
-    open(&mut state, Page::Trophies);
-    assert!(state.trophies.loading);
-    load_trophies(&mut state);
-    assert!(!state.trophies.loading);
-    click(&mut state, "Refresh");
-    assert!(state.trophies.loading);
-    assert!(messages(&state, "Reset trophies")
-        .iter()
-        .any(|m| matches!(m, Message::Trophies(TrophiesMessage::Reset))));
 }
 
 // --- Controls page (Task 28) ---
@@ -1164,7 +860,7 @@ fn keys_that_cannot_be_bound() {
 fn binding_a_used_key_swaps_the_buttons_in_the_view() {
     let dir = tempfile::tempdir().unwrap();
     let mut state = controls_state(dir.path());
-    // Nobody has G by default (F is Rage of Sparta's): Square takes it.
+    // Nobody has G by default: Square takes it.
     capture(&mut state, "square");
     press_key(&mut state, char_key("g"), Location::Standard);
     assert_eq!(state.controls.key["square"], "G");
@@ -1215,8 +911,8 @@ fn device_is_its_own_choice() {
     assert_eq!(state.controls.device, Device::Gamepad);
     assert!(!state.controls.device_chosen);
     assert!(state.store.json("controls_device").is_none());
-    assert!(tall_has(&state, "GAMEPAD MAPPING"));
-    assert!(!tall_has(&state, "KEYBOARD & MOUSE MAPPING"));
+    assert!(tall_has(&state, "Gamepad Mapping"));
+    assert!(!tall_has(&state, "Keyboard & Mouse Mapping"));
 
     // The device radio only chooses the table shown; the tables keep their inputs.
     capture(&mut state, "cross");
@@ -1226,8 +922,8 @@ fn device_is_its_own_choice() {
     assert_eq!(state.controls.device, Device::Keyboard);
     assert!(state.controls.device_chosen);
     assert_eq!(state.store.text("controls_device"), "keyboard");
-    assert!(tall_has(&state, "KEYBOARD & MOUSE MAPPING"));
-    assert!(!tall_has(&state, "GAMEPAD MAPPING"));
+    assert!(tall_has(&state, "Keyboard & Mouse Mapping"));
+    assert!(!tall_has(&state, "Gamepad Mapping"));
     assert_eq!((&state.controls.key, &state.controls.pad), (&key, &pad));
     // Once chosen, a gamepad found later does not switch the page.
     controls_update(&mut state, ControlsMessage::GamepadDetected(true));
@@ -1386,12 +1082,12 @@ fn capture_takes_the_mouse_and_gives_up_in_time() {
 }
 
 #[test]
-fn reset_buttons_and_the_rage_rows() {
+fn reset_buttons_put_the_defaults_back() {
     let dir = tempfile::tempdir().unwrap();
     let mut state = controls_state(dir.path());
     let defaults = state.controls.key.clone();
     assert_eq!(defaults["square"], "Mouse Left");
-    assert_eq!(defaults["rage"], "F");
+    assert_eq!(defaults["r3"], "X");
     // The arrow puts one button back on its default, swapping with the button that had it.
     capture(&mut state, "cross");
     press_key(&mut state, char_key("h"), Location::Standard);
@@ -1408,21 +1104,6 @@ fn reset_buttons_and_the_rage_rows() {
     assert_eq!(state.controls.key["r1"], "H");
     click_tall(&mut state, "Reset keyboard & mouse to defaults");
     assert_eq!(state.controls.key, defaults);
-
-    // Rage of Sparta on one input greys L3 and R3; off, it greys the Rage row.
-    let enabled = |state: &app::State, button: &str| {
-        controls::key_rows(state, "en")
-            .into_iter()
-            .find(|row| row.button == button)
-            .unwrap()
-            .enabled
-    };
-    assert!(state.store.flag("rage_one_input"));
-    assert!(!enabled(&state, "l3") && !enabled(&state, "r3") && enabled(&state, "rage"));
-    click_tall(&mut state, "Rage of Sparta on one input (L3 + R3 together)");
-    assert!(!state.store.flag("rage_one_input"));
-    assert!(enabled(&state, "l3") && enabled(&state, "r3") && !enabled(&state, "rage"));
-    assert!(enabled(&state, "cross"));
 
     // The gamepad table goes back to the controller's own buttons.
     controls_update(
@@ -1765,118 +1446,25 @@ fn second_alternatives_are_saved_only_when_there_are_any_and_come_back() {
 }
 
 #[test]
-fn the_icon_keys_choice_shows_with_the_styles_that_draw_the_keyboard() {
-    let dir = tempfile::tempdir().unwrap();
-    let mut state = controls_state(dir.path());
-    assert_eq!(state.store.text("glyph_keys"), "main");
-    for (style, shown) in [
-        ("off", false),
-        ("xbox", false),
-        ("nintendo", false),
-        ("auto", true),
-        ("keyboard", true),
-    ] {
-        let _ = app::update(
-            &mut state,
-            Message::Set("glyph_style".into(), serde_json::json!(style)),
-        );
-        assert_eq!(tall_has(&state, "Keys on the icons"), shown, "{style}");
-    }
-    let _ = app::update(
-        &mut state,
-        Message::Set("glyph_keys".into(), serde_json::json!("alternative")),
-    );
-    assert_eq!(state.store.text("glyph_keys"), "alternative");
-    let _ = app::update(
-        &mut state,
-        Message::Set("glyph_keys".into(), serde_json::json!("lyre")),
-    );
-    assert_eq!(state.store.text("glyph_keys"), "lyre");
-}
-
-#[test]
-fn the_key_colors_choice_shows_with_the_keyboard_and_the_custom_boxes_with_custom() {
-    let dir = tempfile::tempdir().unwrap();
-    let mut state = controls_state(dir.path());
-    assert_eq!(state.store.text("glyph_key_colors"), "gray");
-    for (style, shown) in [
-        ("off", false),
-        ("xbox", false),
-        ("nintendo", false),
-        ("auto", true),
-        ("keyboard", true),
-    ] {
-        let _ = app::update(
-            &mut state,
-            Message::Set("glyph_style".into(), serde_json::json!(style)),
-        );
-        assert_eq!(tall_has(&state, "Key colors"), shown, "{style}");
-    }
-    // The four boxes appear with Custom only.
-    assert!(!tall_has(&state, "Face button colors"));
-    let _ = app::update(
-        &mut state,
-        Message::Set("glyph_key_colors".into(), serde_json::json!("playstation")),
-    );
-    assert!(!tall_has(&state, "Face button colors"));
-    let _ = app::update(
-        &mut state,
-        Message::Set("glyph_key_colors".into(), serde_json::json!("custom")),
-    );
-    assert!(tall_has(&state, "Face button colors"));
-    let _ = app::update(
-        &mut state,
-        Message::Set("glyph_color_cross".into(), serde_json::json!("blue")),
-    );
-    assert_eq!(state.store.text("glyph_color_cross"), "blue");
-}
-
-#[test]
-fn the_key_colors_choice_offers_gray_playstation_and_custom() {
-    let styles: Vec<&str> = sanctuaryport_launcher::core::options::KEY_COLOR_STYLES
-        .iter()
-        .map(|choice| choice.value)
-        .collect();
-    assert_eq!(styles, ["gray", "playstation", "custom"]);
-    let palette: Vec<&str> = sanctuaryport_launcher::core::options::KEY_COLORS
-        .iter()
-        .map(|choice| choice.value)
-        .collect();
-    assert_eq!(
-        palette,
-        ["gray", "white", "blue", "orange", "green", "red", "pink", "yellow", "purple"]
-    );
-}
-
-#[test]
-fn the_icon_keys_choice_offers_the_main_key_the_alternative_and_the_lyre_alone() {
-    let values: Vec<&str> = sanctuaryport_launcher::core::options::GLYPH_KEYS
-        .iter()
-        .map(|choice| choice.value)
-        .collect();
-    assert_eq!(values, ["main", "alternative", "lyre"]);
-}
-
-#[test]
 fn clear_input_unbinds_one_row() {
     let dir = tempfile::tempdir().unwrap();
     let mut state = controls_state(dir.path());
     let before = state.controls.key.clone();
-    assert_eq!(before["rage"], "F");
+    assert_eq!(before["r3"], "X");
     let mut ui = iced_test::simulator::Simulator::with_size(
         iced::Settings::default(),
         iced::Size::new(1280.0, 4000.0),
         app::view(&state),
     );
-    ui.click(iced_test::selector::id(controls::clear_id("rage")))
+    ui.click(iced_test::selector::id(controls::clear_id("r3")))
         .unwrap();
     let sent: Vec<Message> = ui.into_messages().collect();
     for message in sent {
         let _ = app::update(&mut state, message);
     }
-    assert_eq!(state.controls.key["rage"], "None");
+    assert_eq!(state.controls.key["r3"], "None");
     for (button, input) in &before {
-        if button != "rage" {
+        if button != "r3" {
             assert_eq!(&state.controls.key[button], input, "{button}");
         }
     }
@@ -2024,384 +1612,6 @@ fn losing_the_focus_ends_the_capture() {
     assert_eq!(state.controls.key, before);
 }
 
-// --- Mods page (Task 29) ---
-
-use sanctuaryport_launcher::ui::pages::mods::ModsMessage;
-
-fn mods_state(dir: &std::path::Path) -> app::State {
-    let mut state = state(dir);
-    state.lang = "en".into();
-    state
-}
-
-fn mods_update(state: &mut app::State, message: ModsMessage) {
-    let _ = app::update(state, Message::Mods(message));
-}
-
-#[test]
-fn mods_list_follows_the_folder_and_saved_order() {
-    let dir = tempfile::tempdir().unwrap();
-    let mut state = mods_state(dir.path());
-    for name in ["a", "b", "c"] {
-        make_mod(&state, name, &format!("{name}.bin"));
-    }
-    std::fs::write(
-        state.paths.mods_json(),
-        r#"{"order": ["b","a"], "disabled": ["a"]}"#,
-    )
-    .unwrap();
-    load_mods(&mut state);
-    assert_eq!(state.mods.order, ["b", "a", "c"]);
-    assert!(state.mods.enabled["b"]);
-    assert!(!state.mods.enabled["a"]);
-    assert!(state.mods.enabled["c"]);
-    open(&mut state, Page::Mods);
-    assert!(tall_has(&state, "2 of 3 active"));
-}
-
-#[test]
-fn reopening_mods_reads_an_update_extracted_meanwhile() {
-    // Python `PAGE_REFRESH['mods']`: each show of the page reads the game folders again. The game
-    // is a PKG extraction without its param.sfo; an update extracted into the update folder after
-    // the first visit names the game, and its third-party patches show.
-    let dir = tempfile::tempdir().unwrap();
-    let mut state = mods_state(dir.path());
-    let game = dir.path().join("game");
-    let update = dir.path().join("update");
-    std::fs::create_dir_all(&game).unwrap();
-    std::fs::create_dir_all(&update).unwrap();
-    std::fs::write(game.join("eboot.bin"), b"elf").unwrap();
-    std::fs::create_dir_all(dir.path().join("patches")).unwrap();
-    std::fs::write(
-        dir.path().join("patches").join("Community.xml"),
-        "<Patch><TitleID><ID>CUSA01623</ID></TitleID>\
-         <Metadata Name=\"Sharper Shadows\" Author=\"Bo\" AppVer=\"01.02\" isEnabled=\"true\"><PatchList/></Metadata></Patch>",
-    )
-    .unwrap();
-    browsed(&mut state, "game_dir", &game);
-    browsed(&mut state, "update_dir", &update);
-    open(&mut state, Page::Mods);
-    load_mods(&mut state);
-    assert!(state.mods.external.is_empty(), "no game known yet");
-
-    std::fs::create_dir_all(update.join("sce_sys")).unwrap();
-    std::fs::write(update.join("eboot.bin"), b"elf").unwrap();
-    std::fs::write(
-        update.join("sce_sys").join("param.sfo"),
-        sfo(&[
-            ("TITLE_ID", "CUSA01623"),
-            ("TITLE", "God of War III"),
-            ("APP_VER", "01.02"),
-        ]),
-    )
-    .unwrap();
-    open(&mut state, Page::Home);
-    open(&mut state, Page::Mods);
-    load_mods(&mut state);
-    let keys: Vec<&str> = state
-        .mods
-        .external
-        .iter()
-        .map(|(key, _, _)| key.as_str())
-        .collect();
-    assert_eq!(keys, ["Community.xml/Sharper Shadows"]);
-}
-
-/// A translated third-party row saves and reloads the original file/name selection.
-#[test]
-fn chinese_third_party_patch_selection_survives_save_and_reload() {
-    let dir = tempfile::tempdir().unwrap();
-    let mut state = mods_state(dir.path());
-    let dump = dump_with_patches(dir.path());
-    std::fs::write(
-        dir.path().join("patches/Community.xml"),
-        "<Patch><TitleID><ID>CUSA01623</ID></TitleID>\
-         <Metadata Name=\"Skip Intro\" Author=\"Bo\" AppVer=\"01.02\" isEnabled=\"false\"><PatchList/></Metadata></Patch>",
-    )
-    .unwrap();
-    browsed(&mut state, "game_dir", &dump);
-    open(&mut state, Page::Mods);
-    load_mods(&mut state);
-    state.lang = "zh".into();
-    let key = "Community.xml/Skip Intro";
-    let label = format!("Community.xml/{}  ·  Bo", tr("zh", "Skip Intro"));
-    assert_ne!(tr("zh", "Skip Intro"), "Skip Intro");
-    assert!(!state.mods.external_enabled.contains(key));
-    click_tall(&mut state, &label);
-    assert!(state.mods.external_enabled.contains(key));
-    let _ = app::update(&mut state, Message::Save);
-    let saved: serde_json::Value =
-        serde_json::from_slice(&std::fs::read(state.paths.patches_json()).unwrap()).unwrap();
-    assert_eq!(saved["enabled"], serde_json::json!([key]));
-    let mut restored = mods_state(dir.path());
-    open(&mut restored, Page::Mods);
-    load_mods(&mut restored);
-    restored.lang = "zh".into();
-    assert!(restored.mods.external_enabled.contains(key));
-    assert!(tall_has(&restored, &label));
-    click_tall(&mut restored, &label);
-    assert!(!restored.mods.external_enabled.contains(key));
-}
-
-/// Slashes inside third-party names stay visible once and preserve the selection key.
-#[test]
-fn third_party_patch_names_with_slashes_keep_the_original_identity() {
-    for lang in ["en", "zh"] {
-        let dir = tempfile::tempdir().unwrap();
-        let mut state = mods_state(dir.path());
-        open(&mut state, Page::Mods);
-        state.lang = lang.into();
-        let key = "Community.xml/60/120 FPS";
-        state.mods.external.push((
-            key.into(),
-            dir.path().join("patches/Community.xml"),
-            sanctuaryport_launcher::core::patches::PatchMeta {
-                name: "60/120 FPS".into(),
-                author: Some("Bo".into()),
-                note: None,
-                enabled_by_default: false,
-            },
-        ));
-        assert!(tall_has(&state, "Community.xml/60/120 FPS  ·  Bo"));
-        assert!(!tall_has(&state, "Community.xml/60/60/120 FPS  ·  Bo"));
-        click_tall(&mut state, "Community.xml/60/120 FPS  ·  Bo");
-        assert!(state.mods.external_enabled.contains(key));
-        click_tall(&mut state, "Community.xml/60/120 FPS  ·  Bo");
-        assert!(!state.mods.external_enabled.contains(key));
-    }
-}
-
-#[test]
-fn the_load_mods_box_sits_beside_its_name() {
-    // The user's screenshot (R94): the box of "Load mods" sat in the middle of the row. A row with a
-    // check box and an action keeps the box beside its name and the button at the row's end.
-    for lang in ["en", "pt", "ar"] {
-        let dir = tempfile::tempdir().unwrap();
-        let mut state = mods_state(dir.path());
-        state.lang = lang.into();
-        state.rtl = lang == "ar";
-        make_mod(&state, "a", "a.bin");
-        load_mods(&mut state);
-        let name = tr(lang, "Load mods");
-        let mut ui = settled(&mut state, Page::Mods, 1280.0, 800.0);
-        let boxed = control(&mut ui, &name);
-        let label = ui.find(name.as_str()).unwrap().bounds();
-        let open = ui.find(tr(lang, "Open folder").as_str()).unwrap().bounds();
-        let gap = if lang == "ar" {
-            label.x - (boxed.x + boxed.width)
-        } else {
-            boxed.x - (label.x + label.width)
-        };
-        assert!(
-            (0.0..=16.0).contains(&gap),
-            "{lang}: the box {boxed:?} is {gap} from its name {label:?}"
-        );
-        if lang == "ar" {
-            assert!(open.x < boxed.x, "{lang}: {open:?} vs {boxed:?}");
-        } else {
-            // Refresh ends the Load order heading at the page's edge; both pad their label by 10.
-            let refresh = ui.find(tr(lang, "Refresh").as_str()).unwrap().bounds();
-            assert!(
-                (open.x + open.width - (refresh.x + refresh.width)).abs() < 0.5,
-                "{lang}: Open folder {open:?}, Refresh {refresh:?}"
-            );
-        }
-    }
-}
-
-#[test]
-fn moving_a_mod_changes_the_order() {
-    let dir = tempfile::tempdir().unwrap();
-    let mut state = mods_state(dir.path());
-    for name in ["a", "b", "c"] {
-        make_mod(&state, name, &format!("{name}.bin"));
-    }
-    load_mods(&mut state);
-    assert_eq!(state.mods.order, ["a", "b", "c"]);
-    mods_update(&mut state, ModsMessage::Move(0, 1));
-    assert_eq!(state.mods.order, ["b", "a", "c"]);
-    // Past either end nothing moves.
-    mods_update(&mut state, ModsMessage::Move(0, -1));
-    mods_update(&mut state, ModsMessage::Move(2, 1));
-    assert_eq!(state.mods.order, ["b", "a", "c"]);
-}
-
-#[test]
-fn conflict_summary_names_the_winner() {
-    let dir = tempfile::tempdir().unwrap();
-    let mut state = mods_state(dir.path());
-    make_mod(&state, "alpha", "same.bin");
-    make_mod(&state, "beta", "same.bin");
-    load_mods(&mut state);
-    let found = sanctuaryport_launcher::core::mods::conflicts(
-        &state.paths.mods_dir(""),
-        &state.mods.order,
-        None,
-    );
-    let names = state.mods.order.clone();
-    mods_update(&mut state, ModsMessage::Conflicts(names, found));
-    open(&mut state, Page::Mods);
-    assert!(tall_has(
-        &state,
-        "⚠ 1 file is changed by two mods. beta wins."
-    ));
-    // The lower mod moves up: the other one wins.
-    mods_update(&mut state, ModsMessage::Move(1, -1));
-    assert_eq!(state.mods.order, ["beta", "alpha"]);
-    let found = sanctuaryport_launcher::core::mods::conflicts(
-        &state.paths.mods_dir(""),
-        &state.mods.order,
-        None,
-    );
-    let names = state.mods.order.clone();
-    mods_update(&mut state, ModsMessage::Conflicts(names, found));
-    assert!(tall_has(
-        &state,
-        "⚠ 1 file is changed by two mods. alpha wins."
-    ));
-}
-
-#[test]
-fn a_corrupt_presets_file_is_listed_empty_with_a_warning() {
-    const WARNING: &str = "mods_presets.json could not be read, so no preset is listed and the file is left as it is. Fix or delete it to save presets again.";
-    let dir = tempfile::tempdir().unwrap();
-    let mut state = mods_state(dir.path());
-    make_mod(&state, "a", "a.bin");
-    std::fs::write(state.paths.mod_presets(), "{oops").unwrap();
-    load_mods(&mut state);
-    open(&mut state, Page::Mods);
-    assert!(state.mods.presets.is_empty());
-    assert!(tall_has(&state, WARNING));
-    // Saving or deleting a preset would replace it: the file is kept and the warning shows.
-    mods_update(&mut state, ModsMessage::PresetName("x".into()));
-    for message in [ModsMessage::SavePreset, ModsMessage::DeletePreset] {
-        mods_update(&mut state, message);
-        let shown = state.modal.take().expect("a warning");
-        assert!(matches!(shown.kind, ModalKind::Error), "{shown:?}");
-        assert_eq!(shown.text, WARNING);
-        assert_eq!(std::fs::read(state.paths.mod_presets()).unwrap(), b"{oops");
-    }
-}
-
-#[test]
-fn preset_round_trip() {
-    let dir = tempfile::tempdir().unwrap();
-    let mut state = mods_state(dir.path());
-    for name in ["a", "b"] {
-        make_mod(&state, name, &format!("{name}.bin"));
-    }
-    load_mods(&mut state);
-    // No name: an Info dialog and no file.
-    mods_update(&mut state, ModsMessage::SavePreset);
-    let modal = state.modal.take().unwrap();
-    assert_eq!(modal.text, "Type a name for the preset first.");
-    assert!(!state.paths.mod_presets().exists());
-
-    mods_update(&mut state, ModsMessage::Toggle("a".into()));
-    mods_update(&mut state, ModsMessage::Move(0, 1));
-    mods_update(&mut state, ModsMessage::PresetName("x".into()));
-    mods_update(&mut state, ModsMessage::SavePreset);
-    let saved: serde_json::Value =
-        serde_json::from_slice(&std::fs::read(state.paths.mod_presets()).unwrap()).unwrap();
-    assert_eq!(
-        saved,
-        serde_json::json!({"x": {"order": ["b", "a"], "disabled": ["a"]}})
-    );
-    assert_eq!(state.mods.presets, ["x"]);
-
-    mods_update(&mut state, ModsMessage::Toggle("a".into()));
-    mods_update(&mut state, ModsMessage::Move(0, 1));
-    assert_eq!(state.mods.order, ["a", "b"]);
-    assert!(state.mods.enabled["a"]);
-    mods_update(&mut state, ModsMessage::LoadPreset);
-    assert_eq!(state.mods.order, ["b", "a"]);
-    assert!(!state.mods.enabled["a"]);
-
-    mods_update(&mut state, ModsMessage::DeletePreset);
-    let saved: serde_json::Value =
-        serde_json::from_slice(&std::fs::read(state.paths.mod_presets()).unwrap()).unwrap();
-    assert_eq!(saved, serde_json::json!({}));
-    assert!(state.mods.presets.is_empty());
-    assert!(state.mods.preset_name.is_empty());
-}
-
-#[test]
-fn the_list_follows_the_mods() {
-    let dir = tempfile::tempdir().unwrap();
-    let mut state = mods_state(dir.path());
-    let _ = follow(&mut state, Cause::Keys(&["mods_dir"]));
-    let builtin = performance::resolution_options(&state).len();
-    // No mod yet.
-    load_mods(&mut state);
-    assert_eq!(performance::resolution_options(&state).len(), builtin);
-    // The Mods page lists the new folder.
-    let patches = state.paths.mods_dir("").join("Ultrawide").join("patches");
-    std::fs::create_dir_all(&patches).unwrap();
-    write_mod_patch(&patches, "3840x1080");
-    load_mods(&mut state);
-    let options = performance::resolution_options(&state);
-    assert_eq!(options.len(), builtin + 1);
-    let label = options.iter().find(|(v, _)| v == "3840x1080").unwrap();
-    assert_eq!(label.1, "3840 × 1080 · 32:9 (mod)");
-    // Unticked on the Mods page.
-    mods_update(&mut state, ModsMessage::Toggle("Ultrawide".into()));
-    assert_eq!(performance::resolution_options(&state).len(), builtin);
-    mods_update(&mut state, ModsMessage::Toggle("Ultrawide".into()));
-    assert_eq!(performance::resolution_options(&state).len(), builtin + 1);
-    // "Load mods" off.
-    let _ = app::update(
-        &mut state,
-        Message::Set("mods_enabled".into(), false.into()),
-    );
-    assert_eq!(performance::resolution_options(&state).len(), builtin);
-}
-
-/// Copies the folder `from` to `to`, files and subfolders.
-fn copy_tree(from: &std::path::Path, to: &std::path::Path) {
-    std::fs::create_dir_all(to).unwrap();
-    for entry in std::fs::read_dir(from).unwrap() {
-        let entry = entry.unwrap();
-        let target = to.join(entry.file_name());
-        if entry.file_type().unwrap().is_dir() {
-            copy_tree(&entry.path(), &target);
-        } else {
-            std::fs::copy(entry.path(), target).unwrap();
-        }
-    }
-}
-
-#[test]
-fn the_bundled_ultrawide_mod_lists_with_its_patches() {
-    // Item 7 (adjustments 4): the repo's `extras/mods/Ultrawide`, put in the mods folder as its
-    // README says, lists on the Mods page with its game patches, and its patch file is the one the
-    // game merges (Python `enabled_patch_files`). Its sizes are built in since 2.4.0, so the
-    // Render resolution list gets no "(mod)" entry from it.
-    use sanctuaryport_launcher::core::{mods as core_mods, patches::resolution_names};
-    let bundled = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../extras/mods/Ultrawide");
-    let dir = tempfile::tempdir().unwrap();
-    let mut state = mods_state(dir.path());
-    let root = state.paths.mods_dir("");
-    copy_tree(&bundled, &root.join("Ultrawide"));
-    let _ = follow(&mut state, Cause::Keys(&["mods_dir"]));
-    let builtin = performance::resolution_options(&state).len();
-    load_mods(&mut state);
-    assert_eq!(state.mods.order, ["Ultrawide"]);
-    assert!(state.mods.enabled["Ultrawide"]);
-    assert_eq!(state.mods.facts["Ultrawide"], (0, true));
-    let names = core_mods::selected(&root, Some(&state.paths.mods_json()), None).unwrap();
-    assert_eq!(names, ["Ultrawide"]);
-    let files = core_mods::patch_files(&root.join("Ultrawide"));
-    assert_eq!(
-        files,
-        [root.join("Ultrawide").join("patches").join("Ultrawide.xml")]
-    );
-    let sizes = resolution_names(&files);
-    assert!(sizes.contains(&"3440x1440".to_string()), "{sizes:?}");
-    assert_eq!(performance::resolution_options(&state).len(), builtin);
-}
-
-// --- Advanced page (Task 30) ---
-
 use sanctuaryport_launcher::core::options::{UI_LANGUAGES, UI_SCALES};
 use sanctuaryport_launcher::ui::pages::advanced;
 use sanctuaryport_launcher::ui::play::GameState;
@@ -2472,44 +1682,14 @@ fn performance_page_has_the_shader_cache_rows() {
     let mut state = state(dir.path());
     state.lang = "en".into();
     open(&mut state, Page::Performance);
-    page_has(
-        &state,
-        &[
-            "Reuse compiled shaders from disk  ·  restart",
-            "Read the shader cache into memory at start  ·  restart",
-            "Show shader notes in the corner  ·  restart",
-            "Shader cache",
-            "Delete shader cache",
-        ],
-    );
-    assert!(state.store.flag("disk_shaders"));
-    assert!(!state.store.flag("shader_notes"));
-    // The rows sit below the first screen: a tall window reaches them.
+    page_has(&state, &["Shader cache", "Delete shader cache"]);
+    // SanctuaryPort: the cache switches the runtime does not read are not offered.
     let mut ui = settled(&mut state, Page::Performance, 1280.0, 4000.0);
-    for label in [
-        "Reuse compiled shaders from disk  ·  restart",
-        "Show shader notes in the corner  ·  restart",
-        "Delete shader cache",
-    ] {
-        ui.click(label)
-            .unwrap_or_else(|error| panic!("click {label:?}: {error:?}"));
-    }
+    assert!(ui.find("Reuse compiled shaders from disk  ·  restart").is_err());
+    ui.click("Delete shader cache").unwrap();
     let emitted: Vec<Message> = ui.into_messages().collect();
     // The button asks the same question as the Advanced page's.
     assert!(matches!(emitted.last(), Some(Message::ClearShaderCache)));
-    for message in emitted.into_iter().take(2) {
-        let _ = app::update(&mut state, message);
-    }
-    assert!(!state.store.flag("disk_shaders"));
-    assert!(state.store.flag("shader_notes"));
-    state.lang = "pt".into();
-    page_has(
-        &state,
-        &[
-            "Reutilizar shaders compilados do disco  ·  reiniciar",
-            "Apagar cache de shaders",
-        ],
-    );
 }
 
 #[test]
@@ -2527,7 +1707,7 @@ fn deleting_the_shader_cache_asks_then_deletes() {
     assert_eq!(shown.text, "The shader cache is already empty.");
     // 4 KiB deep inside: the question names the size in MB and the folder.
     let deep = cache
-        .join("CUSA01623")
+        .join("CUSA00243")
         .join("pipeline-binaries")
         .join("shared");
     std::fs::create_dir_all(&deep).unwrap();
@@ -2635,7 +1815,7 @@ fn the_launcher_buttons_wrap_instead_of_squeezing() {
 
 #[test]
 fn the_files_buttons_share_one_row_at_its_end() {
-    // R93: "Port folder", "spartanport.ini" and "Clear shader cache" on one line, ending where
+    // R93: "Port folder", "sanctuary.ini" and "Clear shader cache" on one line, ending where
     // every row's control ends (starting there right to left), each label on one line.
     for lang in [
         "en", "pt", "es", "fr", "de", "it", "pl", "cs", "ru", "tr", "ar", "zh", "ja", "ko", "id",
@@ -2646,7 +1826,7 @@ fn the_files_buttons_share_one_row_at_its_end() {
         state.rtl = lang == "ar";
         let labels = [
             tr(lang, "Port folder"),
-            "spartanport.ini".to_string(),
+            "sanctuary.ini".to_string(),
             tr(lang, "Clear shader cache"),
         ];
         let mut ui = settled(&mut state, Page::Advanced, 1280.0, 4000.0);
@@ -2713,8 +1893,8 @@ fn diagnostics_is_a_plain_section_after_the_others() {
         iced::Size::new(1280.0, 4000.0),
         app::view(&state),
     );
-    let heading = ui.find("DIAGNOSTICS (FOR DEVELOPMENT)").unwrap().bounds();
-    let files = ui.find("FILES").unwrap().bounds();
+    let heading = ui.find("Diagnostics (for development)").unwrap().bounds();
+    let files = ui.find("Files").unwrap().bounds();
     assert!(heading.y > files.y, "{heading:?} before {files:?}");
     for label in [
         "Frame statistics in the log (every 5 s)",
@@ -2752,11 +1932,11 @@ fn steam_results_become_the_texts() {
     };
     assert_eq!(
         advanced::steam_message("en", &added(false)).unwrap(),
-        "The shortcut \"SpartanPort\" was added to Steam (accounts: 2), with its icon, capsules, background and logo. Open Steam to see it in the library."
+        "The shortcut \"SanctuaryPort\" was added to Steam (accounts: 2), with its icon, capsules, background and logo. Open Steam to see it in the library."
     );
     assert_eq!(
         advanced::steam_message("en", &added(true)).unwrap(),
-        "The shortcut \"SpartanPort\" was updated in Steam (accounts: 2), with its icon, capsules, background and logo. Open Steam to see it in the library."
+        "The shortcut \"SanctuaryPort\" was updated in Steam (accounts: 2), with its icon, capsules, background and logo. Open Steam to see it in the library."
     );
     assert_eq!(
         advanced::steam_message("en", &Err(SteamError::Running)).unwrap_err(),
@@ -2773,39 +1953,6 @@ fn steam_results_become_the_texts() {
     let long = std::io::Error::other("x".repeat(500));
     let other = advanced::steam_message("en", &Err(SteamError::Io(long))).unwrap_err();
     assert_eq!(other.chars().count(), 400);
-}
-
-#[test]
-fn stale_conflicts_are_dropped() {
-    let dir = tempfile::tempdir().unwrap();
-    let mut state = mods_state(dir.path());
-    make_mod(&state, "alpha", "same.bin");
-    make_mod(&state, "beta", "same.bin");
-    load_mods(&mut state);
-    let root = state.paths.mods_dir("");
-    let old_names = state.mods.order.clone();
-    let old = sanctuaryport_launcher::core::mods::conflicts(&root, &old_names, None);
-    assert_eq!(old[0].1.last().unwrap(), "beta");
-    // An edit lands before the older result does.
-    mods_update(&mut state, ModsMessage::Move(1, -1));
-    let new_names = state.mods.order.clone();
-    assert_eq!(new_names, ["beta", "alpha"]);
-    mods_update(&mut state, ModsMessage::Conflicts(old_names, Vec::new()));
-    assert_eq!(state.mods.conflicts, old);
-    let current = sanctuaryport_launcher::core::mods::conflicts(&root, &new_names, None);
-    assert_eq!(current[0].1.last().unwrap(), "alpha");
-    // The stale result changed nothing; the matching one applies.
-    mods_update(
-        &mut state,
-        ModsMessage::Conflicts(new_names.clone(), current.clone()),
-    );
-    assert_eq!(state.mods.conflicts, current);
-    // And a stale one after it is still dropped.
-    mods_update(
-        &mut state,
-        ModsMessage::Conflicts(vec!["alpha".into(), "beta".into()], old),
-    );
-    assert_eq!(state.mods.conflicts, current);
 }
 
 // --- Log page (Task 31) ---
@@ -2910,8 +2057,8 @@ mod update_flow {
 
     use sanctuaryport_launcher::core::release::{Channel, Release, ReleaseId};
     use sanctuaryport_launcher::ui::app::{self, Message};
-    use sanctuaryport_launcher::ui::splash::{self, Check, SplashMessage};
-    use sanctuaryport_launcher::ui::update::{start_up_check, Listing, UpdateMessage};
+    use sanctuaryport_launcher::ui::splash::{self};
+    use sanctuaryport_launcher::ui::update::{Listing, UpdateMessage};
     use sanctuaryport_launcher::ui::widgets::ModalKind;
 
     use sanctuaryport_launcher::core::update::{InstallTarget, RELEASES_PAGE};
@@ -3271,23 +2418,6 @@ mod update_flow {
     }
 
     #[test]
-    fn a_confirmed_install_shows_progress() {
-        let dir = tempfile::tempdir().unwrap();
-        let (fake, calls) = FakeReleases::new();
-        let mut state = state_with(dir.path(), fake.progress(42).host());
-        let newer = release("2.7.0", None, false);
-        let _ = app::update(
-            &mut state,
-            Message::Update(UpdateMessage::Confirmed(newer.clone())),
-        );
-        // The fake sent its percent before it reported the call; the clock drains it.
-        assert_eq!(next_call(&calls), Call::Install(newer.url));
-        let _ = app::update(&mut state, Message::Tick(iced::time::Instant::now()));
-        let mut ui = iced_test::simulator::simulator(app::view(&state));
-        assert!(ui.find("Downloading version 2.7.0… 42%").is_ok());
-    }
-
-    #[test]
     fn a_silent_check_asks_the_host() {
         let dir = tempfile::tempdir().unwrap();
         let (fake, calls) = FakeReleases::new();
@@ -3307,158 +2437,43 @@ mod update_flow {
         assert!(calls.try_recv().is_err());
     }
 
-    #[test]
-    fn the_start_up_check_needs_self_update() {
-        let dir = tempfile::tempdir().unwrap();
-        let on = serde_json::json!(true);
-        let list = vec![release("2.7.0", None, false)];
-        let update_of = |sent: Vec<Message>| match sent.as_slice() {
-            [Message::Splash(SplashMessage::CheckDone(Check::Update(found)))] => found.clone(),
-            other => panic!("{other:?}"),
-        };
+}
 
-        // It cannot update itself: the host is not asked, even with the setting on.
-        let (fake, calls) = FakeReleases::new();
-        let mut state = state_with(
-            dir.path(),
-            fake.self_update(false).list(Ok(list.clone())).host(),
-        );
-        let _ = app::update(&mut state, Message::Set("check_updates".into(), on.clone()));
-        assert_eq!(update_of(run_task(start_up_check(&state))), None);
-        assert!(calls.try_recv().is_err());
 
-        // It can, with the setting off: still not asked.
-        let (fake, calls) = FakeReleases::new();
-        let state = state_with(dir.path(), fake.list(Ok(list.clone())).host());
-        assert!(!state.store.flag("check_updates"));
-        assert_eq!(update_of(run_task(start_up_check(&state))), None);
-        assert!(calls.try_recv().is_err());
+// --- SanctuaryPort: Diablo III's languages and shared saves ---
 
-        // Both: the host lists.
-        let (fake, calls) = FakeReleases::new();
-        let mut state = state_with(dir.path(), fake.list(Ok(list.clone())).host());
-        let _ = app::update(&mut state, Message::Set("check_updates".into(), on));
-        assert_eq!(update_of(run_task(start_up_check(&state))), Some(list));
-        assert_eq!(next_call(&calls), Call::List);
+#[test]
+fn the_language_list_follows_the_packs_of_the_dump() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut state = state(dir.path());
+    // No game folder yet: every language.
+    let (pairs, shown) = game::game_languages(&state, "1", "en");
+    assert_eq!(pairs.len(), LANGUAGES.len());
+    assert_eq!(shown, "1");
+    // The Brazilian release: Portuguese and Spanish only. English, saved before, shows as the
+    // Portuguese run.py starts the game in.
+    let game = dir.path().join("CUSA00243");
+    std::fs::create_dir_all(game.join("CPKs")).unwrap();
+    for pack in ["ptBR", "esMX"] {
+        std::fs::write(game.join("CPKs").join(format!("{pack}_Common.cpk")), b"").unwrap();
     }
+    set(&mut state, "game_dir", &game.display().to_string());
+    let (pairs, shown) = game::game_languages(&state, "1", "en");
+    let codes: Vec<&str> = pairs.iter().map(|(code, _)| code.as_str()).collect();
+    assert_eq!(codes, ["20", "17"]);
+    assert_eq!(shown, "17");
+    let (_, shown) = game::game_languages(&state, "20", "en");
+    assert_eq!(shown, "20");
 }
 
 #[test]
-fn graphics_effects_toggle_motion_blur_and_depth_of_field() {
-    let dir = tempfile::tempdir().unwrap();
-    let mut state = state(dir.path());
-    open(&mut state, Page::Graphics);
-    // Section titles are drawn in capitals.
-    page_has(&state, &["EFFECTS", "Motion blur", "Depth of field"]);
-    // On by default, as in the game.
-    assert_eq!(state.store.text("motion_blur"), "1");
-    assert_eq!(state.store.text("depth_of_field"), "1");
-    click_tall(&mut state, "Motion blur");
-    assert_eq!(state.store.text("motion_blur"), "0");
-    click_tall(&mut state, "Depth of field");
-    assert_eq!(state.store.text("depth_of_field"), "0");
-}
-
-#[test]
-fn game_audio_offers_volume_and_speakers() {
-    let dir = tempfile::tempdir().unwrap();
-    let mut state = state(dir.path());
-    open(&mut state, Page::Game);
-    // Section titles are drawn in capitals.
-    page_has(
-        &state,
-        &["AUDIO", "Volume", "100 %", "Speakers  ·  restart"],
-    );
-    assert_eq!(state.store.text("master_volume"), "100");
-    assert_eq!(state.store.text("audio_channels"), "auto");
-    let _ = app::update(
-        &mut state,
-        Message::Set("master_volume".into(), serde_json::json!(160)),
-    );
-    assert_eq!(state.store.text("master_volume"), "160");
-    page_has(&state, &["160 %"]);
-    let _ = app::update(
-        &mut state,
-        Message::Set("audio_channels".into(), serde_json::json!("7.1")),
-    );
-    assert_eq!(state.store.text("audio_channels"), "7.1");
-    // Portuguese reuses the legacy launcher's translations.
-    state.lang = "pt".into();
-    page_has(&state, &["ÁUDIO", "Alto-falantes  ·  reiniciar"]);
-}
-
-#[test]
-fn graphics_page_offers_spatial_anti_aliasing() {
-    use sanctuaryport_launcher::core::options::ANTI_ALIASING;
-    let dir = tempfile::tempdir().unwrap();
-    let mut state = state(dir.path());
-    open(&mut state, Page::Graphics);
-    page_has(&state, &["Anti-aliasing"]);
-    // Off until chosen, as in the game; FXAA and SMAA are values of one ini key.
-    assert_eq!(state.store.text("anti_aliasing"), "off");
-    for (label, value) in [("FXAA", "fxaa"), ("SMAA", "smaa"), ("Off", "off")] {
-        let pick = select_message("anti_aliasing", ANTI_ALIASING, "en", label).unwrap();
-        let _ = app::update(&mut state, pick);
-        assert_eq!(state.store.text("anti_aliasing"), value);
-    }
-}
-
-#[test]
-fn performance_offers_60_fps_during_qtes_under_the_engine_rate() {
-    let dir = tempfile::tempdir().unwrap();
-    let mut state = state(dir.path());
-    open(&mut state, Page::Performance);
-    page_has(
-        &state,
-        &["Engine frame rate", "High Frame Rate Physics Fix"],
-    );
-    // On by default, as in the game.
-    assert_eq!(state.store.text("auto_safe_fps"), "1");
-    click_tall(&mut state, "High Frame Rate Physics Fix");
-    assert_eq!(state.store.text("auto_safe_fps"), "0");
-}
-
-use sanctuaryport_launcher::core::trophy_sound::{self, TrophySound};
-use sanctuaryport_launcher::ui::persist;
-
-#[test]
-fn turning_off_all_cheats_and_the_trophy_sound_are_saved() {
-    let dir = tempfile::tempdir().unwrap();
-    let mut state = state(dir.path());
-    let user = state.paths.user_dir(&state.store.text("user_dir"));
-    // Saving without touching the sound writes no custom_trophy file.
-    persist::collect(&mut state).unwrap();
-    assert!(!trophy_sound::file(&user).exists());
-    for key in ["cheat_health", "auto_qte", "cheat_double_jumps"] {
-        let _ = app::update(&mut state, Message::Set(key.into(), true.into()));
-    }
-    let _ = app::update(
-        &mut state,
-        Message::Set("damage_dealt".into(), "2.500".into()),
-    );
-    let _ = app::update(&mut state, Message::CheatsOff);
-    for key in [
-        "cheat_health",
-        "cheat_magic",
-        "cheat_item",
-        "cheat_rage",
-        "cheat_orbs",
-        "cheat_very_hard",
-        "cheat_double_jumps",
-        "auto_qte",
-    ] {
-        assert!(!state.store.flag(key), "{key}");
-    }
-    assert_eq!(state.store.text("damage_dealt"), "1.000");
-    let sound = TrophySound {
-        volume: 30,
-        muted: true,
-    };
-    let _ = app::update(&mut state, Message::TrophySound(sound));
-    assert!(persist::dirty(&state));
-    persist::collect(&mut state).unwrap();
-    assert_eq!(trophy_sound::read(&user), sound);
-    let ini = std::fs::read_to_string(state.paths.ini_path()).unwrap();
-    assert!(ini.contains("damage_dealt=1.000\n"), "{ini}");
-    assert!(ini.contains("cheat_health=0\n"), "{ini}");
+fn diablo_iii_releases_share_their_saves() {
+    use std::collections::BTreeSet;
+    let titles = |ids: &[&str]| ids.iter().map(|s| s.to_string()).collect::<BTreeSet<String>>();
+    // The Brazilian release reads the saves the game keeps under the US title id.
+    assert!(!game::backup_is_for_another_game("CUSA00243", &titles(&["CUSA00242"])));
+    assert!(!game::backup_is_for_another_game("CUSA00242", &titles(&["CUSA00242"])));
+    assert!(game::backup_is_for_another_game("CUSA00243", &titles(&["CUSA12345"])));
+    // A backup without a title id says nothing either way.
+    assert!(!game::backup_is_for_another_game("CUSA00243", &titles(&[])));
 }

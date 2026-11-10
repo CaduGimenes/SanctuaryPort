@@ -1,11 +1,11 @@
-//! What every setting is, described once: its file, type, default, choices and `GOW3_*` name.
+//! What every setting is, described once: its file, type, default, choices and `SANCTUARY_*` name.
 //! Only the table; reading and writing live in `settings` and `store`.
 
 use crate::core::options::{
     Choice, AIM_STYLES, ANISOTROPY, ANTI_ALIASING, AUDIO_CHANNELS, DISPLAY_MODES, DRAW_PIPE,
-    ENGINE_FPS_CHOICES, FPS_LIMITS, FRAMES_QUEUED, FRAME_GENERATION, GLYPH_KEYS, GLYPH_STYLES,
-    KEY_COLORS, KEY_COLOR_STYLES, LANGUAGES, LIVE_RESOLUTION, MENU_CONFIRM_STYLES, NO_MSAA,
-    OUTPUTS, PRESETS, READBACKS, STICK_PROMPTS, STREAM_MEMORY, UI_LANGUAGES, UI_SCALES, UPSCALERS,
+    ENGINE_FPS_CHOICES, FPS_LIMITS, FRAMES_QUEUED, FRAME_GENERATION, GLYPH_STYLES,
+    LANGUAGES, LIVE_RESOLUTION, MENU_CONFIRM_STYLES, NO_MSAA,
+    OUTPUTS, PRESETS, READBACKS, STREAM_MEMORY, UI_LANGUAGES, UI_SCALES, UPSCALERS,
     VIDEO_BACKENDS,
 };
 
@@ -14,7 +14,7 @@ use crate::core::options::{
 pub enum File {
     /// `settings.json`.
     App,
-    /// The game's `gow3.ini`.
+    /// The game's `sanctuary.ini`.
     Ini,
 }
 
@@ -145,195 +145,166 @@ pub static SETTINGS: &[Setting] = &[
         Pick(UI_LANGUAGES),
         // SanctuaryPort: empty = the system language (pt-BR desktops start in Portuguese).
         Text(""),
-        env("GOW3_UI_LANGUAGE", ""),
+        env("SANCTUARY_UI_LANGUAGE", ""),
     ),
     app("ui_scale", Pick(UI_SCALES), Text("auto"), None),
     app(
         "game_dir",
         Kind::Text,
         Text(""),
-        env("GOW3_GAME_DIR", ""),
+        env("SANCTUARY_GAME_DIR", ""),
     ),
     app(
         "update_dir",
         Kind::Text,
         Text(""),
-        env("GOW3_PATCH_DIR", ""),
+        env("SANCTUARY_PATCH_DIR", ""),
     ),
     app("video_backend", Pick(VIDEO_BACKENDS), Text("auto"), None),
-    app("gamemode", Flag, Bool(false), env("GOW3_GAMEMODE", "")),
-    app("mangohud", Flag, Bool(false), env("GOW3_MANGOHUD", "")),
+    app("gamemode", Flag, Bool(false), env("SANCTUARY_GAMEMODE", "")),
+    app("mangohud", Flag, Bool(false), env("SANCTUARY_MANGOHUD", "")),
     app("desktop_integration", Flag, Bool(true), None),
     app(
         "user_dir",
         Kind::Text,
         Text(""),
-        env("GOW3_USER_DIR", ""),
+        env("SANCTUARY_USER_DIR", ""),
     ),
     app(
         "mods_dir",
         Kind::Text,
         Text(""),
-        env("GOW3_MODS_DIR", ""),
+        env("SANCTUARY_MODS_DIR", ""),
     ),
     app(
         "mods_enabled",
         Flag,
         Bool(true),
-        env("GOW3_MODS_ENABLED", "1"),
+        env("SANCTUARY_MODS_ENABLED", "1"),
     ),
     app(
         "patches_dir",
         Kind::Text,
         Text(""),
-        env("GOW3_PATCHES_DIR", ""),
+        env("SANCTUARY_PATCHES_DIR", ""),
     ),
     app(
         "language",
         Pick(LANGUAGES),
         Text("1"),
-        env("GOW3_LANGUAGE", "1"),
+        env("SANCTUARY_LANGUAGE", "1"),
     ),
-    app("hdr", Flag, Bool(false), env("GOW3_HDR", "")),
+    app("hdr", Flag, Bool(false), env("SANCTUARY_HDR", "")),
     app(
         "draw_pipe",
         Pick(DRAW_PIPE),
         Text(""),
-        env("GOW3_DRAW_PIPE", ""),
+        env("SANCTUARY_DRAW_PIPE", ""),
     ),
     app(
         "readbacks",
         Pick(READBACKS),
         Text(""),
-        env("GOW3_READBACKS", ""),
+        env("SANCTUARY_READBACKS", ""),
     ),
     app(
         "no_msaa",
         Pick(NO_MSAA),
         Text(""),
-        env("GOW3_NO_MSAA", ""),
+        env("SANCTUARY_NO_MSAA", ""),
     ),
     app(
         "stream_memory",
         Pick(STREAM_MEMORY),
         Text("cached"),
-        env("GOW3_STREAM_MEMORY", "cached"),
+        env("SANCTUARY_STREAM_MEMORY", "cached"),
     ),
-    app("gpu_id", Kind::Text, Text(""), env("GOW3_GPU_ID", "")),
-    app("monitor", Kind::Text, Text(""), env("GOW3_MONITOR", "")),
+    app("gpu_id", Kind::Text, Text(""), env("SANCTUARY_GPU_ID", "")),
+    app("monitor", Kind::Text, Text(""), env("SANCTUARY_MONITOR", "")),
     app(
         "partial_height_views",
         Flag,
         Bool(true),
-        env("GOW3_PARTIAL_HEIGHT_VIEWS", ""),
+        env("SANCTUARY_PARTIAL_HEIGHT_VIEWS", ""),
     ),
     app(
         "disk_shaders",
         Flag,
         Bool(true),
-        env("GOW3_DISK_SHADERS", ""),
+        env("SANCTUARY_DISK_SHADERS", ""),
     ),
     app(
         "shader_prefetch",
         Flag,
         Bool(true),
-        env("GOW3_SHADER_PREFETCH", ""),
+        env("SANCTUARY_SHADER_PREFETCH", ""),
     ),
     app(
         "shader_notes",
         Flag,
         Bool(false),
-        env("GOW3_SHADER_NOTES", ""),
+        env("SANCTUARY_SHADER_NOTES", ""),
     ),
     app(
         "background_warmup",
         Flag,
         Bool(true),
-        env("GOW3_BACKGROUND_WARMUP", ""),
+        env("SANCTUARY_BACKGROUND_WARMUP", ""),
     ),
     app(
         "parallel_warmup",
         Flag,
         Bool(true),
-        env("GOW3_PARALLEL_WARMUP", ""),
+        env("SANCTUARY_PARALLEL_WARMUP", ""),
     ),
     app(
         "pipeline_binary_cache",
         Flag,
         Bool(true),
-        env("GOW3_PIPELINE_BINARIES", ""),
+        env("SANCTUARY_PIPELINE_BINARIES", ""),
     ),
-    app("perf_diag", Flag, Bool(false), env("GOW3_PERF_DIAG", "")),
+    app("perf_diag", Flag, Bool(false), env("SANCTUARY_PERF_DIAG", "")),
     app(
         "frame_capture_key",
         Flag,
         Bool(false),
-        env("GOW3_FRAME_CAPTURE_KEY", ""),
+        env("SANCTUARY_FRAME_CAPTURE_KEY", ""),
     ),
     app(
         "frame_stats",
         Flag,
         Bool(false),
-        env("GOW3_FRAME_STATS", ""),
+        env("SANCTUARY_FRAME_STATS", ""),
     ),
     app(
         "gpu_profile",
         Flag,
         Bool(false),
-        env("GOW3_GPU_PROFILE", ""),
+        env("SANCTUARY_GPU_PROFILE", ""),
     ),
     app(
         "vk_validation",
         Flag,
         Bool(false),
-        env("GOW3_VK_VALIDATION", ""),
+        env("SANCTUARY_VK_VALIDATION", ""),
     ),
     app("close_on_play", Flag, Bool(false), None),
-    // The runner reads GOW3_DISCORD only to switch it off ("0"), so absent has no default.
-    app("discord_rpc", Flag, Bool(true), env("GOW3_DISCORD", "")),
+    // The runner reads SANCTUARY_DISCORD only to switch it off ("0"), so absent has no default.
+    app("discord_rpc", Flag, Bool(true), env("SANCTUARY_DISCORD", "")),
     app("check_updates", Flag, Bool(false), None),
-    // Derived, not 1:1: `env.rs` builds GOW3_PATCHES and GOW3_KEY_MAP / GOW3_PAD_MAP
+    // Derived, not 1:1: `env.rs` builds SANCTUARY_PATCHES and SANCTUARY_KEY_MAP / SANCTUARY_PAD_MAP
     // from the content of these two, so they carry no `env`.
     app("game_patches", Json, Object, None),
     app("controls", Json, Object, None),
     app("pad_style", Kind::Text, Text("playstation"), None),
-    app("rage_one_input", Flag, Bool(true), None),
-    app(
-        "stick_prompts",
-        Pick(STICK_PROMPTS),
-        Text("keyboard"),
-        env("GOW3_STICK_PROMPTS", ""),
-    ),
     app("controls_layout", Kind::Int, Int(5), None),
-    // Off unless set: the runner patches the tutorials only for "1" (`run.py` `switch_text_mounts`).
-    app(
-        "switch_attacks",
-        Flag,
-        Bool(false),
-        env("GOW3_SWITCH_ATTACKS", ""),
-    ),
     app(
         "glyph_style",
         Pick(GLYPH_STYLES),
         Text("off"),
-        env("GOW3_GLYPH_STYLE", "off"),
+        env("SANCTUARY_GLYPH_STYLE", "off"),
     ),
     app_unwritten("launcher_effects", Flag, Bool(true)),
-    // Rust only: which key of a button the keyboard icons draw; a new settings.json does not get it.
-    Setting {
-        env: env("GOW3_GLYPH_KEYS", "main"),
-        ..app_unwritten("glyph_keys", Pick(GLYPH_KEYS), Text("main"))
-    },
-    // Rust only, like `glyph_keys`: the colour of the key labels of the four face buttons. The
-    // four picks of a custom colouring are not variables; `game_environment` joins them.
-    Setting {
-        env: env("GOW3_GLYPH_KEY_COLORS", "gray"),
-        ..app_unwritten("glyph_key_colors", Pick(KEY_COLOR_STYLES), Text("gray"))
-    },
-    app_unwritten("glyph_color_cross", Pick(KEY_COLORS), Text("gray")),
-    app_unwritten("glyph_color_circle", Pick(KEY_COLORS), Text("gray")),
-    app_unwritten("glyph_color_square", Pick(KEY_COLORS), Text("gray")),
-    app_unwritten("glyph_color_triangle", Pick(KEY_COLORS), Text("gray")),
     app_unwritten("controls_device", Kind::Text, Text("")),
     // The page follows the connected controller's family until the player picks one.
     app_unwritten("pad_style_auto", Flag, Bool(true)),
@@ -404,10 +375,10 @@ pub static SETTINGS: &[Setting] = &[
     ini("frame_generation_frames", Kind::Int, Text("1"), false, 32),
     // F2: the engine at 60 FPS while a QTE prompt is up, read by the game itself.
     ini("auto_safe_fps", Flag, Bool(true), true, 33),
-    // FXAA / SMAA of the finished frame, read by the game from gow3.ini.
+    // FXAA / SMAA of the finished frame, read by the game from sanctuary.ini.
     ini("anti_aliasing", Pick(ANTI_ALIASING), Text("off"), true, 34),
     ini("free_camera", Flag, Bool(false), true, 35),
-    // The in-game menu's cheats and multipliers (#1135), read by the game from gow3.ini.
+    // The in-game menu's cheats and multipliers (#1135), read by the game from sanctuary.ini.
     ini("cheat_health", Flag, Bool(false), true, 36),
     ini("cheat_magic", Flag, Bool(false), true, 37),
     ini("cheat_item", Flag, Bool(false), true, 38),
@@ -420,6 +391,11 @@ pub static SETTINGS: &[Setting] = &[
     ini("gold_orb_multiplier", Kind::Text, Text("1.000"), true, 45),
     ini("damage_dealt", Kind::Text, Text("1.000"), true, 46),
     ini("damage_taken", Kind::Text, Text("1.000"), true, 47),
+    // SanctuaryPort: FSR 1 upscaling and RCAS sharpening of the game's picture (sanctuary_settings.cpp;
+    // also in the in-game menu's Image tab).
+    ini("fsr1", Flag, Bool(false), true, 48),
+    ini("rcas", Flag, Bool(true), true, 49),
+    ini("rcas_strength", Kind::Int, Int(75), true, 50),
     ini("object_motion", Flag, Bool(true), false, 2),
     ini("output_res", Pick(OUTPUTS), Text("1920x1080"), false, 4),
     ini(
@@ -562,14 +538,14 @@ mod tests {
                 "cheat_very_hard"
             ]
         );
-        assert_eq!(keys.last(), Some(&"damage_taken"));
+        assert_eq!(keys.last(), Some(&"rcas_strength"));
         let shown: Vec<_> = rows.iter().filter(|s| s.written).map(|s| s.key).collect();
         assert_eq!(shown, SHOWN_INI_KEYS.iter().copied().collect::<Vec<_>>());
     }
 
     #[test]
-    fn shown_ini_keys_are_the_44_controls_of_the_window() {
-        assert_eq!(SHOWN_INI_KEYS.len(), 44);
+    fn shown_ini_keys_are_the_47_controls_of_the_window() {
+        assert_eq!(SHOWN_INI_KEYS.len(), 47); // SanctuaryPort: + fsr1, rcas, rcas_strength
         for seeded in ["monitor", "hdr", "glyph_style"] {
             assert!(SHOWN_INI_KEYS.contains(&seeded), "{seeded}");
         }
@@ -592,12 +568,6 @@ mod tests {
         for key in [
             "launcher_effects",
             "controls_device",
-            "glyph_keys",
-            "glyph_key_colors",
-            "glyph_color_cross",
-            "glyph_color_circle",
-            "glyph_color_square",
-            "glyph_color_triangle",
         ] {
             let row = setting(key).unwrap();
             assert!(!row.written, "{key}");
@@ -607,11 +577,10 @@ mod tests {
 
     #[test]
     fn the_runner_defaults_come_from_the_table() {
-        assert_eq!(run_default("GOW3_MODS_ENABLED"), Some("1"));
-        assert_eq!(run_default("GOW3_STREAM_MEMORY"), Some("cached"));
-        assert_eq!(run_default("GOW3_GLYPH_STYLE"), Some("off"));
-        assert_eq!(run_default("GOW3_SWITCH_ATTACKS"), Some(""));
-        assert_eq!(run_default("GOW3_NOT_A_SETTING"), None);
+        assert_eq!(run_default("SANCTUARY_MODS_ENABLED"), Some("1"));
+        assert_eq!(run_default("SANCTUARY_STREAM_MEMORY"), Some("cached"));
+        assert_eq!(run_default("SANCTUARY_GLYPH_STYLE"), Some("off"));
+        assert_eq!(run_default("SANCTUARY_NOT_A_SETTING"), None);
     }
 
     #[test]

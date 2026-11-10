@@ -1,4 +1,4 @@
-// gow3: profiler disabled; Tracy macros compile to nothing.
+// sanctuary: profiler disabled; Tracy macros compile to nothing.
 #pragma once
 #include <cstddef>
 #include <cstdint>

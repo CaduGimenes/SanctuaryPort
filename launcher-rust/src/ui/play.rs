@@ -18,7 +18,7 @@ use crate::core::game::{adopt_system_files, system_files_beside, FileState, Game
 use crate::core::i18n::{tr, tr_fmt};
 use crate::core::installation::{Installation, SEPARATE_FOLDERS};
 use crate::core::launch::{
-    run_command, spawn_game, Exit, GameEvent, GameHandle, Group, Launch, LaunchError,
+    spawn_game, Exit, GameEvent, GameHandle, Group, Launch, LaunchError,
 };
 use crate::core::log::{line_status, LineStatus, RunLog};
 use crate::core::paths::Paths;
@@ -115,7 +115,6 @@ impl GameState {
 #[derive(Debug, Clone, Copy)]
 pub enum LiveAction {
     RestoreSaves,
-    ResetTrophies,
     ClearShaderCache,
     Update,
     SetUpController,
@@ -129,7 +128,6 @@ pub fn refuse_while_live(state: &mut State, action: LiveAction) -> bool {
     }
     let english = match action {
         LiveAction::RestoreSaves => "Close the game before restoring saves.",
-        LiveAction::ResetTrophies => "Close the game before resetting the trophies.",
         LiveAction::ClearShaderCache => "Close the game before deleting the shader cache.",
         LiveAction::Update => "Close the game before updating.",
         LiveAction::SetUpController => "Stop the game before setting up a controller.",
@@ -219,7 +217,7 @@ pub fn play(state: &mut State) -> Task<Message> {
     if !state.installation.has_game() {
         let text = tr(
             &state.lang,
-            "Choose the game folder with eboot.bin (CUSA01623).",
+            "Choose the game folder with eboot.bin (CUSA00243).",
         );
         return refuse(state, text);
     }
@@ -301,16 +299,19 @@ fn checks(state: &mut State, declined: Option<&str>) -> Task<Message> {
     start(state)
 }
 
-/// What the runner needs from the port folder and does not find: the probe it starts (`bin/` in
-/// a package, `out/` in a checkout). An exe moved out of its package or a package half extracted
+/// What PLAY needs from the port folder and does not find: run.sh and the probe it starts (`bin/`
+/// in a package, `out/` in a checkout). An exe moved out of its package or a package half extracted
 /// lack it; PLAY says so instead of failing inside the runner.
 pub fn missing_port_files(paths: &Paths) -> Vec<String> {
     let mut missing = Vec::new();
-    if paths.find_tool("spartanport-probe").is_none() {
+    if !paths.port_dir.join("run.sh").is_file() {
+        missing.push("run.sh".to_string());
+    }
+    if paths.find_tool("sanctuary-probe").is_none() {
         let file = if cfg!(windows) {
-            "spartanport-probe.exe"
+            "sanctuary-probe.exe"
         } else {
-            "spartanport-probe"
+            "sanctuary-probe"
         };
         missing.push(Path::new("bin").join(file).display().to_string());
     }
@@ -356,14 +357,10 @@ fn spawn(state: &mut State) -> Task<Message> {
     state.log.clear();
     let run_log = RunLog::open(&state.paths.run_log_path(&state.store.text("user_dir")));
     let env = launch_environment(state);
-    let command = match &state.launch_command {
-        Some(command) => Ok(command.clone()),
-        None => state
-            .launcher_exe
-            .clone()
-            .map_or_else(std::env::current_exe, Ok)
-            .map(|exe| run_command(&exe, &[])),
-    };
+    // SanctuaryPort: the game starts from the port's run.sh (missing_port_files says so before).
+    let command = state.launch_command.clone().ok_or_else(|| {
+        std::io::Error::new(std::io::ErrorKind::NotFound, "run.sh is missing from the port folder")
+    });
     let started = command.map_err(LaunchError::from).and_then(|command| {
         spawn_game(Launch {
             command: &command,

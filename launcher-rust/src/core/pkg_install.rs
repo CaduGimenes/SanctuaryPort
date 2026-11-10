@@ -198,7 +198,10 @@ fn sha256(parts: &[&[u8]]) -> [u8; 32] {
 }
 
 fn hmac(key: &[u8], parts: &[&[u8]]) -> [u8; 32] {
-    let mut m = <Hmac<Sha256> as Mac>::new_from_slice(key).expect("HMAC takes any key length");
+    // HMAC takes a key of any length, so this never fails.
+    let Ok(mut m) = <Hmac<Sha256> as Mac>::new_from_slice(key) else {
+        return [0; 32];
+    };
     for p in parts {
         m.update(p);
     }

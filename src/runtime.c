@@ -1,7 +1,7 @@
 /* Narrow, explicit PS4 libc contracts. No automatic success stubs. */
 #define _CRT_RAND_S
 #include "runtime.h"
-#include "gpu/gow3gpu.h"
+#include "gpu/sanctuarygpu.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -261,7 +261,7 @@ uintptr_t runtime_resolve(const char *name, int is_data) {
     if (json) return json;
     uintptr_t ngs2 = runtime_ngs2_resolve(name);
     if (ngs2) return ngs2;
-    return gow3gpu_resolve(name);
+    return sanctuarygpu_resolve(name);
 }
 static const struct { const char *nid, *symbol; } import_names[]={
 #include "import_names.inc"

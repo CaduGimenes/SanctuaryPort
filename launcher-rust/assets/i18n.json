@@ -32,8 +32,8 @@
   "Restarting with the new settings…",
   "\nThe game exited (code {}).\n",
   "Could not start: {}",
-  "Choose the game folder with eboot.bin (CUSA01623).",
-  "Stored in gow3.ini; the in-game menu (Insert or R3+L2) changes the same values.",
+  "Choose the game folder with eboot.bin (CUSA00243).",
+  "Stored in sanctuary.ini; the in-game menu (Insert or R3+L2) changes the same values.",
   "Upscaling",
   "Temporal upscaling with the game's own motion vectors. FSR 4 needs its assets (below) and a GPU with INT8 dot products; otherwise the game falls back to FSR 3.1 by itself.",
   "Quality preset",
@@ -189,8 +189,8 @@
    "إعادة التشغيل بالإعدادات الجديدة…",
    "\nأُغلقت اللعبة (الرمز {}).\n",
    "تعذّر التشغيل: {}",
-   "اختر مجلد اللعبة الذي يحتوي eboot.bin (CUSA01623).",
-   "محفوظة في gow3.ini؛ قائمة اللعبة (Insert أو R3+L2) تغيّر القيم نفسها.",
+   "اختر مجلد اللعبة الذي يحتوي eboot.bin (CUSA00243).",
+   "محفوظة في sanctuary.ini؛ قائمة اللعبة (Insert أو R3+L2) تغيّر القيم نفسها.",
    "التكبير",
    "تكبير زمني باستخدام متجهات الحركة الخاصة باللعبة. يحتاج FSR 4 إلى ملفاته (بالأسفل) وبطاقة تدعم INT8؛ وإلا تعود اللعبة تلقائيًا إلى FSR 3.1.",
    "إعداد الجودة",
@@ -345,8 +345,8 @@
    "Reiniciando con los nuevos ajustes…",
    "\nEl juego se cerró (código {}).\n",
    "No se pudo iniciar: {}",
-   "Elige la carpeta del juego con eboot.bin (CUSA01623).",
-   "Se guarda en gow3.ini; el menú del juego (Insert o R3+L2) cambia los mismos valores.",
+   "Elige la carpeta del juego con eboot.bin (CUSA00243).",
+   "Se guarda en sanctuary.ini; el menú del juego (Insert o R3+L2) cambia los mismos valores.",
    "Escalado",
    "Escalado temporal con los vectores de movimiento del propio juego. FSR 4 necesita sus archivos (abajo) y una GPU con INT8; si no, el juego vuelve solo a FSR 3.1.",
    "Preajuste de calidad",
@@ -501,8 +501,8 @@
    "Reiniciando com as novas configurações…",
    "\nO jogo foi fechado (código {}).\n",
    "Não foi possível iniciar: {}",
-   "Escolha a pasta do jogo com eboot.bin (CUSA01623).",
-   "Salvo em gow3.ini; o menu do jogo (Insert ou R3+L2) altera os mesmos valores.",
+   "Escolha a pasta do jogo com eboot.bin (CUSA00243).",
+   "Salvo em sanctuary.ini; o menu do jogo (Insert ou R3+L2) altera os mesmos valores.",
    "Upscaling",
    "Upscaling temporal com os vetores de movimento do próprio jogo. O FSR 4 precisa de seus arquivos (abaixo) e de uma GPU com INT8; senão o jogo volta sozinho para o FSR 3.1.",
    "Predefinição de qualidade",
@@ -657,8 +657,8 @@
    "Redémarrage avec les nouveaux réglages…",
    "\nLe jeu s’est fermé (code {}).\n",
    "Impossible de lancer : {}",
-   "Choisissez le dossier du jeu contenant eboot.bin (CUSA01623).",
-   "Enregistré dans gow3.ini ; le menu en jeu (Insert ou R3+L2) modifie les mêmes valeurs.",
+   "Choisissez le dossier du jeu contenant eboot.bin (CUSA00243).",
+   "Enregistré dans sanctuary.ini ; le menu en jeu (Insert ou R3+L2) modifie les mêmes valeurs.",
    "Upscaling",
    "Upscaling temporel avec les vecteurs de mouvement du jeu. FSR 4 nécessite ses fichiers (ci-dessous) et un GPU avec INT8 ; sinon le jeu repasse seul à FSR 3.1.",
    "Préréglage de qualité",
@@ -813,8 +813,8 @@
    "Neustart mit den neuen Einstellungen…",
    "\nDas Spiel wurde beendet (Code {}).\n",
    "Start fehlgeschlagen: {}",
-   "Spielordner mit eboot.bin wählen (CUSA01623).",
-   "Gespeichert in gow3.ini; das Menü im Spiel (Einfg oder R3+L2) ändert dieselben Werte.",
+   "Spielordner mit eboot.bin wählen (CUSA00243).",
+   "Gespeichert in sanctuary.ini; das Menü im Spiel (Einfg oder R3+L2) ändert dieselben Werte.",
    "Hochskalierung",
    "Temporale Hochskalierung mit den Bewegungsvektoren des Spiels. FSR 4 braucht seine Dateien (unten) und eine GPU mit INT8; sonst wechselt das Spiel selbst zu FSR 3.1.",
    "Qualitätsstufe",
@@ -969,8 +969,8 @@
    "Riavvio con le nuove impostazioni…",
    "\nIl gioco è stato chiuso (codice {}).\n",
    "Impossibile avviare: {}",
-   "Scegli la cartella del gioco con eboot.bin (CUSA01623).",
-   "Salvato in gow3.ini; il menu nel gioco (Ins o R3+L2) modifica gli stessi valori.",
+   "Scegli la cartella del gioco con eboot.bin (CUSA00243).",
+   "Salvato in sanctuary.ini; il menu nel gioco (Ins o R3+L2) modifica gli stessi valori.",
    "Upscaling",
    "Upscaling temporale con i vettori di movimento del gioco. FSR 4 richiede i suoi file (sotto) e una GPU con INT8; altrimenti il gioco torna da solo a FSR 3.1.",
    "Preset di qualità",
@@ -1125,8 +1125,8 @@
    "Ponowne uruchamianie z nowymi ustawieniami…",
    "\nGra została zamknięta (kod {}).\n",
    "Nie udało się uruchomić: {}",
-   "Wybierz folder gry z eboot.bin (CUSA01623).",
-   "Zapisywane w gow3.ini; menu w grze (Insert lub R3+L2) zmienia te same wartości.",
+   "Wybierz folder gry z eboot.bin (CUSA00243).",
+   "Zapisywane w sanctuary.ini; menu w grze (Insert lub R3+L2) zmienia te same wartości.",
    "Skalowanie",
    "Skalowanie czasowe z wektorami ruchu samej gry. FSR 4 wymaga swoich plików (poniżej) i GPU z INT8; w przeciwnym razie gra sama wraca do FSR 3.1.",
    "Profil jakości",
@@ -1281,8 +1281,8 @@
    "Yeni ayarlarla yeniden başlatılıyor…",
    "\nOyun kapandı (kod {}).\n",
    "Başlatılamadı: {}",
-   "eboot.bin içeren oyun klasörünü seçin (CUSA01623).",
-   "gow3.ini içinde saklanır; oyun içi menü (Insert veya R3+L2) aynı değerleri değiştirir.",
+   "eboot.bin içeren oyun klasörünü seçin (CUSA00243).",
+   "sanctuary.ini içinde saklanır; oyun içi menü (Insert veya R3+L2) aynı değerleri değiştirir.",
    "Ölçekleme",
    "Oyunun kendi hareket vektörleriyle zamansal ölçekleme. FSR 4 için dosyaları (aşağıda) ve INT8 destekli bir GPU gerekir; aksi halde oyun kendiliğinden FSR 3.1’e döner.",
    "Kalite ön ayarı",
@@ -1437,8 +1437,8 @@
    "正在以新设置重新启动…",
    "\n— 游戏已退出（代码 {}）—\n",
    "无法启动：{}",
-   "请选择包含 eboot.bin 的游戏文件夹（CUSA01623）。",
-   "保存在 gow3.ini 中；游戏内菜单（Insert 或 R3+L2）会修改相同的值。",
+   "请选择包含 eboot.bin 的游戏文件夹（CUSA00243）。",
+   "保存在 sanctuary.ini 中；游戏内菜单（Insert 或 R3+L2）会修改相同的值。",
    "超分辨率",
    "使用游戏自身运动矢量的时间性超分辨率。FSR 4 需要其文件（见下方）和支持 INT8 的显卡；否则游戏会自动改用 FSR 3.1。",
    "画质预设",
@@ -1593,8 +1593,8 @@
    "新しい設定で再起動しています…",
    "\n— ゲームが終了しました（コード {}）—\n",
    "起動できませんでした：{}",
-   "eboot.bin のあるゲームフォルダーを選択してください（CUSA01623）。",
-   "gow3.ini に保存されます。ゲーム内メニュー（Insert または R3+L2）でも同じ値を変更できます。",
+   "eboot.bin のあるゲームフォルダーを選択してください（CUSA00243）。",
+   "sanctuary.ini に保存されます。ゲーム内メニュー（Insert または R3+L2）でも同じ値を変更できます。",
    "アップスケーリング",
    "ゲーム自身のモーションベクトルを使うテンポラルアップスケーリング。FSR 4 にはファイル（下記）と INT8 対応 GPU が必要です。ない場合は自動で FSR 3.1 になります。",
    "画質プリセット",
@@ -1749,8 +1749,8 @@
    "새 설정으로 다시 시작하는 중…",
    "\n게임이 종료됨 (코드 {}).\n",
    "시작할 수 없음: {}",
-   "eboot.bin이 있는 게임 폴더를 선택하세요 (CUSA01623).",
-   "gow3.ini에 저장됩니다. 게임 내 메뉴(Insert 또는 R3+L2)에서도 같은 값을 바꿉니다.",
+   "eboot.bin이 있는 게임 폴더를 선택하세요 (CUSA00243).",
+   "sanctuary.ini에 저장됩니다. 게임 내 메뉴(Insert 또는 R3+L2)에서도 같은 값을 바꿉니다.",
    "업스케일링",
    "게임 자체의 모션 벡터를 사용한 시간적 업스케일링. FSR 4에는 파일(아래)과 INT8 지원 GPU가 필요하며, 없으면 게임이 자동으로 FSR 3.1을 사용합니다.",
    "품질 프리셋",
@@ -1905,8 +1905,8 @@
    "Memulai ulang dengan pengaturan baru…",
    "\nGame ditutup (kode {}).\n",
    "Tidak dapat memulai: {}",
-   "Pilih folder game dengan eboot.bin (CUSA01623).",
-   "Tersimpan di gow3.ini; menu dalam game (Insert atau R3+L2) mengubah nilai yang sama.",
+   "Pilih folder game dengan eboot.bin (CUSA00243).",
+   "Tersimpan di sanctuary.ini; menu dalam game (Insert atau R3+L2) mengubah nilai yang sama.",
    "Upscaling",
    "Temporal upscaling dengan vektor gerak game itu sendiri. FSR 4 memerlukan asetnya (di bawah) dan GPU dengan INT8 dot product; jika tidak, game akan otomatis beralih ke FSR 3.1.",
    "Preset kualitas",
@@ -2061,8 +2061,8 @@
    "Restartuji s novým nastavením…",
    "\nHra skončila (kód {}).\n",
    "Nelze spustit: {}",
-   "Vyberte složku hry s eboot.bin (CUSA01623).",
-   "Uloženo ve gow3.ini; herní menu (Insert nebo R3+L2) mění stejné hodnoty.",
+   "Vyberte složku hry s eboot.bin (CUSA00243).",
+   "Uloženo ve sanctuary.ini; herní menu (Insert nebo R3+L2) mění stejné hodnoty.",
    "Upscaling",
    "Časový upscaling s vlastními vektory pohybu hry. FSR 4 potřebuje své soubory (níže) a GPU s INT8 skalárními součiny; jinak hra sama přejde na FSR 3.1.",
    "Předvolba kvality",
@@ -2232,13 +2232,8 @@
    "Deferred GPU readbacks": "Leituras da GPU adiadas",
    "Fewer waits for the GPU. Switch it off if textures or shadows look wrong.": "Menos esperas pela GPU. Desative se texturas ou sombras parecerem erradas.",
    "Your game dump, saves and language.": "Seu dump do jogo, saves e idioma.",
-   "Cheats": "Cheats",
-   "Infinite Double Jumps": "Pulos duplos infinitos",
-   "Repeat air jumps without landing. Also available in the in-game Cheats menu.": "Repete pulos no ar sem tocar o chão. Também está no menu de Cheats do jogo.",
-   "Unlock Very Hard": "Liberar Muito Difícil",
-   "Select Very Hard without completing the game. Does not change existing save difficulty. In-game: enable before opening New Game.": "Seleciona Muito Difícil sem terminar o jogo. Não muda a dificuldade de saves existentes. No jogo: ative antes de abrir Novo Jogo.",
    "Folders": "Pastas",
-   "Your own dump of the game (eboot.bin, sce_module, sce_sys); SanctuaryPort: CUSA01623, version 01.02 for the community patches.": "Seu próprio dump do jogo (eboot.bin, sce_module, sce_sys); SanctuaryPort: CUSA01623, versão 01.02 para os patches da comunidade.",
+   "Your own dump of the game (eboot.bin, sce_module, sce_sys); SanctuaryPort: CUSA00243, version 01.02 for the community patches.": "Seu próprio dump do jogo (eboot.bin, sce_module, sce_sys); SanctuaryPort: CUSA00243, versão 01.02 para os patches da comunidade.",
    "Update folder (optional)": "Pasta do update (opcional)",
    "Choose the folder of the update (eboot.bin, sce_sys)": "Escolha a pasta do update (eboot.bin, sce_sys)",
    "Only if the update is dumped apart from the game: it is laid over the game folder without changing either. Leave empty when the game folder already has the update.": "Só se o update foi dumpado separado do jogo: ele é colocado por cima da pasta do jogo sem alterar nenhuma das duas. Deixe vazio quando a pasta do jogo já tiver o update.",
@@ -2327,7 +2322,7 @@
    "The shortcut \"{}\" was updated in Steam (accounts: {}), with its icon, capsules, background and logo. Open Steam to see it in the library.": "O atalho \"{}\" foi atualizado na Steam (contas: {}), com ícone, capas, fundo e logotipo. Abra a Steam para vê-lo na biblioteca.",
    "The shortcut \"{}\" was added to Steam (accounts: {}), with its icon, capsules, background and logo. Open Steam to see it in the library.": "O atalho \"{}\" foi adicionado à Steam (contas: {}), com ícone, capas, fundo e logotipo. Abra a Steam para vê-lo na biblioteca.",
    "Menu entry and icon (AppImage)": "Entrada no menu e ícone (AppImage)",
-   "Creates spartanport.desktop in ~/.local/share/applications so the launcher and the game show their icon in the dock and the menu. Turning it off removes the entry.": "Cria o spartanport.desktop em ~/.local/share/applications para o launcher e o jogo mostrarem o ícone no dock e no menu. Desligar remove a entrada.",
+   "Creates sanctuaryport.desktop in ~/.local/share/applications so the launcher and the game show their icon in the dock and the menu. Turning it off removes the entry.": "Cria o sanctuaryport.desktop em ~/.local/share/applications para o launcher e o jogo mostrarem o ícone no dock e no menu. Desligar remove a entrada.",
    "The game dump is incomplete. Missing or empty files:\n\n{}\n\nDump the game again, or copy these files from a complete dump.": "O dump do jogo está incompleto. Arquivos faltando ou vazios:\n\n{}\n\nFaça o dump do jogo de novo, ou copie esses arquivos de um dump completo.",
    "The files in {} look like a PKG extraction: the system files (param.sfo, icon0.png, pic1.png and the rest) are in\n\n{}\n\nCopy all of them into its sce_sys folder now? Files already there are kept.": "Os arquivos em {} parecem vir de um PKG extraído: os arquivos de sistema (param.sfo, icon0.png, pic1.png e os demais) estão em\n\n{}\n\nCopiar todos para a pasta sce_sys dele agora? Os arquivos que já estão lá são mantidos.",
    "Could not copy the files: {}": "Não foi possível copiar os arquivos: {}",
@@ -2372,7 +2367,6 @@
    "Control profiles": "Perfis de controle",
    "Left stick dead zone": "Zona morta do analógico esquerdo",
    "Right stick dead zone": "Zona morta do analógico direito",
-   "How far a stick must move before the game sees it. Raise it if the camera or Kratos moves by itself. 0% is the game's own stick. Applied when the game starts.": "Quanto o analógico precisa mover para o jogo perceber. Aumente se a câmera ou o Kratos se mexer sozinho. 0% é o analógico original. Aplicado ao iniciar o jogo.",
    "Touchpad right opens the game's pause menu. Touchpad left (photo mode) is L1 + Touchpad right, or a button of its own if you choose one. R3+L2 always opens the port's menu. Applied when the game starts.": "Touchpad direito abre o menu de pausa do jogo. Touchpad esquerdo (modo foto) é L1 + Touchpad direito, ou um botão próprio se você escolher. R3+L2 sempre abre o menu do port. Aplicado ao iniciar o jogo.",
    "Default": "Padrão",
    "Mouse with side buttons": "Mouse com botões laterais",
@@ -2387,7 +2381,6 @@
    "Native · 1920 × 1080 · 16:9": "Nativa · 1920 × 1080 · 16:9",
    "Graphics card": "Placa de vídeo",
    "The GPU the game runs on. Choose your dedicated card if the game uses the integrated one.": "A GPU em que o jogo roda. Escolha a placa dedicada se o jogo estiver usando a integrada.",
-   "Fast screen effects (Rage of Sparta, weapons)": "Efeitos de tela rápidos (Rage of Sparta, armas)",
    "Keeps powers and weapon effects at full FPS. Switch it off if a screen effect (blur, distortion, the color change of a power) looks stretched, shifted or wrong.": "Mantém os efeitos de poderes e armas no FPS máximo. Desative se um efeito de tela (desfoque, distorção, a mudança de cor de um poder) parecer esticado, deslocado ou errado.",
    "Your own dump of the game (eboot.bin, sce_module, sce_sys): SanctuaryPort, any region and version.": "O seu próprio dump do jogo (eboot.bin, sce_module, sce_sys): SanctuaryPort, de qualquer região e versão.",
    "L1 + Touchpad right": "L1 + Touchpad direito",
@@ -2417,9 +2410,7 @@
    "Fixes the black screen at startup with the FPS counter running: the frame pacing index starts at 2 instead of 0, so the second frame no longer waits for a flip that only it can trigger.": "Corrige a tela preta na inicialização com o contador de FPS rodando: o índice de ritmo dos quadros começa em 2 em vez de 0, então o segundo quadro não espera mais por um flip que só ele pode disparar.",
    "(none)": "(nenhuma)",
    "Adaptive mouse: how far the mouse moves for one step of a rotation. Also in the in-game menu.": "Mouse adaptativo: quanto o mouse se move para cada passo de um giro. Também no menu do jogo.",
-   "Aiming with the mouse while L2 is held (Head of Helios, Bow of Apollo). Relative: the stick follows the movement and goes back to neutral when the mouse stops. Absolute: where the mouse was when L2 was pressed is the centre, and the stick points from it to the mouse. Also in the in-game menu.": "Mira com o mouse enquanto L2 está pressionado (Cabeça de Hélio, Arco de Apolo). Relativo: o analógico segue o movimento e volta ao centro quando o mouse para. Absoluto: onde o mouse estava ao apertar L2 é o centro, e o analógico aponta dele até o mouse. Também no menu do jogo.",
    "Aiming with the mouse while L2 is held: lower needs more mouse movement for the same stick, higher less. Also in the in-game menu.": "Mira com o mouse enquanto L2 está pressionado: menor precisa de mais movimento do mouse para o mesmo analógico, maior de menos. Também no menu do jogo.",
-   "Click a box, then press a key, click a mouse button or turn the wheel (it gives up after {} seconds). An input already used by another button swaps with it; the arrow puts one button back on its default. Rage of Sparta presses L3 and R3 together: tick the box above it to use one input instead of two. Grab presses L1 and Circle together. Dodge evades the way you are moving, or back when standing still. Touchpad right opens the game's pause menu. Insert always opens the port's menu and cannot be bound. Applied when the game starts.": "Clique em uma caixa e aperte uma tecla, clique com um botão do mouse ou gire a roda (desiste após {} segundos). Uma entrada já usada por outro botão troca com ele; a seta devolve um botão ao padrão. Rage of Sparta aperta L3 e R3 juntos: marque a caixa acima dele para usar uma entrada em vez de duas. Agarrar aperta L1 e Círculo juntos. A esquiva vai na direção em que você anda, ou para trás quando parado. O touchpad direito abre o menu de pausa do jogo. Insert sempre abre o menu do port e não pode ser atribuído. Aplicado ao iniciar o jogo.",
    "Gamepad Mapping": "Mapeamento do controle",
    "General": "Geral",
    "How the stick-rotation prompts are answered. Keyboard: type the turn instead, half turns from the top D S A (clockwise) or A S D, from the bottom A W D or D W A, full turns D S A W or A S D W; a key out of turn starts again. Adaptive mouse: draw the turn with the mouse.": "Como os eventos de girar o analógico são respondidos. Teclado: digite o giro, meias-voltas a partir de cima D S A (horário) ou A S D, a partir de baixo A W D ou D W A, voltas completas D S A W ou A S D W; uma tecla fora de ordem recomeça. Mouse adaptativo: desenhe o giro com o mouse.",
@@ -2432,7 +2423,6 @@
    "Mouse prompt distance": "Distância do mouse nos prompts",
    "Press a key": "Aperte uma tecla",
    "Press a key or mouse": "Aperte uma tecla ou o mouse",
-   "Rage of Sparta on one input (L3 + R3 together)": "Rage of Sparta em uma entrada (L3 + R3 juntos)",
    "Reset gamepad to defaults": "Restaurar o controle ao padrão",
    "Reset keyboard & mouse to defaults": "Restaurar teclado e mouse ao padrão",
    "Right stick sensitivity": "Sensibilidade do analógico direito",
@@ -2503,38 +2493,21 @@
    "Shows the render resolutions of this shape only.": "Mostra só as resoluções de render desta proporção.",
    "Polish": "Polonês",
    "Trophies": "Troféus",
-   "The trophies this port recorded while you played.": "Os troféus que o port registrou enquanto você jogava.",
-   "All trophies": "Todos",
-   "Unlocked": "Desbloqueados",
    "Locked": "Bloqueados",
-   "UNLOCKED": "DESBLOQUEADO",
    "LOCKED": "BLOQUEADO",
-   "{} of {} unlocked": "{} de {} desbloqueados",
-   "Trophy {}": "Troféu {}",
    "Platinum": "Platina",
    "Gold": "Ouro",
    "Silver": "Prata",
    "Bronze": "Bronze",
-   "No trophy list: choose the game folder on the Game page (its sce_sys/trophy/trophy00.trp is read).": "Sem lista de troféus: escolha a pasta do jogo na página Jogo (o arquivo sce_sys/trophy/trophy00.trp dela é lido).",
-   "Only trophies unlocked with this port are listed; the ones earned on a PlayStation are not known to it.": "Só aparecem os troféus desbloqueados com este port; os que você ganhou em um PlayStation ele não conhece.",
-   "TROPHY UNLOCKED": "TROFÉU DESBLOQUEADO",
    "Up/Down: scroll   Left/Right: filter   F8 / R3+R2 / Esc: close": "Cima/Baixo: rolar   Esquerda/Direita: filtrar   F8 / R3+R2 / Esc: fechar",
-   "Reset trophies": "Redefinir troféus",
-   "Close the game before resetting the trophies.": "Feche o jogo antes de redefinir os troféus.",
-   "Lock all {} unlocked trophies again? A copy is kept as trophies.dat.bak.": "Bloquear de novo os {} troféus desbloqueados? Uma cópia fica guardada como trophies.dat.bak.",
-   "No trophy is unlocked.": "Nenhum troféu está desbloqueado.",
-   "Could not reset the trophies: {}": "Não foi possível redefinir os troféus: {}",
    "Notifications": "Notificações",
    "List order": "Ordem da lista",
-   "Most earned first": "Mais conquistados primeiro",
-   "Rarest first": "Mais raros primeiro",
    "{}% of players": "{}% dos jogadores",
    "Common": "Comum",
    "Rare": "Raro",
    "Very rare": "Muito raro",
    "Ultra rare": "Ultrarraro",
    "Triangle/Tab: order   L1/R1: notifications": "Triângulo/Tab: ordem   L1/R1: notificações",
-   "L1/R1: trophies   F8 / R3+R2 / Esc: close": "L1/R1: troféus   F8 / R3+R2 / Esc: fechar",
    "Used on the game's first start. After that, the game keeps its own text and speech languages in its settings save: change them in the game, in Options → Game Settings → Game Text and Options → Audio → Speech.": "Vale no primeiro início do jogo. Depois, o jogo guarda os próprios idiomas de texto e de falas no save de configurações: troque no jogo, em Opções → Configurações de jogo → Texto de jogo e Opções → Áudio → Falas.",
    "Move forward": "Mover para frente",
    "Move backward": "Mover para trás",
@@ -2618,7 +2591,6 @@
    "Depth of field": "Profundidade de campo",
    "The game's own blur of distant objects, strongest in cutscenes. Off keeps the whole picture sharp.": "O desfoque do próprio jogo em objetos distantes, mais forte nas cenas. Desligado, a imagem inteira fica nítida.",
    "High Frame Rate Physics Fix": "Correção de física em FPS alto",
-   "At high frame rates the engine runs at 60 while a quick-time prompt is on screen or during the Cronos blade pull, then goes back to the engine frame rate.": "Em FPS alto, o motor roda a 60 enquanto um comando de QTE está na tela ou durante a puxada de lâminas do Cronos, e depois volta à taxa do motor.",
    "Enable the upscaler": "Ativar o upscaler",
    "Share of the Render resolution (Performance page) the game renders at; the upscaler rebuilds the full Render resolution. Lower renders faster. Native AA keeps the full resolution.": "Fração da resolução de renderização (página Desempenho) em que o jogo renderiza; o upscaler reconstrói essa resolução completa. Menor roda mais rápido. AA nativo mantém a resolução completa.",
    "Off (default): the game runs without temporal upscaling. On: FSR 3.1 with the preset below. Animated characters can still show some ghosting.": "Desligado (padrão): o jogo roda sem upscaling temporal. Ligado: FSR 3.1 com o preset abaixo. Personagens animados ainda podem mostrar algum rastro.",
@@ -2653,7 +2625,16 @@
    "Your own game and add-on PKG files: they are installed into {} and the game folder is set.": "Os PKG do seu jogo e das DLCs: são instalados em {} e a pasta do jogo é configurada.",
    "Diablo III runs at 60 frames per second.": "O Diablo III roda a 60 quadros por segundo.",
    "The size the game draws at; higher is sharper and slower.": "O tamanho em que o jogo desenha; maior é mais nítido e mais lento.",
-   "Shows Xbox buttons (A, B, X, Y, LB, RT, Menu, View) instead of the PlayStation ones in the game's prompts and HUD. Drawn by the port over the game's own icons; your game files are never changed. Applied when the game starts.": "Mostra os botões do Xbox (A, B, X, Y, LB, RT, Menu, View) no lugar dos do PlayStation nas dicas e no HUD do jogo. O port desenha por cima dos ícones do próprio jogo; seus arquivos nunca são alterados. Vale ao iniciar o jogo."
+   "Shows Xbox buttons (A, B, X, Y, LB, RT, Menu, View) instead of the PlayStation ones in the game's prompts and HUD. Drawn by the port over the game's own icons; your game files are never changed. Applied when the game starts.": "Mostra os botões do Xbox (A, B, X, Y, LB, RT, Menu, View) no lugar dos do PlayStation nas dicas e no HUD do jogo. O port desenha por cima dos ícones do próprio jogo; seus arquivos nunca são alterados. Vale ao iniciar o jogo.",
+   "The language of the game's text and speech, on every start. Only the languages your dump ships are listed: the Brazilian release has Portuguese and Spanish, the US release English, French and Spanish.": "O idioma dos textos e das falas do jogo, em todo início. Só aparecem os idiomas que o seu jogo traz: a versão brasileira tem português e espanhol; a americana, inglês, francês e espanhol.",
+   "Upscale with FSR 1": "Ampliar com FSR 1",
+   "Sharpening (RCAS)": "Nitidez (RCAS)",
+   "Sharpening strength": "Força da nitidez",
+   "Upscaling": "Ampliação",
+   "With a Render resolution (Performance page) below the window, AMD FSR 1 upscales the game's picture instead of a plain stretch: render at 720p or 900p for more FPS and keep a sharp 1080p window. Works on any graphics card; borderless and fullscreen upscale to the whole screen.": "Com a resolução de renderização (página Desempenho) abaixo da janela, o AMD FSR 1 amplia a imagem do jogo em vez de só esticá-la: renderize em 720p ou 900p para ganhar FPS e mantenha uma janela 1080p nítida. Funciona em qualquer placa de vídeo; sem bordas e tela cheia ampliam para a tela inteira.",
+   "Sharpens the game's picture on its way to the window. Also in the in-game menu.": "Deixa a imagem do jogo mais nítida a caminho da janela. Também no menu do jogo.",
+   "How far a stick must move before the game sees it. Raise it if the camera or your hero moves by itself. 0% is the game's own stick. Applied when the game starts.": "Quanto o analógico precisa mover para o jogo perceber. Aumente se a câmera ou seu herói se mexer sozinho. 0% é o analógico original. Aplicado ao iniciar o jogo.",
+   "Click a box, then press a key, click a mouse button or turn the wheel (it gives up after {} seconds). An input already used by another button swaps with it; the arrow puts one button back on its default. Touchpad right opens the game's pause menu. Insert always opens the port's menu and cannot be bound. Applied when the game starts.": "Clique numa caixa e depois aperte uma tecla, clique com um botão do mouse ou gire a roda (desiste depois de {} segundos). Uma entrada já usada por outro botão troca de lugar com ele; a seta devolve um botão ao padrão. Touchpad direito abre o menu de pausa do jogo. Insert sempre abre o menu do port e não pode ser trocado. Vale quando o jogo começa."
   },
   "es": {
    "The launcher cannot write to {}, so it cannot replace itself there. Open the releases page to download the new version by hand?": "El launcher no puede escribir en {}, así que no puede reemplazarse ahí. ¿Abrir la página de releases para descargar la versión nueva a mano?",
@@ -2701,13 +2682,8 @@
    "Deferred GPU readbacks": "Lecturas de la GPU diferidas",
    "Fewer waits for the GPU. Switch it off if textures or shadows look wrong.": "Menos esperas por la GPU. Desactívalo si las texturas o las sombras se ven mal.",
    "Your game dump, saves and language.": "Tu dump del juego, partidas guardadas e idioma.",
-   "Cheats": "Trucos",
-   "Infinite Double Jumps": "Dobles saltos infinitos",
-   "Repeat air jumps without landing. Also available in the in-game Cheats menu.": "Repite los saltos en el aire sin tocar el suelo. También está en el menú de trucos del juego.",
-   "Unlock Very Hard": "Desbloquear Muy difícil",
-   "Select Very Hard without completing the game. Does not change existing save difficulty. In-game: enable before opening New Game.": "Permite elegir Muy difícil sin completar el juego. No cambia la dificultad de las partidas existentes. En el juego: actívalo antes de abrir Nuevo juego.",
    "Folders": "Carpetas",
-   "Your own dump of the game (eboot.bin, sce_module, sce_sys); SanctuaryPort: CUSA01623, version 01.02 for the community patches.": "Tu propio volcado del juego (eboot.bin, sce_module, sce_sys); SanctuaryPort: CUSA01623, versión 01.02 para los parches de la comunidad.",
+   "Your own dump of the game (eboot.bin, sce_module, sce_sys); SanctuaryPort: CUSA00243, version 01.02 for the community patches.": "Tu propio volcado del juego (eboot.bin, sce_module, sce_sys); SanctuaryPort: CUSA00243, versión 01.02 para los parches de la comunidad.",
    "Update folder (optional)": "Carpeta de la actualización (opcional)",
    "Choose the folder of the update (eboot.bin, sce_sys)": "Elige la carpeta de la actualización (eboot.bin, sce_sys)",
    "Only if the update is dumped apart from the game: it is laid over the game folder without changing either. Leave empty when the game folder already has the update.": "Solo si la actualización se volcó aparte del juego: se superpone a la carpeta del juego sin modificar ninguna de las dos. Déjala vacía cuando la carpeta del juego ya incluya la actualización.",
@@ -2796,7 +2772,7 @@
    "The shortcut \"{}\" was updated in Steam (accounts: {}), with its icon, capsules, background and logo. Open Steam to see it in the library.": "El acceso directo \"{}\" se actualizó en Steam (cuentas: {}), con su icono, cápsulas, fondo y logotipo. Abre Steam para verlo en la biblioteca.",
    "The shortcut \"{}\" was added to Steam (accounts: {}), with its icon, capsules, background and logo. Open Steam to see it in the library.": "El acceso directo \"{}\" se añadió a Steam (cuentas: {}), con su icono, cápsulas, fondo y logotipo. Abre Steam para verlo en la biblioteca.",
    "Menu entry and icon (AppImage)": "Entrada de menú e icono (AppImage)",
-   "Creates spartanport.desktop in ~/.local/share/applications so the launcher and the game show their icon in the dock and the menu. Turning it off removes the entry.": "Crea spartanport.desktop en ~/.local/share/applications para que el lanzador y el juego muestren su icono en el dock y en el menú. Al desactivarlo se elimina la entrada.",
+   "Creates sanctuaryport.desktop in ~/.local/share/applications so the launcher and the game show their icon in the dock and the menu. Turning it off removes the entry.": "Crea sanctuaryport.desktop en ~/.local/share/applications para que el lanzador y el juego muestren su icono en el dock y en el menú. Al desactivarlo se elimina la entrada.",
    "The game dump is incomplete. Missing or empty files:\n\n{}\n\nDump the game again, or copy these files from a complete dump.": "El volcado del juego está incompleto. Archivos que faltan o están vacíos:\n\n{}\n\nVuelve a volcar el juego o copia esos archivos de un volcado completo.",
    "The files in {} look like a PKG extraction: the system files (param.sfo, icon0.png, pic1.png and the rest) are in\n\n{}\n\nCopy all of them into its sce_sys folder now? Files already there are kept.": "Los archivos de {} parecen la extracción de un PKG: los archivos del sistema (param.sfo, icon0.png, pic1.png y el resto) están en\n\n{}\n\n¿Copiarlos todos ahora a su carpeta sce_sys? Los archivos que ya están allí se conservan.",
    "Could not copy the files: {}": "No se pudieron copiar los archivos: {}",
@@ -2844,7 +2820,6 @@
    "Control profiles": "Perfiles de control",
    "Left stick dead zone": "Zona muerta del stick izquierdo",
    "Right stick dead zone": "Zona muerta del stick derecho",
-   "How far a stick must move before the game sees it. Raise it if the camera or Kratos moves by itself. 0% is the game's own stick. Applied when the game starts.": "Cuánto debe moverse el stick para que el juego lo note. Súbelo si la cámara o Kratos se mueven solos. 0% es el stick original. Se aplica al iniciar el juego.",
    "Touchpad right opens the game's pause menu. Touchpad left (photo mode) is L1 + Touchpad right, or a button of its own if you choose one. R3+L2 always opens the port's menu. Applied when the game starts.": "Touchpad derecho abre el menú de pausa del juego. Touchpad izquierdo (modo foto) es L1 + Touchpad derecho, o un botón propio si lo eliges. R3+L2 siempre abre el menú del port. Se aplica al iniciar el juego.",
    "Default": "Predeterminado",
    "Mouse with side buttons": "Ratón con botones laterales",
@@ -2855,9 +2830,7 @@
    "Strength of the gamepad's vibration; 0% turns it off.": "Fuerza de la vibración del mando; 0% la desactiva.",
    "(none)": "(ninguna)",
    "Adaptive mouse: how far the mouse moves for one step of a rotation. Also in the in-game menu.": "Ratón adaptativo: cuánto se mueve el ratón para cada paso de un giro. También en el menú del juego.",
-   "Aiming with the mouse while L2 is held (Head of Helios, Bow of Apollo). Relative: the stick follows the movement and goes back to neutral when the mouse stops. Absolute: where the mouse was when L2 was pressed is the centre, and the stick points from it to the mouse. Also in the in-game menu.": "Apuntar con el ratón mientras mantienes L2 (Cabeza de Helios, Arco de Apolo). Relativo: el stick sigue el movimiento y vuelve al centro cuando el ratón se detiene. Absoluto: donde estaba el ratón al pulsar L2 es el centro, y el stick apunta desde él hasta el ratón. También en el menú del juego.",
    "Aiming with the mouse while L2 is held: lower needs more mouse movement for the same stick, higher less. Also in the in-game menu.": "Apuntar con el ratón mientras mantienes L2: más bajo necesita más movimiento del ratón para el mismo stick, más alto menos. También en el menú del juego.",
-   "Click a box, then press a key, click a mouse button or turn the wheel (it gives up after {} seconds). An input already used by another button swaps with it; the arrow puts one button back on its default. Rage of Sparta presses L3 and R3 together: tick the box above it to use one input instead of two. Grab presses L1 and Circle together. Dodge evades the way you are moving, or back when standing still. Touchpad right opens the game's pause menu. Insert always opens the port's menu and cannot be bound. Applied when the game starts.": "Haz clic en una casilla y luego pulsa una tecla, haz clic con un botón del ratón o gira la rueda (se cancela tras {} segundos). Una entrada ya usada por otro botón se intercambia con él; la flecha devuelve un botón a su valor predeterminado. Rage of Sparta pulsa L3 y R3 a la vez: marca la casilla de encima para usar una entrada en lugar de dos. Agarrar pulsa L1 y Círculo a la vez. Esquivar evade hacia donde te mueves, o hacia atrás si estás quieto. El touchpad derecho abre el menú de pausa del juego. Insert siempre abre el menú del port y no se puede asignar. Se aplica al iniciar el juego.",
    "Gamepad Mapping": "Asignación del mando",
    "General": "General",
    "How the stick-rotation prompts are answered. Keyboard: type the turn instead, half turns from the top D S A (clockwise) or A S D, from the bottom A W D or D W A, full turns D S A W or A S D W; a key out of turn starts again. Adaptive mouse: draw the turn with the mouse.": "Cómo se responden los eventos de girar el stick. Teclado: escribe el giro, medias vueltas desde arriba D S A (horario) o A S D, desde abajo A W D o D W A, vueltas completas D S A W o A S D W; una tecla fuera de orden vuelve a empezar. Ratón adaptativo: dibuja el giro con el ratón.",
@@ -2870,7 +2843,6 @@
    "Mouse prompt distance": "Distancia del ratón en los eventos",
    "Press a key": "Pulsa una tecla",
    "Press a key or mouse": "Pulsa una tecla o el ratón",
-   "Rage of Sparta on one input (L3 + R3 together)": "Rage of Sparta en una entrada (L3 + R3 a la vez)",
    "Reset gamepad to defaults": "Restablecer el mando",
    "Reset keyboard & mouse to defaults": "Restablecer teclado y ratón",
    "Right stick sensitivity": "Sensibilidad del stick derecho",
@@ -2941,7 +2913,6 @@
    "D-pad left": "Cruceta izquierda",
    "D-pad right": "Cruceta derecha",
    "D-pad up": "Cruceta arriba",
-   "Fast screen effects (Rage of Sparta, weapons)": "Efectos de pantalla rápidos (Rage of Sparta, armas)",
    "Fixes corrupted textures in the game by increasing the Video Arena size, allowing the game to use more video memory for textures and effects. Requires setting DMEM to 2048 MB or more, or the game crashes. Enable either this patch or one resolution patch, never both.": "Corrige las texturas corruptas del juego aumentando el tamaño del Video Arena, para que el juego use más memoria de vídeo en texturas y efectos. Requiere DMEM de 2048 MB o más, o el juego se cierra. Activa este parche o un parche de resolución, nunca los dos.",
    "Fixes the black screen at startup with the FPS counter running: the frame pacing index starts at 2 instead of 0, so the second frame no longer waits for a flip that only it can trigger.": "Corrige la pantalla negra al iniciar con el contador de FPS en marcha: el índice de ritmo de fotogramas empieza en 2 en lugar de 0, así el segundo fotograma ya no espera un flip que solo él puede provocar.",
    "For launcher only. Applies after Save.": "Solo para el launcher. Se aplica después de Guardar.",
@@ -2969,38 +2940,21 @@
    "Shows the render resolutions of this shape only.": "Muestra solo las resoluciones de render de esta proporción.",
    "Polish": "Polaco",
    "Trophies": "Trofeos",
-   "The trophies this port recorded while you played.": "Los trofeos que este port registró mientras jugabas.",
-   "All trophies": "Todos",
-   "Unlocked": "Desbloqueados",
    "Locked": "Bloqueados",
-   "UNLOCKED": "DESBLOQUEADO",
    "LOCKED": "BLOQUEADO",
-   "{} of {} unlocked": "{} de {} desbloqueados",
-   "Trophy {}": "Trofeo {}",
    "Platinum": "Platino",
    "Gold": "Oro",
    "Silver": "Plata",
    "Bronze": "Bronce",
-   "No trophy list: choose the game folder on the Game page (its sce_sys/trophy/trophy00.trp is read).": "Sin lista de trofeos: elige la carpeta del juego en la página Juego (se lee su sce_sys/trophy/trophy00.trp).",
-   "Only trophies unlocked with this port are listed; the ones earned on a PlayStation are not known to it.": "Solo se muestran los trofeos desbloqueados con este port; los que conseguiste en una PlayStation no los conoce.",
-   "TROPHY UNLOCKED": "TROFEO DESBLOQUEADO",
    "Up/Down: scroll   Left/Right: filter   F8 / R3+R2 / Esc: close": "Arriba/Abajo: desplazar   Izquierda/Derecha: filtrar   F8 / R3+R2 / Esc: cerrar",
-   "Reset trophies": "Restablecer trofeos",
-   "Close the game before resetting the trophies.": "Cierra el juego antes de restablecer los trofeos.",
-   "Lock all {} unlocked trophies again? A copy is kept as trophies.dat.bak.": "¿Volver a bloquear los {} trofeos desbloqueados? Se guarda una copia como trophies.dat.bak.",
-   "No trophy is unlocked.": "No hay ningún trofeo desbloqueado.",
-   "Could not reset the trophies: {}": "No se pudieron restablecer los trofeos: {}",
    "Notifications": "Notificaciones",
    "List order": "Orden de la lista",
-   "Most earned first": "Más obtenidos primero",
-   "Rarest first": "Más raros primero",
    "{}% of players": "{}% de los jugadores",
    "Common": "Común",
    "Rare": "Raro",
    "Very rare": "Muy raro",
    "Ultra rare": "Ultrarraro",
    "Triangle/Tab: order   L1/R1: notifications": "Triángulo/Tab: orden   L1/R1: notificaciones",
-   "L1/R1: trophies   F8 / R3+R2 / Esc: close": "L1/R1: trofeos   F8 / R3+R2 / Esc: cerrar",
    "Used on the game's first start. After that, the game keeps its own text and speech languages in its settings save: change them in the game, in Options → Game Settings → Game Text and Options → Audio → Speech.": "Se usa en el primer inicio del juego. Después, el juego guarda sus propios idiomas de texto y de diálogos en su partida de ajustes: cambialos en el juego, en Opciones → Ajustes de juego → Texto del juego y Opciones → Audio → Diálogos.",
    "Move forward": "Mover hacia delante",
    "Move backward": "Mover hacia atrás",
@@ -3027,7 +2981,6 @@
    "Depth of field": "Profundidad de campo",
    "The game's own blur of distant objects, strongest in cutscenes. Off keeps the whole picture sharp.": "El desenfoque del propio juego en objetos lejanos, más fuerte en las escenas. Desactivado, toda la imagen se ve nítida.",
    "High Frame Rate Physics Fix": "Corrección de física a FPS altos",
-   "At high frame rates the engine runs at 60 while a quick-time prompt is on screen or during the Cronos blade pull, then goes back to the engine frame rate.": "Con FPS altos, el motor funciona a 60 mientras hay un QTE en pantalla o durante el tirón de las cuchillas en Cronos, y luego vuelve a la velocidad del motor.",
    "Enable the upscaler": "Activar el escalador",
    "Share of the Render resolution (Performance page) the game renders at; the upscaler rebuilds the full Render resolution. Lower renders faster. Native AA keeps the full resolution.": "Fracción de la resolución de renderizado (página Rendimiento) a la que el juego renderiza; el escalador reconstruye esa resolución completa. Menor es más rápido. AA nativo mantiene la resolución completa.",
    "Off (default): the game runs without temporal upscaling. On: FSR 3.1 with the preset below. Animated characters can still show some ghosting.": "Desactivado (predet.): el juego funciona sin escalado temporal. Activado: FSR 3.1 con el preset de abajo. Los personajes animados aún pueden mostrar algo de estela.",
@@ -3055,43 +3008,34 @@
    "Your own game and add-on PKG files: they are installed into {} and the game folder is set.": "Tus PKG del juego y de los DLC: se instalan en {} y se configura la carpeta del juego.",
    "Diablo III runs at 60 frames per second.": "Diablo III funciona a 60 fotogramas por segundo.",
    "The size the game draws at; higher is sharper and slower.": "El tamaño al que dibuja el juego; mayor es más nítido y más lento.",
-   "Shows Xbox buttons (A, B, X, Y, LB, RT, Menu, View) instead of the PlayStation ones in the game's prompts and HUD. Drawn by the port over the game's own icons; your game files are never changed. Applied when the game starts.": "Muestra los botones de Xbox (A, B, X, Y, LB, RT, Menú, Vista) en lugar de los de PlayStation en las indicaciones y el HUD del juego. El port los dibuja sobre los iconos del propio juego; tus archivos nunca se modifican. Se aplica al iniciar el juego."
+   "Shows Xbox buttons (A, B, X, Y, LB, RT, Menu, View) instead of the PlayStation ones in the game's prompts and HUD. Drawn by the port over the game's own icons; your game files are never changed. Applied when the game starts.": "Muestra los botones de Xbox (A, B, X, Y, LB, RT, Menú, Vista) en lugar de los de PlayStation en las indicaciones y el HUD del juego. El port los dibuja sobre los iconos del propio juego; tus archivos nunca se modifican. Se aplica al iniciar el juego.",
+   "The language of the game's text and speech, on every start. Only the languages your dump ships are listed: the Brazilian release has Portuguese and Spanish, the US release English, French and Spanish.": "El idioma de los textos y las voces del juego, en cada inicio. Solo se muestran los idiomas que trae tu copia: la versión brasileña tiene portugués y español; la estadounidense, inglés, francés y español.",
+   "Upscale with FSR 1": "Escalar con FSR 1",
+   "Sharpening (RCAS)": "Nitidez (RCAS)",
+   "Sharpening strength": "Intensidad de la nitidez",
+   "With a Render resolution (Performance page) below the window, AMD FSR 1 upscales the game's picture instead of a plain stretch: render at 720p or 900p for more FPS and keep a sharp 1080p window. Works on any graphics card; borderless and fullscreen upscale to the whole screen.": "Con la resolución de renderizado (página Rendimiento) por debajo de la ventana, AMD FSR 1 escala la imagen del juego en lugar de solo estirarla: renderiza a 720p o 900p para ganar FPS y conserva una ventana 1080p nítida. Funciona con cualquier tarjeta gráfica; sin bordes y pantalla completa escalan a toda la pantalla.",
+   "Sharpens the game's picture on its way to the window. Also in the in-game menu.": "Hace más nítida la imagen del juego camino a la ventana. También en el menú del juego.",
+   "How far a stick must move before the game sees it. Raise it if the camera or your hero moves by itself. 0% is the game's own stick. Applied when the game starts.": "Cuánto debe moverse el stick para que el juego lo note. Súbelo si la cámara tu héroe se mueven solos. 0% es el stick original. Se aplica al iniciar el juego.",
+   "Click a box, then press a key, click a mouse button or turn the wheel (it gives up after {} seconds). An input already used by another button swaps with it; the arrow puts one button back on its default. Touchpad right opens the game's pause menu. Insert always opens the port's menu and cannot be bound. Applied when the game starts.": "Haz clic en una casilla y luego pulsa una tecla, haz clic con un botón del ratón o gira la rueda (se rinde tras {} segundos). Una entrada ya usada por otro botón se intercambia con él; la flecha devuelve un botón a su valor por defecto. Touchpad derecho abre el menú de pausa del juego. Insert siempre abre el menú del port y no se puede asignar. Se aplica al iniciar el juego."
   },
   "pl": {
    "Polish": "Polski",
    "Trophies": "Trofea",
-   "The trophies this port recorded while you played.": "Trofea, które ten port zapisał podczas gry.",
-   "All trophies": "Wszystkie",
-   "Unlocked": "Odblokowane",
    "Locked": "Zablokowane",
-   "UNLOCKED": "ODBLOKOWANE",
    "LOCKED": "ZABLOKOWANE",
-   "{} of {} unlocked": "Odblokowano {} z {}",
-   "Trophy {}": "Trofeum {}",
    "Platinum": "Platyna",
    "Gold": "Złoto",
    "Silver": "Srebro",
    "Bronze": "Brąz",
-   "No trophy list: choose the game folder on the Game page (its sce_sys/trophy/trophy00.trp is read).": "Brak listy trofeów: wybierz folder gry na stronie Gra (odczytywany jest jego plik sce_sys/trophy/trophy00.trp).",
-   "Only trophies unlocked with this port are listed; the ones earned on a PlayStation are not known to it.": "Wyświetlane są tylko trofea odblokowane w tym porcie; tych zdobytych na PlayStation nie zna.",
-   "TROPHY UNLOCKED": "TROFEUM ODBLOKOWANE",
    "Up/Down: scroll   Left/Right: filter   F8 / R3+R2 / Esc: close": "Góra/Dół: przewijanie   Lewo/Prawo: filtr   F8 / R3+R2 / Esc: zamknij",
-   "Reset trophies": "Zresetuj trofea",
-   "Close the game before resetting the trophies.": "Zamknij grę przed zresetowaniem trofeów.",
-   "Lock all {} unlocked trophies again? A copy is kept as trophies.dat.bak.": "Zablokować ponownie wszystkie odblokowane trofea ({})? Kopia zostanie zachowana jako trophies.dat.bak.",
-   "No trophy is unlocked.": "Żadne trofeum nie jest odblokowane.",
-   "Could not reset the trophies: {}": "Nie udało się zresetować trofeów: {}",
    "Notifications": "Powiadomienia",
    "List order": "Kolejność listy",
-   "Most earned first": "Najczęściej zdobywane najpierw",
-   "Rarest first": "Najrzadsze najpierw",
    "{}% of players": "{}% graczy",
    "Common": "Powszechne",
    "Rare": "Rzadkie",
    "Very rare": "Bardzo rzadkie",
    "Ultra rare": "Ultrarzadkie",
    "Triangle/Tab: order   L1/R1: notifications": "Trójkąt/Tab: kolejność   L1/R1: powiadomienia",
-   "L1/R1: trophies   F8 / R3+R2 / Esc: close": "L1/R1: trofea   F8 / R3+R2 / Esc: zamknij",
    "Used on the game's first start. After that, the game keeps its own text and speech languages in its settings save: change them in the game, in Options → Game Settings → Game Text and Options → Audio → Speech.": "Używany przy pierwszym uruchomieniu gry. Potem gra zapisuje własny język tekstu i dialogów w zapisie ustawień: zmień je w grze, w Opcje → Ustawienia gry → Tekst gry oraz Opcje → Dźwięk → Dialogi.",
    "Audio": "Dźwięk",
    "Volume": "Głośność",
@@ -3108,44 +3052,26 @@
    "The game's own blur of distant objects, strongest in cutscenes. Off keeps the whole picture sharp.": "Własne rozmycie gry na odległych obiektach, najsilniejsze w przerywnikach. Wyłączone zachowuje ostrość całego obrazu.",
    "Automatic": "Automatycznie",
    "restart": "restart",
-   "High Frame Rate Physics Fix": "Poprawka fizyki przy wysokim FPS",
-   "At high frame rates the engine runs at 60 while a quick-time prompt is on screen or during the Cronos blade pull, then goes back to the engine frame rate.": "Przy wysokim FPS silnik działa w 60 FPS, gdy na ekranie jest QTE lub podczas przyciągania ostrzami na Kronosie, a potem wraca do liczby klatek silnika."
+   "High Frame Rate Physics Fix": "Poprawka fizyki przy wysokim FPS"
   },
   "fr": {
    "Polish": "Polonais",
    "Trophies": "Trophées",
-   "The trophies this port recorded while you played.": "Les trophées que ce port a enregistrés pendant que vous jouiez.",
-   "All trophies": "Tous",
-   "Unlocked": "Débloqués",
    "Locked": "Verrouillés",
-   "UNLOCKED": "DÉBLOQUÉ",
    "LOCKED": "VERROUILLÉ",
-   "{} of {} unlocked": "{} sur {} débloqués",
-   "Trophy {}": "Trophée {}",
    "Platinum": "Platine",
    "Gold": "Or",
    "Silver": "Argent",
    "Bronze": "Bronze",
-   "No trophy list: choose the game folder on the Game page (its sce_sys/trophy/trophy00.trp is read).": "Aucune liste de trophées : choisissez le dossier du jeu dans la page Jeu (son fichier sce_sys/trophy/trophy00.trp est lu).",
-   "Only trophies unlocked with this port are listed; the ones earned on a PlayStation are not known to it.": "Seuls les trophées débloqués avec ce port sont listés ; ceux obtenus sur une PlayStation lui sont inconnus.",
-   "TROPHY UNLOCKED": "TROPHÉE DÉBLOQUÉ",
    "Up/Down: scroll   Left/Right: filter   F8 / R3+R2 / Esc: close": "Haut/Bas : défiler   Gauche/Droite : filtrer   F8 / R3+R2 / Échap : fermer",
-   "Reset trophies": "Réinitialiser les trophées",
-   "Close the game before resetting the trophies.": "Fermez le jeu avant de réinitialiser les trophées.",
-   "Lock all {} unlocked trophies again? A copy is kept as trophies.dat.bak.": "Verrouiller de nouveau les {} trophées débloqués ? Une copie est conservée sous le nom trophies.dat.bak.",
-   "No trophy is unlocked.": "Aucun trophée n'est débloqué.",
-   "Could not reset the trophies: {}": "Impossible de réinitialiser les trophées : {}",
    "Notifications": "Notifications",
    "List order": "Ordre de la liste",
-   "Most earned first": "Les plus obtenus d'abord",
-   "Rarest first": "Les plus rares d'abord",
    "{}% of players": "{} % des joueurs",
    "Common": "Commun",
    "Rare": "Rare",
    "Very rare": "Très rare",
    "Ultra rare": "Ultra rare",
    "Triangle/Tab: order   L1/R1: notifications": "Triangle/Tab : ordre   L1/R1 : notifications",
-   "L1/R1: trophies   F8 / R3+R2 / Esc: close": "L1/R1 : trophées   F8 / R3+R2 / Échap : fermer",
    "Used on the game's first start. After that, the game keeps its own text and speech languages in its settings save: change them in the game, in Options → Game Settings → Game Text and Options → Audio → Speech.": "Utilisée au premier lancement du jeu. Ensuite, le jeu garde ses propres langues de texte et de voix dans sa sauvegarde de réglages : changez-les dans le jeu, dans Options → Paramètres jeu → Texte du jeu et Options → Audio → Voix.",
    "Audio": "Audio",
    "Volume": "Volume",
@@ -3163,48 +3089,36 @@
    "Automatic": "Automatique",
    "restart": "redémarrage",
    "High Frame Rate Physics Fix": "Correctif physique à FPS élevé",
-   "At high frame rates the engine runs at 60 while a quick-time prompt is on screen or during the Cronos blade pull, then goes back to the engine frame rate.": "À FPS élevé, le moteur tourne à 60 tant qu'un QTE est à l'écran ou pendant la traction aux lames sur Cronos, puis revient à la fréquence du moteur.",
    "Spanish (Latin America)": "Espagnol (Amérique latine)",
    "Shows Xbox buttons (A, B, X, Y, LB, RT, Menu, View) instead of the PlayStation ones in the game's prompts and HUD. Drawn by the port over the game's own icons; your game files are never changed. Applied when the game starts.": "Affiche les boutons Xbox (A, B, X, Y, LB, RT, Menu, Affichage) à la place de ceux de la PlayStation dans les indications et le HUD du jeu. Le port les dessine par-dessus les icônes du jeu ; vos fichiers ne sont jamais modifiés. Appliqué au lancement du jeu.",
    "In-game button icons": "Icônes des boutons en jeu",
    "Match my controller": "Comme ma manette",
-   "Original (default)": "Originales (par défaut)"
+   "Original (default)": "Originales (par défaut)",
+   "The language of the game's text and speech, on every start. Only the languages your dump ships are listed: the Brazilian release has Portuguese and Spanish, the US release English, French and Spanish.": "La langue des textes et des voix du jeu, à chaque lancement. Seules les langues de votre copie sont proposées : la version brésilienne a le portugais et l'espagnol, la version américaine l'anglais, le français et l'espagnol.",
+   "Upscale with FSR 1": "Mise à l'échelle FSR 1",
+   "Sharpening (RCAS)": "Netteté (RCAS)",
+   "Sharpening strength": "Intensité de la netteté",
+   "With a Render resolution (Performance page) below the window, AMD FSR 1 upscales the game's picture instead of a plain stretch: render at 720p or 900p for more FPS and keep a sharp 1080p window. Works on any graphics card; borderless and fullscreen upscale to the whole screen.": "Avec une résolution de rendu (page Performances) inférieure à la fenêtre, AMD FSR 1 agrandit l'image du jeu au lieu de simplement l'étirer : rendez en 720p ou 900p pour gagner des FPS et gardez une fenêtre 1080p nette. Fonctionne avec toute carte graphique ; sans bordure et plein écran agrandissent à tout l'écran.",
+   "Sharpens the game's picture on its way to the window. Also in the in-game menu.": "Rend l'image du jeu plus nette en route vers la fenêtre. Aussi dans le menu du jeu."
   },
   "de": {
    "Polish": "Polnisch",
    "Trophies": "Trophäen",
-   "The trophies this port recorded while you played.": "Die Trophäen, die dieser Port beim Spielen aufgezeichnet hat.",
-   "All trophies": "Alle",
-   "Unlocked": "Freigeschaltet",
    "Locked": "Gesperrt",
-   "UNLOCKED": "FREIGESCHALTET",
    "LOCKED": "GESPERRT",
-   "{} of {} unlocked": "{} von {} freigeschaltet",
-   "Trophy {}": "Trophäe {}",
    "Platinum": "Platin",
    "Gold": "Gold",
    "Silver": "Silber",
    "Bronze": "Bronze",
-   "No trophy list: choose the game folder on the Game page (its sce_sys/trophy/trophy00.trp is read).": "Keine Trophäenliste: Wählen Sie auf der Seite Spiel den Spielordner (gelesen wird dessen sce_sys/trophy/trophy00.trp).",
-   "Only trophies unlocked with this port are listed; the ones earned on a PlayStation are not known to it.": "Es werden nur Trophäen angezeigt, die mit diesem Port freigeschaltet wurden; auf einer PlayStation erspielte kennt er nicht.",
-   "TROPHY UNLOCKED": "TROPHÄE FREIGESCHALTET",
    "Up/Down: scroll   Left/Right: filter   F8 / R3+R2 / Esc: close": "Hoch/Runter: scrollen   Links/Rechts: filtern   F8 / R3+R2 / Esc: schließen",
-   "Reset trophies": "Trophäen zurücksetzen",
-   "Close the game before resetting the trophies.": "Beenden Sie das Spiel, bevor Sie die Trophäen zurücksetzen.",
-   "Lock all {} unlocked trophies again? A copy is kept as trophies.dat.bak.": "Alle {} freigeschalteten Trophäen wieder sperren? Eine Kopie bleibt als trophies.dat.bak erhalten.",
-   "No trophy is unlocked.": "Keine Trophäe ist freigeschaltet.",
-   "Could not reset the trophies: {}": "Die Trophäen konnten nicht zurückgesetzt werden: {}",
    "Notifications": "Benachrichtigungen",
    "List order": "Listenreihenfolge",
-   "Most earned first": "Häufigste zuerst",
-   "Rarest first": "Seltenste zuerst",
    "{}% of players": "{} % der Spieler",
    "Common": "Häufig",
    "Rare": "Selten",
    "Very rare": "Sehr selten",
    "Ultra rare": "Extrem selten",
    "Triangle/Tab: order   L1/R1: notifications": "Dreieck/Tab: Reihenfolge   L1/R1: Benachrichtigungen",
-   "L1/R1: trophies   F8 / R3+R2 / Esc: close": "L1/R1: Trophäen   F8 / R3+R2 / Esc: schließen",
    "Used on the game's first start. After that, the game keeps its own text and speech languages in its settings save: change them in the game, in Options → Game Settings → Game Text and Options → Audio → Speech.": "Gilt beim ersten Start des Spiels. Danach speichert das Spiel seine eigene Text- und Sprachausgabe-Sprache im Einstellungsspeicherstand: ändere sie im Spiel unter Optionen → Spieleinstellungen → Spieltext und Optionen → Audio → Sprachausgabe.",
    "Audio": "Audio",
    "Volume": "Lautstärke",
@@ -3222,44 +3136,26 @@
    "Automatic": "Automatisch",
    "restart": "Neustart",
    "High Frame Rate Physics Fix": "Physik-Fix bei hoher Bildrate",
-   "At high frame rates the engine runs at 60 while a quick-time prompt is on screen or during the Cronos blade pull, then goes back to the engine frame rate.": "Bei hoher Bildrate läuft die Engine mit 60, solange ein QTE auf dem Bildschirm ist oder während des Klingenzugs auf Kronos, und kehrt danach zur Engine-Bildrate zurück.",
    "Spanish (Latin America)": "Spanisch (Lateinamerika)"
   },
   "it": {
    "Polish": "Polacco",
    "Trophies": "Trofei",
-   "The trophies this port recorded while you played.": "I trofei che questo port ha registrato mentre giocavi.",
-   "All trophies": "Tutti",
-   "Unlocked": "Sbloccati",
    "Locked": "Bloccati",
-   "UNLOCKED": "SBLOCCATO",
    "LOCKED": "BLOCCATO",
-   "{} of {} unlocked": "{} di {} sbloccati",
-   "Trophy {}": "Trofeo {}",
    "Platinum": "Platino",
    "Gold": "Oro",
    "Silver": "Argento",
    "Bronze": "Bronzo",
-   "No trophy list: choose the game folder on the Game page (its sce_sys/trophy/trophy00.trp is read).": "Nessuna lista di trofei: scegli la cartella del gioco nella pagina Gioco (viene letto il suo sce_sys/trophy/trophy00.trp).",
-   "Only trophies unlocked with this port are listed; the ones earned on a PlayStation are not known to it.": "Sono elencati solo i trofei sbloccati con questo port; quelli ottenuti su una PlayStation non li conosce.",
-   "TROPHY UNLOCKED": "TROFEO SBLOCCATO",
    "Up/Down: scroll   Left/Right: filter   F8 / R3+R2 / Esc: close": "Su/Giù: scorri   Sinistra/Destra: filtra   F8 / R3+R2 / Esc: chiudi",
-   "Reset trophies": "Reimposta trofei",
-   "Close the game before resetting the trophies.": "Chiudi il gioco prima di reimpostare i trofei.",
-   "Lock all {} unlocked trophies again? A copy is kept as trophies.dat.bak.": "Bloccare di nuovo i {} trofei sbloccati? Una copia viene conservata come trophies.dat.bak.",
-   "No trophy is unlocked.": "Nessun trofeo è sbloccato.",
-   "Could not reset the trophies: {}": "Impossibile reimpostare i trofei: {}",
    "Notifications": "Notifiche",
    "List order": "Ordine della lista",
-   "Most earned first": "Più ottenuti prima",
-   "Rarest first": "Più rari prima",
    "{}% of players": "{}% dei giocatori",
    "Common": "Comune",
    "Rare": "Raro",
    "Very rare": "Molto raro",
    "Ultra rare": "Ultra raro",
    "Triangle/Tab: order   L1/R1: notifications": "Triangolo/Tab: ordine   L1/R1: notifiche",
-   "L1/R1: trophies   F8 / R3+R2 / Esc: close": "L1/R1: trofei   F8 / R3+R2 / Esc: chiudi",
    "Used on the game's first start. After that, the game keeps its own text and speech languages in its settings save: change them in the game, in Options → Game Settings → Game Text and Options → Audio → Speech.": "Usata al primo avvio del gioco. Poi il gioco conserva le proprie lingue di testo e dei dialoghi nel salvataggio delle impostazioni: cambiale nel gioco, in Opzioni → Impostazioni di gioco → Testo di gioco e Opzioni → Audio → Dialoghi.",
    "Audio": "Audio",
    "Volume": "Volume",
@@ -3277,44 +3173,26 @@
    "Automatic": "Automatico",
    "restart": "riavvio",
    "High Frame Rate Physics Fix": "Correzione fisica ad alto framerate",
-   "At high frame rates the engine runs at 60 while a quick-time prompt is on screen or during the Cronos blade pull, then goes back to the engine frame rate.": "Ad alto framerate il motore gira a 60 finché un QTE è sullo schermo o durante la trazione con le lame su Crono, poi torna alla frequenza del motore.",
    "Spanish (Latin America)": "Spagnolo (America Latina)"
   },
   "tr": {
    "Polish": "Lehçe",
    "Trophies": "Kupalar",
-   "The trophies this port recorded while you played.": "Bu portun siz oynarken kaydettiği kupalar.",
-   "All trophies": "Tümü",
-   "Unlocked": "Açılanlar",
    "Locked": "Kilitliler",
-   "UNLOCKED": "AÇILDI",
    "LOCKED": "KİLİTLİ",
-   "{} of {} unlocked": "{} / {} açıldı",
-   "Trophy {}": "Kupa {}",
    "Platinum": "Platin",
    "Gold": "Altın",
    "Silver": "Gümüş",
    "Bronze": "Bronz",
-   "No trophy list: choose the game folder on the Game page (its sce_sys/trophy/trophy00.trp is read).": "Kupa listesi yok: Oyun sayfasında oyun klasörünü seçin (klasördeki sce_sys/trophy/trophy00.trp okunur).",
-   "Only trophies unlocked with this port are listed; the ones earned on a PlayStation are not known to it.": "Yalnızca bu portla açılan kupalar listelenir; PlayStation'da kazanılanları bilmez.",
-   "TROPHY UNLOCKED": "KUPA AÇILDI",
    "Up/Down: scroll   Left/Right: filter   F8 / R3+R2 / Esc: close": "Yukarı/Aşağı: kaydır   Sol/Sağ: filtre   F8 / R3+R2 / Esc: kapat",
-   "Reset trophies": "Kupaları sıfırla",
-   "Close the game before resetting the trophies.": "Kupaları sıfırlamadan önce oyunu kapatın.",
-   "Lock all {} unlocked trophies again? A copy is kept as trophies.dat.bak.": "Açılmış {} kupanın tümü yeniden kilitlensin mi? Bir kopya trophies.dat.bak olarak saklanır.",
-   "No trophy is unlocked.": "Açılmış kupa yok.",
-   "Could not reset the trophies: {}": "Kupalar sıfırlanamadı: {}",
    "Notifications": "Bildirimler",
    "List order": "Liste sırası",
-   "Most earned first": "En çok kazanılan önce",
-   "Rarest first": "En nadir önce",
    "{}% of players": "Oyuncuların %{}",
    "Common": "Yaygın",
    "Rare": "Nadir",
    "Very rare": "Çok nadir",
    "Ultra rare": "Ultra nadir",
    "Triangle/Tab: order   L1/R1: notifications": "Üçgen/Tab: sıra   L1/R1: bildirimler",
-   "L1/R1: trophies   F8 / R3+R2 / Esc: close": "L1/R1: kupalar   F8 / R3+R2 / Esc: kapat",
    "Used on the game's first start. After that, the game keeps its own text and speech languages in its settings save: change them in the game, in Options → Game Settings → Game Text and Options → Audio → Speech.": "Oyunun ilk açılışında kullanılır. Sonrasında oyun kendi metin ve konuşma dillerini ayar kaydında tutar: bunları oyunda, Seçenekler → Oyun Ayarları → Oyun Metni ve Seçenekler → Ses → Konuşma bölümünden değiştirin.",
    "Audio": "Ses",
    "Volume": "Ses düzeyi",
@@ -3331,44 +3209,26 @@
    "The game's own blur of distant objects, strongest in cutscenes. Off keeps the whole picture sharp.": "Oyunun uzaktaki nesnelerdeki kendi bulanıklığı, en güçlüsü ara sahnelerde. Kapalı olduğunda tüm görüntü net kalır.",
    "Automatic": "Otomatik",
    "restart": "yeniden başlatma",
-   "High Frame Rate Physics Fix": "Yüksek FPS fizik düzeltmesi",
-   "At high frame rates the engine runs at 60 while a quick-time prompt is on screen or during the Cronos blade pull, then goes back to the engine frame rate.": "Yüksek FPS'de motor, ekranda bir QTE varken veya Kronos'taki bıçak çekişi sırasında 60'ta çalışır, sonra motor kare hızına geri döner."
+   "High Frame Rate Physics Fix": "Yüksek FPS fizik düzeltmesi"
   },
   "ar": {
    "Polish": "البولندية",
    "Trophies": "الكؤوس",
-   "The trophies this port recorded while you played.": "الكؤوس التي سجّلها هذا المنفذ أثناء لعبك.",
-   "All trophies": "كل الكؤوس",
-   "Unlocked": "المفتوحة",
    "Locked": "المقفلة",
-   "UNLOCKED": "مفتوح",
    "LOCKED": "مقفل",
-   "{} of {} unlocked": "{} من {} مفتوح",
-   "Trophy {}": "الكأس {}",
    "Platinum": "بلاتينية",
    "Gold": "ذهبية",
    "Silver": "فضية",
    "Bronze": "برونزية",
-   "No trophy list: choose the game folder on the Game page (its sce_sys/trophy/trophy00.trp is read).": "لا توجد قائمة كؤوس: اختر مجلد اللعبة في صفحة اللعبة (يُقرأ الملف sce_sys/trophy/trophy00.trp منه).",
-   "Only trophies unlocked with this port are listed; the ones earned on a PlayStation are not known to it.": "تظهر فقط الكؤوس التي فُتحت عبر هذا المنفذ؛ أما التي حصلت عليها على PlayStation فهو لا يعرفها.",
-   "TROPHY UNLOCKED": "تم فتح كأس",
    "Up/Down: scroll   Left/Right: filter   F8 / R3+R2 / Esc: close": "أعلى/أسفل: تمرير   يسار/يمين: تصفية   F8 / R3+R2 / Esc: إغلاق",
-   "Reset trophies": "إعادة ضبط الكؤوس",
-   "Close the game before resetting the trophies.": "أغلق اللعبة قبل إعادة ضبط الكؤوس.",
-   "Lock all {} unlocked trophies again? A copy is kept as trophies.dat.bak.": "هل تريد إقفال جميع الكؤوس المفتوحة ({}) من جديد؟ سيتم الاحتفاظ بنسخة باسم trophies.dat.bak.",
-   "No trophy is unlocked.": "لا يوجد أي كأس مفتوح.",
-   "Could not reset the trophies: {}": "تعذّرت إعادة ضبط الكؤوس: {}",
    "Notifications": "الإشعارات",
    "List order": "ترتيب القائمة",
-   "Most earned first": "الأكثر حصولًا أولًا",
-   "Rarest first": "الأندر أولًا",
    "{}% of players": "{}% من اللاعبين",
    "Common": "شائعة",
    "Rare": "نادرة",
    "Very rare": "نادرة جدًا",
    "Ultra rare": "نادرة للغاية",
    "Triangle/Tab: order   L1/R1: notifications": "المثلث/Tab: الترتيب   L1/R1: الإشعارات",
-   "L1/R1: trophies   F8 / R3+R2 / Esc: close": "L1/R1: الكؤوس   F8 / R3+R2 / Esc: إغلاق",
    "Audio": "الصوت",
    "Volume": "مستوى الصوت",
    "Speakers": "مكبرات الصوت",
@@ -3384,8 +3244,7 @@
    "The game's own blur of distant objects, strongest in cutscenes. Off keeps the whole picture sharp.": "ضبابية اللعبة الخاصة على الأجسام البعيدة، وهي الأقوى في المشاهد السينمائية. الإيقاف يُبقي الصورة كلها واضحة.",
    "Automatic": "تلقائي",
    "restart": "إعادة التشغيل",
-   "High Frame Rate Physics Fix": "إصلاح الفيزياء عند معدل إطارات مرتفع",
-   "At high frame rates the engine runs at 60 while a quick-time prompt is on screen or during the Cronos blade pull, then goes back to the engine frame rate.": "عند معدل إطارات مرتفع يعمل المحرك بـ 60 أثناء ظهور حدث QTE على الشاشة أو أثناء السحب بالنصلين في كرونوس، ثم يعود إلى معدل إطارات المحرك."
+   "High Frame Rate Physics Fix": "إصلاح الفيزياء عند معدل إطارات مرتفع"
   },
   "zh": {
    "Polish": "波兰语",
@@ -3402,7 +3261,6 @@
    "Adaptive mouse (experimental)": "自适应鼠标（实验性）",
    "Adaptive mouse: how far the mouse moves for one step of a rotation. Also in the in-game menu.": "自适应鼠标：每次旋转步进所需的鼠标移动距离。也可在游戏内菜单调整。",
    "Add to Steam": "添加到 Steam",
-   "Aiming with the mouse while L2 is held (Head of Helios, Bow of Apollo). Relative: the stick follows the movement and goes back to neutral when the mouse stops. Absolute: where the mouse was when L2 was pressed is the centre, and the stick points from it to the mouse. Also in the in-game menu.": "按住 L2 时用鼠标瞄准（赫利俄斯之首、阿波罗之弓）。相对模式：摇杆跟随鼠标移动，停止移动时回中。绝对模式：以按下 L2 时的鼠标位置为中心，按鼠标偏移控制摇杆。也可在游戏内菜单调整。",
    "Aiming with the mouse while L2 is held: lower needs more mouse movement for the same stick, higher less. Also in the in-game menu.": "按住 L2 用鼠标瞄准时，数值越低，所需移动距离越大；越高则越小。也可在游戏内菜单调整。",
    "Allows manual skipping of cinematics any cinematic with the X button. Thanks to illusion0001 aka illusionyy for the PS3 patch which made this very easy.": "允许按叉键（X）手动跳过过场动画。感谢 illusion0001（又名 illusionyy）提供的 PS3 补丁，让此功能易于实现。",
    "Anisotropic filtering": "各向异性过滤",
@@ -3419,13 +3277,11 @@
    "Capture": "截屏键",
    "Change textures, sounds and text. Your game files stay untouched.": "替换纹理、声音和文字，原始游戏文件保持不变。",
    "Changes applied to the game code at start.": "启动时应用到游戏代码的修改。",
-   "Cheats": "作弊选项",
    "Choose the folder of the update (eboot.bin, sce_sys)": "选择更新目录（包含 eboot.bin、sce_sys）",
    "Choose the game folder": "选择游戏目录",
    "Choose two separate folders for the game and its update, or leave the update folder empty.": "游戏和更新请选择两个不同目录，或将更新目录留空。",
    "Choose your game folder to play.": "请选择游戏目录以开始游玩。",
    "Circle": "圆圈",
-   "Click a box, then press a key, click a mouse button or turn the wheel (it gives up after {} seconds). An input already used by another button swaps with it; the arrow puts one button back on its default. Rage of Sparta presses L3 and R3 together: tick the box above it to use one input instead of two. Grab presses L1 and Circle together. Dodge evades the way you are moving, or back when standing still. Touchpad right opens the game's pause menu. Insert always opens the port's menu and cannot be bound. Applied when the game starts.": "点击输入框后按键、点击鼠标按钮或滚动滚轮（{} 秒后自动取消）。已被使用的输入会与原绑定互换；箭头可单独恢复默认绑定。斯巴达之怒同时按下 L3 和 R3：勾选上方选项可改用单个输入。抓取同时按下 L1 和圆圈。闪避沿移动方向（WASD）进行，站立时向后闪避。触摸板右侧打开暂停菜单。Insert 固定打开移植版菜单，不能绑定。下次启动游戏生效。",
    "Close the game before restoring saves.": "恢复存档前请先退出游戏。",
    "Community patches of the selected game, applied at start.": "所选游戏的社区补丁，启动时应用。",
    "Compile new shaders in the background": "后台编译新着色器",
@@ -3435,7 +3291,7 @@
    "Could not copy the files: {}": "无法复制文件：{}",
    "Could not restore: {}": "无法恢复：{}",
    "Could not save all settings. Check write permissions and free disk space, then try again.": "部分设置保存失败。请检查写入权限和磁盘剩余空间后重试。",
-   "Creates spartanport.desktop in ~/.local/share/applications so the launcher and the game show their icon in the dock and the menu. Turning it off removes the entry.": "在 ~/.local/share/applications 创建 spartanport.desktop，使启动器和游戏在程序坞与菜单中显示图标。关闭时会删除该条目。",
+   "Creates sanctuaryport.desktop in ~/.local/share/applications so the launcher and the game show their icon in the dock and the menu. Turning it off removes the entry.": "在 ~/.local/share/applications 创建 sanctuaryport.desktop，使启动器和游戏在程序坞与菜单中显示图标。关闭时会删除该条目。",
    "Cross": "叉号",
    "D-pad down": "方向键下",
    "D-pad left": "方向键左",
@@ -3456,7 +3312,6 @@
    "Experimental": "实验性",
    "F11 captures a frame for analysis": "按 F11 捕获一帧用于分析",
    "F12 in the game": "游戏中按 F12",
-   "Fast screen effects (Rage of Sparta, weapons)": "快速屏幕特效（斯巴达之怒、武器）",
    "Fast shader cache loading (parallel)": "快速加载着色器缓存（并行）",
    "Fewer stutters in new areas: the game keeps running while new shaders compile. An object or effect may appear a moment later. Switch it off if something stays missing.": "进入新区域时减少卡顿：编译新着色器时游戏继续运行，物体或特效可能稍后出现。若内容持续缺失，请关闭。",
    "Fewer waits for the GPU. Switch it off if textures or shadows look wrong.": "减少等待 GPU；若纹理或阴影异常，请关闭。",
@@ -3493,7 +3348,6 @@
    "How the game appears on your screen.": "游戏在屏幕上的显示方式。",
    "How the stick-rotation prompts are answered. Keyboard: type the turn instead, half turns from the top D S A (clockwise) or A S D, from the bottom A W D or D W A, full turns D S A W or A S D W; a key out of turn starts again. Adaptive mouse: draw the turn with the mouse.": "旋转摇杆提示的输入方式。键盘模式：依次按键完成旋转。从上方开始半圈按 D S A（顺时针）或 A S D，从下方开始按 A W D 或 D W A；整圈按 D S A W 或 A S D W。顺序错误会重新开始。自适应鼠标模式则用鼠标画出旋转轨迹。",
    "In-game button icons": "游戏内按键图标",
-   "Infinite Double Jumps": "无限空中跳跃",
    "Items, size and corner: in-game menu (Insert / R3+L2) > Overlay.": "显示项目、大小和位置：游戏内菜单（Insert／R3+L2）→ 性能叠加层。",
    "Joystick prompts": "摇杆提示输入",
    "KEYBOARD": "键盘",
@@ -3560,11 +3414,9 @@
    "Quality (×1.5)": "质量（×1.5）",
    "RS (right stick click)": "RS（按下右摇杆）",
    "RUNNING": "运行中",
-   "Rage of Sparta on one input (L3 + R3 together)": "单键释放斯巴达之怒（同时按下 L3 + R3）",
    "Records how the next frame is drawn into the captures folder.": "将下一帧的绘制过程记录到 captures 目录。",
    "Relative": "相对移动",
    "Render resolution": "渲染分辨率",
-   "Repeat air jumps without landing. Also available in the in-game Cheats menu.": "可连续空中跳跃，无需落地。游戏内作弊菜单也可设置。",
    "Replace the current saves with the backup {}? The current saves are backed up first.": "用备份 {} 替换当前存档？操作前会先备份当前存档。",
    "Replaces the PlayStation button icons inside the game with the ones of your controller. Works on a copy of two game files in the port's data folder (about 70 MB); your game folder is never changed. Applied when the game starts.": "将游戏内 PlayStation 按键图标替换为所选手柄图标。在移植版 data 目录生成两个游戏文件的副本（约 70 MB），不改变原始游戏目录。下次启动游戏生效。",
    "Reset gamepad to defaults": "恢复默认手柄绑定",
@@ -3582,7 +3434,6 @@
    "Saves restored from {}.": "已从 {} 恢复存档。",
    "Saves the game's image, without the overlay, as a PNG in the screenshots folder of the saves.": "将不含性能叠加层的游戏画面保存为 PNG，位于用户存档目录中的 screenshots 文件夹。",
    "Screenshots": "截图",
-   "Select Very Hard without completing the game. Does not change existing save difficulty. In-game: enable before opening New Game.": "无需通关即可选择极难模式，不改变已有存档难度。请在打开“新游戏”前启用。",
    "Shaders": "着色器",
    "Sharper floors and walls seen at an angle, at little cost on most graphics cards.": "斜视地面和墙壁时纹理更清晰，多数显卡的性能开销很小。",
    "Shortcut created:": "已创建快捷方式：",
@@ -3623,7 +3474,6 @@
    "Type a name for the preset first.": "请先输入预设名称。",
    "Ultra Performance (×3)": "极致性能（×3）",
    "Unlimited": "无限制",
-   "Unlock Very Hard": "解锁极难模式",
    "Update folder (optional)": "更新目录（可选）",
    "Use pipeline binary cache (A/B test)": "使用管线二进制缓存（对比测试）",
    "VSync": "垂直同步",
@@ -3639,10 +3489,8 @@
    "Linux could not allocate the memory the game needs. Close other programs, check available RAM, swap space, or /dev/shm, and start again.": "Linux 无法为游戏分配所需的内存。请关闭其他程序，检查可用的 RAM、swap 交换空间或 /dev/shm，然后重新启动。",
    "Xbox button": "Xbox 键",
    "Your game dump, saves and language.": "游戏文件、存档和语言。",
-   "Your own dump of the game (eboot.bin, sce_module, sce_sys): God of War III Remastered, any region and version.": "你自己的游戏文件（eboot.bin、sce_module、sce_sys）；支持各地区和版本的战神 3 重制版。",
    "Your own dump of the game (eboot.bin, sce_module, sce_sys): SanctuaryPort, any region and version.": "你自己的战神 3 重制版游戏文件（eboot.bin、sce_module、sce_sys），支持各地区和版本。",
-   "Your own dump of the game (eboot.bin, sce_module, sce_sys); God of War III Remastered: CUSA01623, version 01.02 for the community patches.": "你自己的游戏文件（eboot.bin、sce_module、sce_sys）；社区补丁要求战神 3 重制版 CUSA01623、01.02 版本。",
-   "Your own dump of the game (eboot.bin, sce_module, sce_sys); SanctuaryPort: CUSA01623, version 01.02 for the community patches.": "你自己的战神 3 重制版游戏文件（eboot.bin、sce_module、sce_sys）；社区补丁要求 CUSA01623、01.02 版本。",
+   "Your own dump of the game (eboot.bin, sce_module, sce_sys); SanctuaryPort: CUSA00243, version 01.02 for the community patches.": "你自己的战神 3 重制版游戏文件（eboot.bin、sce_module、sce_sys）；社区补丁要求 CUSA00243、01.02 版本。",
    "by {}": "作者：{}",
    "game patches": "游戏补丁",
    "restart": "需重启",
@@ -3670,38 +3518,21 @@
    "⚠ {} files are changed by more than one mod. The lower one in the list wins.": "⚠ 有 {} 个文件被多个模组修改，列表下方的优先。",
    "✓ Game version {}: the game patches apply": "✓ 游戏版本 {}：可应用游戏补丁",
    "Trophies": "奖杯",
-   "The trophies this port recorded while you played.": "此移植版在你游玩时记录的奖杯。",
-   "All trophies": "全部",
-   "Unlocked": "已解锁",
    "Locked": "未解锁",
-   "UNLOCKED": "已解锁",
    "LOCKED": "未解锁",
-   "{} of {} unlocked": "已解锁 {} / {}",
-   "Trophy {}": "奖杯 {}",
    "Platinum": "白金",
    "Gold": "金",
    "Silver": "银",
    "Bronze": "铜",
-   "No trophy list: choose the game folder on the Game page (its sce_sys/trophy/trophy00.trp is read).": "没有奖杯列表：请在“游戏”页面选择游戏文件夹（会读取其中的 sce_sys/trophy/trophy00.trp）。",
-   "Only trophies unlocked with this port are listed; the ones earned on a PlayStation are not known to it.": "只列出通过此移植版解锁的奖杯；在 PlayStation 上获得的它并不知道。",
-   "TROPHY UNLOCKED": "奖杯已解锁",
    "Up/Down: scroll   Left/Right: filter   F8 / R3+R2 / Esc: close": "上/下：滚动   左/右：筛选   F8 / R3+R2 / Esc：关闭",
-   "Reset trophies": "重置奖杯",
-   "Close the game before resetting the trophies.": "重置奖杯前请先关闭游戏。",
-   "Lock all {} unlocked trophies again? A copy is kept as trophies.dat.bak.": "要将已解锁的 {} 个奖杯全部重新锁定吗？会保留一份副本 trophies.dat.bak。",
-   "No trophy is unlocked.": "没有已解锁的奖杯。",
-   "Could not reset the trophies: {}": "无法重置奖杯：{}",
    "Notifications": "通知",
    "List order": "列表顺序",
-   "Most earned first": "获得最多的在前",
-   "Rarest first": "最稀有的在前",
    "{}% of players": "{}% 的玩家",
    "Common": "普通",
    "Rare": "稀有",
    "Very rare": "非常稀有",
    "Ultra rare": "极其稀有",
    "Triangle/Tab: order   L1/R1: notifications": "三角/Tab：顺序   L1/R1：通知",
-   "L1/R1: trophies   F8 / R3+R2 / Esc: close": "L1/R1：奖杯   F8 / R3+R2 / Esc：关闭",
    "Version {} is out, but it has no Linux build yet.": "版本 {} 已发布，但还没有 Linux 版本。",
    "The launcher cannot write to {}, so it cannot replace itself there. Open the releases page to download the new version by hand?": "启动器无法写入 {}，因此无法在此处替换自身。是否打开发布页面手动下载新版本？",
    "Monitor": "显示器",
@@ -3748,7 +3579,6 @@
    "Depth of field": "景深",
    "The game's own blur of distant objects, strongest in cutscenes. Off keeps the whole picture sharp.": "游戏自带的远景模糊，过场动画中最明显。关闭后整个画面保持清晰。",
    "High Frame Rate Physics Fix": "高帧率物理修复",
-   "At high frame rates the engine runs at 60 while a quick-time prompt is on screen or during the Cronos blade pull, then goes back to the engine frame rate.": "高帧率下，快速反应提示在屏幕上或在克洛诺斯身上用刀刃拉拽时，引擎以 60 运行，结束后回到引擎帧率。",
    "Enable the upscaler": "启用超分辨率",
    "Share of the Render resolution (Performance page) the game renders at; the upscaler rebuilds the full Render resolution. Lower renders faster. Native AA keeps the full resolution.": "游戏以渲染分辨率（性能页面）的这一比例渲染，超分辨率重建完整渲染分辨率。越低越快。原生抗锯齿保持完整分辨率。",
    "Off (default): the game runs without temporal upscaling. On: FSR 3.1 with the preset below. Animated characters can still show some ghosting.": "默认关闭，游戏不使用时域超分辨率。开启：使用下方预设的 FSR 3.1。动画角色仍可能有少量拖影。",
@@ -3838,7 +3668,6 @@
    "Triangle / Y": "三角键 / Y",
    "Bug Fix - Texture Corruption Fix": "贴图损坏修复",
    "High FPS Wall Seam Fix": "高帧率墙面接缝修复",
-   "Lets Kratos cross the Realm of Hades wall seam at high engine FPS: a ledge ray miss right after a hit reuses that hit. Swaps an equivalent xor encoding that SanctuaryPort turns into the fix. Validated on the first Realm of Hades wall at 240 FPS.": "修复高引擎帧率下奎托斯无法通过冥界墙面接缝的问题：攀爬射线在刚命中后出现短暂未命中时，沿用上次命中结果。通过替换等效的 xor 编码，由 SanctuaryPort 识别并应用修复。上游已在 240 FPS 下验证冥界第一段墙面。",
    "Skip Intro": "跳过开场标志",
    "Skip Any Video With X Button": "使用叉键跳过过场动画",
    "Bug Fix - Startup Black Screen": "启动黑屏修复"
@@ -3846,38 +3675,21 @@
   "ja": {
    "Polish": "ポーランド語",
    "Trophies": "トロフィー",
-   "The trophies this port recorded while you played.": "このポートがプレイ中に記録したトロフィー。",
-   "All trophies": "すべて",
-   "Unlocked": "獲得済み",
    "Locked": "未獲得",
-   "UNLOCKED": "獲得済み",
    "LOCKED": "未獲得",
-   "{} of {} unlocked": "{} / {} 獲得",
-   "Trophy {}": "トロフィー {}",
    "Platinum": "プラチナ",
    "Gold": "ゴールド",
    "Silver": "シルバー",
    "Bronze": "ブロンズ",
-   "No trophy list: choose the game folder on the Game page (its sce_sys/trophy/trophy00.trp is read).": "トロフィーリストがありません：「ゲーム」ページでゲームフォルダーを選択してください（その sce_sys/trophy/trophy00.trp を読み込みます）。",
-   "Only trophies unlocked with this port are listed; the ones earned on a PlayStation are not known to it.": "このポートで獲得したトロフィーのみ表示されます。PlayStation で獲得したものは認識できません。",
-   "TROPHY UNLOCKED": "トロフィー獲得",
    "Up/Down: scroll   Left/Right: filter   F8 / R3+R2 / Esc: close": "上/下：スクロール   左/右：絞り込み   F8 / R3+R2 / Esc：閉じる",
-   "Reset trophies": "トロフィーをリセット",
-   "Close the game before resetting the trophies.": "トロフィーをリセットする前にゲームを終了してください。",
-   "Lock all {} unlocked trophies again? A copy is kept as trophies.dat.bak.": "獲得済みの {} 個のトロフィーをすべて未獲得に戻しますか？コピーが trophies.dat.bak として残ります。",
-   "No trophy is unlocked.": "獲得済みのトロフィーはありません。",
-   "Could not reset the trophies: {}": "トロフィーをリセットできませんでした：{}",
    "Notifications": "通知",
    "List order": "リスト順",
-   "Most earned first": "獲得率が高い順",
-   "Rarest first": "レア度が高い順",
    "{}% of players": "プレイヤーの {}%",
    "Common": "コモン",
    "Rare": "レア",
    "Very rare": "ベリーレア",
    "Ultra rare": "ウルトラレア",
    "Triangle/Tab: order   L1/R1: notifications": "トライアングル/Tab：並び順   L1/R1：通知",
-   "L1/R1: trophies   F8 / R3+R2 / Esc: close": "L1/R1：トロフィー   F8 / R3+R2 / Esc：閉じる",
    "Used on the game's first start. After that, the game keeps its own text and speech languages in its settings save: change them in the game, in Options → Game Settings → Game Text and Options → Audio → Speech.": "ゲームの初回起動時に使われます。その後は、ゲームが設定セーブにテキストと台詞の言語を保存します。ゲーム内の オプション → ゲーム設定 → テキスト表示 と オプション → 音声設定 → 台詞 で変更してください。",
    "Audio": "オーディオ",
    "Volume": "音量",
@@ -3894,44 +3706,26 @@
    "The game's own blur of distant objects, strongest in cutscenes. Off keeps the whole picture sharp.": "遠くの物体にかかるゲーム本来のぼかし。カットシーンで最も強くなります。オフにすると画面全体がくっきりします。",
    "Automatic": "自動",
    "restart": "再起動",
-   "High Frame Rate Physics Fix": "高フレームレート物理修正",
-   "At high frame rates the engine runs at 60 while a quick-time prompt is on screen or during the Cronos blade pull, then goes back to the engine frame rate.": "高フレームレート時、QTE の表示中やクロノスでのブレードの引き寄せ中はエンジンを 60 で動かし、その後エンジンのフレームレートに戻します。"
+   "High Frame Rate Physics Fix": "高フレームレート物理修正"
   },
   "ko": {
    "Polish": "폴란드어",
    "Trophies": "트로피",
-   "The trophies this port recorded while you played.": "이 포트가 플레이 중에 기록한 트로피입니다.",
-   "All trophies": "전체",
-   "Unlocked": "획득",
    "Locked": "미획득",
-   "UNLOCKED": "획득",
    "LOCKED": "미획득",
-   "{} of {} unlocked": "{} / {} 획득",
-   "Trophy {}": "트로피 {}",
    "Platinum": "플래티넘",
    "Gold": "골드",
    "Silver": "실버",
    "Bronze": "브론즈",
-   "No trophy list: choose the game folder on the Game page (its sce_sys/trophy/trophy00.trp is read).": "트로피 목록 없음: 게임 페이지에서 게임 폴더를 선택하세요 (해당 폴더의 sce_sys/trophy/trophy00.trp를 읽습니다).",
-   "Only trophies unlocked with this port are listed; the ones earned on a PlayStation are not known to it.": "이 포트로 획득한 트로피만 표시됩니다. PlayStation에서 얻은 트로피는 알 수 없습니다.",
-   "TROPHY UNLOCKED": "트로피 획득",
    "Up/Down: scroll   Left/Right: filter   F8 / R3+R2 / Esc: close": "위/아래: 스크롤   왼쪽/오른쪽: 필터   F8 / R3+R2 / Esc: 닫기",
-   "Reset trophies": "트로피 초기화",
-   "Close the game before resetting the trophies.": "트로피를 초기화하기 전에 게임을 종료하세요.",
-   "Lock all {} unlocked trophies again? A copy is kept as trophies.dat.bak.": "획득한 트로피 {}개를 모두 다시 잠글까요? 복사본이 trophies.dat.bak으로 보관됩니다.",
-   "No trophy is unlocked.": "획득한 트로피가 없습니다.",
-   "Could not reset the trophies: {}": "트로피를 초기화하지 못했습니다: {}",
    "Notifications": "알림",
    "List order": "목록 순서",
-   "Most earned first": "많이 획득한 순",
-   "Rarest first": "희귀한 순",
    "{}% of players": "플레이어의 {}%",
    "Common": "일반",
    "Rare": "희귀",
    "Very rare": "매우 희귀",
    "Ultra rare": "극히 희귀",
    "Triangle/Tab: order   L1/R1: notifications": "세모/Tab: 정렬   L1/R1: 알림",
-   "L1/R1: trophies   F8 / R3+R2 / Esc: close": "L1/R1: 트로피   F8 / R3+R2 / Esc: 닫기",
    "Used on the game's first start. After that, the game keeps its own text and speech languages in its settings save: change them in the game, in Options → Game Settings → Game Text and Options → Audio → Speech.": "게임을 처음 시작할 때 사용됩니다. 그 후에는 게임이 설정 저장 데이터에 텍스트와 음성 언어를 저장합니다. 게임 안의 옵션 → 게임 설정 → 게임 텍스트 및 옵션 → 오디오 → 음성에서 변경하세요.",
    "Audio": "오디오",
    "Volume": "볼륨",
@@ -3948,44 +3742,26 @@
    "The game's own blur of distant objects, strongest in cutscenes. Off keeps the whole picture sharp.": "먼 물체에 적용되는 게임 자체의 흐림 효과로, 컷신에서 가장 강합니다. 끄면 화면 전체가 선명하게 유지됩니다.",
    "Automatic": "자동",
    "restart": "재시작",
-   "High Frame Rate Physics Fix": "고프레임 물리 수정",
-   "At high frame rates the engine runs at 60 while a quick-time prompt is on screen or during the Cronos blade pull, then goes back to the engine frame rate.": "고프레임에서 QTE가 화면에 있는 동안이나 크로노스에서 블레이드로 당겨질 때 엔진은 60으로 동작하고, 이후 엔진 프레임레이트로 돌아갑니다."
+   "High Frame Rate Physics Fix": "고프레임 물리 수정"
   },
   "id": {
    "Polish": "Polandia",
    "Trophies": "Trofi",
-   "The trophies this port recorded while you played.": "Trofi yang dicatat oleh port ini saat Anda bermain.",
-   "All trophies": "Semua trofi",
-   "Unlocked": "Terbuka",
    "Locked": "Terkunci",
-   "UNLOCKED": "TERBUKA",
    "LOCKED": "TERKUNCI",
-   "{} of {} unlocked": "{} dari {} terbuka",
-   "Trophy {}": "Trofi {}",
    "Platinum": "Platina",
    "Gold": "Emas",
    "Silver": "Perak",
    "Bronze": "Perunggu",
-   "No trophy list: choose the game folder on the Game page (its sce_sys/trophy/trophy00.trp is read).": "Tidak ada daftar trofi: pilih folder game di halaman Game (file sce_sys/trophy/trophy00.trp akan dibaca).",
-   "Only trophies unlocked with this port are listed; the ones earned on a PlayStation are not known to it.": "Hanya trofi yang dibuka melalui port ini yang dicantumkan; trofi yang diperoleh di PlayStation tidak diketahui oleh port.",
-   "TROPHY UNLOCKED": "TROFI TERBUKA",
    "Up/Down: scroll   Left/Right: filter   F8 / R3+R2 / Esc: close": "Atas/Bawah: gulir   Kiri/Kanan: filter   F8 / R3+R2 / Esc: tutup",
-   "Reset trophies": "Atur ulang trofi",
-   "Close the game before resetting the trophies.": "Tutup game sebelum mengatur ulang trofi.",
-   "Lock all {} unlocked trophies again? A copy is kept as trophies.dat.bak.": "Kunci kembali semua {} trofi yang terbuka? Salinan akan disimpan sebagai trophies.dat.bak.",
-   "No trophy is unlocked.": "Tidak ada trofi yang terbuka.",
-   "Could not reset the trophies: {}": "Tidak dapat mengatur ulang trofi: {}",
    "Notifications": "Notifikasi",
    "List order": "Urutan daftar",
-   "Most earned first": "Paling banyak diraih dulu",
-   "Rarest first": "Paling langka dulu",
    "{}% of players": "{}% pemain",
    "Common": "Umum",
    "Rare": "Langka",
    "Very rare": "Sangat langka",
    "Ultra rare": "Ultra langka",
    "Triangle/Tab: order   L1/R1: notifications": "Segitiga/Tab: urutan   L1/R1: notifikasi",
-   "L1/R1: trophies   F8 / R3+R2 / Esc: close": "L1/R1: trofi   F8 / R3+R2 / Esc: tutup",
    "Used on the game's first start. After that, the game keeps its own text and speech languages in its settings save: change them in the game, in Options → Game Settings → Game Text and Options → Audio → Speech.": "Digunakan pada saat pertama kali game dimulai. Setelah itu, game menyimpan bahasa teks dan suaranya sendiri di penyimpanan pengaturan: ubah di dalam game, di Options → Game Settings → Game Text dan Options → Audio → Speech.",
    "The launcher cannot write to {}, so it cannot replace itself there. Open the releases page to download the new version by hand?": "Launcher tidak dapat menulis ke {}, sehingga tidak dapat mengganti dirinya di sana. Buka halaman rilis untuk mengunduh versi baru secara manual?",
    "Version {} is out, but it has no Linux build yet.": "Versi {} telah tersedia, tetapi belum memiliki build Linux.",
@@ -4122,19 +3898,12 @@
    "About 40 to 66 FPS in a heavy scene. Needs deferred GPU readbacks. Switch it off if lighting or objects look wrong.": "Sekitar 40 hingga 66 FPS pada adegan berat. Memerlukan readback GPU yang ditangguhkan. Matikan jika pencahayaan atau objek terlihat salah.",
    "Deferred GPU readbacks": "Readback GPU ditangguhkan",
    "Fewer waits for the GPU. Switch it off if textures or shadows look wrong.": "Lebih sedikit waktu tunggu untuk GPU. Matikan jika tekstur atau bayangan terlihat salah.",
-   "Fast screen effects (Rage of Sparta, weapons)": "Efek layar cepat (Rage of Sparta, senjata)",
    "Keeps powers and weapon effects at full FPS. Switch it off if a screen effect (blur, distortion, the color change of a power) looks stretched, shifted or wrong.": "Menjaga kekuatan dan efek senjata tetap pada FPS penuh. Matikan jika efek layar (blur, distorsi, perubahan warna kekuatan) terlihat melar, bergeser, atau salah.",
    "Precise": "Tepat (Precise)",
-   "Cheats": "Cheat",
-   "Infinite Double Jumps": "Lompatan Ganda Tak Terbatas",
-   "Repeat air jumps without landing. Also available in the in-game Cheats menu.": "Ulangi lompatan di udara tanpa harus mendarat. Juga tersedia di menu Cheat dalam game.",
-   "Rage of Sparta on one input (L3 + R3 together)": "Rage of Sparta dalam satu input (L3 + R3 bersamaan)",
-   "Unlock Very Hard": "Buka Tingkat Kesulitan Sangat Sulit",
-   "Select Very Hard without completing the game. Does not change existing save difficulty. In-game: enable before opening New Game.": "Pilih tingkat Sangat Sulit tanpa menamatkan game. Tidak mengubah kesulitan simpanan yang sudah ada. Dalam game: aktifkan sebelum membuka Game Baru.",
    "Folders": "Folder",
    "Your game dump, saves and language.": "Dump game, simpanan, dan bahasa Anda.",
    "Your own dump of the game (eboot.bin, sce_module, sce_sys): SanctuaryPort, any region and version.": "Dump game milik Anda sendiri (eboot.bin, sce_module, sce_sys): SanctuaryPort, wilayah dan versi apa pun.",
-   "Your own dump of the game (eboot.bin, sce_module, sce_sys); SanctuaryPort: CUSA01623, version 01.02 for the community patches.": "Dump game milik Anda sendiri (eboot.bin, sce_module, sce_sys); SanctuaryPort: CUSA01623, versi 01.02 untuk patch komunitas.",
+   "Your own dump of the game (eboot.bin, sce_module, sce_sys); SanctuaryPort: CUSA00243, version 01.02 for the community patches.": "Dump game milik Anda sendiri (eboot.bin, sce_module, sce_sys); SanctuaryPort: CUSA00243, versi 01.02 untuk patch komunitas.",
    "Update folder (optional)": "Folder pembaruan (opsional)",
    "Only if the update is dumped apart from the game: it is laid over the game folder without changing either. Leave empty when the game folder already has the update.": "Hanya jika pembaruan di-dump terpisah dari game: pembaruan akan diterapkan di atas folder game tanpa mengubah keduanya. Biarkan kosong jika folder game sudah memiliki pembaruan.",
    "The update folder {} is incomplete. Missing or empty files:\n\n{}\n\nChoose the folder of the update (eboot.bin, sce_sys), or leave it empty.": "Folder pembaruan {} tidak lengkap. File hilang atau kosong:\n\n{}\n\nPilih folder pembaruan (eboot.bin, sce_sys), atau biarkan kosong.",
@@ -4213,7 +3982,6 @@
    "Adaptive mouse (experimental)": "Mouse adaptif (eksperimental)",
    "Adaptive mouse: how far the mouse moves for one step of a rotation. Also in the in-game menu.": "Mouse adaptif: seberapa jauh mouse bergerak untuk satu langkah putaran. Juga ada di menu dalam game.",
    "Add to Steam": "Tambahkan ke Steam",
-   "Aiming with the mouse while L2 is held (Head of Helios, Bow of Apollo). Relative: the stick follows the movement and goes back to neutral when the mouse stops. Absolute: where the mouse was when L2 was pressed is the centre, and the stick points from it to the mouse. Also in the in-game menu.": "Membidik dengan mouse saat L2 ditahan (Head of Helios, Bow of Apollo). Relatif: stik mengikuti gerakan dan kembali ke netral saat mouse berhenti. Absolut: posisi mouse saat L2 ditekan menjadi titik tengah, dan stik mengarah darinya ke mouse. Juga ada di menu dalam game.",
    "Aiming with the mouse while L2 is held: lower needs more mouse movement for the same stick, higher less. Also in the in-game menu.": "Membidik dengan mouse saat L2 ditahan: nilai lebih rendah memerlukan lebih banyak gerakan mouse untuk pergerakan stik yang sama, lebih tinggi lebih sedikit. Juga ada di menu dalam game.",
    "Asks GameMode (gamemoderun) for the performance governor while the game runs.": "Meminta GameMode (gamemoderun) untuk pengatur performa saat game berjalan.",
    "Auto": "Otomatis",
@@ -4225,14 +3993,13 @@
    "Choose the game folder": "Pilih folder game",
    "Choose two separate folders for the game and its update, or leave the update folder empty.": "Pilih dua folder terpisah untuk game dan pembaruannya, atau biarkan folder pembaruan kosong.",
    "Choose your game folder to play.": "Pilih folder game Anda untuk bermain.",
-   "Click a box, then press a key, click a mouse button or turn the wheel (it gives up after {} seconds). An input already used by another button swaps with it; the arrow puts one button back on its default. Rage of Sparta presses L3 and R3 together: tick the box above it to use one input instead of two. Grab presses L1 and Circle together. Dodge evades the way you are moving, or back when standing still. Touchpad right opens the game's pause menu. Insert always opens the port's menu and cannot be bound. Applied when the game starts.": "Klik kotak, lalu tekan tombol, klik tombol mouse, atau putar roda mouse (waktu habis setelah {} detik). Input yang sudah digunakan oleh tombol lain akan ditukar; panah mengembalikan tombol ke default-nya. Rage of Sparta menekan L3 dan R3 bersamaan: centang kotak di atasnya untuk memakai satu input saja. Grab menekan L1 dan Lingkaran bersamaan. Dodge menghindar ke arah gerakan Anda (WASD), atau mundur jika diam. Touchpad kanan membuka menu jeda game. Insert selalu membuka menu port dan tidak dapat diubah. Diterapkan saat game dimulai.",
    "Close the game before restoring saves.": "Tutup game sebelum memulihkan simpanan.",
    "Controls": "Kontrol",
    "Copying the system files…": "Menyalin file sistem…",
    "Could not copy the files: {}": "Tidak dapat menyalin file: {}",
    "Could not restore: {}": "Tidak dapat memulihkan: {}",
    "Could not save all settings. Check write permissions and free disk space, then try again.": "Tidak dapat menyimpan semua pengaturan. Periksa izin penulisan dan ruang disk yang kosong, lalu coba lagi.",
-   "Creates spartanport.desktop in ~/.local/share/applications so the launcher and the game show their icon in the dock and the menu. Turning it off removes the entry.": "Membuat spartanport.desktop di ~/.local/share/applications agar launcher dan game menampilkan ikon di dock dan menu. Mematikannya akan menghapus entri ini.",
+   "Creates sanctuaryport.desktop in ~/.local/share/applications so the launcher and the game show their icon in the dock and the menu. Turning it off removes the entry.": "Membuat sanctuaryport.desktop di ~/.local/share/applications agar launcher dan game menampilkan ikon di dock dan menu. Mematikannya akan menghapus entri ini.",
    "Delete": "Hapus",
    "Diagnostics (for development)": "Diagnostik (untuk pengembangan)",
    "Enable the upscaler (experimental)": "Aktifkan upscaler (eksperimental)",
@@ -4297,7 +4064,6 @@
    "Depth of field": "Depth of field",
    "The game's own blur of distant objects, strongest in cutscenes. Off keeps the whole picture sharp.": "Blur bawaan game pada objek yang jauh, paling kuat di cutscene. Jika dimatikan, seluruh gambar tetap tajam.",
    "High Frame Rate Physics Fix": "Perbaikan fisika FPS tinggi",
-   "At high frame rates the engine runs at 60 while a quick-time prompt is on screen or during the Cronos blade pull, then goes back to the engine frame rate.": "Pada FPS tinggi, mesin berjalan di 60 selama QTE tampil di layar atau saat tarikan bilah di Cronos, lalu kembali ke frame rate mesin.",
    "Enable the upscaler": "Aktifkan upscaler",
    "Share of the Render resolution (Performance page) the game renders at; the upscaler rebuilds the full Render resolution. Lower renders faster. Native AA keeps the full resolution.": "Bagian dari resolusi render (halaman Performa) yang dipakai game untuk merender; upscaler membangun ulang resolusi render penuh. Lebih rendah lebih cepat. Native AA memakai resolusi penuh.",
    "Off (default): the game runs without temporal upscaling. On: FSR 3.1 with the preset below. Animated characters can still show some ghosting.": "Mati (bawaan): game berjalan tanpa upscaling temporal. Nyala: FSR 3.1 dengan preset di bawah. Karakter yang bergerak masih bisa sedikit berbayang.",
@@ -4318,38 +4084,21 @@
   },
   "cs": {
    "Trophies": "Trofeje",
-   "The trophies this port recorded while you played.": "Trofeje, které si tento port zaznamenal při hraní.",
-   "All trophies": "Všechny",
-   "Unlocked": "Odemčené",
    "Locked": "Zamčené",
-   "UNLOCKED": "ODEMČENO",
    "LOCKED": "ZAMČENO",
-   "{} of {} unlocked": "Odemčeno {} z {}",
-   "Trophy {}": "Trofej {}",
    "Platinum": "Platina",
    "Gold": "Zlato",
    "Silver": "Stříbro",
    "Bronze": "Bronz",
-   "No trophy list: choose the game folder on the Game page (its sce_sys/trophy/trophy00.trp is read).": "Žádný seznam trofejí: vyberte složku hry na stránce Hra (čte se její soubor sce_sys/trophy/trophy00.trp).",
-   "Only trophies unlocked with this port are listed; the ones earned on a PlayStation are not known to it.": "Zobrazují se jen trofeje odemčené v tomto portu; ty získané na PlayStationu nezná.",
-   "TROPHY UNLOCKED": "TROFEJ ODEMČENA",
    "Up/Down: scroll   Left/Right: filter   F8 / R3+R2 / Esc: close": "Nahoru/Dolů: posun   Vlevo/Vpravo: filtr   F8 / R3+R2 / Esc: zavřít",
-   "Reset trophies": "Resetovat trofeje",
-   "Close the game before resetting the trophies.": "Před resetem trofejí zavřete hru.",
-   "Lock all {} unlocked trophies again? A copy is kept as trophies.dat.bak.": "Znovu zamknout všech {} odemčených trofejí? Kopie se uchová jako trophies.dat.bak.",
-   "No trophy is unlocked.": "Žádná trofej není odemčena.",
-   "Could not reset the trophies: {}": "Trofeje se nepodařilo resetovat: {}",
    "Notifications": "Oznámení",
    "List order": "Pořadí seznamu",
-   "Most earned first": "Nejčastěji získané první",
-   "Rarest first": "Nejvzácnější první",
    "{}% of players": "{} % hráčů",
    "Common": "Běžná",
    "Rare": "Vzácná",
    "Very rare": "Velmi vzácná",
    "Ultra rare": "Ultra vzácná",
    "Triangle/Tab: order   L1/R1: notifications": "Trojúhelník/Tab: pořadí   L1/R1: oznámení",
-   "L1/R1: trophies   F8 / R3+R2 / Esc: close": "L1/R1: trofeje   F8 / R3+R2 / Esc: zavřít",
    "Used on the game's first start. After that, the game keeps its own text and speech languages in its settings save: change them in the game, in Options → Game Settings → Game Text and Options → Audio → Speech.": "Použije se při prvním spuštění hry. Potom si hra drží vlastní jazyk textu a mluveného slova v uloženém nastavení: změníte je ve hře v Možnosti → Nastavení hry → Text hry a Možnosti → Zvuk → Řeč.",
    "Audio": "Zvuk",
    "Volume": "Hlasitost",
@@ -4367,7 +4116,6 @@
    "Automatic": "Automaticky",
    "restart": "restart",
    "High Frame Rate Physics Fix": "Oprava fyziky pro vysoké FPS",
-   "At high frame rates the engine runs at 60 while a quick-time prompt is on screen or during the Cronos blade pull, then goes back to the engine frame rate.": "Při vysokém FPS engine běží na 60, dokud je na obrazovce QTE výzva nebo při tahu čepele Krona, a pak se vrátí na svou snímkovou frekvenci.",
    "The launcher cannot write to {}, so it cannot replace itself there. Open the releases page to download the new version by hand?": "Launcher nemůže zapisovat do {}, a proto se tam nemůže nahradit. Otevřít stránku vydání, abyste novou verzi stáhli ručně?",
    "Version {} is out, but it has no Linux build yet.": "Verze {} vyšla, ale zatím nemá sestavení pro Linux.",
    "Show Discord Rich Presence": "Zobrazit Discord Rich Presence",
@@ -4413,13 +4161,8 @@
    "Deferred GPU readbacks": "Odložené čtení z GPU",
    "Fewer waits for the GPU. Switch it off if textures or shadows look wrong.": "Méně čekání na GPU. Vypněte, pokud vypadají špatně textury nebo stíny.",
    "Your game dump, saves and language.": "Váš dump hry, uložené hry a jazyk.",
-   "Cheats": "Cheaty",
-   "Infinite Double Jumps": "Nekonečné dvojité skoky",
-   "Repeat air jumps without landing. Also available in the in-game Cheats menu.": "Opakované skoky ve vzduchu bez dopadu. Je také v herním menu Cheaty.",
-   "Unlock Very Hard": "Odemknout Very Hard",
-   "Select Very Hard without completing the game. Does not change existing save difficulty. In-game: enable before opening New Game.": "Umožní vybrat Very Hard bez dokončení hry. Nemění obtížnost existující uložené hry. Ve hře: zapněte před spuštěním Nové hry.",
    "Folders": "Složky",
-   "Your own dump of the game (eboot.bin, sce_module, sce_sys); SanctuaryPort: CUSA01623, version 01.02 for the community patches.": "Váš vlastní dump hry (eboot.bin, sce_module, sce_sys); SanctuaryPort: CUSA01623, verze 01.02 pro komunitní záplaty.",
+   "Your own dump of the game (eboot.bin, sce_module, sce_sys); SanctuaryPort: CUSA00243, version 01.02 for the community patches.": "Váš vlastní dump hry (eboot.bin, sce_module, sce_sys); SanctuaryPort: CUSA00243, verze 01.02 pro komunitní záplaty.",
    "Update folder (optional)": "Složka aktualizace (volitelné)",
    "Choose the folder of the update (eboot.bin, sce_sys)": "Vyberte složku aktualizace (eboot.bin, sce_sys)",
    "Only if the update is dumped apart from the game: it is laid over the game folder without changing either. Leave empty when the game folder already has the update.": "Jen pokud je aktualizace vydumpovaná zvlášť od hry: položí se přes složku hry, aniž by se změnila některá z nich. Nechte prázdné, pokud složka hry už aktualizaci obsahuje.",
@@ -4506,7 +4249,7 @@
    "The shortcut \"{}\" was updated in Steam (accounts: {}), with its icon, capsules, background and logo. Open Steam to see it in the library.": "Zástupce „{}“ byl ve Steamu aktualizován (účty: {}) s ikonou, kapslemi, pozadím a logem. Otevřete Steam a uvidíte ho v knihovně.",
    "The shortcut \"{}\" was added to Steam (accounts: {}), with its icon, capsules, background and logo. Open Steam to see it in the library.": "Zástupce „{}“ byl přidán do Steamu (účty: {}) s ikonou, kapslemi, pozadím a logem. Otevřete Steam a uvidíte ho v knihovně.",
    "Menu entry and icon (AppImage)": "Položka menu a ikona (AppImage)",
-   "Creates spartanport.desktop in ~/.local/share/applications so the launcher and the game show their icon in the dock and the menu. Turning it off removes the entry.": "Vytvoří spartanport.desktop v ~/.local/share/applications, aby launcher a hra ukazovaly ikonu v docku a v menu. Vypnutím se položka odstraní.",
+   "Creates sanctuaryport.desktop in ~/.local/share/applications so the launcher and the game show their icon in the dock and the menu. Turning it off removes the entry.": "Vytvoří sanctuaryport.desktop v ~/.local/share/applications, aby launcher a hra ukazovaly ikonu v docku a v menu. Vypnutím se položka odstraní.",
    "The game dump is incomplete. Missing or empty files:\n\n{}\n\nDump the game again, or copy these files from a complete dump.": "Dump hry je neúplný. Chybějící nebo prázdné soubory:\n\n{}\n\nVydumpujte hru znovu, nebo tyto soubory zkopírujte z úplného dumpu.",
    "The files in {} look like a PKG extraction: the system files (param.sfo, icon0.png, pic1.png and the rest) are in\n\n{}\n\nCopy all of them into its sce_sys folder now? Files already there are kept.": "Soubory v {} vypadají jako rozbalení PKG: systémové soubory (param.sfo, icon0.png, pic1.png a další) jsou v\n\n{}\n\nZkopírovat je všechny teď do jeho složky sce_sys? Soubory, které tam už jsou, zůstanou.",
    "Could not copy the files: {}": "Soubory se nepodařilo zkopírovat: {}",
@@ -4538,7 +4281,6 @@
    "Native · 1920 × 1080 · 16:9": "Nativní · 1920 × 1080 · 16:9",
    "Graphics card": "Grafická karta",
    "The GPU the game runs on. Choose your dedicated card if the game uses the integrated one.": "GPU, na které hra běží. Pokud hra používá integrovanou, vyberte svou dedikovanou kartu.",
-   "Fast screen effects (Rage of Sparta, weapons)": "Rychlé efekty na obrazovce (Sparťanův hněv, zbraně)",
    "Keeps powers and weapon effects at full FPS. Switch it off if a screen effect (blur, distortion, the color change of a power) looks stretched, shifted or wrong.": "Udrží síly a efekty zbraní na plném FPS. Vypněte, pokud efekt na obrazovce (rozmazání, zkreslení, změna barvy síly) vypadá natažený, posunutý nebo špatně.",
    "Your own dump of the game (eboot.bin, sce_module, sce_sys): SanctuaryPort, any region and version.": "Váš vlastní dump hry (eboot.bin, sce_module, sce_sys): SanctuaryPort, libovolný region a verze.",
    "L1 + Touchpad right": "L1 + Touchpad vpravo",
@@ -4568,9 +4310,7 @@
    "Fixes the black screen at startup with the FPS counter running: the frame pacing index starts at 2 instead of 0, so the second frame no longer waits for a flip that only it can trigger.": "Opraví černou obrazovku při startu s běžícím počítadlem FPS: index tempa snímků začíná na 2 místo 0, takže druhý snímek už nečeká na přehození, které může spustit jen on sám.",
    "(none)": "(žádné)",
    "Adaptive mouse: how far the mouse moves for one step of a rotation. Also in the in-game menu.": "Adaptivní myš: jak daleko se myš pohne na jeden krok otočení. Také v herním menu.",
-   "Aiming with the mouse while L2 is held (Head of Helios, Bow of Apollo). Relative: the stick follows the movement and goes back to neutral when the mouse stops. Absolute: where the mouse was when L2 was pressed is the centre, and the stick points from it to the mouse. Also in the in-game menu.": "Míření myší při držení L2 (Heliova hlava, Apollónův luk). Relativní: páčka sleduje pohyb a když se myš zastaví, vrátí se do neutrálu. Absolutní: střed je místo, kde byla myš při stisku L2, a páčka míří od něj k myši. Také v herním menu.",
    "Aiming with the mouse while L2 is held: lower needs more mouse movement for the same stick, higher less. Also in the in-game menu.": "Míření myší při držení L2: nižší hodnota vyžaduje víc pohybu myši pro stejnou výchylku páčky, vyšší méně. Také v herním menu.",
-   "Click a box, then press a key, click a mouse button or turn the wheel (it gives up after {} seconds). An input already used by another button swaps with it; the arrow puts one button back on its default. Rage of Sparta presses L3 and R3 together: tick the box above it to use one input instead of two. Grab presses L1 and Circle together. Dodge evades the way you are moving, or back when standing still. Touchpad right opens the game's pause menu. Insert always opens the port's menu and cannot be bound. Applied when the game starts.": "Klikněte na pole, pak stiskněte klávesu, klikněte tlačítkem myši nebo otočte kolečkem (po {} s to vzdá). Vstup, který už používá jiné tlačítko, se s ním prohodí; šipka vrátí tlačítko na výchozí hodnotu. Sparťanův hněv stiskne L3 a R3 společně: zaškrtněte pole nad ním, pokud chcete použít jeden vstup místo dvou. Chycení stiskne L1 a Kolečko společně. Úhyb uhne ve směru pohybu, nebo dozadu, když stojíte. Touchpad vpravo otevře pauzové menu hry. Insert vždy otevře menu portu a nelze ho přiřadit. Použije se při spuštění hry.",
    "Gamepad Mapping": "Mapování gamepadu",
    "General": "Obecné",
    "How the stick-rotation prompts are answered. Keyboard: type the turn instead, half turns from the top D S A (clockwise) or A S D, from the bottom A W D or D W A, full turns D S A W or A S D W; a key out of turn starts again. Adaptive mouse: draw the turn with the mouse.": "Jak se odpovídá na výzvy s otáčením páčky. Klávesnice: otočení zadejte psaním, půlotáčky shora D S A (po směru) nebo A S D, zdola A W D nebo D W A, celé otáčky D S A W nebo A S D W; klávesa mimo pořadí začne znovu. Adaptivní myš: otočení nakreslete myší.",
@@ -4583,7 +4323,6 @@
    "Mouse prompt distance": "Vzdálenost výzvy myší",
    "Press a key": "Stiskněte klávesu",
    "Press a key or mouse": "Stiskněte klávesu nebo myš",
-   "Rage of Sparta on one input (L3 + R3 together)": "Sparťanův hněv na jeden vstup (L3 + R3 společně)",
    "Reset gamepad to defaults": "Obnovit výchozí hodnoty gamepadu",
    "Reset keyboard & mouse to defaults": "Obnovit výchozí hodnoty klávesnice a myši",
    "Right stick sensitivity": "Citlivost pravé páčky",
@@ -4746,25 +4485,17 @@
   "Linux could not allocate the memory the game needs. Close other programs, check available RAM, swap space, or /dev/shm, and start again.": "Linux не смогла выделить память для игры. Закройте другие программы, проверьте доступную память RAM, swap или /dev/shm и запустите снова.",
   "The game stopped while reading its files: the game dump may be incomplete. Extract the pkg again and check that the game folder is about 40 GB.": "Игра остановилась при чтении своих файлов: дамп игры может быть неполным. Распакуйте pkg заново и проверьте, что папка игры занимает около 40 ГБ.",
   "Trophies": "Трофеи",
-  "TROPHY UNLOCKED": "ТРОФЕЙ ПОЛУЧЕН",
-  "UNLOCKED": "ПОЛУЧЕН",
   "LOCKED": "ЗАКРЫТ",
-  "All trophies": "Все",
-  "Unlocked": "Получены",
   "Locked": "Закрыты",
-  "{} of {} unlocked": "{} из {} получено",
   "Up/Down: scroll   Left/Right: filter   F8 / R3+R2 / Esc: close": "Вверх/Вниз: прокрутка   Влево/Вправо: фильтр   F8 / R3+R2 / Esc: закрыть",
   "Notifications": "Уведомления",
   "List order": "Порядок списка",
-  "Most earned first": "Сначала частые",
-  "Rarest first": "Сначала редкие",
   "{}% of players": "{}% игроков",
   "Common": "Обычный",
   "Rare": "Редкий",
   "Very rare": "Очень редкий",
   "Ultra rare": "Ультраредкий",
   "Triangle/Tab: order   L1/R1: notifications": "Треугольник/Tab: порядок   L1/R1: уведомления",
-  "L1/R1: trophies   F8 / R3+R2 / Esc: close": "L1/R1: трофеи   F8 / R3+R2 / Esc: закрыть",
   "Graphics": "Графика",
   "Game": "Игра",
   "Controls": "Управление",
@@ -4795,8 +4526,6 @@
   "Choose the saves folder": "Выберите папку сохранений",
   "Game language": "Язык игры",
   "Used on the game's first start. After that, the game keeps its own text and speech languages in its settings save: change them in the game, in Options → Game Settings → Game Text and Options → Audio → Speech.": "Действует при первом запуске игры. Потом игра хранит язык текста и речи в своём сохранении настроек: меняйте их в игре, в Настройки → Параметры игры → Текст и Настройки → Аудио → Речь.",
-  "The trophies this port recorded while you played.": "Трофеи, которые порт записал во время игры.",
-  "Only trophies unlocked with this port are listed; the ones earned on a PlayStation are not known to it.": "Показаны только трофеи, полученные через этот порт; полученные на PlayStation ему неизвестны.",
   "Save backups": "Резервные копии",
   "Game patches": "Патчи игры",
   "Third-party patches": "Сторонние патчи",
@@ -4823,14 +4552,12 @@
   "PLAY": "ИГРАТЬ",
   "Save": "Сохранить",
   "Delete shader cache": "Удалить кэш шейдеров",
-  "Close the game before resetting the trophies.": "Закройте игру перед сбросом трофеев.",
-  "No trophy is unlocked.": "Нет полученных трофеев.",
   "No built-in patches for this game.": "Для этой игры нет встроенных патчей.",
   "Load": "Загрузить",
   "Delete": "Удалить",
   "Check for updates when the launcher opens": "Проверять обновления при открытии лаунчера",
   "1 file": "1 файл",
-  "Choose the game folder with eboot.bin (CUSA01623).": "Выберите папку игры с eboot.bin (CUSA01623).",
+  "Choose the game folder with eboot.bin (CUSA00243).": "Выберите папку игры с eboot.bin (CUSA00243).",
   "Preparing the game; it opens in its own window…": "Подготовка игры; она откроется в своём окне…",
   "Version {} is available.": "Доступна версия {}.",
   "Update": "Обновить",
@@ -4847,8 +4574,6 @@
   "Browse…": "Обзор…",
   "Open": "Открыть",
   "Refresh": "Обновить",
-  "Reset trophies": "Сбросить трофеи",
-  "Lock all {} unlocked trophies again? A copy is kept as trophies.dat.bak.": "Снова закрыть все полученные трофеи ({})? Копия сохранится как trophies.dat.bak.",
   "Restore": "Восстановить",
   "Load mods": "Загружать моды",
   "Open folder": "Открыть папку",
@@ -4873,8 +4598,6 @@
   "What's new": "Что нового",
   "Install version {} now? The launcher closes, installs it and opens again. Saves and settings are kept.": "Установить версию {} сейчас? Лаунчер закроется, установит её и откроется снова. Сохранения и настройки останутся.",
   "Could not delete all of the shader cache; another program may be using it: {}": "Не удалось удалить весь кэш шейдеров; возможно, его использует другая программа: {}",
-  "Could not reset the trophies: {}": "Не удалось сбросить трофеи: {}",
-  "No trophy list: choose the game folder on the Game page (its sce_sys/trophy/trophy00.trp is read).": "Нет списка трофеев: выберите папку игры на странице «Игра» (читается sce_sys/trophy/trophy00.trp).",
   "Check for updates": "Проверить обновления",
   "No patch files for this game version yet.": "Пока нет патчей для этой версии игры.",
   "{} of {} active": "активно {} из {}",
@@ -4892,7 +4615,6 @@
   "Restarting with the new settings…": "Перезапуск с новыми настройками…",
   "You have the latest version ({}).": "У вас последняя версия ({}).",
   "Update failed: {}": "Не удалось обновить: {}",
-  "Trophy {}": "Трофей {}",
   "Could not check for updates: {}": "Не удалось проверить обновления: {}",
   "Audio": "Звук",
   "Volume": "Громкость",
@@ -4928,2455 +4650,5 @@
   "18": "ko",
   "33": "id",
   "5": "cs"
- },
- "trophies": {
-  "count": 35,
-  "texts": {
-   "en": [
-    [
-     "King of the Hill",
-     "Unlock all trophies"
-    ],
-    [
-     "Releasing the Floodgates",
-     "Kill Poseidon"
-    ],
-    [
-     "Burnt to a Crisp",
-     "Acquire the Bow of Apollo"
-    ],
-    [
-     "Mr. Hand",
-     "Discover the secret 'Hades Arm' room"
-    ],
-    [
-     "Shine Lord",
-     "Kill Helios"
-    ],
-    [
-     "Shoe Delivery",
-     "Kill Hermes and acquire his Boots"
-    ],
-    [
-     "Ladies Man",
-     "Successfully entertain Aphrodite"
-    ],
-    [
-     "Handy Man",
-     "Sever Gaia’s hand"
-    ],
-    [
-     "Open Sesame",
-     "Open the Gates of Tisiphone"
-    ],
-    [
-     "Rescue Me",
-     "Save Pandora"
-    ],
-    [
-     "Three Wise Men",
-     "Solve the Three Judges"
-    ],
-    [
-     "Hit Man",
-     "Perform a 1000-hit combo"
-    ],
-    [
-     "Torn Up",
-     "Rip apart 1 Olympus Sentry"
-    ],
-    [
-     "Nice Tan",
-     "Blind 100 enemies with the Head of Helios"
-    ],
-    [
-     "Obedience School",
-     "Deliver 50 kicks to Hounds"
-    ],
-    [
-     "It’s getting hot in here...",
-     "Burn 100 enemies with the Bow of Apollo"
-    ],
-    [
-     "Souled Out",
-     "Summon every Soul with the Claws of Hades"
-    ],
-    [
-     "Bloody Hell",
-     "Cover Kratos in 500 buckets of blood by killing the enemies"
-    ],
-    [
-     "No Guts, No Glory",
-     "Gut 3 Centaur Generals"
-    ],
-    [
-     "Hitting Your Stride",
-     "Upgrade any weapon to the next level"
-    ],
-    [
-     "Sibling Rivalry",
-     "Kill Hercules"
-    ],
-    [
-     "Titan Slayer",
-     "Kill Cronos"
-    ],
-    [
-     "Retribution",
-     "Kill Zeus"
-    ],
-    [
-     "Depths Below",
-     "Kill Hades"
-    ],
-    [
-     "Freezer Burn",
-     "Acquire the Boreas Icestorm"
-    ],
-    [
-     "Seeing things from a different perspective",
-     "Solve Hera's Gardens"
-    ],
-    [
-     "Eye Candy",
-     "Collect all of the Gorgon Eyes"
-    ],
-    [
-     "Feather Plucker",
-     "Collect all of the Phoenix Feathers"
-    ],
-    [
-     "Horn of Plenty",
-     "Collect all of the Minotaur Horns"
-    ],
-    [
-     "Maxed Out!",
-     "Completely upgrade all weapons"
-    ],
-    [
-     "Vengeance Complete",
-     "Beat the game"
-    ],
-    [
-     "Up to the Challenge",
-     "Beat the Challenge of Olympus"
-    ],
-    [
-     "Unhuman",
-     "Beat Titan Mode"
-    ],
-    [
-     "Priceless",
-     "Collect all of the ‘Godly Possessions’"
-    ],
-    [
-     "aMAZEd",
-     "Beat the Labyrinth without dying or failing"
-    ]
-   ],
-   "ru": [
-    [
-     "Царь горы",
-     "Получите доступ ко всем призам"
-    ],
-    [
-     "Открыть шлюзы!",
-     "Сразите Посейдона"
-    ],
-    [
-     "Хрустящая корочка",
-     "Добудьте лук Аполлона"
-    ],
-    [
-     "Ищейка",
-     "Найдите тайную комнату с Дланью Аида"
-    ],
-    [
-     "Ваше сиятельство",
-     "Убейте Гелиоса"
-    ],
-    [
-     "Обувь с доставкой",
-     "Убейте Гермеса и заберите его сандалии"
-    ],
-    [
-     "Дамский угодник",
-     "Развлеките Афродиту"
-    ],
-    [
-     "Ручная работа",
-     "Отрубите руку Гее"
-    ],
-    [
-     "Сезам, откройся!",
-     "Откройте Врата Тизифоны"
-    ],
-    [
-     "Спаси меня!",
-     "Спасите Пандору"
-    ],
-    [
-     "Три мудреца",
-     "Заберите цепь у Трех Судей"
-    ],
-    [
-     "Киллер",
-     "Выполните серию из 1000 ударов"
-    ],
-    [
-     "Растерзание",
-     "Разорвите часового Олимпа"
-    ],
-    [
-     "Работай головой!",
-     "Ослепите 100 противников с помощью головы Гелиоса"
-    ],
-    [
-     "Урок послушания",
-     "50 раз пните диких псов"
-    ],
-    [
-     "Обстановка накаляется...",
-     "Сожгите 100 противников с помощью лука Аполлона"
-    ],
-    [
-     "Душевный король",
-     "Призовите все души с помощью Когтей Аида"
-    ],
-    [
-     "Кровавая пелена",
-     "Убивая противников, покройте Кратоса 500 ведрами крови"
-    ],
-    [
-     "Кишка тонка",
-     "Вырвите внутренности у 3 генералов-кентавров"
-    ],
-    [
-     "Иди в рост!",
-     "Усильте любое оружие до следующего уровня"
-    ],
-    [
-     "Братская вражда",
-     "Сразите Геракла"
-    ],
-    [
-     "Убийца титанов",
-     "Сразите Крона"
-    ],
-    [
-     "Возмездие",
-     "Сразите Зевса"
-    ],
-    [
-     "Глубина бездны",
-     "Сразите Аида"
-    ],
-    [
-     "Отмороженный",
-     "Добудьте ледяной дождь Борея"
-    ],
-    [
-     "C разных точек зрения",
-     "Решите головоломку садов Геры"
-    ],
-    [
-     "Глаз радуется!",
-     "Соберите все глаза горгон"
-    ],
-    [
-     "Пух и перья",
-     "Соберите все перья феникса"
-    ],
-    [
-     "Рог изобилия",
-     "Соберите все рога минотавров"
-    ],
-    [
-     "По максимуму!",
-     "Усильте все оружие до максимума"
-    ],
-    [
-     "Мститель",
-     "Пройдите игру"
-    ],
-    [
-     "Испытанный",
-     "Пройдите все испытания Олимпа"
-    ],
-    [
-     "Титанический",
-     "Пройдите игру в режиме \"Титан\""
-    ],
-    [
-     "Неслыханно богатый",
-     "Соберите все сокровища богов"
-    ],
-    [
-     "Неудержимый",
-     "Пройдите через лабиринт, ни разу не погибнув и не потерпев поражение"
-    ]
-   ],
-   "ar": [
-    [
-     "ملك التل",
-     "افتح جميع الكؤوس"
-    ],
-    [
-     "فتح بوابات المياه",
-     "اقتل بوسيدون"
-    ],
-    [
-     "محروق تمامًا",
-     "احصل على قوس أبولو"
-    ],
-    [
-     "السيد يد",
-     "اكتشف الغرفة السرية «ذراع هاديس»"
-    ],
-    [
-     "سيد الإشراق",
-     "اقتل هيليوس"
-    ],
-    [
-     "توصيل الأحذية",
-     "اقتل هرمس واحصل على حذائه"
-    ],
-    [
-     "زير نساء",
-     "سلِّ أفروديت"
-    ],
-    [
-     "مدّ يد العون",
-     "اقطع يد غايا"
-    ],
-    [
-     "افتح يا سمسم",
-     "افتح بوابات تيسيفوني"
-    ],
-    [
-     "أنقذني",
-     "أنقذ باندورا"
-    ],
-    [
-     "الحكماء الثلاثة",
-     "حُلّ لغز القضاة الثلاثة"
-    ],
-    [
-     "الضارب",
-     "نفّذ كومبو من 1000 ضربة"
-    ],
-    [
-     "ممزَّق",
-     "مزّق حارسًا واحدًا من حرّاس أوليمبوس"
-    ],
-    [
-     "سمرة جميلة",
-     "أعمِ 100 عدو برأس هيليوس"
-    ],
-    [
-     "تدريب الطاعة",
-     "وجّه 50 ركلة إلى الكلاب"
-    ],
-    [
-     "الجو حار هنا...",
-     "أحرق 100 عدو بقوس أبولو"
-    ],
-    [
-     "بلا روح",
-     "استدعِ جميع الأرواح بمخالب هاديس"
-    ],
-    [
-     "جحيم دموي",
-     "غطِّ كريتوس بـ500 دلو من الدم بقتل الأعداء"
-    ],
-    [
-     "لا شجاعة، لا مجد",
-     "أخرج أحشاء 3 من قادة السنتور"
-    ],
-    [
-     "خطوة خطوة",
-     "طوّر أي سلاح إلى المستوى التالي"
-    ],
-    [
-     "تنافس الإخوة",
-     "اقتل هرقل"
-    ],
-    [
-     "قاتل التيتان",
-     "اقتل كرونوس"
-    ],
-    [
-     "القصاص",
-     "اقتل زيوس"
-    ],
-    [
-     "في الأعماق",
-     "اقتل هاديس"
-    ],
-    [
-     "حرق الجليد",
-     "احصل على عاصفة بورياس الجليدية"
-    ],
-    [
-     "من زاوية أخرى",
-     "حُلّ لغز حدائق هيرا"
-    ],
-    [
-     "متعة للعيون",
-     "اجمع جميع عيون الجورجون"
-    ],
-    [
-     "نتف الريش",
-     "اجمع جميع ريش العنقاء"
-    ],
-    [
-     "قرن الوفرة",
-     "اجمع جميع قرون المينوتور"
-    ],
-    [
-     "إلى أقصى حد!",
-     "طوّر جميع الأسلحة بالكامل"
-    ],
-    [
-     "اكتمل الانتقام",
-     "أنهِ اللعبة"
-    ],
-    [
-     "على قدر التحدي",
-     "أكمل تحدي أوليمبوس"
-    ],
-    [
-     "غير بشري",
-     "أكمل وضع التيتان"
-    ],
-    [
-     "لا يُقدَّر بثمن",
-     "اجمع جميع «المقتنيات الإلهية»"
-    ],
-    [
-     "دوار المتاهة",
-     "أكمل المتاهة دون أن تموت أو تفشل"
-    ]
-   ],
-   "es": [
-    [
-     "El rey de la colina",
-     "Desbloquea todos los trofeos"
-    ],
-    [
-     "Abrir las compuertas",
-     "Mata a Poseidón"
-    ],
-    [
-     "Reducido a cenizas",
-     "Obtén el Arco de Apolo"
-    ],
-    [
-     "Señor Mano",
-     "Descubre la sala secreta de los brazos de Hades"
-    ],
-    [
-     "Señor del esplendor",
-     "Mata a Helios"
-    ],
-    [
-     "Entrega de zapatos",
-     "Mata a Hermes y consigue sus botas"
-    ],
-    [
-     "Mujeriego",
-     "Logra complacer a Afrodita"
-    ],
-    [
-     "Siempre a mano",
-     "Córtale la mano a Gaia"
-    ],
-    [
-     "Ábrete, Sésamo",
-     "Abre las Puertas de Tisífone"
-    ],
-    [
-     "Rescátame",
-     "Salva a Pandora"
-    ],
-    [
-     "Los tres sabios",
-     "Libera la cadena de los tres jueces"
-    ],
-    [
-     "Sicario",
-     "Realiza un combo de 1000 golpes"
-    ],
-    [
-     "Desgarrado",
-     "Destroza a 1 centinela del Olimpo"
-    ],
-    [
-     "Lindo bronceado",
-     "Ciega a 100 enemigos con la Cabeza de Helios"
-    ],
-    [
-     "Adiestramiento",
-     "Da 50 patadas a los perros"
-    ],
-    [
-     "Hace calor aquí...",
-     "Quema a 100 enemigos con el Arco de Apolo"
-    ],
-    [
-     "Desalmado",
-     "Invoca todas las almas con las Garras de Hades"
-    ],
-    [
-     "Infierno sangriento",
-     "Cubre a Kratos con 500 cubos de sangre matando a enemigos"
-    ],
-    [
-     "Sin entrañas, no hay gloria",
-     "Destripa a 3 generales centauro"
-    ],
-    [
-     "Un paso hacia la perfección",
-     "Mejora cualquier arma hasta el siguiente nivel"
-    ],
-    [
-     "Rivalidad fraternal",
-     "Mata a Hércules"
-    ],
-    [
-     "Asesino de Titanes",
-     "Mata a Cronos"
-    ],
-    [
-     "Retribución",
-     "Mata a Zeus"
-    ],
-    [
-     "En las profundidades",
-     "Mata a Hades"
-    ],
-    [
-     "Quemadura glacial",
-     "Obtén la Tormenta de hielo de Bóreas"
-    ],
-    [
-     "Ver las cosas desde una perspectiva diferente",
-     "Resuelve el jardín de Hera"
-    ],
-    [
-     "Con buenos ojos",
-     "Recoge todos los ojos de Gorgona"
-    ],
-    [
-     "El desplumador",
-     "Recoge todas las plumas de fénix"
-    ],
-    [
-     "Cuerno de plenitud",
-     "Recoge todos los cuernos de Minotauro"
-    ],
-    [
-     "¡Al máximo!",
-     "Mejora por completo todas las armas"
-    ],
-    [
-     "Venganza completa",
-     "Supera el juego"
-    ],
-    [
-     "A la altura del desafío",
-     "Supera el Desafío del Olimpo"
-    ],
-    [
-     "Inhumano",
-     "Supera el modo Titán"
-    ],
-    [
-     "Invaluable",
-     "Recoge todas las \"Posesiones divinas\""
-    ],
-    [
-     "Laberíntico",
-     "Atraviesa el laberinto sin morir ni fracasar"
-    ]
-   ],
-   "pt": [
-    [
-     "Rei da colina",
-     "Desbloquear todos os troféus"
-    ],
-    [
-     "Abrindo as comportas",
-     "Eliminar Poseidon"
-    ],
-    [
-     "Reduzido a cinzas",
-     "Adquirir o Arco de Apolo"
-    ],
-    [
-     "Sr. Mão",
-     "Descobrir a sala secreta do \"Braço de Hades\""
-    ],
-    [
-     "O senhor do resplandecer",
-     "Eliminar Hélios"
-    ],
-    [
-     "Entrega de calçados",
-     "Eliminar Hermes e adquirir suas Botas"
-    ],
-    [
-     "Mulherengo",
-     "Entreter Afrodite"
-    ],
-    [
-     "Dando uma mãozinha",
-     "Mutilar a mão de Gaia"
-    ],
-    [
-     "Abre-te, sésamo",
-     "Abrir as Portas de Tisífone"
-    ],
-    [
-     "Salve-me",
-     "Salvar Pandora"
-    ],
-    [
-     "Os três sábios",
-     "Solucionar o enigma dos Três Juízes"
-    ],
-    [
-     "Golpeador",
-     "Executar um combo de 1.000 golpes"
-    ],
-    [
-     "Despedaçado",
-     "Despedaçar 1 Sentinela do Olimpo"
-    ],
-    [
-     "Belo bronzeado",
-     "Cegar 100 inimigos com a Cabeça de Hélios"
-    ],
-    [
-     "Adestramento",
-     "Dar 50 chutes nos cães"
-    ],
-    [
-     "Está quente aqui...",
-     "Queimar 100 inimigos com o Arco de Apolo"
-    ],
-    [
-     "Desalmado",
-     "Invocar todas as Almas com as Garras de Hades"
-    ],
-    [
-     "Inferno sangrento",
-     "Cobrir Kratos com 500 baldes de sangue matando os inimigos"
-    ],
-    [
-     "Sem entranhas, sem glória",
-     "Estripar 3 Generais Centauros"
-    ],
-    [
-     "Um passo de cada vez",
-     "Atualizar qualquer arma para o nível seguinte"
-    ],
-    [
-     "Rivalidade entre irmãos",
-     "Matar Hércules"
-    ],
-    [
-     "Matador de Titã",
-     "Matar Cronos"
-    ],
-    [
-     "Retribuição",
-     "Matar Zeus"
-    ],
-    [
-     "Nas profundezas",
-     "Matar Hades"
-    ],
-    [
-     "Queimadura glacial",
-     "Adquirir a Tempestade de gelo de Bóreas"
-    ],
-    [
-     "Vendo as coisas de outro ângulo",
-     "Solucionar o enigma dos Jardins de Hera"
-    ],
-    [
-     "Com bons olhos",
-     "Coletar todos os Olhos de Górgona"
-    ],
-    [
-     "Depenando",
-     "Coletar todas as Penas de Fênix"
-    ],
-    [
-     "Chifre da plenitude",
-     "Coletar todos os Chifres de Minotauro"
-    ],
-    [
-     "Ao máximo!",
-     "Atualizar totalmente todas as armas"
-    ],
-    [
-     "Vingança concluída",
-     "Concluir o jogo"
-    ],
-    [
-     "À altura do desafio",
-     "Concluir o Desafio do Olimpo"
-    ],
-    [
-     "Desumano",
-     "Concluir o Modo Titã"
-    ],
-    [
-     "Não tem preço",
-     "Coletar todos os \"Despojos dos Deuses\""
-    ],
-    [
-     "Labirintite",
-     "Concluir o Labirinto sem morrer ou falhar"
-    ]
-   ],
-   "fr": [
-    [
-     "Roi de la colline",
-     "Débloquez tous les trophées"
-    ],
-    [
-     "Ouvrez les vannes",
-     "Tuez Poséidon"
-    ],
-    [
-     "Chaud devant",
-     "Acquérez l'arc d'Apollon"
-    ],
-    [
-     "M. Sbire",
-     "Découvrez la pièce secrète \"Bras d'Hadès\""
-    ],
-    [
-     "Soleil ardent",
-     "Tuez Hélios"
-    ],
-    [
-     "Livraison de chaussures",
-     "Tuez Hermès et acquérez ses bottes"
-    ],
-    [
-     "Tombeur",
-     "Distrayez Aphrodite"
-    ],
-    [
-     "Homme de main",
-     "Tranchez la main de Gaïa"
-    ],
-    [
-     "Sésame ouvre-toi",
-     "Ouvrez les portes de Tisiphone"
-    ],
-    [
-     "À la rescousse",
-     "Sauvez Pandore"
-    ],
-    [
-     "Trois sages",
-     "Libérez la chaîne des trois juges"
-    ],
-    [
-     "Forcené",
-     "Faites un combo de 1000 coups"
-    ],
-    [
-     "Fracas",
-     "Mettez en pièces une sentinelle olympienne"
-    ],
-    [
-     "Joli bronzage",
-     "Aveuglez 100 ennemis avec la tête d'Hélios"
-    ],
-    [
-     "Dressage",
-     "Donnez 50 coups de pied aux chiens sauvages"
-    ],
-    [
-     "Il fait chaud ici...",
-     "Brûlez 100 ennemis avec l'arc d'Apollon"
-    ],
-    [
-     "Âmes à gogo",
-     "Invoquez toutes les âmes avec les griffes d'Hadès"
-    ],
-    [
-     "Bain de sang",
-     "Couvrez Kratos de 500 seaux remplis du sang de ses ennemis"
-    ],
-    [
-     "Affaire de tripes",
-     "Arrachez les entrailles de 3 généraux centaures"
-    ],
-    [
-     "Toujours plus fort",
-     "Améliorez n'importe quelle arme d'un niveau"
-    ],
-    [
-     "Lutte fraternelle",
-     "Tuez Hercule"
-    ],
-    [
-     "Massacre titanesque",
-     "Tuez Chronos"
-    ],
-    [
-     "Châtiment",
-     "Tuez Zeus"
-    ],
-    [
-     "Entrailles infernales",
-     "Tuez Hadès"
-    ],
-    [
-     "Coup de froid",
-     "Acquérez la tempête de glace de Borias"
-    ],
-    [
-     "Une perspective différente",
-     "Résolvez le puzzle des jardins d'Héra"
-    ],
-    [
-     "Collection de billes",
-     "Collectez tous les yeux de gorgone"
-    ],
-    [
-     "Plumer le phénix",
-     "Collectez toutes les plumes de phénix"
-    ],
-    [
-     "Cornes en abondance",
-     "Collectez toutes les cornes de minotaures"
-    ],
-    [
-     "Puissance max !",
-     "Améliorez toutes les armes au maximum"
-    ],
-    [
-     "Vengeance accomplie",
-     "Terminez le jeu"
-    ],
-    [
-     "Jusqu'au bout",
-     "Terminez le défi de l'Olympe"
-    ],
-    [
-     "Inhumain",
-     "Terminez le mode Titan"
-    ],
-    [
-     "Inestimable",
-     "Collectez tous les \"biens divins\""
-    ],
-    [
-     "Sens de l'orientation",
-     "Réussissez le labyrinthe sans mourir ou échouer"
-    ]
-   ],
-   "de": [
-    [
-     "Supersammler",
-     "Schalten Sie alle Trophäen frei."
-    ],
-    [
-     "Öffnung der Schleusentore",
-     "Erledigen Sie Poseidon."
-    ],
-    [
-     "Verkohlt",
-     "Bringen Sie den Bogen des Apollo in Ihren Besitz."
-    ],
-    [
-     "Forschung",
-     "Entdecken Sie den geheimen \"Hades-Arm\"-Raum."
-    ],
-    [
-     "Einfach glänzend",
-     "Erledigen Sie Helios."
-    ],
-    [
-     "Schuhlieferung",
-     "Erledigen Sie Hermes und bringen Sie seine Stiefel in Ihren Besitz."
-    ],
-    [
-     "Frauenheld",
-     "Unterhalten Sie Aphrodite erfolgreich."
-    ],
-    [
-     "Gib mir deine Hand",
-     "Trennen Sie Gaias Hand ab."
-    ],
-    [
-     "Sesam öffne dich",
-     "Öffnen Sie die Tore von Tisiphone."
-    ],
-    [
-     "Rette mich",
-     "Retten Sie Pandora."
-    ],
-    [
-     "Drei weise Männer",
-     "Sorgen Sie dafür, dass die drei Richter die Kette loslassen."
-    ],
-    [
-     "Unermüdlich",
-     "Führen Sie eine 1000-Treffer-Kombo aus."
-    ],
-    [
-     "Entzweit",
-     "Nehmen Sie 1 Olympwächter auseinander."
-    ],
-    [
-     "Blendend",
-     "Blenden Sie 100 Gegner mit Helios' Kopf."
-    ],
-    [
-     "Schule des Gehorsams",
-     "Versetzen Sie den Hunden 50 Tritte."
-    ],
-    [
-     "Es wird heiß ...",
-     "Stecken Sie 100 Gegner mit dem Bogen des Apollo in Brand."
-    ],
-    [
-     "Seelenlos",
-     "Beschwören Sie alle Seelen mit den Hadesklauen."
-    ],
-    [
-     "Rote Hölle",
-     "Bedecken Sie Kratos mit 500 Kübeln Blut seiner Gegner."
-    ],
-    [
-     "Kein Mut, kein Ruhm",
-     "Weiden Sie 3 Zentaurengeneräle aus."
-    ],
-    [
-     "Richtig loslegen",
-     "Verbessern Sie eine Waffe um eine Stufe."
-    ],
-    [
-     "Rivalität unter Geschwistern",
-     "Erledigen Sie Herkules."
-    ],
-    [
-     "Titanentöter",
-     "Erledigen Sie Kronos."
-    ],
-    [
-     "Vergeltung",
-     "Erledigen Sie Zeus."
-    ],
-    [
-     "Ganz unten",
-     "Erledigen Sie Hades."
-    ],
-    [
-     "Gefrierbrand",
-     "Bringen Sie Boreas' Eissturm in Ihren Besitz."
-    ],
-    [
-     "Eine andere Sicht der Dinge",
-     "Lösen Sie das Rätsel von Heras Gärten."
-    ],
-    [
-     "Augenweide",
-     "Sammeln Sie alle Gorgonenaugen."
-    ],
-    [
-     "Federnrupfen",
-     "Sammeln Sie alle Phönixfedern."
-    ],
-    [
-     "Füllhorn",
-     "Sammeln Sie alle Minotaurenhörner."
-    ],
-    [
-     "Voll ausgerüstet!",
-     "Verbessern Sie alle Waffen vollständig."
-    ],
-    [
-     "Gerächt",
-     "Schließen Sie das Spiel ab."
-    ],
-    [
-     "Der Herausforderung gewachsen",
-     "Schließen Sie die Olymp-Herausforderung ab."
-    ],
-    [
-     "Unmenschlich",
-     "Schließen Sie das Spiel im Titanen-Modus ab."
-    ],
-    [
-     "Unbezahlbar",
-     "Sammeln Sie alle \"Göttlichen Besitztümer\"."
-    ],
-    [
-     "Orientierungssinn",
-     "Schließen Sie das Labyrinth ab, ohne Ihr Leben zu lassen oder zu scheitern."
-    ]
-   ],
-   "it": [
-    [
-     "Re della collina",
-     "Sblocca tutti i trofei."
-    ],
-    [
-     "Aprendo le chiuse",
-     "Uccidi Poseidone."
-    ],
-    [
-     "Ridotto in cenere",
-     "Acquisisci l'Arco di Apollo."
-    ],
-    [
-     "Manolesta",
-     "Scopri la stanza segreta dentro Ade."
-    ],
-    [
-     "Signore della luce",
-     "Uccidi Elio."
-    ],
-    [
-     "Ali ai piedi",
-     "Uccidi Ermes e acquisisci i suoi Sandali."
-    ],
-    [
-     "Donnaiolo",
-     "Soddisfa Afrodite."
-    ],
-    [
-     "Qua la mano!",
-     "Taglia la mano di Gaia."
-    ],
-    [
-     "Apriti sesamo",
-     "Apri i Cancelli di Tisifone."
-    ],
-    [
-     "Salvami",
-     "Salva Pandora."
-    ],
-    [
-     "Tre uomini saggi",
-     "Fai rilasciare la catena ai Tre giudici."
-    ],
-    [
-     "Killer",
-     "Esegui una combo da 1.000 colpi."
-    ],
-    [
-     "Senza pietà",
-     "Fai a pezzi una Sentinella dell'Olimpo."
-    ],
-    [
-     "A bocca aperta",
-     "Acceca 100 nemici con la Testa di Elio."
-    ],
-    [
-     "Scuola d'obbedienza",
-     "Sferra 50 calci ai Cani selvatici."
-    ],
-    [
-     "Inizia a far caldo...",
-     "Dai fuoco a 100 nemici con l'Arco di Apollo."
-    ],
-    [
-     "Mettici l'anima",
-     "Evoca tutte le anime con gli Artigli di Ade."
-    ],
-    [
-     "Inferno di sangue",
-     "Ricopri Kratos con 500 secchi di sangue dei suoi nemici."
-    ],
-    [
-     "Odio viscerale",
-     "Eviscera 3 Generali Centauri."
-    ],
-    [
-     "La strada per il successo",
-     "Porta un'arma qualsiasi al livello successivo."
-    ],
-    [
-     "Rivalità fraterna",
-     "Uccidi Ercole."
-    ],
-    [
-     "Ammazzatitani",
-     "Uccidi Crono."
-    ],
-    [
-     "Vendetta",
-     "Uccidi Zeus."
-    ],
-    [
-     "De profundis",
-     "Uccidi Ade."
-    ],
-    [
-     "Ghiaccio che scotta",
-     "Acquisisci la Tempesta di Borea."
-    ],
-    [
-     "Guardare le cose da un'altra prospettiva",
-     "Vieni a capo del Giardino di Era."
-    ],
-    [
-     "Occhio per occhio",
-     "Raccogli tutti gli Occhi di Gorgone."
-    ],
-    [
-     "Occhio alla penna!",
-     "Raccogli tutte le Piume di Fenice."
-    ],
-    [
-     "Cornucopia",
-     "Raccogli tutti i Corni di Minotauro."
-    ],
-    [
-     "Vado al massimo!",
-     "Potenzia al massimo tutte le armi."
-    ],
-    [
-     "Vendetta compiuta",
-     "Completa il gioco."
-    ],
-    [
-     "L'ultima sfida",
-     "Completa la Sfida di Olimpo."
-    ],
-    [
-     "Inumano",
-     "Completa il gioco in modalità Titano."
-    ],
-    [
-     "Inestimabile",
-     "Raccogli tutti i \"Tesori degli Dei\"."
-    ],
-    [
-     "Labirinto",
-     "Supera il Labirinto senza morire o fallire."
-    ]
-   ],
-   "pl": [
-    [
-     "Pan i władca",
-     "Odblokuj wszystkie trofea"
-    ],
-    [
-     "Przerwanie tamy",
-     "Zabij Posejdona"
-    ],
-    [
-     "Grzanka",
-     "Zdobądź Łuk Apolla"
-    ],
-    [
-     "Ręce do góry!",
-     "Znajdź tajną komnatę \"Ręki Hadesa\""
-    ],
-    [
-     "Władca światłości",
-     "Zabij Heliosa"
-    ],
-    [
-     "Dostawa butów",
-     "Zabij Hermesa i zdobądź jego buty"
-    ],
-    [
-     "Kochaś",
-     "Zabaw Afrodytę"
-    ],
-    [
-     "Złota rączka",
-     "Oderwij rękę Gai"
-    ],
-    [
-     "Sezamie otwórz się",
-     "Otwórz Wrota Tyzyfone"
-    ],
-    [
-     "Na ratunek",
-     "Uratuj Pandorę"
-    ],
-    [
-     "Trzech mędrców",
-     "Uwolnij Łańcuch z rąk Trzech Sędziów"
-    ],
-    [
-     "Zabójca",
-     "Wykonaj combo 1000 trafień"
-    ],
-    [
-     "Rozdarty",
-     "Rozerwij olimpijskiego strażnika na kawałki"
-    ],
-    [
-     "Ładna opalenizna",
-     "Oślep 100 przeciwników za pomocą Głowy Heliosa"
-    ],
-    [
-     "Tresura",
-     "Kopnij 50 wściekłych psów"
-    ],
-    [
-     "Robi się gorąco...",
-     "Podpal 100 przeciwników za pomocą Łuku Apolla"
-    ],
-    [
-     "Co mi w duszy gra",
-     "Przyzwij wszystkie dusze Szponami Hadesa"
-    ],
-    [
-     "Krwawa jatka",
-     "Zbryzgaj Kratosa 500 wiadrami krwi przeciwników"
-    ],
-    [
-     "Ktoś zamawiał flaczki?",
-     "Wypatrosz 3 generałów centaurów"
-    ],
-    [
-     "Rozwój to podstawa",
-     "Zmodyfikuj dowolną broń na następny poziom"
-    ],
-    [
-     "Rywalizacja rodzeństwa",
-     "Zabij Herkulesa"
-    ],
-    [
-     "Zabójca Tytanów",
-     "Zabij Kronosa"
-    ],
-    [
-     "Zemsta",
-     "Zabij Zeusa"
-    ],
-    [
-     "Podziemna otchłań",
-     "Zabij Hadesa"
-    ],
-    [
-     "Odmrażacz",
-     "Zdobądź Burzę Lodową Boreasza"
-    ],
-    [
-     "Inna perspektywa",
-     "Przejdź Ogrody Hery"
-    ],
-    [
-     "Okulista",
-     "Zbierz wszystkie Oczy Gorgony"
-    ],
-    [
-     "Potęga pióra",
-     "Zbierz wszystkie Pióra Feniksa"
-    ],
-    [
-     "Róg obfitości",
-     "Zbierz wszystkie Rogi Minotaura"
-    ],
-    [
-     "Na maksa!",
-     "Całkowicie zmodyfikuj całe uzbrojenie"
-    ],
-    [
-     "Zemsta dokonana",
-     "Przejdź grę"
-    ],
-    [
-     "Pokonać wyzwanie",
-     "Ukończ Wyzwanie Olimpu"
-    ],
-    [
-     "Nieludzki",
-     "Przejdź grę w trybie Tytana"
-    ],
-    [
-     "Bezcenny",
-     "Zbierz cały \"boski dobytek\""
-    ],
-    [
-     "W labiryncie",
-     "Przejdź Labirynt nie ginąc i nie spadając"
-    ]
-   ],
-   "tr": [
-    [
-     "Tepenin Kralı",
-     "Tüm kupaların kilidini aç"
-    ],
-    [
-     "Baraj Kapakları Açılsın",
-     "Poseidon'u öldür"
-    ],
-    [
-     "Çıtır Çıtır Kızarmış",
-     "Apollo'nun yayını ele geçir"
-    ],
-    [
-     "El Ele Kol Kola",
-     "Gizli 'Hades'in Kolu' odasını keşfet"
-    ],
-    [
-     "Işık Saçıyorsun",
-     "Helios'u öldür"
-    ],
-    [
-     "Ayakkabı Teslimatı",
-     "Hermes'i öldürüp çizmelerini ele geçir"
-    ],
-    [
-     "Kadınların Gözdesi",
-     "Afrodit'i zevkten bulutlara çıkar"
-    ],
-    [
-     "El Elden Üstündür",
-     "Gaia'nın elini kopar"
-    ],
-    [
-     "Açıl Susam Açıl",
-     "Tisifon'un Kapıları'nı aç"
-    ],
-    [
-     "Kurtar Beni",
-     "Pandora'yı kurtar"
-    ],
-    [
-     "Üç Bilge Adam",
-     "Üç Yargıç bulmacasını çöz"
-    ],
-    [
-     "Vur Kaç",
-     "1000 vuruşluk bir kombo gerçekleştir"
-    ],
-    [
-     "Paramparça",
-     "1 Olimpos nöbetçisini parçalara ayır"
-    ],
-    [
-     "Güzel Yanmışsın",
-     "Helios'un kafası ile 100 düşmanı kör et"
-    ],
-    [
-     "Köpek Eğitimi",
-     "Köpeklere 50 tekme indir"
-    ],
-    [
-     "Burası Sıcak Mı Oldu Ne...",
-     "Apollo’nun yayı ile 100 düşman yak"
-    ],
-    [
-     "Ruh Güzelliği",
-     "Hades'in pençeleri ile tüm ruhları çağır"
-    ],
-    [
-     "Kan Banyosu",
-     "Düşmanları öldürerek Kratos'un üzerini 500 kova kanla kapla"
-    ],
-    [
-     "Bağırsak Temizliği",
-     "3 Sentor generalinin karnını deş"
-    ],
-    [
-     "Formunun Zirvesinde",
-     "Tüm silahları bir sonraki seviyeye yükselt"
-    ],
-    [
-     "Kardeş Rekabeti",
-     "Herkül'ü öldür"
-    ],
-    [
-     "Titan Katili",
-     "Kronos'u öldür"
-    ],
-    [
-     "Öç",
-     "Zeus'u öldür"
-    ],
-    [
-     "Derinlerde Bir Yerde",
-     "Hades'i öldür"
-    ],
-    [
-     "Ayaz Yanığı",
-     "Boreas'ın buz fırtınasını ele geçir"
-    ],
-    [
-     "Olaylara Farklı Bir Açıdan Bakmak Gerek",
-     "Hera'nın Bahçeleri bulmacasını çöz"
-    ],
-    [
-     "Göze Hitap Eden",
-     "Tüm Gorgon gözlerini topla"
-    ],
-    [
-     "Tüy Yolucu",
-     "Tüm Zümrüdüanka tüylerini topla"
-    ],
-    [
-     "Bereket Boynuzu",
-     "Tüm Minotor boynuzlarını topla"
-    ],
-    [
-     "Maksimumda!",
-     "Silahların hepsini sonuna kadar geliştir"
-    ],
-    [
-     "İntikam Sona Erdi",
-     "Oyunu tamamla"
-    ],
-    [
-     "Mücadeleye Hazır",
-     "Olimpos'un Düellosu'nu tamamla"
-    ],
-    [
-     "İnsanlık Dışı",
-     "Titan modunu tamamla"
-    ],
-    [
-     "Paha Biçilmez",
-     "Tüm 'Tanrısal Eşyalar'ı topla"
-    ],
-    [
-     "Koridor Faresi",
-     "Ölmeden ya da başarısızlığa uğramadan Labirent'i tamamla"
-    ]
-   ],
-   "zh": [
-    [
-     "山丘之王",
-     "解锁所有奖杯"
-    ],
-    [
-     "打开水闸",
-     "击杀波塞冬"
-    ],
-    [
-     "烤得焦脆",
-     "获得阿波罗之弓"
-    ],
-    [
-     "手先生",
-     "发现隐藏的“哈迪斯之臂”房间"
-    ],
-    [
-     "光辉之主",
-     "击杀赫利俄斯"
-    ],
-    [
-     "送鞋上门",
-     "击杀赫尔墨斯并获得他的靴子"
-    ],
-    [
-     "万人迷",
-     "取悦阿佛洛狄忒"
-    ],
-    [
-     "搭把手",
-     "砍下盖亚的手"
-    ],
-    [
-     "芝麻开门",
-     "打开提西福涅之门"
-    ],
-    [
-     "救救我",
-     "拯救潘多拉"
-    ],
-    [
-     "三贤者",
-     "解开三位审判者的谜题"
-    ],
-    [
-     "连击高手",
-     "完成1000连击"
-    ],
-    [
-     "粉身碎骨",
-     "撕碎1名奥林匹斯哨兵"
-    ],
-    [
-     "漂亮的古铜色",
-     "用赫利俄斯之首致盲100名敌人"
-    ],
-    [
-     "服从训练",
-     "踢猎犬50脚"
-    ],
-    [
-     "这里好热……",
-     "用阿波罗之弓烧伤100名敌人"
-    ],
-    [
-     "失魂",
-     "用哈迪斯之爪召唤所有灵魂"
-    ],
-    [
-     "血腥地狱",
-     "通过击杀敌人让克雷多斯沾满500桶鲜血"
-    ],
-    [
-     "没胆量，没荣耀",
-     "开膛3名半人马将军"
-    ],
-    [
-     "一步一个脚印",
-     "将任意武器升级到下一级"
-    ],
-    [
-     "兄弟之争",
-     "击杀赫拉克勒斯"
-    ],
-    [
-     "泰坦杀手",
-     "击杀克洛诺斯"
-    ],
-    [
-     "报应",
-     "击杀宙斯"
-    ],
-    [
-     "深渊之中",
-     "击杀哈迪斯"
-    ],
-    [
-     "冰冻灼伤",
-     "获得波瑞阿斯冰风暴"
-    ],
-    [
-     "换个角度看问题",
-     "解开赫拉花园的谜题"
-    ],
-    [
-     "赏心悦目",
-     "收集所有蛇发女妖之眼"
-    ],
-    [
-     "拔毛",
-     "收集所有凤凰羽毛"
-    ],
-    [
-     "丰饶之角",
-     "收集所有牛头怪之角"
-    ],
-    [
-     "满级！",
-     "将所有武器完全升级"
-    ],
-    [
-     "复仇完成",
-     "通关游戏"
-    ],
-    [
-     "迎接挑战",
-     "完成奥林匹斯挑战"
-    ],
-    [
-     "非人",
-     "完成泰坦模式"
-    ],
-    [
-     "无价之宝",
-     "收集所有“众神遗物”"
-    ],
-    [
-     "迷宫症",
-     "不死亡、不失败地通过迷宫"
-    ]
-   ],
-   "ja": [
-    [
-     "お山の大将",
-     "全部のトロフィーを集める"
-    ],
-    [
-     "水門開放",
-     "ポセイドンを殺す"
-    ],
-    [
-     "徹底燃焼",
-     "アポロの弓矢を手に入れる"
-    ],
-    [
-     "ザ・ハンド",
-     "冥界で秘密の部屋を見つける"
-    ],
-    [
-     "輝く主",
-     "ヘリオスを殺す"
-    ],
-    [
-     "靴の配達",
-     "ヘルメスを殺し、ブーツを手に入れる"
-    ],
-    [
-     "色男",
-     "アフロディーテを楽しませることに成功する"
-    ],
-    [
-     "手相占い",
-     "ガイアの手を切断する"
-    ],
-    [
-     "開けゴマ",
-     "ティシポネの扉を開ける"
-    ],
-    [
-     "私を助けて",
-     "パンドラを助ける"
-    ],
-    [
-     "三賢者",
-     "裁きの三神の鎖を解く"
-    ],
-    [
-     "ヒットマン",
-     "1000 ヒットコンボを繰り出す"
-    ],
-    [
-     "裂け！",
-     "オリュンポスの番兵を1匹引き裂く"
-    ],
-    [
-     "ヘッドをどうぞ",
-     "ヘリオスの頭で敵100体の目をくらます"
-    ],
-    [
-     "訓練学校",
-     "野良猟犬たちを50回蹴る"
-    ],
-    [
-     "暑くなってきた...",
-     "敵100体アポロの弓矢で燃やす"
-    ],
-    [
-     "魂切れ",
-     "すべての魂をハデスの鉤爪で招集する"
-    ],
-    [
-     "なんてこった",
-     "バケツ500個分の返り血をクレイトスに浴びせる"
-    ],
-    [
-     "勇気なくして栄光なし",
-     "ケンタウロス3匹の内臓をえぐり出す"
-    ],
-    [
-     "本領発揮",
-     "武器をどれかパワーアップする"
-    ],
-    [
-     "兄弟喧嘩",
-     "ヘラクレスを殺す"
-    ],
-    [
-     "タイタン スレイヤー",
-     "クロノスを殺す"
-    ],
-    [
-     "報復",
-     "ゼウスを殺す"
-    ],
-    [
-     "歌妓",
-     "ハデスを殺す"
-    ],
-    [
-     "冷凍焼け",
-     "ボリアス・アイスストームを手に入れる"
-    ],
-    [
-     "視点の転換",
-     "ヘラの庭園を解く"
-    ],
-    [
-     "目の保養",
-     "ゴルゴンの目を全部集める"
-    ],
-    [
-     "羽根突き",
-     "フェニックスの羽根を全部集める"
-    ],
-    [
-     "募る",
-     "ミノタウロスの角を全部集める"
-    ],
-    [
-     "最高！",
-     "すべての武器を最高レベルまでパワーアップする"
-    ],
-    [
-     "復讐達成",
-     "ゲームをクリアする"
-    ],
-    [
-     "挑戦準備完了",
-     "オリュンポスの試練をクリアする"
-    ],
-    [
-     "超人的",
-     "タイタンモードでクリアする"
-    ],
-    [
-     "プライスレス",
-     "”神々の所有物”を全部集める"
-    ],
-    [
-     "スバラシイ",
-     "死なずにラビリンスを抜ける"
-    ]
-   ],
-   "ko": [
-    [
-     "언덕 위의 제왕",
-     "모든 트로피 해제하기"
-    ],
-    [
-     "대박 물난리",
-     "포세이돈 죽이기"
-    ],
-    [
-     "바짝 태워볼까",
-     "아폴로의 활 확보"
-    ],
-    [
-     "손을 위로 흔들어!",
-     "하데스의 '팔'이 있는 비밀의 방을 찾기"
-    ],
-    [
-     "빛나리 군주",
-     "헬리오스 죽이기"
-    ],
-    [
-     "택배를 해도 되겠군",
-     "헤르메스를 죽이고 군화를 획득"
-    ],
-    [
-     "정력맨 납시다",
-     "아프로디테 만족시키기"
-    ],
-    [
-     "손 쓸 데 없나?",
-     "가이아의 손 회손"
-    ],
-    [
-     "열려라 참깨",
-     "티시포네의 문을 열기"
-    ],
-    [
-     "살려줘요",
-     "판도라 구하기"
-    ],
-    [
-     "세명의 현자",
-     "세명의 재판관의 손에서 체인을 놓게 하기"
-    ],
-    [
-     "청부업자",
-     "1000개의 히트 콤보를 달성하기"
-    ],
-    [
-     "만신창이",
-     "올림푸스 보초 한명 찟기"
-    ],
-    [
-     "선탠",
-     "헬리오스의 머리로 적 100명의 눈을 멀게 하기"
-    ],
-    [
-     "개 버릇 들이기",
-     "50마리의 개를 발로 걷어차기"
-    ],
-    [
-     "여기 완전 더워",
-     "100명의 적을 아폴로의 활로 태워버리기"
-    ],
-    [
-     "혼이 빠졌네",
-     "하데스의 갈고리로 모든 영혼을 소환하기"
-    ],
-    [
-     "피바다",
-     "적을 죽여서 크레토스가 바가지 500개분의 적의 피에 젖게 하기"
-    ],
-    [
-     "막창 드실 분",
-     "3 마리의 켄타루스 장군의 내장을 뽑아 내기"
-    ],
-    [
-     "쓸만해졌는데?",
-     "아무 무기나 다음 레벨로 업그레이드 하기"
-    ],
-    [
-     "라이벌 형제",
-     "헤라클레스 죽이기"
-    ],
-    [
-     "타이탄 헌터",
-     "크로노스 죽이기"
-    ],
-    [
-     "복수혈전",
-     "제우스 죽이기"
-    ],
-    [
-     "깊은 심연",
-     "하데스 죽이기"
-    ],
-    [
-     "동상에 걸리다",
-     "보레아스 얼음폭풍우 획득하기"
-    ],
-    [
-     "다른 시점에서 사물 바라보기",
-     "헤라의 정원을 빠져 나오기"
-    ],
-    [
-     "눈깔 사탕",
-     "고르곤의 눈을 모두 모으기"
-    ],
-    [
-     "깃털 달기",
-     "피닉스 날개를 모두 모으기"
-    ],
-    [
-     "풍요의 뿔",
-     "미노타우르스의 뿔을 모두 모으기"
-    ],
-    [
-     "완전 대박 최고!",
-     "모든 무기를 완전히 업그레이드 하기"
-    ],
-    [
-     "복수는 이루어지다",
-     "게임을 완수하기"
-    ],
-    [
-     "도전 완수",
-     "올림푸스의 도전을 완수하기"
-    ],
-    [
-     "인간을 넘어서",
-     "타이탄 모드를 완수하기"
-    ],
-    [
-     "돈하고 바꿀 수 없는",
-     "신의 재물을 모두 모으기"
-    ],
-    [
-     "미궁은 없다",
-     "미궁에서 죽거나 실패 없이 살아 나오기"
-    ]
-   ],
-   "cs": [
-    [
-     "Král kopce",
-     "Odemkni všechny trofeje"
-    ],
-    [
-     "Otevření stavidel",
-     "Zabij Poseidona"
-    ],
-    [
-     "Dopečený do křupava",
-     "Získej Apollónův luk"
-    ],
-    [
-     "Pan Ruka",
-     "Objev tajnou místnost „Hádovy ruky“"
-    ],
-    [
-     "Pán lesku",
-     "Zabij Hélia"
-    ],
-    [
-     "Doručení bot",
-     "Zabij Herma a získej jeho boty"
-    ],
-    [
-     "Dámský švihák",
-     "Úspěšně pobav Afroditu"
-    ],
-    [
-     "Šikovné ruce",
-     "Usekni Gaie ruku"
-    ],
-    [
-     "Sezame, otevři se",
-     "Otevři Brány Tisifony"
-    ],
-    [
-     "Zachraň mě",
-     "Zachraň Pandoru"
-    ],
-    [
-     "Tři mudrci",
-     "Vyřeš hádanku Tří soudců"
-    ],
-    [
-     "Zabiják",
-     "Proveď kombo o 1000 zásazích"
-    ],
-    [
-     "Roztrhaný na kusy",
-     "Roztrhej jednoho olympského strážce"
-    ],
-    [
-     "Pěkná opálenina",
-     "Oslep 100 nepřátel Héliovou hlavou"
-    ],
-    [
-     "Výcvik poslušnosti",
-     "Dej 50 kopanců psům"
-    ],
-    [
-     "Začíná tu být horko…",
-     "Podpal 100 nepřátel Apollónovým lukem"
-    ],
-    [
-     "Duše venku",
-     "Přivolej všechny duše Hádovými drápy"
-    ],
-    [
-     "Krvavé peklo",
-     "Pokryj Krata 500 kbelíky krve zabíjením nepřátel"
-    ],
-    [
-     "Bez odvahy není slávy",
-     "Vykuchej 3 kentaury generály"
-    ],
-    [
-     "Rozjíždíš se",
-     "Vylepši libovolnou zbraň na další úroveň"
-    ],
-    [
-     "Sourozenecká rivalita",
-     "Zabij Herakla"
-    ],
-    [
-     "Zabiják titánů",
-     "Zabij Krona"
-    ],
-    [
-     "Odplata",
-     "Zabij Dia"
-    ],
-    [
-     "Hlubiny pod námi",
-     "Zabij Háda"
-    ],
-    [
-     "Mrazivé spálení",
-     "Získej Boreovu ledovou bouři"
-    ],
-    [
-     "Pohled z jiné perspektivy",
-     "Vyřeš Héřiny zahrady"
-    ],
-    [
-     "Pastva pro oči",
-     "Sesbírej všechna Gorgonina oka"
-    ],
-    [
-     "Škubač peří",
-     "Sesbírej všechna Fénixova pera"
-    ],
-    [
-     "Roh hojnosti",
-     "Sesbírej všechny Minotaurovy rohy"
-    ],
-    [
-     "Na maximum!",
-     "Plně vylepši všechny zbraně"
-    ],
-    [
-     "Pomsta dokonána",
-     "Dohraj hru"
-    ],
-    [
-     "Výzvě dorostl",
-     "Dohraj Výzvu Olympu"
-    ],
-    [
-     "Nelidský",
-     "Dohraj Titánský režim"
-    ],
-    [
-     "K nezaplacení",
-     "Sesbírej všechny „Božské poklady“"
-    ],
-    [
-     "Bludiště",
-     "Dohraj Labyrint, aniž bys zemřel nebo selhal"
-    ]
-   ]
-  },
-  "ui": {
-   "ar": {
-    "Trophies": "الكؤوس",
-    "The trophies this port recorded while you played.": "الكؤوس التي سجّلها هذا المنفذ أثناء لعبك.",
-    "All trophies": "كل الكؤوس",
-    "Unlocked": "المفتوحة",
-    "Locked": "المقفلة",
-    "UNLOCKED": "مفتوح",
-    "LOCKED": "مقفل",
-    "{} of {} unlocked": "{} من {} مفتوح",
-    "Trophy {}": "الكأس {}",
-    "Platinum": "بلاتينية",
-    "Gold": "ذهبية",
-    "Silver": "فضية",
-    "Bronze": "برونزية",
-    "No trophy list: choose the game folder on the Game page (its sce_sys/trophy/trophy00.trp is read).": "لا توجد قائمة كؤوس: اختر مجلد اللعبة في صفحة اللعبة (يُقرأ الملف sce_sys/trophy/trophy00.trp منه).",
-    "Only trophies unlocked with this port are listed; the ones earned on a PlayStation are not known to it.": "تظهر فقط الكؤوس التي فُتحت عبر هذا المنفذ؛ أما التي حصلت عليها على PlayStation فهو لا يعرفها.",
-    "TROPHY UNLOCKED": "تم فتح كأس",
-    "Up/Down: scroll   Left/Right: filter   F8 / R3+R2 / Esc: close": "أعلى/أسفل: تمرير   يسار/يمين: تصفية   F8 / R3+R2 / Esc: إغلاق",
-    "Reset trophies": "إعادة ضبط الكؤوس",
-    "Close the game before resetting the trophies.": "أغلق اللعبة قبل إعادة ضبط الكؤوس.",
-    "Lock all {} unlocked trophies again? A copy is kept as trophies.dat.bak.": "هل تريد إقفال جميع الكؤوس المفتوحة ({}) من جديد؟ سيتم الاحتفاظ بنسخة باسم trophies.dat.bak.",
-    "No trophy is unlocked.": "لا يوجد أي كأس مفتوح.",
-    "Could not reset the trophies: {}": "تعذّرت إعادة ضبط الكؤوس: {}",
-    "Notifications": "الإشعارات",
-    "List order": "ترتيب القائمة",
-    "Most earned first": "الأكثر حصولًا أولًا",
-    "Rarest first": "الأندر أولًا",
-    "{}% of players": "{}% من اللاعبين",
-    "Common": "شائعة",
-    "Rare": "نادرة",
-    "Very rare": "نادرة جدًا",
-    "Ultra rare": "نادرة للغاية",
-    "Triangle/Tab: order   L1/R1: notifications": "المثلث/Tab: الترتيب   L1/R1: الإشعارات",
-    "L1/R1: trophies   F8 / R3+R2 / Esc: close": "L1/R1: الكؤوس   F8 / R3+R2 / Esc: إغلاق"
-   },
-   "es": {
-    "Trophies": "Trofeos",
-    "The trophies this port recorded while you played.": "Los trofeos que este port registró mientras jugabas.",
-    "All trophies": "Todos",
-    "Unlocked": "Desbloqueados",
-    "Locked": "Bloqueados",
-    "UNLOCKED": "DESBLOQUEADO",
-    "LOCKED": "BLOQUEADO",
-    "{} of {} unlocked": "{} de {} desbloqueados",
-    "Trophy {}": "Trofeo {}",
-    "Platinum": "Platino",
-    "Gold": "Oro",
-    "Silver": "Plata",
-    "Bronze": "Bronce",
-    "No trophy list: choose the game folder on the Game page (its sce_sys/trophy/trophy00.trp is read).": "Sin lista de trofeos: elige la carpeta del juego en la página Juego (se lee su sce_sys/trophy/trophy00.trp).",
-    "Only trophies unlocked with this port are listed; the ones earned on a PlayStation are not known to it.": "Solo se muestran los trofeos desbloqueados con este port; los que conseguiste en una PlayStation no los conoce.",
-    "TROPHY UNLOCKED": "TROFEO DESBLOQUEADO",
-    "Up/Down: scroll   Left/Right: filter   F8 / R3+R2 / Esc: close": "Arriba/Abajo: desplazar   Izquierda/Derecha: filtrar   F8 / R3+R2 / Esc: cerrar",
-    "Reset trophies": "Restablecer trofeos",
-    "Close the game before resetting the trophies.": "Cierra el juego antes de restablecer los trofeos.",
-    "Lock all {} unlocked trophies again? A copy is kept as trophies.dat.bak.": "¿Volver a bloquear los {} trofeos desbloqueados? Se guarda una copia como trophies.dat.bak.",
-    "No trophy is unlocked.": "No hay ningún trofeo desbloqueado.",
-    "Could not reset the trophies: {}": "No se pudieron restablecer los trofeos: {}",
-    "Notifications": "Notificaciones",
-    "List order": "Orden de la lista",
-    "Most earned first": "Más obtenidos primero",
-    "Rarest first": "Más raros primero",
-    "{}% of players": "{}% de los jugadores",
-    "Common": "Común",
-    "Rare": "Raro",
-    "Very rare": "Muy raro",
-    "Ultra rare": "Ultrarraro",
-    "Triangle/Tab: order   L1/R1: notifications": "Triángulo/Tab: orden   L1/R1: notificaciones",
-    "L1/R1: trophies   F8 / R3+R2 / Esc: close": "L1/R1: trofeos   F8 / R3+R2 / Esc: cerrar"
-   },
-   "pt": {
-    "Trophies": "Troféus",
-    "The trophies this port recorded while you played.": "Os troféus que o port registrou enquanto você jogava.",
-    "All trophies": "Todos",
-    "Unlocked": "Desbloqueados",
-    "Locked": "Bloqueados",
-    "UNLOCKED": "DESBLOQUEADO",
-    "LOCKED": "BLOQUEADO",
-    "{} of {} unlocked": "{} de {} desbloqueados",
-    "Trophy {}": "Troféu {}",
-    "Platinum": "Platina",
-    "Gold": "Ouro",
-    "Silver": "Prata",
-    "Bronze": "Bronze",
-    "No trophy list: choose the game folder on the Game page (its sce_sys/trophy/trophy00.trp is read).": "Sem lista de troféus: escolha a pasta do jogo na página Jogo (o arquivo sce_sys/trophy/trophy00.trp dela é lido).",
-    "Only trophies unlocked with this port are listed; the ones earned on a PlayStation are not known to it.": "Só aparecem os troféus desbloqueados com este port; os que você ganhou em um PlayStation ele não conhece.",
-    "TROPHY UNLOCKED": "TROFÉU DESBLOQUEADO",
-    "Up/Down: scroll   Left/Right: filter   F8 / R3+R2 / Esc: close": "Cima/Baixo: rolar   Esquerda/Direita: filtrar   F8 / R3+R2 / Esc: fechar",
-    "Reset trophies": "Redefinir troféus",
-    "Close the game before resetting the trophies.": "Feche o jogo antes de redefinir os troféus.",
-    "Lock all {} unlocked trophies again? A copy is kept as trophies.dat.bak.": "Bloquear de novo os {} troféus desbloqueados? Uma cópia fica guardada como trophies.dat.bak.",
-    "No trophy is unlocked.": "Nenhum troféu está desbloqueado.",
-    "Could not reset the trophies: {}": "Não foi possível redefinir os troféus: {}",
-    "Notifications": "Notificações",
-    "List order": "Ordem da lista",
-    "Most earned first": "Mais conquistados primeiro",
-    "Rarest first": "Mais raros primeiro",
-    "{}% of players": "{}% dos jogadores",
-    "Common": "Comum",
-    "Rare": "Raro",
-    "Very rare": "Muito raro",
-    "Ultra rare": "Ultrarraro",
-    "Triangle/Tab: order   L1/R1: notifications": "Triângulo/Tab: ordem   L1/R1: notificações",
-    "L1/R1: trophies   F8 / R3+R2 / Esc: close": "L1/R1: troféus   F8 / R3+R2 / Esc: fechar"
-   },
-   "fr": {
-    "Trophies": "Trophées",
-    "The trophies this port recorded while you played.": "Les trophées que ce port a enregistrés pendant que vous jouiez.",
-    "All trophies": "Tous",
-    "Unlocked": "Débloqués",
-    "Locked": "Verrouillés",
-    "UNLOCKED": "DÉBLOQUÉ",
-    "LOCKED": "VERROUILLÉ",
-    "{} of {} unlocked": "{} sur {} débloqués",
-    "Trophy {}": "Trophée {}",
-    "Platinum": "Platine",
-    "Gold": "Or",
-    "Silver": "Argent",
-    "Bronze": "Bronze",
-    "No trophy list: choose the game folder on the Game page (its sce_sys/trophy/trophy00.trp is read).": "Aucune liste de trophées : choisissez le dossier du jeu dans la page Jeu (son fichier sce_sys/trophy/trophy00.trp est lu).",
-    "Only trophies unlocked with this port are listed; the ones earned on a PlayStation are not known to it.": "Seuls les trophées débloqués avec ce port sont listés ; ceux obtenus sur une PlayStation lui sont inconnus.",
-    "TROPHY UNLOCKED": "TROPHÉE DÉBLOQUÉ",
-    "Up/Down: scroll   Left/Right: filter   F8 / R3+R2 / Esc: close": "Haut/Bas : défiler   Gauche/Droite : filtrer   F8 / R3+R2 / Échap : fermer",
-    "Reset trophies": "Réinitialiser les trophées",
-    "Close the game before resetting the trophies.": "Fermez le jeu avant de réinitialiser les trophées.",
-    "Lock all {} unlocked trophies again? A copy is kept as trophies.dat.bak.": "Verrouiller de nouveau les {} trophées débloqués ? Une copie est conservée sous le nom trophies.dat.bak.",
-    "No trophy is unlocked.": "Aucun trophée n'est débloqué.",
-    "Could not reset the trophies: {}": "Impossible de réinitialiser les trophées : {}",
-    "Notifications": "Notifications",
-    "List order": "Ordre de la liste",
-    "Most earned first": "Les plus obtenus d'abord",
-    "Rarest first": "Les plus rares d'abord",
-    "{}% of players": "{} % des joueurs",
-    "Common": "Commun",
-    "Rare": "Rare",
-    "Very rare": "Très rare",
-    "Ultra rare": "Ultra rare",
-    "Triangle/Tab: order   L1/R1: notifications": "Triangle/Tab : ordre   L1/R1 : notifications",
-    "L1/R1: trophies   F8 / R3+R2 / Esc: close": "L1/R1 : trophées   F8 / R3+R2 / Échap : fermer"
-   },
-   "de": {
-    "Trophies": "Trophäen",
-    "The trophies this port recorded while you played.": "Die Trophäen, die dieser Port beim Spielen aufgezeichnet hat.",
-    "All trophies": "Alle",
-    "Unlocked": "Freigeschaltet",
-    "Locked": "Gesperrt",
-    "UNLOCKED": "FREIGESCHALTET",
-    "LOCKED": "GESPERRT",
-    "{} of {} unlocked": "{} von {} freigeschaltet",
-    "Trophy {}": "Trophäe {}",
-    "Platinum": "Platin",
-    "Gold": "Gold",
-    "Silver": "Silber",
-    "Bronze": "Bronze",
-    "No trophy list: choose the game folder on the Game page (its sce_sys/trophy/trophy00.trp is read).": "Keine Trophäenliste: Wählen Sie auf der Seite Spiel den Spielordner (gelesen wird dessen sce_sys/trophy/trophy00.trp).",
-    "Only trophies unlocked with this port are listed; the ones earned on a PlayStation are not known to it.": "Es werden nur Trophäen angezeigt, die mit diesem Port freigeschaltet wurden; auf einer PlayStation erspielte kennt er nicht.",
-    "TROPHY UNLOCKED": "TROPHÄE FREIGESCHALTET",
-    "Up/Down: scroll   Left/Right: filter   F8 / R3+R2 / Esc: close": "Hoch/Runter: scrollen   Links/Rechts: filtern   F8 / R3+R2 / Esc: schließen",
-    "Reset trophies": "Trophäen zurücksetzen",
-    "Close the game before resetting the trophies.": "Beenden Sie das Spiel, bevor Sie die Trophäen zurücksetzen.",
-    "Lock all {} unlocked trophies again? A copy is kept as trophies.dat.bak.": "Alle {} freigeschalteten Trophäen wieder sperren? Eine Kopie bleibt als trophies.dat.bak erhalten.",
-    "No trophy is unlocked.": "Keine Trophäe ist freigeschaltet.",
-    "Could not reset the trophies: {}": "Die Trophäen konnten nicht zurückgesetzt werden: {}",
-    "Notifications": "Benachrichtigungen",
-    "List order": "Listenreihenfolge",
-    "Most earned first": "Häufigste zuerst",
-    "Rarest first": "Seltenste zuerst",
-    "{}% of players": "{} % der Spieler",
-    "Common": "Häufig",
-    "Rare": "Selten",
-    "Very rare": "Sehr selten",
-    "Ultra rare": "Extrem selten",
-    "Triangle/Tab: order   L1/R1: notifications": "Dreieck/Tab: Reihenfolge   L1/R1: Benachrichtigungen",
-    "L1/R1: trophies   F8 / R3+R2 / Esc: close": "L1/R1: Trophäen   F8 / R3+R2 / Esc: schließen"
-   },
-   "it": {
-    "Trophies": "Trofei",
-    "The trophies this port recorded while you played.": "I trofei che questo port ha registrato mentre giocavi.",
-    "All trophies": "Tutti",
-    "Unlocked": "Sbloccati",
-    "Locked": "Bloccati",
-    "UNLOCKED": "SBLOCCATO",
-    "LOCKED": "BLOCCATO",
-    "{} of {} unlocked": "{} di {} sbloccati",
-    "Trophy {}": "Trofeo {}",
-    "Platinum": "Platino",
-    "Gold": "Oro",
-    "Silver": "Argento",
-    "Bronze": "Bronzo",
-    "No trophy list: choose the game folder on the Game page (its sce_sys/trophy/trophy00.trp is read).": "Nessuna lista di trofei: scegli la cartella del gioco nella pagina Gioco (viene letto il suo sce_sys/trophy/trophy00.trp).",
-    "Only trophies unlocked with this port are listed; the ones earned on a PlayStation are not known to it.": "Sono elencati solo i trofei sbloccati con questo port; quelli ottenuti su una PlayStation non li conosce.",
-    "TROPHY UNLOCKED": "TROFEO SBLOCCATO",
-    "Up/Down: scroll   Left/Right: filter   F8 / R3+R2 / Esc: close": "Su/Giù: scorri   Sinistra/Destra: filtra   F8 / R3+R2 / Esc: chiudi",
-    "Reset trophies": "Reimposta trofei",
-    "Close the game before resetting the trophies.": "Chiudi il gioco prima di reimpostare i trofei.",
-    "Lock all {} unlocked trophies again? A copy is kept as trophies.dat.bak.": "Bloccare di nuovo i {} trofei sbloccati? Una copia viene conservata come trophies.dat.bak.",
-    "No trophy is unlocked.": "Nessun trofeo è sbloccato.",
-    "Could not reset the trophies: {}": "Impossibile reimpostare i trofei: {}",
-    "Notifications": "Notifiche",
-    "List order": "Ordine della lista",
-    "Most earned first": "Più ottenuti prima",
-    "Rarest first": "Più rari prima",
-    "{}% of players": "{}% dei giocatori",
-    "Common": "Comune",
-    "Rare": "Raro",
-    "Very rare": "Molto raro",
-    "Ultra rare": "Ultra raro",
-    "Triangle/Tab: order   L1/R1: notifications": "Triangolo/Tab: ordine   L1/R1: notifiche",
-    "L1/R1: trophies   F8 / R3+R2 / Esc: close": "L1/R1: trofei   F8 / R3+R2 / Esc: chiudi"
-   },
-   "pl": {
-    "Trophies": "Trofea",
-    "The trophies this port recorded while you played.": "Trofea, które ten port zapisał podczas gry.",
-    "All trophies": "Wszystkie",
-    "Unlocked": "Odblokowane",
-    "Locked": "Zablokowane",
-    "UNLOCKED": "ODBLOKOWANE",
-    "LOCKED": "ZABLOKOWANE",
-    "{} of {} unlocked": "Odblokowano {} z {}",
-    "Trophy {}": "Trofeum {}",
-    "Platinum": "Platyna",
-    "Gold": "Złoto",
-    "Silver": "Srebro",
-    "Bronze": "Brąz",
-    "No trophy list: choose the game folder on the Game page (its sce_sys/trophy/trophy00.trp is read).": "Brak listy trofeów: wybierz folder gry na stronie Gra (odczytywany jest jego plik sce_sys/trophy/trophy00.trp).",
-    "Only trophies unlocked with this port are listed; the ones earned on a PlayStation are not known to it.": "Wyświetlane są tylko trofea odblokowane w tym porcie; tych zdobytych na PlayStation nie zna.",
-    "TROPHY UNLOCKED": "TROFEUM ODBLOKOWANE",
-    "Up/Down: scroll   Left/Right: filter   F8 / R3+R2 / Esc: close": "Góra/Dół: przewijanie   Lewo/Prawo: filtr   F8 / R3+R2 / Esc: zamknij",
-    "Reset trophies": "Zresetuj trofea",
-    "Close the game before resetting the trophies.": "Zamknij grę przed zresetowaniem trofeów.",
-    "Lock all {} unlocked trophies again? A copy is kept as trophies.dat.bak.": "Zablokować ponownie wszystkie odblokowane trofea ({})? Kopia zostanie zachowana jako trophies.dat.bak.",
-    "No trophy is unlocked.": "Żadne trofeum nie jest odblokowane.",
-    "Could not reset the trophies: {}": "Nie udało się zresetować trofeów: {}",
-    "Notifications": "Powiadomienia",
-    "List order": "Kolejność listy",
-    "Most earned first": "Najczęściej zdobywane najpierw",
-    "Rarest first": "Najrzadsze najpierw",
-    "{}% of players": "{}% graczy",
-    "Common": "Powszechne",
-    "Rare": "Rzadkie",
-    "Very rare": "Bardzo rzadkie",
-    "Ultra rare": "Ultrarzadkie",
-    "Triangle/Tab: order   L1/R1: notifications": "Trójkąt/Tab: kolejność   L1/R1: powiadomienia",
-    "L1/R1: trophies   F8 / R3+R2 / Esc: close": "L1/R1: trofea   F8 / R3+R2 / Esc: zamknij"
-   },
-   "tr": {
-    "Trophies": "Kupalar",
-    "The trophies this port recorded while you played.": "Bu portun siz oynarken kaydettiği kupalar.",
-    "All trophies": "Tümü",
-    "Unlocked": "Açılanlar",
-    "Locked": "Kilitliler",
-    "UNLOCKED": "AÇILDI",
-    "LOCKED": "KİLİTLİ",
-    "{} of {} unlocked": "{} / {} açıldı",
-    "Trophy {}": "Kupa {}",
-    "Platinum": "Platin",
-    "Gold": "Altın",
-    "Silver": "Gümüş",
-    "Bronze": "Bronz",
-    "No trophy list: choose the game folder on the Game page (its sce_sys/trophy/trophy00.trp is read).": "Kupa listesi yok: Oyun sayfasında oyun klasörünü seçin (klasördeki sce_sys/trophy/trophy00.trp okunur).",
-    "Only trophies unlocked with this port are listed; the ones earned on a PlayStation are not known to it.": "Yalnızca bu portla açılan kupalar listelenir; PlayStation'da kazanılanları bilmez.",
-    "TROPHY UNLOCKED": "KUPA AÇILDI",
-    "Up/Down: scroll   Left/Right: filter   F8 / R3+R2 / Esc: close": "Yukarı/Aşağı: kaydır   Sol/Sağ: filtre   F8 / R3+R2 / Esc: kapat",
-    "Reset trophies": "Kupaları sıfırla",
-    "Close the game before resetting the trophies.": "Kupaları sıfırlamadan önce oyunu kapatın.",
-    "Lock all {} unlocked trophies again? A copy is kept as trophies.dat.bak.": "Açılmış {} kupanın tümü yeniden kilitlensin mi? Bir kopya trophies.dat.bak olarak saklanır.",
-    "No trophy is unlocked.": "Açılmış kupa yok.",
-    "Could not reset the trophies: {}": "Kupalar sıfırlanamadı: {}",
-    "Notifications": "Bildirimler",
-    "List order": "Liste sırası",
-    "Most earned first": "En çok kazanılan önce",
-    "Rarest first": "En nadir önce",
-    "{}% of players": "Oyuncuların %{}",
-    "Common": "Yaygın",
-    "Rare": "Nadir",
-    "Very rare": "Çok nadir",
-    "Ultra rare": "Ultra nadir",
-    "Triangle/Tab: order   L1/R1: notifications": "Üçgen/Tab: sıra   L1/R1: bildirimler",
-    "L1/R1: trophies   F8 / R3+R2 / Esc: close": "L1/R1: kupalar   F8 / R3+R2 / Esc: kapat"
-   },
-   "zh": {
-    "Trophies": "奖杯",
-    "The trophies this port recorded while you played.": "此移植版在你游玩时记录的奖杯。",
-    "All trophies": "全部",
-    "Unlocked": "已解锁",
-    "Locked": "未解锁",
-    "UNLOCKED": "已解锁",
-    "LOCKED": "未解锁",
-    "{} of {} unlocked": "已解锁 {} / {}",
-    "Trophy {}": "奖杯 {}",
-    "Platinum": "白金",
-    "Gold": "金",
-    "Silver": "银",
-    "Bronze": "铜",
-    "No trophy list: choose the game folder on the Game page (its sce_sys/trophy/trophy00.trp is read).": "没有奖杯列表：请在“游戏”页面选择游戏文件夹（会读取其中的 sce_sys/trophy/trophy00.trp）。",
-    "Only trophies unlocked with this port are listed; the ones earned on a PlayStation are not known to it.": "只列出通过此移植版解锁的奖杯；在 PlayStation 上获得的它并不知道。",
-    "TROPHY UNLOCKED": "奖杯已解锁",
-    "Up/Down: scroll   Left/Right: filter   F8 / R3+R2 / Esc: close": "上/下：滚动   左/右：筛选   F8 / R3+R2 / Esc：关闭",
-    "Reset trophies": "重置奖杯",
-    "Close the game before resetting the trophies.": "重置奖杯前请先关闭游戏。",
-    "Lock all {} unlocked trophies again? A copy is kept as trophies.dat.bak.": "要将已解锁的 {} 个奖杯全部重新锁定吗？会保留一份副本 trophies.dat.bak。",
-    "No trophy is unlocked.": "没有已解锁的奖杯。",
-    "Could not reset the trophies: {}": "无法重置奖杯：{}",
-    "Notifications": "通知",
-    "List order": "列表顺序",
-    "Most earned first": "获得最多的在前",
-    "Rarest first": "最稀有的在前",
-    "{}% of players": "{}% 的玩家",
-    "Common": "普通",
-    "Rare": "稀有",
-    "Very rare": "非常稀有",
-    "Ultra rare": "极其稀有",
-    "Triangle/Tab: order   L1/R1: notifications": "三角/Tab：顺序   L1/R1：通知",
-    "L1/R1: trophies   F8 / R3+R2 / Esc: close": "L1/R1：奖杯   F8 / R3+R2 / Esc：关闭"
-   },
-   "ja": {
-    "Trophies": "トロフィー",
-    "The trophies this port recorded while you played.": "このポートがプレイ中に記録したトロフィー。",
-    "All trophies": "すべて",
-    "Unlocked": "獲得済み",
-    "Locked": "未獲得",
-    "UNLOCKED": "獲得済み",
-    "LOCKED": "未獲得",
-    "{} of {} unlocked": "{} / {} 獲得",
-    "Trophy {}": "トロフィー {}",
-    "Platinum": "プラチナ",
-    "Gold": "ゴールド",
-    "Silver": "シルバー",
-    "Bronze": "ブロンズ",
-    "No trophy list: choose the game folder on the Game page (its sce_sys/trophy/trophy00.trp is read).": "トロフィーリストがありません：「ゲーム」ページでゲームフォルダーを選択してください（その sce_sys/trophy/trophy00.trp を読み込みます）。",
-    "Only trophies unlocked with this port are listed; the ones earned on a PlayStation are not known to it.": "このポートで獲得したトロフィーのみ表示されます。PlayStation で獲得したものは認識できません。",
-    "TROPHY UNLOCKED": "トロフィー獲得",
-    "Up/Down: scroll   Left/Right: filter   F8 / R3+R2 / Esc: close": "上/下：スクロール   左/右：絞り込み   F8 / R3+R2 / Esc：閉じる",
-    "Reset trophies": "トロフィーをリセット",
-    "Close the game before resetting the trophies.": "トロフィーをリセットする前にゲームを終了してください。",
-    "Lock all {} unlocked trophies again? A copy is kept as trophies.dat.bak.": "獲得済みの {} 個のトロフィーをすべて未獲得に戻しますか？コピーが trophies.dat.bak として残ります。",
-    "No trophy is unlocked.": "獲得済みのトロフィーはありません。",
-    "Could not reset the trophies: {}": "トロフィーをリセットできませんでした：{}",
-    "Notifications": "通知",
-    "List order": "リスト順",
-    "Most earned first": "獲得率が高い順",
-    "Rarest first": "レア度が高い順",
-    "{}% of players": "プレイヤーの {}%",
-    "Common": "コモン",
-    "Rare": "レア",
-    "Very rare": "ベリーレア",
-    "Ultra rare": "ウルトラレア",
-    "Triangle/Tab: order   L1/R1: notifications": "トライアングル/Tab：並び順   L1/R1：通知",
-    "L1/R1: trophies   F8 / R3+R2 / Esc: close": "L1/R1：トロフィー   F8 / R3+R2 / Esc：閉じる"
-   },
-   "ko": {
-    "Trophies": "트로피",
-    "The trophies this port recorded while you played.": "이 포트가 플레이 중에 기록한 트로피입니다.",
-    "All trophies": "전체",
-    "Unlocked": "획득",
-    "Locked": "미획득",
-    "UNLOCKED": "획득",
-    "LOCKED": "미획득",
-    "{} of {} unlocked": "{} / {} 획득",
-    "Trophy {}": "트로피 {}",
-    "Platinum": "플래티넘",
-    "Gold": "골드",
-    "Silver": "실버",
-    "Bronze": "브론즈",
-    "No trophy list: choose the game folder on the Game page (its sce_sys/trophy/trophy00.trp is read).": "트로피 목록 없음: 게임 페이지에서 게임 폴더를 선택하세요 (해당 폴더의 sce_sys/trophy/trophy00.trp를 읽습니다).",
-    "Only trophies unlocked with this port are listed; the ones earned on a PlayStation are not known to it.": "이 포트로 획득한 트로피만 표시됩니다. PlayStation에서 얻은 트로피는 알 수 없습니다.",
-    "TROPHY UNLOCKED": "트로피 획득",
-    "Up/Down: scroll   Left/Right: filter   F8 / R3+R2 / Esc: close": "위/아래: 스크롤   왼쪽/오른쪽: 필터   F8 / R3+R2 / Esc: 닫기",
-    "Reset trophies": "트로피 초기화",
-    "Close the game before resetting the trophies.": "트로피를 초기화하기 전에 게임을 종료하세요.",
-    "Lock all {} unlocked trophies again? A copy is kept as trophies.dat.bak.": "획득한 트로피 {}개를 모두 다시 잠글까요? 복사본이 trophies.dat.bak으로 보관됩니다.",
-    "No trophy is unlocked.": "획득한 트로피가 없습니다.",
-    "Could not reset the trophies: {}": "트로피를 초기화하지 못했습니다: {}",
-    "Notifications": "알림",
-    "List order": "목록 순서",
-    "Most earned first": "많이 획득한 순",
-    "Rarest first": "희귀한 순",
-    "{}% of players": "플레이어의 {}%",
-    "Common": "일반",
-    "Rare": "희귀",
-    "Very rare": "매우 희귀",
-    "Ultra rare": "극히 희귀",
-    "Triangle/Tab: order   L1/R1: notifications": "세모/Tab: 정렬   L1/R1: 알림",
-    "L1/R1: trophies   F8 / R3+R2 / Esc: close": "L1/R1: 트로피   F8 / R3+R2 / Esc: 닫기"
-   },
-   "id": {
-    "Trophies": "Trofi",
-    "The trophies this port recorded while you played.": "Trofi yang dicatat oleh port ini saat Anda bermain.",
-    "All trophies": "Semua trofi",
-    "Unlocked": "Terbuka",
-    "Locked": "Terkunci",
-    "UNLOCKED": "TERBUKA",
-    "LOCKED": "TERKUNCI",
-    "{} of {} unlocked": "{} dari {} terbuka",
-    "Trophy {}": "Trofi {}",
-    "Platinum": "Platina",
-    "Gold": "Emas",
-    "Silver": "Perak",
-    "Bronze": "Perunggu",
-    "No trophy list: choose the game folder on the Game page (its sce_sys/trophy/trophy00.trp is read).": "Tidak ada daftar trofi: pilih folder game di halaman Game (file sce_sys/trophy/trophy00.trp akan dibaca).",
-    "Only trophies unlocked with this port are listed; the ones earned on a PlayStation are not known to it.": "Hanya trofi yang dibuka melalui port ini yang dicantumkan; trofi yang diperoleh di PlayStation tidak diketahui oleh port.",
-    "TROPHY UNLOCKED": "TROFI TERBUKA",
-    "Up/Down: scroll   Left/Right: filter   F8 / R3+R2 / Esc: close": "Atas/Bawah: gulir   Kiri/Kanan: filter   F8 / R3+R2 / Esc: tutup",
-    "Reset trophies": "Atur ulang trofi",
-    "Close the game before resetting the trophies.": "Tutup game sebelum mengatur ulang trofi.",
-    "Lock all {} unlocked trophies again? A copy is kept as trophies.dat.bak.": "Kunci kembali semua {} trofi yang terbuka? Salinan akan disimpan sebagai trophies.dat.bak.",
-    "No trophy is unlocked.": "Tidak ada trofi yang terbuka.",
-    "Could not reset the trophies: {}": "Tidak dapat mengatur ulang trofi: {}",
-    "Notifications": "Notifikasi",
-    "List order": "Urutan daftar",
-    "Most earned first": "Paling banyak diraih dulu",
-    "Rarest first": "Paling langka dulu",
-    "{}% of players": "{}% pemain",
-    "Common": "Umum",
-    "Rare": "Langka",
-    "Very rare": "Sangat langka",
-    "Ultra rare": "Ultra langka",
-    "Triangle/Tab: order   L1/R1: notifications": "Segitiga/Tab: urutan   L1/R1: notifikasi",
-    "L1/R1: trophies   F8 / R3+R2 / Esc: close": "L1/R1: trofi   F8 / R3+R2 / Esc: tutup"
-   },
-   "cs": {
-    "Trophies": "Trofeje",
-    "The trophies this port recorded while you played.": "Trofeje, které si tento port zaznamenal při hraní.",
-    "All trophies": "Všechny",
-    "Unlocked": "Odemčené",
-    "Locked": "Zamčené",
-    "UNLOCKED": "ODEMČENO",
-    "LOCKED": "ZAMČENO",
-    "{} of {} unlocked": "Odemčeno {} z {}",
-    "Trophy {}": "Trofej {}",
-    "Platinum": "Platina",
-    "Gold": "Zlato",
-    "Silver": "Stříbro",
-    "Bronze": "Bronz",
-    "No trophy list: choose the game folder on the Game page (its sce_sys/trophy/trophy00.trp is read).": "Žádný seznam trofejí: vyberte složku hry na stránce Hra (čte se její soubor sce_sys/trophy/trophy00.trp).",
-    "Only trophies unlocked with this port are listed; the ones earned on a PlayStation are not known to it.": "Zobrazují se jen trofeje odemčené v tomto portu; ty získané na PlayStationu nezná.",
-    "TROPHY UNLOCKED": "TROFEJ ODEMČENA",
-    "Up/Down: scroll   Left/Right: filter   F8 / R3+R2 / Esc: close": "Nahoru/Dolů: posun   Vlevo/Vpravo: filtr   F8 / R3+R2 / Esc: zavřít",
-    "Reset trophies": "Resetovat trofeje",
-    "Close the game before resetting the trophies.": "Před resetem trofejí zavřete hru.",
-    "Lock all {} unlocked trophies again? A copy is kept as trophies.dat.bak.": "Znovu zamknout všech {} odemčených trofejí? Kopie se uchová jako trophies.dat.bak.",
-    "No trophy is unlocked.": "Žádná trofej není odemčena.",
-    "Could not reset the trophies: {}": "Trofeje se nepodařilo resetovat: {}",
-    "Notifications": "Oznámení",
-    "List order": "Pořadí seznamu",
-    "Most earned first": "Nejčastěji získané první",
-    "Rarest first": "Nejvzácnější první",
-    "{}% of players": "{} % hráčů",
-    "Common": "Běžná",
-    "Rare": "Vzácná",
-    "Very rare": "Velmi vzácná",
-    "Ultra rare": "Ultra vzácná",
-    "Triangle/Tab: order   L1/R1: notifications": "Trojúhelník/Tab: pořadí   L1/R1: oznámení",
-    "L1/R1: trophies   F8 / R3+R2 / Esc: close": "L1/R1: trofeje   F8 / R3+R2 / Esc: zavřít"
-   }
-  }
  }
 }

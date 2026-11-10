@@ -11,98 +11,22 @@ use iced::{Center, Element, Left, Right, Task};
 use serde_json::{Map, Value};
 
 use crate::core::i18n::{tr, tr_fmt};
-use crate::core::options::{AUDIO_CHANNELS, LANGUAGES};
+use crate::core::options::LANGUAGES;
 use crate::core::patches::{builtin_xml, game_patch_metas, selectable, PatchMeta};
 use crate::core::save_backup::{list_backups, restore, KEEP};
 use crate::core::save_restore;
 use crate::core::settings::mark_default_patches_offered;
-use crate::core::trophy_sound::{self};
 use crate::ui::app::{Message, State};
 use crate::ui::follow::{follow, Cause};
-use crate::ui::pages::controls::ini_number;
 use crate::ui::play::{refuse_while_live, LiveAction};
 use crate::ui::theme;
 use crate::ui::widgets::{
-    folder, min_width, row, section, select, slider, Modal, SELECT_MIN,
+    choice_pairs, folder, min_width, row, section, select_pairs, Modal, SELECT_MIN,
     SELECT_TEXT,
 };
 
-/// The notes under the Audio rows (#968); the translation tables key on these texts.
-pub const VOLUME_NOTE: &str = "Master volume of the game's audio. 100% is the game's own mix; more is louder, with a soft limiter so loud scenes do not clip. Also in the in-game menu.";
-pub const SPEAKERS_NOTE: &str = "Layout the game's 7.1 mix is sent in. Automatic follows your sound device: stereo, 5.1 or 7.1. Applied when the game starts.";
-
 /// The note under the Game language row; the translation tables key on this text.
-pub const LANGUAGE_NOTE: &str = "Used on the game's first start. After that, the game keeps its own text and speech languages in its settings save: change them in the game, in Options → Game Settings → Game Text and Options → Audio → Speech.";
-
-/// The in-game menu's cheats in its order, which F10 + 1 to 8 follows: (ini key, label, note).
-const CHEATS: [(&str, &str, &str); 8] = [
-    ("cheat_health", "Infinite health", "Health stays full. Only Kratos is protected. Turning it off does not undo past refills."),
-    ("cheat_magic", "Infinite magic", "Magic stays full."),
-    ("cheat_item", "Infinite item meter", "The item meter (bow, Helios' head, boots) stays full."),
-    ("cheat_rage", "Infinite Rage of Sparta", "Rage of Sparta stays full."),
-    ("cheat_orbs", "Max red orbs", "Red orbs stay at the maximum."),
-    ("cheat_very_hard", "Unlock Very Hard", "Select Very Hard without completing the game. Does not change existing save difficulty. In-game: enable before opening New Game."),
-    ("cheat_double_jumps", "Infinite Double Jumps", "Repeat air jumps without landing. Also available in the in-game Cheats menu."),
-    ("auto_qte", "Automatic QTE", "Quick-time prompts answer themselves: single presses, repeated presses, holds and stick rotations."),
-];
-
-/// The in-game menu's multipliers, 0.1x to 100x: (ini key, label, note).
-const MULTIPLIERS: [(&str, &str, &str); 6] = [
-    (
-        "red_orb_multiplier",
-        "Red orbs",
-        "Red orbs gained. Orbs you have and prices stay the same.",
-    ),
-    (
-        "green_orb_multiplier",
-        "Green orbs (health)",
-        "Health from each green orb. The bar stays within its maximum.",
-    ),
-    (
-        "blue_orb_multiplier",
-        "Blue orbs (magic)",
-        "Magic from each blue orb. The bar stays within its maximum.",
-    ),
-    (
-        "gold_orb_multiplier",
-        "Gold orbs (Rage of Sparta)",
-        "Rage of Sparta from each gold orb. The bar stays within its maximum.",
-    ),
-    (
-        "damage_dealt",
-        "Damage dealt",
-        "Damage Kratos does to enemies.",
-    ),
-    ("damage_taken", "Damage taken", "Damage Kratos takes."),
-];
-
-const MULTIPLIER_MIN: f32 = 0.1;
-const MULTIPLIER_MAX: f32 = 100.0;
-
-fn multiplier_text(value: f32) -> String {
-    format!("{:.3}", value.clamp(MULTIPLIER_MIN, MULTIPLIER_MAX))
-}
-
-/// Turn off all cheats: the original game, every cheat off and every multiplier 1x (#1135).
-pub(crate) fn cheats_off(state: &mut State) -> Task<Message> {
-    let mut changed = Vec::new();
-    for (key, _, _) in CHEATS {
-        if state.store.set(key, Value::Bool(false)) {
-            changed.push(key);
-        }
-    }
-    for (key, _, _) in MULTIPLIERS {
-        if state.store.set(key, Value::String(multiplier_text(1.0))) {
-            changed.push(key);
-        }
-    }
-    follow(state, Cause::Keys(&changed))
-}
-
-/// The trophy sound of the saves folder (`follow`, when the folder changes).
-pub(crate) fn refresh_trophy_sound(state: &mut State) {
-    state.trophy_sound = trophy_sound::read(&user_dir(state));
-}
+pub const LANGUAGE_NOTE: &str = "The language of the game's text and speech, on every start. Only the languages your dump ships are listed: the Brazilian release has Portuguese and Spanish, the US release English, French and Spanish.";
 
 /// Game patches of the current dump.
 #[derive(Debug, Clone, Default)]
@@ -200,7 +124,7 @@ pub fn backup_update(state: &mut State, message: BackupMessage) -> Task<Message>
                 if state
                     .installation
                     .title_id()
-                    .is_some_and(|id| !snapshot.titles.is_empty() && !snapshot.titles.contains(id))
+                    .is_some_and(|id| backup_is_for_another_game(id, &snapshot.titles))
                 {
                     text += &format!("\n\n{}", tr(&lang, "This backup is for a different game ID and may be incompatible. Game IDs will not be changed."));
                 }
@@ -267,7 +191,7 @@ fn saved_choice(state: &State, title_id: &str) -> Option<BTreeSet<String>> {
 }
 
 /// The page's selection into the settings: the whole list for this game, in file order, without
-/// the resolution and frame rate patches (the start adds those from `gow3.ini`).
+/// the resolution and frame rate patches (the start adds those from `sanctuary.ini`).
 pub fn store_game_patches(state: &mut State) {
     let Some(title_id) = state.patches.title_id.clone() else {
         return;
@@ -426,7 +350,7 @@ fn backups_row(state: &State) -> Element<'_, Message> {
         if state
             .installation
             .title_id()
-            .is_some_and(|id| !snapshot.titles.is_empty() && !snapshot.titles.contains(id))
+            .is_some_and(|id| backup_is_for_another_game(id, &snapshot.titles))
         {
             body = body.push(text(tr(lang, "This backup is for a different game ID and may be incompatible. Game IDs will not be changed.")).size(12));
         }
@@ -438,9 +362,9 @@ pub fn view(state: &State) -> Element<'_, Message> {
     let lang = state.lang.as_str();
     let hint = |english: &str| tr(lang, english);
     let language = state.store.text("language");
+    let (language_pairs, shown_language) = game_languages(state, &language, lang);
     let default_saves = state.paths.user_dir("").display().to_string();
     // The Python marks a row that needs a new start of the game with a small `restart` note.
-    let speakers_label = format!("{}  ·  {}", tr(lang, "Speakers"), tr(lang, "restart"));
 
     column![
         install_section(state),
@@ -477,37 +401,65 @@ pub fn view(state: &State) -> Element<'_, Message> {
         row(
             state.rtl,
             &tr(lang, "Game language"),
-            select("language", LANGUAGES, &language, lang),
+            select_pairs("language", &language_pairs, &shown_language),
             Some(&hint(LANGUAGE_NOTE)),
         ),
-        section(state.rtl, &tr(lang, "Audio")),
-        row(
-            state.rtl,
-            &tr(lang, "Volume"),
-            slider(
-                "master_volume",
-                0.0,
-                200.0,
-                "%",
-                ini_number(state, "master_volume")
-            ),
-            Some(&hint(VOLUME_NOTE)),
-        ),
-        row(
-            state.rtl,
-            &speakers_label,
-            select(
-                "audio_channels",
-                AUDIO_CHANNELS,
-                &state.store.text("audio_channels"),
-                lang
-            ),
-            Some(&hint(SPEAKERS_NOTE)),
-        ),
-        // SanctuaryPort: no cheats or patches (those were God of War III's).
+        // No patches or audio settings here: Diablo III keeps its volume in its own options, and
+        // its render resolution patches follow the Graphics page.
     ]
     .spacing(2)
     .into()
+}
+
+/// Title ids whose saves are one and the same: Diablo III's US and Brazilian releases both keep
+/// them under CUSA00242.
+const SHARED_SAVES: [&[&str]; 1] = [&["CUSA00242", "CUSA00243"]];
+
+/// Whether a backup holding the saves of `titles` belongs to another game than `current`.
+pub fn backup_is_for_another_game(current: &str, titles: &BTreeSet<String>) -> bool {
+    let same = |title: &str| {
+        title == current
+            || SHARED_SAVES
+                .iter()
+                .any(|group| group.contains(&title) && group.contains(&current))
+    };
+    !titles.is_empty() && !titles.iter().any(|t| same(t))
+}
+
+/// The system language codes and the language pack (CPK prefix) each one needs, in the order
+/// run.py falls back when the chosen pack is missing (scripts: `D3_LANGUAGE_PACKS`).
+const LANGUAGE_PACKS: [(&str, &str); 4] = [("17", "ptBR"), ("1", "enUS"), ("20", "esMX"), ("2", "frFR")];
+
+/// The Game language list: only the languages whose pack the game (or its update) folder has,
+/// all of them while no folder is set; and the one run.py will use when the saved choice has
+/// no pack there.
+pub fn game_languages(state: &State, chosen: &str, lang: &str) -> (Vec<(String, String)>, String) {
+    let folders: Vec<PathBuf> = ["game_dir", "update_dir"]
+        .iter()
+        .map(|key| state.store.text(key))
+        .filter(|dir| !dir.is_empty())
+        .map(|dir| PathBuf::from(dir).join("CPKs"))
+        .collect();
+    let has = |pack: &str| {
+        folders
+            .iter()
+            .any(|cpks| cpks.join(format!("{pack}_Common.cpk")).is_file())
+    };
+    let available: Vec<&str> = LANGUAGE_PACKS
+        .iter()
+        .filter(|(_, pack)| has(pack))
+        .map(|(code, _)| *code)
+        .collect();
+    let pairs: Vec<(String, String)> = choice_pairs(LANGUAGES, lang)
+        .into_iter()
+        .filter(|(code, _)| available.is_empty() || available.contains(&code.as_str()))
+        .collect();
+    let shown = if available.is_empty() || available.contains(&chosen) {
+        chosen.to_string()
+    } else {
+        available[0].to_string()
+    };
+    (pairs, shown)
 }
 
 // --- SanctuaryPort: install from PKG ---
@@ -566,7 +518,7 @@ pub fn start_pkg_install(state: &mut State, files: Vec<std::path::PathBuf>) {
             let shared = status.clone();
             let mut progress = |done: u64, total: u64, current: &str| {
                 if let Ok(mut s) = shared.lock() {
-                    let percent = if total == 0 { 100 } else { done * 100 / total };
+                    let percent = (done * 100).checked_div(total).unwrap_or(100);
                     s.text = format!("{}/{count} · {name} · {percent}% · {current}", n + 1);
                 }
                 true

@@ -12,9 +12,9 @@ use sanctuaryport_launcher::core::settings::{app_defaults, Settings};
 /// Variables built from more than one setting, or from a setting's content, so the catalog rows
 /// (`game_patches`, `controls`) carry no `env`; they are not a 1:1 encoding.
 const DERIVED: &[(&str, &str)] = &[
-    ("SPARTAN_PATCHES", "game_patches"),
-    ("SPARTAN_KEY_MAP", "controls"),
-    ("SPARTAN_PAD_MAP", "controls"),
+    ("SANCTUARY_PATCHES", "game_patches"),
+    ("SANCTUARY_KEY_MAP", "controls"),
+    ("SANCTUARY_PAD_MAP", "controls"),
 ];
 
 /// Switches the launcher parks: whatever the setting says, the game gets this value. None now: the
@@ -24,7 +24,7 @@ const PARKED: &[(&str, &str)] = &[];
 fn world() -> (Paths, tempfile::TempDir) {
     let dir = tempfile::tempdir().unwrap();
     let data = dir.path().to_string_lossy().into_owned();
-    let env = move |key: &str| (key == "SPARTAN_DATA_DIR").then(|| data.clone());
+    let env = move |key: &str| (key == "SANCTUARY_DATA_DIR").then(|| data.clone());
     (Paths::from_env(dir.path(), &env), dir)
 }
 
@@ -95,7 +95,7 @@ fn every_env_setting_round_trips() {
 fn hdr_is_always_one_or_zero() {
     // Python `'1' if s['hdr'] else '0'`: written either way, over an inherited value too.
     let (paths, _dir) = world();
-    let inherited: IndexMap<String, String> = [("SPARTAN_HDR".to_string(), "1".to_string())]
+    let inherited: IndexMap<String, String> = [("SANCTUARY_HDR".to_string(), "1".to_string())]
         .into_iter()
         .collect();
     for (value, sent) in [
@@ -109,7 +109,7 @@ fn hdr_is_always_one_or_zero() {
         for base in [IndexMap::new(), inherited.clone()] {
             let env = environment(&settings, &paths, "en", &base, true);
             assert_eq!(
-                env.get("SPARTAN_HDR").map(String::as_str),
+                env.get("SANCTUARY_HDR").map(String::as_str),
                 Some(sent),
                 "{value}"
             );
@@ -130,21 +130,18 @@ fn derived_variables_have_no_catalog_row() {
         assert!(catalog::run_default(name).is_none(), "{name}");
         assert!(catalog::setting(source).unwrap().env.is_none(), "{source}");
     }
-    assert!(env.contains_key("SPARTAN_KEY_MAP"));
-    assert!(env.contains_key("SPARTAN_PAD_MAP"));
+    assert!(env.contains_key("SANCTUARY_KEY_MAP"));
+    assert!(env.contains_key("SANCTUARY_PAD_MAP"));
 }
 
 #[test]
 fn runner_defaults_are_run_pys() {
     // Each literal is the default run.py passes to env.get(...) (or the launcher's own fallback).
     let expected = [
-        ("SPARTAN_MODS_ENABLED", "1"), // run.py: env.get('SPARTAN_MODS_ENABLED', '1')
-        ("SPARTAN_STREAM_MEMORY", "cached"), // run.py: env.get('SPARTAN_STREAM_MEMORY', 'cached')
-        ("SPARTAN_GLYPH_STYLE", "off"), // run.py: env.get('SPARTAN_GLYPH_STYLE', 'off')
-        ("SPARTAN_LANGUAGE", "1"),     // the English text and voice, as the game assumes
-        // Rust only (the Python launcher has no such choice): absent counts as the main key.
-        ("SPARTAN_GLYPH_KEYS", "main"),
-        ("SPARTAN_GLYPH_KEY_COLORS", "gray"),
+        ("SANCTUARY_MODS_ENABLED", "1"), // run.py: env.get('SANCTUARY_MODS_ENABLED', '1')
+        ("SANCTUARY_STREAM_MEMORY", "cached"), // run.py: env.get('SANCTUARY_STREAM_MEMORY', 'cached')
+        ("SANCTUARY_GLYPH_STYLE", "off"), // run.py: env.get('SANCTUARY_GLYPH_STYLE', 'off')
+        ("SANCTUARY_LANGUAGE", "1"),     // the English text and voice, as the game assumes
     ];
     for (name, literal) in expected {
         assert_eq!(catalog::run_default(name), Some(literal), "{name}");
@@ -161,13 +158,8 @@ fn runner_defaults_are_run_pys() {
 fn environment_writes_no_file() {
     let (paths, dir) = world();
     let settings = Settings(app_defaults(&|_| None));
-    let trophies = paths
-        .user_dir(&settings.get_str("user_dir"))
-        .join("trophy_texts.txt");
     let pure = environment(&settings, &paths, "en", &IndexMap::new(), true);
-    assert!(!trophies.exists());
-    assert!(std::fs::read_dir(dir.path()).unwrap().next().is_none());
     let full = game_environment(&settings, &paths, "en", &IndexMap::new(), true);
-    assert!(trophies.exists());
+    assert!(std::fs::read_dir(dir.path()).unwrap().next().is_none());
     assert_eq!(pure, full);
 }

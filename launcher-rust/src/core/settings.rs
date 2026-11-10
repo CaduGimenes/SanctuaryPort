@@ -57,8 +57,8 @@ impl Settings {
 }
 
 /// Every setting with its default, in the order the Python launcher writes them. The game folder
-/// starts empty on every system unless `GOW3_GAME_DIR` names one (ruling R83: the Python
-/// guesses `<port parent>/CUSA01623` on Windows).
+/// starts empty on every system unless `SANCTUARY_GAME_DIR` names one (ruling R83: the Python
+/// guesses `<port parent>/CUSA00243` on Windows).
 pub fn app_defaults(env: &dyn Fn(&str) -> Option<String>) -> Map<String, Value> {
     SETTINGS
         .iter()
@@ -69,7 +69,7 @@ pub fn app_defaults(env: &dyn Fn(&str) -> Option<String>) -> Map<String, Value> 
                 Default::Int(n) => json!(n),
                 Default::Object => Value::Object(Map::new()),
                 Default::Text(_) if row.key == "game_dir" => {
-                    Value::String(env("GOW3_GAME_DIR").unwrap_or_default())
+                    Value::String(env("SANCTUARY_GAME_DIR").unwrap_or_default())
                 }
                 Default::Text(text) => Value::String(text.to_string()),
             };
@@ -81,7 +81,7 @@ pub fn app_defaults(env: &dyn Fn(&str) -> Option<String>) -> Map<String, Value> 
 /// Built-in patches that became on by default after players had saved their list. A saved list
 /// is exact, so each is ticked in it once; `patches_offered` remembers that, and unticking it
 /// later sticks. ponytail: a fixed list, read the XML defaults if more such patches come.
-const NEW_DEFAULT_PATCHES: &[(&str, &str)] = &[("CUSA01623", "High FPS Wall Seam Fix")];
+const NEW_DEFAULT_PATCHES: &[(&str, &str)] = &[("CUSA00243", "High FPS Wall Seam Fix")];
 
 fn offered(saved: &Map<String, Value>) -> Vec<Value> {
     match saved.get("patches_offered") {
@@ -154,7 +154,7 @@ pub fn read_app_settings(paths: &Paths) -> (Settings, SettingsFile) {
         Ok(Some(_)) | Err(_) => (Map::new(), SettingsFile::Unreadable),
     };
     let mut merged =
-        app_defaults(&|k| (k == "GOW3_GAME_DIR").then(|| paths.game_dir_default().to_string()));
+        app_defaults(&|k| (k == "SANCTUARY_GAME_DIR").then(|| paths.game_dir_default().to_string()));
     for (key, value) in migrate_controls(saved) {
         merged.insert(key, value);
     }
@@ -182,13 +182,9 @@ mod tests {
     #[test]
     fn defaults_are_in_python_order() {
         let defaults = app_defaults(&no_env);
-        assert_eq!(defaults.len(), 43);
+        assert_eq!(defaults.len(), 40);
         assert_eq!(defaults.keys().next().unwrap(), "ui_language");
         assert_eq!(defaults.keys().next_back().unwrap(), "glyph_style");
-        // The switch attacks sit right before the glyphs, as in the Python's APP_DEFAULTS.
-        let at = defaults.keys().position(|key| key == "switch_attacks");
-        assert_eq!(at, Some(41));
-        assert_eq!(defaults["switch_attacks"], json!(false));
         // The 2.7.0 shader cache switches sit between the screen effects and the warm-up.
         let keys: Vec<&str> = defaults.keys().map(String::as_str).collect();
         let at = keys
@@ -214,7 +210,7 @@ mod tests {
         assert_eq!(defaults["ui_scale"], json!("auto"));
         // Ruling R91: Discord Rich Presence starts on.
         assert_eq!(defaults["discord_rpc"], json!(true));
-        let env = |k: &str| (k == "GOW3_GAME_DIR").then(|| "/games".to_string());
+        let env = |k: &str| (k == "SANCTUARY_GAME_DIR").then(|| "/games".to_string());
         assert_eq!(app_defaults(&env)["game_dir"], json!("/games"));
     }
 
@@ -225,7 +221,7 @@ mod tests {
         let saved = json!({"zzz_future": {"a": [1, 2]}, "ui_language": "pt"});
         fs::write(&path, saved.to_string()).unwrap();
         let paths = Paths::from_env(dir.path(), &|k| {
-            (k == "GOW3_DATA_DIR").then(|| dir.path().to_string_lossy().into_owned())
+            (k == "SANCTUARY_DATA_DIR").then(|| dir.path().to_string_lossy().into_owned())
         });
         let mut settings = load_app_settings(&paths);
         assert_eq!(settings.get_str("ui_language"), "pt");
@@ -248,7 +244,7 @@ mod tests {
             fs::write(&path, text).unwrap();
             let data = dir.path().to_string_lossy().into_owned();
             let paths = Paths::from_env(dir.path(), &|k| match k {
-                "GOW3_DATA_DIR" => Some(data.clone()),
+                "SANCTUARY_DATA_DIR" => Some(data.clone()),
                 "APPDATA" | "XDG_CONFIG_HOME" => Some(format!("{data}/nowhere")),
                 _ => None,
             });
@@ -264,7 +260,7 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let data = dir.path().to_string_lossy().into_owned();
         let paths = Paths::from_env(dir.path(), &|k| {
-            (k == "GOW3_DATA_DIR").then(|| data.clone())
+            (k == "SANCTUARY_DATA_DIR").then(|| data.clone())
         });
         // Missing: the defaults, nothing to report.
         let (settings, file) = read_app_settings(&paths);
@@ -288,7 +284,7 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let data = dir.path().to_string_lossy().into_owned();
         let paths = Paths::from_env(dir.path(), &|k| match k {
-            "GOW3_DATA_DIR" => Some(data.clone()),
+            "SANCTUARY_DATA_DIR" => Some(data.clone()),
             "APPDATA" | "XDG_CONFIG_HOME" => Some(format!("{data}/nowhere")),
             _ => None,
         });
@@ -311,12 +307,12 @@ mod tests {
     fn a_settings_file_at_the_old_location_is_ignored() {
         let dir = tempfile::tempdir().unwrap();
         let data = dir.path().join("data");
-        let legacy = dir.path().join("legacy").join("gow3-launcher");
+        let legacy = dir.path().join("legacy").join("sanctuary-launcher");
         fs::create_dir_all(&legacy).unwrap();
         fs::write(legacy.join("settings.json"), r#"{"ui_language": "de"}"#).unwrap();
         let config_home = dir.path().join("legacy").to_string_lossy().into_owned();
         let paths = Paths::from_env(dir.path(), &|k| match k {
-            "GOW3_DATA_DIR" => Some(data.to_string_lossy().into_owned()),
+            "SANCTUARY_DATA_DIR" => Some(data.to_string_lossy().into_owned()),
             "APPDATA" | "XDG_CONFIG_HOME" => Some(config_home.clone()),
             _ => None,
         });
@@ -327,7 +323,7 @@ mod tests {
     }
 
     fn patches(settings: &Map<String, Value>) -> Vec<&str> {
-        settings["game_patches"]["CUSA01623"]
+        settings["game_patches"]["CUSA00243"]
             .as_array()
             .unwrap()
             .iter()
@@ -337,7 +333,7 @@ mod tests {
 
     #[test]
     fn a_new_default_patch_is_ticked_once_in_a_saved_list() {
-        let mut saved = json!({"game_patches": {"CUSA01623": ["Skip Intro"]}})
+        let mut saved = json!({"game_patches": {"CUSA00243": ["Skip Intro"]}})
             .as_object()
             .unwrap()
             .clone();
@@ -345,7 +341,7 @@ mod tests {
         assert_eq!(patches(&saved), ["Skip Intro", "High FPS Wall Seam Fix"]);
         assert_eq!(saved["patches_offered"], json!(["High FPS Wall Seam Fix"]));
         // Unticked by the player afterwards: it stays off.
-        saved["game_patches"]["CUSA01623"] = json!(["Skip Intro"]);
+        saved["game_patches"]["CUSA00243"] = json!(["Skip Intro"]);
         offer_new_default_patches(&mut saved);
         assert_eq!(patches(&saved), ["Skip Intro"]);
     }
@@ -356,8 +352,8 @@ mod tests {
         offer_new_default_patches(&mut saved);
         assert!(saved.is_empty());
         // The page then writes the list it showed, with the default unticked: it stays off.
-        saved.insert("game_patches".into(), json!({"CUSA01623": ["Skip Intro"]}));
-        mark_default_patches_offered(&mut saved, "CUSA01623");
+        saved.insert("game_patches".into(), json!({"CUSA00243": ["Skip Intro"]}));
+        mark_default_patches_offered(&mut saved, "CUSA00243");
         offer_new_default_patches(&mut saved);
         assert_eq!(patches(&saved), ["Skip Intro"]);
     }

@@ -1,6 +1,6 @@
-# SpartanPort launcher (Rust)
+# SanctuaryPort launcher (Rust)
 
-Rust rewrite of the Python/Tk launcher. `src/core/` holds the launcher logic and never depends on the UI crate; `src/ui/` holds the graphical front end.
+The SanctuaryPort launcher, adapted from SpartanPort's. `src/core/` holds the launcher logic and never depends on the UI crate; `src/ui/` holds the graphical front end.
 
 ## Toolchain
 
@@ -12,7 +12,7 @@ Install Rust with [rustup](https://rustup.rs). `rust-toolchain.toml` pins the to
 
 ## macOS
 
-On macOS you can build and run the launcher, but not the game: `main` doesn't build the game's runtime for macOS yet, so PLAY doesn't start anything. Apple Silicon support is in progress in [#798](https://github.com/FelipePrado0/SpartanPort/pull/798).
+On macOS you can build and run the launcher, but not the game: `main` doesn't build the game's runtime for macOS yet, so PLAY doesn't start anything.
 
 1. Install the Xcode Command Line Tools if they are missing: `xcode-select --install`.
 2. Install Rust with [rustup](https://rustup.rs). Use the official installer rather than Homebrew's `rustup`, which puts `cargo` outside your `PATH`:

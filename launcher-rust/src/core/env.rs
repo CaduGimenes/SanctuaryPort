@@ -1,15 +1,12 @@
-//! The environment the game is started with (`GOW3_*`) and the trophy texts it reads.
+//! The environment the game is started with (`SANCTUARY_*`) and the trophy texts it reads.
 
 use std::ffi::OsStr;
-use std::fs;
-use std::path::Path;
 
 use indexmap::IndexMap;
 use serde_json::Value;
 
 use crate::core::catalog::{run_default, setting, Kind};
 use crate::core::controls::{control_map, keyboard_map, Kind as ControlKind};
-use crate::core::i18n::{tr, trophy_text, LANGS};
 use crate::core::installation::Installation;
 use crate::core::options::Choice;
 use crate::core::pad_model::MAX_DEADZONE;
@@ -19,7 +16,6 @@ use crate::core::settings::Settings;
 /// Reads one environment variable; tests pass a closure over a map instead of the process.
 pub type Lookup<'a> = &'a dyn Fn(&str) -> Option<String>;
 
-const TROPHY_COUNT: usize = 35;
 
 /// AMD hybrid laptops: this Vulkan layer hides the NVIDIA GPU and the game stays black (#263).
 const VULKAN_LAYERS_DISABLE: (&str, &str) = (
@@ -42,67 +38,6 @@ fn one_or_zero(on: bool) -> String {
     if on { "1" } else { "0" }.to_string()
 }
 
-/// The labels of the game's trophy notice and window, as (key, English).
-const TROPHY_LABELS: [(&str, &str); 20] = [
-    ("heading", "Trophies"),
-    ("notice", "TROPHY UNLOCKED"),
-    ("unlocked", "UNLOCKED"),
-    ("locked", "LOCKED"),
-    ("all", "All trophies"),
-    ("only_unlocked", "Unlocked"),
-    ("only_locked", "Locked"),
-    ("counter", "{} of {} unlocked"),
-    (
-        "hint",
-        "Up/Down: scroll   Left/Right: filter   F8 / R3+R2 / Esc: close",
-    ),
-    ("notifications", "Notifications"),
-    ("order_list", "List order"),
-    ("order_common", "Most earned first"),
-    ("order_rare", "Rarest first"),
-    ("rarity", "{}% of players"),
-    ("common", "Common"),
-    ("rare", "Rare"),
-    ("very_rare", "Very rare"),
-    ("ultra_rare", "Ultra rare"),
-    ("hint_order", "Triangle/Tab: order   L1/R1: notifications"),
-    (
-        "hint_notifications",
-        "L1/R1: trophies   F8 / R3+R2 / Esc: close",
-    ),
-];
-
-/// The text of a trophy_texts.txt in `lang`: the labels, then "ID=Name | Description" per trophy.
-pub fn trophy_texts(lang: &str) -> String {
-    let mut lines = vec![format!(
-        "# Written by the launcher on every start (language: {lang}); do not edit."
-    )];
-    for (key, en) in TROPHY_LABELS {
-        let text = tr(lang, en);
-        let collapsed = text.split_whitespace().collect::<Vec<_>>().join(" ");
-        lines.push(format!("@{key}={collapsed}"));
-    }
-    for trophy in 0..TROPHY_COUNT {
-        let (name, description) = trophy_text(lang, trophy);
-        lines.push(format!("{trophy}={name} | {description}"));
-    }
-    lines.join("\n") + "\n"
-}
-
-/// `user/trophy_texts.txt`: the trophy names, descriptions and labels the game shows, in the
-/// launcher's language, and the same in every language in `user/trophy_texts/<language>.txt`, for
-/// the language chosen inside the game. A failure is harmless.
-pub fn write_trophy_texts(folder: &Path, lang: &str) {
-    let each = folder.join("trophy_texts");
-    if fs::create_dir_all(&each).is_err() {
-        return;
-    }
-    let _ = fs::write(folder.join("trophy_texts.txt"), trophy_texts(lang));
-    for code in LANGS {
-        let _ = fs::write(each.join(format!("{code}.txt")), trophy_texts(code));
-    }
-}
-
 /// An environment as text, in its order (lossily where it is not Unicode): what the game starts
 /// from is the launcher's whole environment, `environment_of(std::env::vars_os())`, as the
 /// Python passes `dict(os.environ)`.
@@ -119,7 +54,7 @@ pub fn environment_of<K: AsRef<OsStr>, V: AsRef<OsStr>>(
         .collect()
 }
 
-/// The `GOW3_*` name of a catalog row; empty when the row has none (a slip the contract test in
+/// The `SANCTUARY_*` name of a catalog row; empty when the row has none (a slip the contract test in
 /// `tests/env_contract.rs` catches).
 fn var(key: &str) -> &'static str {
     setting(key).and_then(|row| row.env).map_or("", |e| e.name)
@@ -131,22 +66,6 @@ fn choices(key: &str) -> &'static [Choice] {
         Some(Kind::Choice(list)) => list,
         _ => &[],
     }
-}
-
-/// The custom colours of the four face buttons as `cross=blue,circle=orange`: only the buttons that
-/// are not gray, which is what an unpicked one is; a name outside the palette counts as gray.
-fn custom_key_colors(settings: &Settings) -> String {
-    ["cross", "circle", "square", "triangle"]
-        .iter()
-        .filter_map(|button| {
-            let color = settings.get_str(&format!("glyph_color_{button}"));
-            let named = crate::core::options::KEY_COLORS
-                .iter()
-                .any(|choice| choice.value == color);
-            (named && color != "gray").then(|| format!("{button}={color}"))
-        })
-        .collect::<Vec<_>>()
-        .join(",")
 }
 
 /// `1` or `0` for the flag `key`, always written.
@@ -170,7 +89,6 @@ pub fn game_environment(
     base: &IndexMap<String, String>,
     windows: bool,
 ) -> IndexMap<String, String> {
-    write_trophy_texts(&paths.user_dir(&settings.get_str("user_dir")), lang);
     environment(settings, paths, lang, base, windows)
 }
 
@@ -205,8 +123,8 @@ pub fn environment(
     let chosen = title_id.and_then(|id| settings.get("game_patches")?.get(id)?.as_array());
     if let (Some(_), Some(chosen)) = (profile, chosen) {
         let names: Vec<&str> = chosen.iter().filter_map(Value::as_str).collect();
-        env.insert("GOW3_PATCHES".into(), names.join(";"));
-        env.insert("GOW3_PATCHES_ONLY".into(), "1".into());
+        env.insert("SANCTUARY_PATCHES".into(), names.join(";"));
+        env.insert("SANCTUARY_PATCHES_ONLY".into(), "1".into());
     }
     let user_dir = settings.get_str("user_dir");
     if !user_dir.is_empty() {
@@ -214,7 +132,7 @@ pub fn environment(
     }
     if !windows {
         env.insert(
-            "GOW3_FSR4_DIR".into(),
+            "SANCTUARY_FSR4_DIR".into(),
             paths.fsr4_folder().to_string_lossy().into_owned(),
         );
     }
@@ -223,14 +141,14 @@ pub fn environment(
         var("mods_dir").into(),
         path_text(paths.mods_dir(&settings.get_str("mods_dir"))),
     );
-    env.insert("GOW3_MODS_CONFIG".into(), path_text(paths.mods_json()));
+    env.insert("SANCTUARY_MODS_CONFIG".into(), path_text(paths.mods_json()));
     put_switch(&mut env, settings, "mods_enabled");
     env.insert(
         var("patches_dir").into(),
         path_text(paths.patches_dir(&settings.get_str("patches_dir"))),
     );
     env.insert(
-        "GOW3_PATCHES_CONFIG".into(),
+        "SANCTUARY_PATCHES_CONFIG".into(),
         path_text(paths.patches_json()),
     );
     env.insert(var("language").into(), settings.get_str("language"));
@@ -300,18 +218,18 @@ pub fn environment(
     // The key and pad maps are derived from the saved bindings (no 1:1 catalog row).
     let no_controls = Value::Object(serde_json::Map::new());
     let controls = settings.get("controls").unwrap_or(&no_controls);
-    let value = keyboard_map(controls, settings.flag("rage_one_input"));
+    let value = keyboard_map(controls);
     if !value.is_empty() {
-        env.insert("GOW3_KEY_MAP".into(), value);
+        env.insert("SANCTUARY_KEY_MAP".into(), value);
     }
     let value = control_map(controls, ControlKind::Pad);
     if !value.is_empty() {
-        env.insert("GOW3_PAD_MAP".into(), value);
+        env.insert("SANCTUARY_PAD_MAP".into(), value);
     }
     // 0 is the game's own stick, so only a real dead zone is sent.
     for (key, name) in [
-        ("deadzone_left", "GOW3_DEADZONE_LEFT"),
-        ("deadzone_right", "GOW3_DEADZONE_RIGHT"),
+        ("deadzone_left", "SANCTUARY_DEADZONE_LEFT"),
+        ("deadzone_right", "SANCTUARY_DEADZONE_RIGHT"),
     ] {
         env.shift_remove(name);
         let percent = settings.get(key).and_then(Value::as_u64).unwrap_or(0);
@@ -319,9 +237,6 @@ pub fn environment(
             env.insert(name.into(), percent.to_string());
         }
     }
-    // The saved choice wins over an inherited variable, as in the Python.
-    env.shift_remove(var("switch_attacks"));
-    put_if_on(&mut env, settings, "switch_attacks");
     // A saved value that is not a choice, or is the runner's own default, is left out.
     let put_choice = |env: &mut IndexMap<String, String>, key: &str| {
         let name = var(key);
@@ -332,20 +247,9 @@ pub fn environment(
             env.insert(name.into(), value);
         }
     };
-    put_choice(&mut env, "stick_prompts");
     put_choice(&mut env, "glyph_style");
-    put_choice(&mut env, "glyph_keys");
-    put_choice(&mut env, "glyph_key_colors");
-    // The four picks of a custom colouring travel together, only with that choice.
-    env.shift_remove("GOW3_GLYPH_KEY_COLOR_MAP");
-    if env.get("GOW3_GLYPH_KEY_COLORS").map(String::as_str) == Some("custom") {
-        let custom = custom_key_colors(settings);
-        if !custom.is_empty() {
-            env.insert("GOW3_GLYPH_KEY_COLOR_MAP".into(), custom);
-        }
-    }
-    env.shift_remove("GOW3_MENU_CONFIRM_SWAP");
-    env.shift_remove("GOW3_MENU_CONFIRM");
+    env.shift_remove("SANCTUARY_MENU_CONFIRM_SWAP");
+    env.shift_remove("SANCTUARY_MENU_CONFIRM");
     if let Some(val) = settings.get("menu_confirm_swap") {
         let is_swapped = match val {
             Value::String(s) => matches!(
@@ -357,7 +261,7 @@ pub fn environment(
             _ => false,
         };
         if is_swapped {
-            env.insert("GOW3_MENU_CONFIRM_SWAP".into(), "1".into());
+            env.insert("SANCTUARY_MENU_CONFIRM_SWAP".into(), "1".into());
         }
     }
     env.insert("PYTHONUNBUFFERED".into(), "1".into());
@@ -386,13 +290,13 @@ mod tests {
         let run =
             |settings: &Settings| game_environment(settings, &paths, "en", &IndexMap::new(), true);
         let env = run(&settings);
-        assert!(!env.contains_key("GOW3_DEADZONE_LEFT"));
-        assert!(!env.contains_key("GOW3_DEADZONE_RIGHT"));
+        assert!(!env.contains_key("SANCTUARY_DEADZONE_LEFT"));
+        assert!(!env.contains_key("SANCTUARY_DEADZONE_RIGHT"));
         settings.set("deadzone_left", json!(12));
         settings.set("deadzone_right", json!(99));
         let env = run(&settings);
-        assert_eq!(env["GOW3_DEADZONE_LEFT"], "12");
-        assert!(!env.contains_key("GOW3_DEADZONE_RIGHT"));
+        assert_eq!(env["SANCTUARY_DEADZONE_LEFT"], "12");
+        assert!(!env.contains_key("SANCTUARY_DEADZONE_RIGHT"));
     }
 
     #[test]
@@ -444,7 +348,7 @@ mod tests {
     fn setup(edits: Value) -> (Settings, Paths, tempfile::TempDir) {
         let dir = tempfile::tempdir().unwrap();
         let data = dir.path().to_string_lossy().into_owned();
-        let env = move |key: &str| (key == "GOW3_DATA_DIR").then(|| data.clone());
+        let env = move |key: &str| (key == "SANCTUARY_DATA_DIR").then(|| data.clone());
         let paths = Paths::from_env(dir.path(), &env);
         let mut settings = Settings(app_defaults(&|_| None));
         if let Value::Object(map) = edits {
@@ -465,15 +369,15 @@ mod tests {
     #[test]
     fn inherited_gpu_id_and_monitor_are_dropped_when_not_digits() {
         let (settings, paths, _dir) = setup(json!({"gpu_id": "abc", "monitor": "-1"}));
-        let inherited = base(&[("GOW3_GPU_ID", "7"), ("GOW3_MONITOR", "3")]);
+        let inherited = base(&[("SANCTUARY_GPU_ID", "7"), ("SANCTUARY_MONITOR", "3")]);
         let env = game_environment(&settings, &paths, "en", &inherited, true);
-        assert!(!env.contains_key("GOW3_GPU_ID"));
-        assert!(!env.contains_key("GOW3_MONITOR"));
+        assert!(!env.contains_key("SANCTUARY_GPU_ID"));
+        assert!(!env.contains_key("SANCTUARY_MONITOR"));
 
         let (settings, paths, _dir) = setup(json!({"gpu_id": "2", "monitor": "1"}));
         let env = game_environment(&settings, &paths, "en", &inherited, true);
-        assert_eq!(env["GOW3_GPU_ID"], "2");
-        assert_eq!(env["GOW3_MONITOR"], "1");
+        assert_eq!(env["SANCTUARY_GPU_ID"], "2");
+        assert_eq!(env["SANCTUARY_MONITOR"], "1");
     }
 
     #[test]
@@ -481,14 +385,14 @@ mod tests {
         // R91: the default turns it on, and a file without the key (an older launcher's) too.
         let (settings, paths, _dir) = setup(json!({}));
         let env = game_environment(&settings, &paths, "en", &IndexMap::new(), true);
-        assert_eq!(env["GOW3_DISCORD"], "1");
+        assert_eq!(env["SANCTUARY_DISCORD"], "1");
         let mut without = settings.clone();
         without.0.shift_remove("discord_rpc");
         let env = game_environment(&without, &paths, "en", &IndexMap::new(), true);
-        assert_eq!(env["GOW3_DISCORD"], "1");
+        assert_eq!(env["SANCTUARY_DISCORD"], "1");
         let (off, paths, _dir) = setup(json!({"discord_rpc": false}));
         let env = game_environment(&off, &paths, "en", &IndexMap::new(), true);
-        assert_eq!(env["GOW3_DISCORD"], "0");
+        assert_eq!(env["SANCTUARY_DISCORD"], "0");
     }
 
     #[test]
@@ -498,7 +402,7 @@ mod tests {
         let mut without = settings.clone();
         without.0.shift_remove("shader_notes");
         let env = game_environment(&without, &paths, "en", &IndexMap::new(), true);
-        assert_eq!(env["GOW3_SHADER_NOTES"], "0");
+        assert_eq!(env["SANCTUARY_SHADER_NOTES"], "0");
     }
 
     #[test]
@@ -506,7 +410,7 @@ mod tests {
         for enabled in [true, false] {
             let dir = tempfile::tempdir().unwrap();
             let data = dir.path().to_string_lossy().into_owned();
-            let env = move |key: &str| (key == "GOW3_DATA_DIR").then(|| data.clone());
+            let env = move |key: &str| (key == "SANCTUARY_DATA_DIR").then(|| data.clone());
             let paths = Paths::from_env(dir.path(), &env);
             std::fs::write(
                 dir.path().join("settings.json"),
@@ -516,7 +420,7 @@ mod tests {
             let settings = crate::core::settings::load_app_settings(&paths);
             assert_eq!(settings.get("shader_notes"), Some(&json!(enabled)));
             let env = game_environment(&settings, &paths, "en", &IndexMap::new(), true);
-            assert_eq!(env["GOW3_SHADER_NOTES"], if enabled { "1" } else { "0" });
+            assert_eq!(env["SANCTUARY_SHADER_NOTES"], if enabled { "1" } else { "0" });
         }
     }
 
@@ -526,9 +430,9 @@ mod tests {
         let env = game_environment(&settings, &paths, "en", &IndexMap::new(), true);
         assert_eq!(
             (
-                env["GOW3_DISK_SHADERS"].as_str(),
-                env["GOW3_SHADER_PREFETCH"].as_str(),
-                env["GOW3_SHADER_NOTES"].as_str()
+                env["SANCTUARY_DISK_SHADERS"].as_str(),
+                env["SANCTUARY_SHADER_PREFETCH"].as_str(),
+                env["SANCTUARY_SHADER_NOTES"].as_str()
             ),
             ("1", "1", "0")
         );
@@ -536,14 +440,14 @@ mod tests {
         let keys: Vec<&str> = env.keys().map(String::as_str).collect();
         let at = keys
             .iter()
-            .position(|key| *key == "GOW3_PARTIAL_HEIGHT_VIEWS")
+            .position(|key| *key == "SANCTUARY_PARTIAL_HEIGHT_VIEWS")
             .unwrap();
         assert_eq!(
             &keys[at + 1..at + 4],
             [
-                "GOW3_DISK_SHADERS",
-                "GOW3_SHADER_PREFETCH",
-                "GOW3_SHADER_NOTES"
+                "SANCTUARY_DISK_SHADERS",
+                "SANCTUARY_SHADER_PREFETCH",
+                "SANCTUARY_SHADER_NOTES"
             ]
         );
         let (off, paths, _dir) = setup(json!({
@@ -552,9 +456,9 @@ mod tests {
         let env = game_environment(&off, &paths, "en", &IndexMap::new(), true);
         assert_eq!(
             (
-                env["GOW3_DISK_SHADERS"].as_str(),
-                env["GOW3_SHADER_PREFETCH"].as_str(),
-                env["GOW3_SHADER_NOTES"].as_str()
+                env["SANCTUARY_DISK_SHADERS"].as_str(),
+                env["SANCTUARY_SHADER_PREFETCH"].as_str(),
+                env["SANCTUARY_SHADER_NOTES"].as_str()
             ),
             ("0", "0", "0")
         );
@@ -563,30 +467,14 @@ mod tests {
     #[test]
     fn stream_memory_falls_back_to_cached() {
         let (settings, paths, _dir) = setup(json!({"stream_memory": "weird"}));
-        let inherited = base(&[("GOW3_STREAM_MEMORY", "device")]);
+        let inherited = base(&[("SANCTUARY_STREAM_MEMORY", "device")]);
         let env = game_environment(&settings, &paths, "en", &inherited, true);
-        assert_eq!(env["GOW3_STREAM_MEMORY"], "cached");
+        assert_eq!(env["SANCTUARY_STREAM_MEMORY"], "cached");
         let (settings, paths, _dir) = setup(json!({"stream_memory": "host"}));
         let env = game_environment(&settings, &paths, "en", &inherited, true);
-        assert_eq!(env["GOW3_STREAM_MEMORY"], "host");
+        assert_eq!(env["SANCTUARY_STREAM_MEMORY"], "host");
     }
 
-    #[test]
-    fn switch_attacks_follow_the_saved_choice() {
-        // Off by default: no variable, also over an inherited one.
-        let (settings, paths, _dir) = setup(json!({}));
-        let inherited = base(&[("GOW3_SWITCH_ATTACKS", "1")]);
-        let env = game_environment(&settings, &paths, "en", &inherited, true);
-        assert!(!env.contains_key("GOW3_SWITCH_ATTACKS"));
-        let (on, paths, _dir) = setup(json!({"switch_attacks": true}));
-        let env = game_environment(&on, &paths, "en", &IndexMap::new(), true);
-        assert_eq!(env["GOW3_SWITCH_ATTACKS"], "1");
-        // In the Python's order: after the key and gamepad maps.
-        let keys: Vec<&str> = env.keys().map(String::as_str).collect();
-        let at = keys.iter().position(|key| *key == "GOW3_SWITCH_ATTACKS");
-        let key_map = keys.iter().position(|key| *key == "GOW3_KEY_MAP");
-        assert!(key_map.is_some() && key_map < at, "{keys:?}");
-    }
 
     #[test]
     fn alternative_keys_reach_the_key_map() {
@@ -595,14 +483,14 @@ mod tests {
             "key_alt": {"cross": "K", "circle": "L", "square": "J", "triangle": "I"}
         }}));
         let env = game_environment(&settings, &paths, "en", &IndexMap::new(), true);
-        assert!(env["GOW3_KEY_MAP"].contains(
+        assert!(env["SANCTUARY_KEY_MAP"].contains(
             "cross=Space|K,circle=Left Ctrl|L,square=Mouse Left|J,triangle=Mouse Right|I,"
         ));
         // Without alternatives the map has no `|`, and the gamepad map never has one.
         let (plain, paths, _dir) = setup(json!({}));
         let env = game_environment(&plain, &paths, "en", &IndexMap::new(), true);
-        assert!(!env["GOW3_KEY_MAP"].contains('|'));
-        assert!(!env.contains_key("GOW3_PAD_MAP"));
+        assert!(!env["SANCTUARY_KEY_MAP"].contains('|'));
+        assert!(!env.contains_key("SANCTUARY_PAD_MAP"));
     }
 
     #[test]
@@ -613,7 +501,7 @@ mod tests {
             "key_alt2": {"cross": "Keypad 2", "circle": "Keypad 6", "square": "Keypad 4", "triangle": "Keypad 8"}
         }}));
         let env = game_environment(&settings, &paths, "en", &IndexMap::new(), true);
-        assert!(env["GOW3_KEY_MAP"].contains(
+        assert!(env["SANCTUARY_KEY_MAP"].contains(
             "cross=Space|9|Keypad 2,circle=Left Ctrl|0|Keypad 6,square=Mouse Left|7|Keypad 4,triangle=Mouse Right|8|Keypad 8,"
         ));
     }
@@ -635,11 +523,10 @@ mod tests {
                 .map(|row| (row.button.to_string(), json!("Mouse Forward")))
                 .collect();
         let (settings, paths, _dir) = setup(json!({
-            "rage_one_input": false,
             "controls": {"key": keys, "key_alt": alternatives, "key_alt2": second}
         }));
         let env = game_environment(&settings, &paths, "en", &IndexMap::new(), true);
-        let bound: Vec<&str> = env["GOW3_KEY_MAP"]
+        let bound: Vec<&str> = env["SANCTUARY_KEY_MAP"]
             .split(',')
             .filter(|entry| entry.contains("Mouse Forward"))
             .collect();
@@ -652,126 +539,10 @@ mod tests {
         );
     }
 
-    #[test]
-    fn the_icon_keys_choice_is_sent_only_when_it_is_not_the_main_key() {
-        let inherited = base(&[("GOW3_GLYPH_KEYS", "alternative")]);
-        let (settings, paths, _dir) = setup(json!({}));
-        let env = game_environment(&settings, &paths, "en", &inherited, true);
-        assert!(
-            !env.contains_key("GOW3_GLYPH_KEYS"),
-            "the saved choice wins"
-        );
-        let (chosen, paths, _dir) = setup(json!({"glyph_keys": "alternative"}));
-        let env = game_environment(&chosen, &paths, "en", &IndexMap::new(), true);
-        assert_eq!(env["GOW3_GLYPH_KEYS"], "alternative");
-        let (lyre, paths, _dir) = setup(json!({"glyph_keys": "lyre"}));
-        let env = game_environment(&lyre, &paths, "en", &IndexMap::new(), true);
-        assert_eq!(env["GOW3_GLYPH_KEYS"], "lyre");
-        let (unknown, paths, _dir) = setup(json!({"glyph_keys": "both"}));
-        let env = game_environment(&unknown, &paths, "en", &IndexMap::new(), true);
-        assert!(!env.contains_key("GOW3_GLYPH_KEYS"));
-    }
 
-    #[test]
-    fn the_key_colors_are_sent_only_when_they_change_a_label() {
-        // The style, and with Custom the picks of the four buttons.
-        let colors = |edits: Value| {
-            let (settings, paths, _dir) = setup(edits);
-            let env = game_environment(&settings, &paths, "en", &IndexMap::new(), true);
-            (
-                env.get("GOW3_GLYPH_KEY_COLORS").cloned(),
-                env.get("GOW3_GLYPH_KEY_COLOR_MAP").cloned(),
-            )
-        };
-        let style = |name: &str| (Some(name.to_string()), None);
-        assert_eq!(colors(json!({})), (None, None));
-        assert_eq!(colors(json!({"glyph_key_colors": "gray"})), (None, None));
-        assert_eq!(
-            colors(json!({"glyph_key_colors": "playstation"})),
-            style("playstation")
-        );
-        // Custom joins the four picks, in the order of the buttons, leaving out the gray ones.
-        let custom = json!({
-            "glyph_key_colors": "custom",
-            "glyph_color_square": "blue", "glyph_color_cross": "blue",
-            "glyph_color_triangle": "orange", "glyph_color_circle": "orange"
-        });
-        assert_eq!(
-            colors(custom),
-            (
-                Some("custom".to_string()),
-                Some("cross=blue,circle=orange,square=blue,triangle=orange".to_string())
-            )
-        );
-        assert_eq!(
-            colors(json!({"glyph_key_colors": "custom", "glyph_color_circle": "red"})),
-            (Some("custom".to_string()), Some("circle=red".to_string()))
-        );
-        // Custom with nothing picked, or a name outside the palette, has no picks to send; picks
-        // while the style is not custom, and an unknown style, send nothing.
-        assert_eq!(
-            colors(json!({"glyph_key_colors": "custom"})),
-            style("custom")
-        );
-        assert_eq!(
-            colors(json!({"glyph_key_colors": "custom", "glyph_color_cross": "chartreuse"})),
-            style("custom")
-        );
-        assert_eq!(colors(json!({"glyph_color_cross": "blue"})), (None, None));
-        assert_eq!(colors(json!({"glyph_key_colors": "rainbow"})), (None, None));
-        assert_eq!(
-            colors(json!({"glyph_key_colors": "playstation", "glyph_color_cross": "blue"})),
-            style("playstation")
-        );
-    }
 
-    #[test]
-    fn trophy_texts_file_has_35_rows_and_the_labels() {
-        let dir = tempfile::tempdir().unwrap();
-        let folder = dir.path().join("user");
-        write_trophy_texts(&folder, "pt");
-        let text = fs::read_to_string(folder.join("trophy_texts.txt")).unwrap();
-        assert!(text.ends_with('\n'));
-        let lines: Vec<&str> = text.lines().collect();
-        assert_eq!(lines.len(), 56);
-        assert!(lines[0].starts_with("# Written by the launcher on every start (language: pt)"));
-        assert_eq!(lines[1], format!("@heading={}", tr("pt", "Trophies")));
-        let (name, _) = trophy_text("pt", 0);
-        assert!(lines[21].starts_with(&format!("0={name} | ")));
-        assert!(lines[55].starts_with("34="));
-    }
 
-    #[test]
-    fn trophy_texts_are_written_in_every_language() {
-        let dir = tempfile::tempdir().unwrap();
-        let folder = dir.path().join("user");
-        write_trophy_texts(&folder, "pt");
-        for code in LANGS {
-            let text = fs::read_to_string(folder.join("trophy_texts").join(format!("{code}.txt")))
-                .unwrap();
-            let lines: Vec<&str> = text.lines().collect();
-            let rows = lines
-                .iter()
-                .filter(|line| line.starts_with(|c: char| c.is_ascii_digit()));
-            assert_eq!(rows.count(), TROPHY_COUNT, "{code}");
-            let labels = lines.iter().filter(|line| line.starts_with('@')).count();
-            assert_eq!(labels, TROPHY_LABELS.len(), "{code}");
-        }
-        let ru = fs::read_to_string(folder.join("trophy_texts").join("ru.txt")).unwrap();
-        assert!(ru.contains("@heading=Трофеи"));
-        assert!(ru.contains("@rarity={}% игроков"));
-        let pt = fs::read_to_string(folder.join("trophy_texts").join("pt.txt")).unwrap();
-        assert!(pt.contains("@order_rare=Mais raros primeiro"));
-    }
 
-    #[test]
-    fn english_names_are_the_ps4_list() {
-        let names: Vec<String> = [12, 23, 28]
-            .iter()
-            .map(|&id| trophy_text("en", id).0)
-            .collect();
-        assert_eq!(names, ["Torn Up", "Depths Below", "Horn of Plenty"]);
-    }
 
     #[test]
     fn game_environment_honors_inherited_spartan_user_dir() {
@@ -779,17 +550,16 @@ mod tests {
         let user_folder = dir.path().join("inherited_user");
         let user_str = user_folder.to_string_lossy().into_owned();
         let user_clone = user_str.clone();
-        let env_fn = move |key: &str| (key == "GOW3_USER_DIR").then(|| user_clone.clone());
+        let env_fn = move |key: &str| (key == "SANCTUARY_USER_DIR").then(|| user_clone.clone());
         let paths = Paths::from_env(dir.path(), &env_fn);
         let settings = Settings(app_defaults(&|_| None));
-        let inherited = base(&[("GOW3_USER_DIR", &user_str)]);
+        let inherited = base(&[("SANCTUARY_USER_DIR", &user_str)]);
 
         let env = game_environment(&settings, &paths, "en", &inherited, true);
         assert_eq!(
-            env.get("GOW3_USER_DIR").map(String::as_str),
+            env.get("SANCTUARY_USER_DIR").map(String::as_str),
             Some(user_str.as_str())
         );
-        assert!(user_folder.join("trophy_texts.txt").is_file());
     }
 
     #[test]
@@ -800,32 +570,30 @@ mod tests {
         let inherited_str = inherited_folder.to_string_lossy().into_owned();
         let custom_str = custom_folder.to_string_lossy().into_owned();
         let inh_clone = inherited_str.clone();
-        let env_fn = move |key: &str| (key == "GOW3_USER_DIR").then(|| inh_clone.clone());
+        let env_fn = move |key: &str| (key == "SANCTUARY_USER_DIR").then(|| inh_clone.clone());
         let paths = Paths::from_env(dir.path(), &env_fn);
 
         let (mut settings, _, _temp) = setup(json!({}));
         settings.set("user_dir", json!(custom_str));
-        let inherited = base(&[("GOW3_USER_DIR", &inherited_str)]);
+        let inherited = base(&[("SANCTUARY_USER_DIR", &inherited_str)]);
 
         let env = game_environment(&settings, &paths, "en", &inherited, true);
         assert_eq!(
-            env.get("GOW3_USER_DIR").map(String::as_str),
+            env.get("SANCTUARY_USER_DIR").map(String::as_str),
             Some(custom_str.as_str())
         );
-        assert!(custom_folder.join("trophy_texts.txt").is_file());
-        assert!(!inherited_folder.join("trophy_texts.txt").exists());
     }
 
     #[test]
     fn inherited_menu_confirm_env_is_not_leaked() {
         let (settings, paths, _dir) = setup(json!({}));
         let inherited = base(&[
-            ("GOW3_MENU_CONFIRM_SWAP", "1"),
-            ("GOW3_MENU_CONFIRM", "circle"),
+            ("SANCTUARY_MENU_CONFIRM_SWAP", "1"),
+            ("SANCTUARY_MENU_CONFIRM", "circle"),
         ]);
         let env = game_environment(&settings, &paths, "en", &inherited, true);
-        assert!(!env.contains_key("GOW3_MENU_CONFIRM_SWAP"));
-        assert!(!env.contains_key("GOW3_MENU_CONFIRM"));
+        assert!(!env.contains_key("SANCTUARY_MENU_CONFIRM_SWAP"));
+        assert!(!env.contains_key("SANCTUARY_MENU_CONFIRM"));
     }
 
     #[test]
@@ -833,11 +601,11 @@ mod tests {
         let (settings, paths, _dir) = setup(json!({"menu_confirm_swap": "1"}));
         let env = game_environment(&settings, &paths, "en", &IndexMap::new(), true);
         assert_eq!(
-            env.get("GOW3_MENU_CONFIRM_SWAP").map(String::as_str),
+            env.get("SANCTUARY_MENU_CONFIRM_SWAP").map(String::as_str),
             Some("1")
         );
         let (settings, paths, _dir) = setup(json!({"menu_confirm_swap": "0"}));
         let env = game_environment(&settings, &paths, "en", &IndexMap::new(), true);
-        assert!(!env.contains_key("GOW3_MENU_CONFIRM_SWAP"));
+        assert!(!env.contains_key("SANCTUARY_MENU_CONFIRM_SWAP"));
     }
 }

@@ -160,9 +160,9 @@ mod tests {
     fn sample() -> Vec<u8> {
         build(&[
             ("ATTRIBUTE", 0x404, 2u32.to_le_bytes().to_vec()),
-            ("TITLE_ID", 0x204, text("CUSA01623")),
-            ("APP_VER", 0x204, text("01.02")),
-            ("TITLE", 0x204, text("God of War® III Remastered")),
+            ("TITLE_ID", 0x204, text("CUSA00243")),
+            ("APP_VER", 0x204, text("01.47")),
+            ("TITLE", 0x204, text("Diablo® III: Eternal Collection")),
         ])
     }
 
@@ -171,11 +171,11 @@ mod tests {
         let map = parse_sfo(&sample()).unwrap();
         assert_eq!(map.len(), 4);
         assert_eq!(map["ATTRIBUTE"], SfoValue::Int(2));
-        assert_eq!(map["TITLE_ID"], SfoValue::Text("CUSA01623".into()));
-        assert_eq!(map["APP_VER"], SfoValue::Text("01.02".into()));
+        assert_eq!(map["TITLE_ID"], SfoValue::Text("CUSA00243".into()));
+        assert_eq!(map["APP_VER"], SfoValue::Text("01.47".into()));
         assert_eq!(
             map["TITLE"],
-            SfoValue::Text("God of War® III Remastered".into())
+            SfoValue::Text("Diablo® III: Eternal Collection".into())
         );
     }
 
@@ -227,7 +227,7 @@ mod tests {
         std::fs::write(&path, sample()).unwrap();
         assert_eq!(
             load_sfo(&path).unwrap()["TITLE_ID"],
-            SfoValue::Text("CUSA01623".into())
+            SfoValue::Text("CUSA00243".into())
         );
         assert_eq!(read_sfo(&path).unwrap()["ATTRIBUTE"], SfoValue::Int(2));
 

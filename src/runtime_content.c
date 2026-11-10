@@ -77,7 +77,7 @@ static ABI int32_t param_int(uint32_t id,int32_t *out) {
     printf("Runtime: AppContent parameter %u = %d\n",id,*out);
     return 0;
 }
-/* Add-ons: GOW3_ADDCONT_DIR holds one folder per entitlement label (16 characters), as the
+/* Add-ons: SANCTUARY_ADDCONT_DIR holds one folder per entitlement label (16 characters), as the
  * PS4 installs them. Diablo III's packs are entitlement-only (license + config, no data), so
  * listing them is enough; they are reported installed, as shadPS4 does. */
 typedef struct { char label[17]; uint8_t pad[3]; uint32_t status; } AddcontInfo;
@@ -88,7 +88,7 @@ static uint32_t addon_count, addons_scanned;
 static void scan_addons(void) {
     if (addons_scanned) return;
     addons_scanned=1;
-    const char *dir=getenv("GOW3_ADDCONT_DIR");
+    const char *dir=getenv("SANCTUARY_ADDCONT_DIR");
     DIR *d=dir && *dir ? opendir(dir) : NULL;
     for (struct dirent *e; d && (e=readdir(d)) && addon_count<32;) {
         if (strlen(e->d_name)!=16) continue;

@@ -1,7 +1,7 @@
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 //! The SDL3 adapter on the real library, with virtual joysticks (Python
 //! `tests/test_controller_mapper_sdl.py`): no pad and no display are needed. Set
-//! `SPARTAN_TEST_SDL3` to SDL3's path (`SDL3.dll` or `libSDL3.so`); without it each SDL test says
+//! `SANCTUARY_TEST_SDL3` to SDL3's path (`SDL3.dll` or `libSDL3.so`); without it each SDL test says
 //! so and passes.
 
 use std::ffi::OsString;
@@ -49,11 +49,11 @@ struct Rig {
 }
 
 impl Rig {
-    /// `None` (and a note) without `SPARTAN_TEST_SDL3`.
+    /// `None` (and a note) without `SANCTUARY_TEST_SDL3`.
     fn new() -> Option<Rig> {
-        let Some(library) = std::env::var_os("SPARTAN_TEST_SDL3").filter(|path| !path.is_empty())
+        let Some(library) = std::env::var_os("SANCTUARY_TEST_SDL3").filter(|path| !path.is_empty())
         else {
-            println!("skipped: set SPARTAN_TEST_SDL3");
+            println!("skipped: set SANCTUARY_TEST_SDL3");
             return None;
         };
         let lock = SDL.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
@@ -96,7 +96,7 @@ impl Rig {
             axes: 6,
             buttons: 12,
             hats: 1,
-            name: "GOW3 mapper test".to_string(),
+            name: "SANCTUARY mapper test".to_string(),
         };
         self.ident = sdl.attach_virtual(&joystick).unwrap();
         assert_ne!(self.ident, 0);
@@ -106,7 +106,7 @@ impl Rig {
             .into_iter()
             .find(|device| device.id == self.ident)
             .unwrap();
-        assert_eq!(device.name, "GOW3 mapper test");
+        assert_eq!(device.name, "SANCTUARY mapper test");
         assert_eq!((device.buttons, device.axes, device.hats), (12, 6, 1));
         sdl.select(&device).unwrap();
         self.device = device;
@@ -351,9 +351,9 @@ fn the_fake_answers_like_the_sdl_adapter() {
 /// The real SDL3 starts, answers and stops on the live view's own thread.
 #[test]
 fn sdl_runs_on_its_own_thread() {
-    let Some(library) = std::env::var_os("SPARTAN_TEST_SDL3").filter(|path| !path.is_empty())
+    let Some(library) = std::env::var_os("SANCTUARY_TEST_SDL3").filter(|path| !path.is_empty())
     else {
-        println!("skipped: set SPARTAN_TEST_SDL3");
+        println!("skipped: set SANCTUARY_TEST_SDL3");
         return;
     };
     let _lock = SDL.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
@@ -375,6 +375,6 @@ fn sdl_runs_on_its_own_thread() {
     drop(joysticks);
     // Stopped for real: the next one opens.
     let dir = tempfile::tempdir().unwrap();
-    let library = std::env::var_os("SPARTAN_TEST_SDL3").unwrap();
+    let library = std::env::var_os("SANCTUARY_TEST_SDL3").unwrap();
     assert!(Sdl3::open(dir.path(), dir.path(), Some(std::path::Path::new(&library))).is_ok());
 }

@@ -934,9 +934,9 @@ mod tests {
     fn sdl3_is_loaded_once_and_kept_for_the_process() {
         // SDL's global state outlives SDL_QuitSubSystem, so the library is never unloaded (as
         // Python's CDLL), and opening the mapper again reuses it.
-        let Some(path) = std::env::var_os("GOW3_TEST_SDL3").filter(|path| !path.is_empty())
+        let Some(path) = std::env::var_os("SANCTUARY_TEST_SDL3").filter(|path| !path.is_empty())
         else {
-            println!("skipped: set GOW3_TEST_SDL3");
+            println!("skipped: set SANCTUARY_TEST_SDL3");
             return;
         };
         let path = PathBuf::from(path);

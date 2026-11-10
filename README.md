@@ -33,6 +33,7 @@ CPU emulator.
 | ✅ DLC entitlements | from your own add-on packages |
 | ✅ Install straight from your PKG files | in the launcher, no external tools |
 | ✅ Languages | whatever your dump ships: Portuguese (Brazil) and Spanish in the Brazilian release; English, French and Spanish in the US one |
+| ✅ Render resolution 480p–4K | resolution patches; FSR 1 upscaling and RCAS sharpening |
 | ✅ Updates | the 1.47 update (Eternal Collection) from its own folder; the base game is never changed |
 | ⚠️ Windows | the code base builds for Windows, but this port has only been played on Linux |
 | ❌ Online play / PSN | offline only |
@@ -45,7 +46,7 @@ CPU emulator.
 - **Home** with your game's own key art (`sce_sys/pic1.png`, read from your dump; nothing is shipped);
 - **Graphics / Performance**: resolution, window mode, monitor, VSync, upscalers, frame limit;
 - **Game**: game folder, language, saves, and **installation from PKG** (base game and add-ons);
-- **Trophies**, **Controls** (keyboard, mouse and gamepad mapping, button icon style), **Log**.
+- **Controls** (keyboard, mouse and gamepad mapping, button icon style), **Advanced**, **Log**.
 
 Its interface follows your system language (English, Portuguese and many more).
 
@@ -83,7 +84,7 @@ cargo build --release --manifest-path launcher-rust/Cargo.toml
 Press **PLAY** in the launcher, or from a terminal:
 
 ```bash
-GOW3_GAME_DIR=~/Games/PS4/CUSA00243 GOW3_PATCH_DIR=~/Games/PS4/CUSA00243-UPDATE bash run.sh
+SANCTUARY_GAME_DIR=~/Games/PS4/CUSA00243 SANCTUARY_PATCH_DIR=~/Games/PS4/CUSA00243-UPDATE bash run.sh
 ```
 
 - **Gamepads** (Xbox, DualSense, DualShock 4, anything SDL recognises) work out of the box.
@@ -96,14 +97,9 @@ GOW3_GAME_DIR=~/Games/PS4/CUSA00243 GOW3_PATCH_DIR=~/Games/PS4/CUSA00243-UPDATE 
   *Match my controller*). Your game files are never changed.
 - **In-game port menu:** `Insert` (or R3 + L2). **Screenshot:** `F12` (`user/screenshots/`).
 
-Environment variables still use the `GOW3_` prefix inherited from the code base this port grew
-from.
-
 ## Known issues
 
 - The analog stick icons still read L3/R3 with Xbox icons on; Nintendo letters are not drawn yet.
-- Some launcher pages still carry options of the God of War III port the launcher came from.
-- About 150 of the launcher's ~1000 inherited tests still expect God of War III content.
 
 ## How it works
 

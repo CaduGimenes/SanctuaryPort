@@ -46,7 +46,7 @@ Next time
 Data
 - Saves, trophies (trophies.txt), shader cache and the log: user\ next to Knack.exe (keep it
   when updating).
-- Settings: gow3.ini next to Knack.exe; launcher options in %APPDATA%\knack-launcher.
+- Settings: sanctuary.ini next to Knack.exe; launcher options in %APPDATA%\knack-launcher.
   Portable: put a settings.json next to Knack.exe (an empty file, or a copy of the one in
   %APPDATA%\knack-launcher) and the launcher keeps its options there instead.
 - Generated files (prepared game image): out\.
@@ -65,13 +65,10 @@ Problems
 - Memory error (error 1450): increase the Windows page file. Win+R ->
   SystemPropertiesAdvanced -> Performance Settings -> Advanced -> Virtual memory Change ->
   set C: to 16384 MB initial, 24576 MB maximum -> Set -> OK, then restart your PC.
-- RTSS/Afterburner and ReShade must target bin\gow3-probe.exe, not the launcher. Select
+- RTSS/Afterburner and ReShade must target bin\sanctuary-probe.exe, not the launcher. Select
   Vulkan in the ReShade installer.
 - Report problems here, with your GPU, driver, CPU and the log:
   https://github.com/AbdelmoumenDeghbouche/knack_pc/issues
-
-Some file names (gow3-probe.exe, gow3.ini) still come from the God of War III port this
-project is based on.
 
 This project is not affiliated with Sony Interactive Entertainment or Japan Studio. Knack is a
 trademark of Sony Interactive Entertainment.

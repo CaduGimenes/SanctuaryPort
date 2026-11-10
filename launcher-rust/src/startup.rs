@@ -11,7 +11,6 @@ use indexmap::IndexMap;
 
 use crate::core::env::{environment_of, start_up_environment};
 use crate::core::i18n::tr;
-use crate::core::mods;
 use crate::core::paths::{default_port_dir, Paths};
 use crate::core::settings::load_app_settings;
 use crate::core::update::{self, is_packaged, update_dir};
@@ -23,15 +22,11 @@ use crate::{APP_NAME, VERSION};
 pub enum Route {
     /// `--version`: the name and the version.
     Version,
-    /// `--run`: the Rust runner, with everything after it.
-    Run { args: Vec<OsString> },
-    /// `--play`: the Rust runner's play role.
+    /// `--play`: starts the game (the port's run.sh) with the launcher's settings.
     Play,
     /// `--install-update TARGET PID`: the downloaded version installs itself over the old one.
     /// A `pid` that is not a number is 0.
     InstallUpdate { target: PathBuf, pid: u32 },
-    /// `--voice-swap`: the voice-line tool, with everything after it.
-    VoiceSwap { args: Vec<OsString> },
     /// Anything else: the window.
     Launcher,
 }
@@ -41,20 +36,11 @@ pub fn route<S: AsRef<OsStr>>(args: &[S]) -> Route {
     route_on(args, cfg!(windows))
 }
 
-/// `--run`, `--voice-swap` and `--install-update` count first (what follows them is theirs); `--install-update`
-/// needs exactly `TARGET PID` and Windows, the only system that updates itself this way. `--play`
+/// `--install-update` counts first (what follows it is its own) and needs exactly `TARGET PID` and Windows, the only system that updates itself this way. `--play`
 /// counts anywhere, as in the Python `main`. Other arguments, `--script` included, are ignored.
 pub fn route_on<S: AsRef<OsStr>>(args: &[S], windows: bool) -> Route {
     let is = |arg: &S, flag: &str| arg.as_ref() == OsStr::new(flag);
-    let rest = || {
-        args[1..]
-            .iter()
-            .map(|arg| arg.as_ref().to_owned())
-            .collect()
-    };
     match args.first() {
-        Some(first) if is(first, "--run") => return Route::Run { args: rest() },
-        Some(first) if is(first, "--voice-swap") => return Route::VoiceSwap { args: rest() },
         Some(first) if is(first, "--install-update") && windows && args.len() == 3 => {
             return Route::InstallUpdate {
                 target: PathBuf::from(args[1].as_ref()),
@@ -134,18 +120,11 @@ pub fn start(
     let read = |env: &IndexMap<String, String>, port: Option<&Path>| {
         let port = port.map(|port| port.to_string_lossy().into_owned());
         Paths::from_env(&port_dir, &|key| match (key, &port) {
-            ("GOW3_PORT_DIR", Some(port)) => Some(port.clone()),
+            ("SANCTUARY_PORT_DIR", Some(port)) => Some(port.clone()),
             _ => env.get(key).cloned(),
         })
     };
-    let mut paths = read(&env, None);
-    if matches!(route, Route::Run { .. }) {
-        if let Ok(resolved) = mods::resolve(&paths.port_dir) {
-            if resolved != paths.port_dir {
-                paths = read(&env, Some(&resolved));
-            }
-        }
-    }
+    let paths = read(&env, None);
     (route, Context { paths, env })
 }
 
@@ -235,7 +214,20 @@ pub fn log_failure(data_dir: &Path, text: &str) {
 /// The steps between the arguments and the window, in the Python `main`'s order: the settings,
 /// the Linux menu entry and what a finished update left behind. The language is the window's
 /// (`State::new`).
+/// The settings file was `gow3.ini` before SanctuaryPort named everything after itself: an old one
+/// beside the new name's place becomes it, unless the new file is already there.
+pub fn migrate_settings_file(paths: &Paths) {
+    let ini = paths.ini_path();
+    if ini.file_name().is_some_and(|name| name == "sanctuary.ini") && !ini.exists() {
+        let old = ini.with_file_name("gow3.ini");
+        if old.is_file() {
+            let _ = std::fs::rename(&old, &ini);
+        }
+    }
+}
+
 pub fn prepare(paths: &Paths) {
+    migrate_settings_file(paths);
     // Python `WINDOWS and FROZEN and UPDATE_DIR not in PORT_DIR.parents`: the installed Windows
     // launcher, not the copy that runs from a downloaded update.
     let installed = cfg!(windows) && is_packaged() && !runs_from_update_dir(&paths.port_dir);

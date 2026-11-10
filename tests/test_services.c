@@ -4,19 +4,19 @@
 #include <assert.h>
 
 uintptr_t runtime_lookup(const RuntimeExport *table, size_t count, const char *nid) { (void)table; (void)count; (void)nid; return 0; }
-int gow3gpu_text_input_begin(const char *text, const char *prompt) { (void)text; (void)prompt; return 0; }
-int gow3gpu_text_input_poll(char *text, uint64_t size) { (void)text; (void)size; return 0; }
+int sanctuarygpu_text_input_begin(const char *text, const char *prompt) { (void)text; (void)prompt; return 0; }
+int sanctuarygpu_text_input_poll(char *text, uint64_t size) { (void)text; (void)size; return 0; }
 /* trophy00.trp with 3 entries: a config and two trophy icons. */
 static unsigned char trp[0x60+3*64];
 int64_t runtime_file_open(const char *path, int flags, int mode) { (void)flags; (void)mode; return strstr(path,"trophy00.trp") ? 7 : -1; }
 int64_t runtime_file_read(int fd, void *buffer, uint64_t size) { if (fd!=7) return -1; size=size<sizeof(trp) ? size : sizeof(trp); memcpy(buffer,trp,size); return (int64_t)size; }
 const char *runtime_file_user_dir(void) { return "out"; }
 static int notices;
-void gow3gpu_notice(const char *text) { (void)text; ++notices; }
+void sanctuarygpu_notice(const char *text) { (void)text; ++notices; }
 int64_t runtime_file_close(int fd) { (void)fd; return 0; }
 static int choice_next=-1;
-int gow3gpu_choice_begin(const char *title, const char *const *items, const char *const *images, int count, int focus) { (void)title; (void)items; (void)images; (void)focus; return count>0; }
-int gow3gpu_choice_poll(void) { return choice_next; }
+int sanctuarygpu_choice_begin(const char *title, const char *const *items, const char *const *images, int count, int focus) { (void)title; (void)items; (void)images; (void)focus; return count>0; }
+int sanctuarygpu_choice_poll(void) { return choice_next; }
 int runtime_savedata_param(int32_t user, const char *dir, void *param) { (void)user; (void)dir; (void)param; return -1; }
 int runtime_savedata_icon(int32_t user, const char *dir, char *out, size_t size) { (void)user; (void)dir; (void)out; (void)size; return -1; }
 static unsigned pad_users; /* bit N: user N's gamepad is connected */

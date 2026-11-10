@@ -9,8 +9,7 @@ use iced::Task;
 use crate::core::store::Store;
 use crate::ui::app::{refresh_installation, Message, State};
 use crate::ui::home;
-use crate::ui::pages::mods::{self, ModsMessage};
-use crate::ui::pages::{game, performance, trophies};
+use crate::ui::pages::{game, performance};
 
 /// Something the window shows that is read from the disk, or from another setting.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -23,16 +22,8 @@ pub enum View {
     Patches,
     /// The save backups of the Game page.
     Backups,
-    /// The render resolutions the enabled mods add.
-    ModResolutions,
     /// The Aspect ratio box, which follows the render resolution.
     Aspect,
-    /// The lists of the Mods page.
-    Mods,
-    /// The list of the Trophies page.
-    Trophies,
-    /// The trophy notification sound of the Game page (`custom_trophy/notifications.ini`).
-    TrophySound,
 }
 
 /// Why the views are read again.
@@ -65,7 +56,7 @@ const fn row(view: View, keys: &'static [&'static str], start: bool, rebuild: bo
 }
 
 /// The views in the order they are read: the installation first, since the views after it ask it.
-const TABLE: [Row; 9] = [
+const TABLE: [Row; 5] = [
     row(View::Installation, &["game_dir", "update_dir"], true, true),
     row(
         View::Home,
@@ -75,26 +66,7 @@ const TABLE: [Row; 9] = [
     ),
     row(View::Patches, &["game_dir", "update_dir"], true, true),
     row(View::Backups, &["user_dir"], true, false),
-    row(
-        View::ModResolutions,
-        &["mods_enabled", "mods_dir", "game_dir"],
-        true,
-        false,
-    ),
     row(View::Aspect, &["render_resolution"], true, false),
-    row(
-        View::Mods,
-        &["mods_dir", "game_dir", "update_dir", "patches_dir"],
-        true,
-        true,
-    ),
-    row(
-        View::Trophies,
-        &["game_dir", "update_dir", "user_dir"],
-        false,
-        false,
-    ),
-    row(View::TrophySound, &["user_dir"], true, false),
 ];
 
 impl Row {
@@ -129,27 +101,14 @@ pub fn inputs(view: View, store: &Store) -> Vec<String> {
         .collect()
 }
 
-/// Reads `view` again: at once, except the Trophies list, and the Mods lists unless the window
-/// opens or is rebuilt, which are read on a thread.
-fn read(state: &mut State, view: View, cause: Cause<'_>) -> Task<Message> {
+/// Reads `view` again, at once.
+fn read(state: &mut State, view: View, _cause: Cause<'_>) -> Task<Message> {
     match view {
         View::Installation => refresh_installation(state),
         View::Home => home::read_facts(state),
         View::Patches => game::refresh_game_patches(state),
         View::Backups => game::refresh_backups(state),
-        View::ModResolutions => performance::refresh_mod_resolutions(state),
         View::Aspect => performance::resolution_chosen(state),
-        View::TrophySound => game::refresh_trophy_sound(state),
-        View::Mods => {
-            return match cause {
-                Cause::Start | Cause::Rebuild => {
-                    let lists = mods::load(&state.paths, &state.store, &state.installation);
-                    mods::update(state, ModsMessage::Loaded(Box::new(lists)))
-                }
-                Cause::Keys(_) => mods::refresh(state),
-            };
-        }
-        View::Trophies => return trophies::refresh(state),
     }
     Task::none()
 }

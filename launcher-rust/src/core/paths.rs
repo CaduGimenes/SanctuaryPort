@@ -3,23 +3,23 @@
 use std::path::{Path, PathBuf};
 
 /// Every launcher folder and file, derived from the executable's folder and the environment:
-/// `GOW3_PORT_DIR` names the port folder (default: the executable's; absolute, even when the
+/// `SANCTUARY_PORT_DIR` names the port folder (default: the executable's; absolute, even when the
 /// variable is relative), whose `bin/` and `scripts/` the launcher uses;
-/// `GOW3_DATA_DIR` the data folder (default: the port folder, as the Python's
-/// `DATA_DIR = PORT_DIR`); `GOW3_USER_DIR` the default saves and trophy directory (default:
-/// `GOW3_DATA_DIR/user`); `GOW3_CONFIG` the ini.
+/// `SANCTUARY_DATA_DIR` the data folder (default: the port folder, as the Python's
+/// `DATA_DIR = PORT_DIR`); `SANCTUARY_USER_DIR` the default saves and trophy directory (default:
+/// `SANCTUARY_DATA_DIR/user`); `SANCTUARY_CONFIG` the ini.
 #[derive(Debug, Clone)]
 pub struct Paths {
     pub port_dir: PathBuf,
     pub data_dir: PathBuf,
     user_dir_default: PathBuf,
     ini: PathBuf,
-    /// `GOW3_GAME_DIR` as the environment given to `from_env` had it: the game folder a new
+    /// `SANCTUARY_GAME_DIR` as the environment given to `from_env` had it: the game folder a new
     /// `settings.json` starts with.
     game_dir_default: String,
 }
 
-/// The port folder of a launcher started without `GOW3_PORT_DIR`: the exe's folder when
+/// The port folder of a launcher started without `SANCTUARY_PORT_DIR`: the exe's folder when
 /// `launcher/sanctuaryport.png` is beside it (a packaged port); else the nearest folder above
 /// holding it (a cargo build in `launcher-rust/target/<profile>/`); else the exe's folder, whose
 /// missing probe PLAY reports.
@@ -36,34 +36,34 @@ pub fn default_port_dir(exe_dir: &Path) -> PathBuf {
 }
 
 impl Paths {
-    /// `env` reads one environment variable; a relative `GOW3_PORT_DIR` is also joined to the
+    /// `env` reads one environment variable; a relative `SANCTUARY_PORT_DIR` is also joined to the
     /// current folder. Nothing else touches the OS.
     pub fn from_env(exe_dir: &Path, env: &dyn Fn(&str) -> Option<String>) -> Paths {
         // Made absolute here, once: the game and the Python launcher start inside it.
-        let port_dir = env("GOW3_PORT_DIR")
+        let port_dir = env("SANCTUARY_PORT_DIR")
             .filter(|dir| !dir.is_empty())
             .map_or_else(
                 || exe_dir.to_path_buf(),
                 |dir| std::path::absolute(&dir).unwrap_or_else(|_| PathBuf::from(dir)),
             );
-        let data_dir = env("GOW3_DATA_DIR")
+        let data_dir = env("SANCTUARY_DATA_DIR")
             .filter(|dir| !dir.is_empty())
             .map(PathBuf::from)
             .unwrap_or_else(|| port_dir.clone());
-        let user_dir_default = env("GOW3_USER_DIR")
+        let user_dir_default = env("SANCTUARY_USER_DIR")
             .filter(|dir| !dir.is_empty())
             .map(PathBuf::from)
             .unwrap_or_else(|| data_dir.join("user"));
-        let ini = env("GOW3_CONFIG")
+        let ini = env("SANCTUARY_CONFIG")
             .filter(|file| !file.is_empty())
             .map(PathBuf::from)
-            .unwrap_or_else(|| data_dir.join("gow3.ini"));
+            .unwrap_or_else(|| data_dir.join("sanctuary.ini"));
         Paths {
             port_dir,
             data_dir,
             user_dir_default,
             ini,
-            game_dir_default: env("GOW3_GAME_DIR").unwrap_or_default(),
+            game_dir_default: env("SANCTUARY_GAME_DIR").unwrap_or_default(),
         }
     }
 
@@ -79,7 +79,7 @@ impl Paths {
         self.ini.clone()
     }
 
-    /// The saves folder: the setting, or `user_dir_default` (`GOW3_USER_DIR` or `data_dir/user`)
+    /// The saves folder: the setting, or `user_dir_default` (`SANCTUARY_USER_DIR` or `data_dir/user`)
     /// when it is empty.
     pub fn user_dir(&self, settings_user_dir: &str) -> PathBuf {
         if settings_user_dir.is_empty() {
@@ -225,14 +225,14 @@ mod tests {
         // A relative folder is taken from the current one, once: the game and the Python
         // launcher start inside the port folder, where it would point somewhere else.
         let repo = std::env::current_dir().unwrap().join("repo");
-        let paths = Paths::from_env(Path::new("exe"), &env_of(&[("GOW3_PORT_DIR", "repo")]));
+        let paths = Paths::from_env(Path::new("exe"), &env_of(&[("SANCTUARY_PORT_DIR", "repo")]));
         assert_eq!(paths.port_dir, repo);
-        // Python `DATA_DIR = PORT_DIR` unless `GOW3_DATA_DIR` says otherwise.
+        // Python `DATA_DIR = PORT_DIR` unless `SANCTUARY_DATA_DIR` says otherwise.
         assert_eq!(paths.data_dir, repo);
-        assert_eq!(paths.ini_path(), repo.join("gow3.ini"));
+        assert_eq!(paths.ini_path(), repo.join("sanctuary.ini"));
         let both = Paths::from_env(
             Path::new("exe"),
-            &env_of(&[("GOW3_PORT_DIR", "repo"), ("GOW3_DATA_DIR", "data")]),
+            &env_of(&[("SANCTUARY_PORT_DIR", "repo"), ("SANCTUARY_DATA_DIR", "data")]),
         );
         assert_eq!(both.port_dir, repo);
         assert_eq!(both.data_dir, Path::new("data"));
@@ -240,17 +240,17 @@ mod tests {
         let absolute = repo.join("port").display().to_string();
         let given = Paths::from_env(
             Path::new("exe"),
-            &env_of(&[("GOW3_PORT_DIR", absolute.as_str())]),
+            &env_of(&[("SANCTUARY_PORT_DIR", absolute.as_str())]),
         );
         assert_eq!(given.port_dir, repo.join("port"));
         // An empty value counts as unset.
-        let empty = Paths::from_env(Path::new("exe"), &env_of(&[("GOW3_PORT_DIR", "")]));
+        let empty = Paths::from_env(Path::new("exe"), &env_of(&[("SANCTUARY_PORT_DIR", "")]));
         assert_eq!(empty.port_dir, Path::new("exe"));
     }
 
     #[test]
     fn data_dir_follows_spartan_data_dir() {
-        let paths = Paths::from_env(Path::new("exe"), &env_of(&[("GOW3_DATA_DIR", "data")]));
+        let paths = Paths::from_env(Path::new("exe"), &env_of(&[("SANCTUARY_DATA_DIR", "data")]));
         assert_eq!(paths.port_dir, Path::new("exe"));
         assert_eq!(paths.data_dir, Path::new("data"));
         assert_eq!(paths.mods_json(), Path::new("data").join("mods.json"));
@@ -270,8 +270,8 @@ mod tests {
         let paths = Paths::from_env(
             Path::new("exe"),
             &env_of(&[
-                ("GOW3_DATA_DIR", "data"),
-                ("GOW3_USER_DIR", "custom_user"),
+                ("SANCTUARY_DATA_DIR", "data"),
+                ("SANCTUARY_USER_DIR", "custom_user"),
             ]),
         );
         assert_eq!(paths.user_dir_default(), Path::new("custom_user"));
@@ -280,7 +280,7 @@ mod tests {
             paths.run_log_path(""),
             Path::new("custom_user").join("last_run.log")
         );
-        // Explicit saved user_dir setting overrides inherited GOW3_USER_DIR
+        // Explicit saved user_dir setting overrides inherited SANCTUARY_USER_DIR
         assert_eq!(paths.user_dir("saved_setting"), Path::new("saved_setting"));
         assert_eq!(
             paths.run_log_path("saved_setting"),
@@ -292,7 +292,7 @@ mod tests {
     fn empty_spartan_user_dir_falls_back_to_data_dir() {
         let paths = Paths::from_env(
             Path::new("exe"),
-            &env_of(&[("GOW3_DATA_DIR", "data"), ("GOW3_USER_DIR", "")]),
+            &env_of(&[("SANCTUARY_DATA_DIR", "data"), ("SANCTUARY_USER_DIR", "")]),
         );
         assert_eq!(paths.user_dir_default(), Path::new("data").join("user"));
         assert_eq!(paths.user_dir(""), Path::new("data").join("user"));
@@ -306,7 +306,7 @@ mod tests {
     fn user_dir_with_spaces() {
         let paths = Paths::from_env(
             Path::new("exe"),
-            &env_of(&[("GOW3_USER_DIR", "my custom/user folder")]),
+            &env_of(&[("SANCTUARY_USER_DIR", "my custom/user folder")]),
         );
         assert_eq!(paths.user_dir(""), Path::new("my custom/user folder"));
         assert_eq!(
@@ -321,12 +321,12 @@ mod tests {
 
     #[test]
     fn ini_path_follows_spartan_config() {
-        let default = Paths::from_env(Path::new("exe"), &env_of(&[("GOW3_DATA_DIR", "data")]));
+        let default = Paths::from_env(Path::new("exe"), &env_of(&[("SANCTUARY_DATA_DIR", "data")]));
         assert_eq!(
             default.ini_path(),
-            Path::new("data").join("gow3.ini")
+            Path::new("data").join("sanctuary.ini")
         );
-        let custom = Paths::from_env(Path::new("exe"), &env_of(&[("GOW3_CONFIG", "my.ini")]));
+        let custom = Paths::from_env(Path::new("exe"), &env_of(&[("SANCTUARY_CONFIG", "my.ini")]));
         assert_eq!(custom.ini_path(), Path::new("my.ini"));
     }
 
@@ -353,7 +353,7 @@ mod tests {
     #[test]
     fn fsr4_folder_is_next_to_the_port_when_writable() {
         let dir = tempfile::tempdir().unwrap();
-        let paths = Paths::from_env(dir.path(), &env_of(&[("GOW3_DATA_DIR", "data")]));
+        let paths = Paths::from_env(dir.path(), &env_of(&[("SANCTUARY_DATA_DIR", "data")]));
         assert_eq!(paths.fsr4_folder(), dir.path().join("fsr4_shaders"));
     }
 
@@ -363,7 +363,7 @@ mod tests {
         use std::os::unix::fs::PermissionsExt;
         let dir = tempfile::tempdir().unwrap();
         std::fs::set_permissions(dir.path(), std::fs::Permissions::from_mode(0o500)).unwrap();
-        let paths = Paths::from_env(dir.path(), &env_of(&[("GOW3_DATA_DIR", "data")]));
+        let paths = Paths::from_env(dir.path(), &env_of(&[("SANCTUARY_DATA_DIR", "data")]));
         let root_ignores_modes = tempfile::NamedTempFile::new_in(dir.path()).is_ok();
         let folder = paths.fsr4_folder();
         std::fs::set_permissions(dir.path(), std::fs::Permissions::from_mode(0o700)).unwrap();
@@ -380,7 +380,7 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         std::fs::create_dir(dir.path().join("fsr4_shaders")).unwrap();
         std::fs::set_permissions(dir.path(), std::fs::Permissions::from_mode(0o500)).unwrap();
-        let paths = Paths::from_env(dir.path(), &env_of(&[("GOW3_DATA_DIR", "data")]));
+        let paths = Paths::from_env(dir.path(), &env_of(&[("SANCTUARY_DATA_DIR", "data")]));
         let folder = paths.fsr4_folder();
         std::fs::set_permissions(dir.path(), std::fs::Permissions::from_mode(0o700)).unwrap();
         assert_eq!(folder, dir.path().join("fsr4_shaders"));

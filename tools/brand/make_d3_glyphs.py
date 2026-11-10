@@ -2,7 +2,7 @@
 
 The atlas is a 256x1024 BC3 texture, one mip (guest hash below). Each cell here covers one
 PlayStation glyph of it and is drawn from scratch (no game art): the GPU core uploads these BC3
-blocks over the game's texture after each upload of it (GOW3_GLYPH_ATLAS, texture_cache.cpp
+blocks over the game's texture after each upload of it (SANCTUARY_GLYPH_ATLAS, texture_cache.cpp
 PatchGlyphs). The rest of the atlas stays the game's.
 
 usage: python3 -I tools/brand/make_d3_glyphs.py [atlas.png]

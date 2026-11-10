@@ -21,14 +21,12 @@ use serde_json::Value;
 use crate::core::control_profiles::{Profile, DEFAULT_PROFILE};
 use crate::core::controls::{
     alternative_values, at_defaults, bind_key, control_values, default_input, sdl_key_name,
-    table_rows, Kind, Slot, CAMERA_ROW, CONTROLS, PAD_STYLES, RAGE_BUTTONS,
+    table_rows, Kind, Slot, CONTROLS, PAD_STYLES,
 };
 use crate::core::gpu::connected_gamepad;
 use crate::core::i18n::{tr, tr_fmt};
 use crate::core::ini::INI_DEFAULTS;
-use crate::core::options::{D3_GLYPH_STYLES, 
-    AIM_STYLES, MENU_CONFIRM_STYLES,
-    STICK_PROMPTS,
+use crate::core::options::{D3_GLYPH_STYLES, MENU_CONFIRM_STYLES,
 };
 use crate::core::pad_model::PadModel;
 use crate::core::platform::tool::SystemTools;
@@ -72,7 +70,6 @@ pub const PS_BUTTON_NAMES: &[(&str, &str)] = &[
 
 /// The actions of the keyboard & mouse table only.
 pub const ACTION_NAMES: &[(&str, &str)] = &[
-    ("dodge", "Dodge"),
     ("move_up", "Move forward"),
     ("move_down", "Move backward"),
     ("move_left", "Move left"),
@@ -83,18 +80,12 @@ pub const ACTION_NAMES: &[(&str, &str)] = &[
     ("look_right", "Right stick right"),
 ];
 
-const RAGE_CHECK: &str = "Rage of Sparta on one input (L3 + R3 together)";
-const KEY_NOTE: &str = "Click a box, then press a key, click a mouse button or turn the wheel (it gives up after {} seconds). An input already used by another button swaps with it; the arrow puts one button back on its default. Rage of Sparta presses L3 and R3 together: tick the box above it to use one input instead of two. Grab presses L1 and Circle together. Dodge evades the way you are moving, or back when standing still. Touchpad right opens the game's pause menu. Insert always opens the port's menu and cannot be bound. Applied when the game starts.";
-const STICK_HINT: &str = "Keyboard: enter the rotation with your movement inputs. With default keys, the sequences are A W D / D W A, D S A / A S D and D S A W / A S D W. Remapping movement changes these inputs too. Adaptive mouse: draw the turn with the mouse.";
-const DISTANCE_HINT: &str =
-    "Adaptive mouse: how far the mouse moves for one step of a rotation. Also in the in-game menu.";
-const AIM_STYLE_HINT: &str = "Aiming with the mouse while L2 is held (Head of Helios, Bow of Apollo). Relative: the stick follows the movement and goes back to neutral when the mouse stops. Absolute: where the mouse was when L2 was pressed is the centre, and the stick points from it to the mouse. Also in the in-game menu.";
-const SENSITIVITY_HINT: &str = "Aiming with the mouse while L2 is held: lower needs more mouse movement for the same stick, higher less. Also in the in-game menu.";
+const KEY_NOTE: &str = "Click a box, then press a key, click a mouse button or turn the wheel (it gives up after {} seconds). An input already used by another button swaps with it; the arrow puts one button back on its default. Touchpad right opens the game's pause menu. Insert always opens the port's menu and cannot be bound. Applied when the game starts.";
 const MOUSE_LOCK_HINT: &str = "While you play, the mouse stays in the game window, so a click cannot land on another monitor or app. The in-game menu and switching windows get it back. Also in the in-game menu.";
 const VIBRATION_HINT: &str = "Strength of the gamepad's vibration; 0% turns it off.";
 const CONFIRM_HINT: &str = "Which button confirms choices in save/load dialogs and menu lists. Default: Cross confirms, Circle cancels. Swapped: Circle confirms, Cross cancels. Does not change gameplay or combat controls.";
 const PAD_NOTE: &str = "Touchpad right opens the game's pause menu. Touchpad left (photo mode) is L1 + Touchpad right, or a button of its own if you choose one. R3+L2 always opens the port's menu. Applied when the game starts.";
-const DEADZONE_HINT: &str = "How far a stick must move before the game sees it. Raise it if the camera or Kratos moves by itself. 0% is the game's own stick. Applied when the game starts.";
+const DEADZONE_HINT: &str = "How far a stick must move before the game sees it. Raise it if the camera or your hero moves by itself. 0% is the game's own stick. Applied when the game starts.";
 
 /// Side of a button icon.
 const ICON_SIZE: f32 = 28.0;
@@ -713,15 +704,11 @@ pub(crate) fn button_name_of(button: &str) -> &'static str {
         .map_or("", |(_, english)| *english)
 }
 
-/// The game button's icon as `(icon, style)`: its PlayStation button, a pill for the two-button
-/// actions (Rage of Sparta, Grab), a D-pad pill for the weapon cycle, the left stick for the
-/// movement rows and the right stick labelled RS for Dodge and the look rows.
+/// The game button's icon as `(icon, style)`: its PlayStation button, the left stick for the
+/// movement rows and the right stick for the look rows.
 fn game_icon(button: &str) -> (&'static str, &'static str) {
     match (game_button(button), button) {
         (Some(sdl), _) => (sdl, "playstation"),
-        (None, "rage") => ("label:L3+R3", "playstation"),
-        (None, "grab") => ("label:L1+O", "playstation"),
-        (None, "weapon_next" | "weapon_prev") => ("label:D-PAD", "playstation"),
         (None, move_stick) if move_stick.starts_with("move_") => ("leftstick", "xbox"),
         _ => ("rightstick", "xbox"),
     }
@@ -742,21 +729,15 @@ pub struct KeyRow {
     pub second_alternative: String,
     /// Whether the row has a second alternative to drop.
     pub has_second_alternative: bool,
-    /// Off for L3 and R3 while Rage of Sparta is on one input, and for the Rage row otherwise.
+    /// Whether the row can be bound (every row can).
     pub enabled: bool,
 }
 
 /// The rows of the keyboard & mouse table; `view` draws them.
 pub fn key_rows(state: &State, lang: &str) -> Vec<KeyRow> {
-    let combined = state.store.flag("rage_one_input");
     table_rows(Kind::Key)
         .into_iter()
         .map(|row| {
-            let enabled = if row.button == "rage" {
-                combined
-            } else {
-                !(combined && RAGE_BUTTONS.contains(&row.button))
-            };
             KeyRow {
                 button: row.button,
                 title: tr(lang, button_name(row.button)),
@@ -765,7 +746,7 @@ pub fn key_rows(state: &State, lang: &str) -> Vec<KeyRow> {
                 has_alternative: state.controls.key_alt.contains_key(row.button),
                 second_alternative: key_box_text(state, lang, row.button, Slot::SecondAlternative),
                 has_second_alternative: state.controls.key_alt2.contains_key(row.button),
-                enabled,
+                enabled: true,
             }
         })
         .collect()
@@ -827,7 +808,7 @@ pub fn pad_labels(style: &str, lang: &str) -> Vec<(String, String)> {
 pub fn pad_rows(state: &State, lang: &str) -> Vec<PadRow> {
     let view = &state.controls;
     let pairs = pad_labels(&view.pad_style, lang);
-    let mut rows: Vec<PadRow> = CONTROLS
+    let rows: Vec<PadRow> = CONTROLS
         .iter()
         .map(|row| {
             let chosen = view.pad.get(row.button).cloned().unwrap_or_default();
@@ -857,16 +838,6 @@ pub fn pad_rows(state: &State, lang: &str) -> Vec<PadRow> {
             }
         })
         .collect();
-    // The free camera's switch is a tap of R3 alone, not remapped (R3 still reaches the game).
-    rows.push(PadRow {
-        button: CAMERA_ROW.button,
-        title: tr(lang, button_name(CAMERA_ROW.button)),
-        icon: "rightstick".to_string(),
-        choice: PadChoice {
-            pairs: Vec::new(),
-            current: tr(lang, "Tap R3"),
-        },
-    });
     rows
 }
 
@@ -1050,21 +1021,10 @@ fn pad_line<'a>(row: PadRow, pad_style: &str) -> Element<'a, Message> {
 
 fn keyboard_section<'a>(state: &State, lang: &str) -> Element<'a, Message> {
     let hint = |english: &str| tr(lang, english);
-    let rage_on = state.store.flag("rage_one_input");
     let mut lines = column![].spacing(6);
     for key_row in key_rows(state, lang) {
-        if key_row.button == "rage" {
-            lines = lines.push(checkbox(
-                state.rtl,
-                "rage_one_input",
-                &tr(lang, RAGE_CHECK),
-                rage_on,
-                None,
-            ));
-        }
         lines = lines.push(key_line(key_row, lang));
     }
-    let aim_style = state.store.text("mouse_aim_style");
     column![
         section(state.rtl, &tr(lang, "Keyboard & Mouse Mapping")),
         note(tr(
@@ -1078,47 +1038,6 @@ fn keyboard_section<'a>(state: &State, lang: &str) -> Element<'a, Message> {
             state,
             tr(lang, "Reset keyboard & mouse to defaults"),
             Kind::Key
-        ),
-        row(
-            state.rtl,
-            &tr(lang, "Joystick prompts"),
-            select(
-                "stick_prompts",
-                STICK_PROMPTS,
-                &state.store.text("stick_prompts"),
-                lang
-            ),
-            Some(&hint(STICK_HINT)),
-        ),
-        row(
-            state.rtl,
-            &tr(lang, "Mouse prompt distance"),
-            slider(
-                "mouse_prompt_distance",
-                16.0,
-                200.0,
-                "px",
-                ini_number(state, "mouse_prompt_distance")
-            ),
-            Some(&hint(DISTANCE_HINT)),
-        ),
-        row(
-            state.rtl,
-            &tr(lang, "Right stick style"),
-            select("mouse_aim_style", AIM_STYLES, &aim_style, lang),
-            Some(&hint(AIM_STYLE_HINT)),
-        ),
-        row(
-            state.rtl,
-            &tr(lang, "Right stick sensitivity"),
-            slider(
-                "mouse_aim_sensitivity",
-                10.0,
-                200.0,
-                "%",
-                ini_number(state, "mouse_aim_sensitivity")
-            ),
-            Some(&hint(SENSITIVITY_HINT)),
         ),
         checkbox(
             state.rtl,

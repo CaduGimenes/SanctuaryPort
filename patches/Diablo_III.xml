@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<!-- Diablo III (CUSA00243 1.47 Eternal Collection; CUSA00242 when the code matches): render resolution.
+     The renderer's setup (eboot 0xbb1e4) sets its size in [obj+0x4c] / [obj+0x50] as
+     sceKernelIsNeoMode() ? 3840x2160 : 1920x1080, and every screen-sized target (the display buffers,
+     the scene, the post-process chain at a quarter) follows it; the 1536x1536 shadow map does not.
+     Each patch replaces the base PS4's 1920 and 1080 (mov ecx, imm32), so the game renders at that size
+     on the base PS4 path. Found by SanctuaryPort; each site by its signature (Pattern/At). -->
+<Patch>
+    <TitleID>
+        <ID>CUSA00243</ID>
+        <ID>CUSA00242</ID>
+    </TitleID>
+    <Metadata Title="Diablo III" Name="Resolution Patch - 480p" Note="Renders at 854x480." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x004bb1ea" Value="56030000" Pattern="b8 00 0f 00 00 b9 80 07 00 00 0f 45 c8 41 89 4f 4c" At="6"/>
+            <Line Type="bytes" Address="0x004bb202" Value="e0010000" Pattern="b8 70 08 00 00 b9 38 04 00 00 49 8d bf 10 0d 00 00 0f 45 c8 41 89 4f 50" At="6"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="Resolution Patch - 720p" Note="Renders at 1280x720." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x004bb1ea" Value="00050000" Pattern="b8 00 0f 00 00 b9 80 07 00 00 0f 45 c8 41 89 4f 4c" At="6"/>
+            <Line Type="bytes" Address="0x004bb202" Value="d0020000" Pattern="b8 70 08 00 00 b9 38 04 00 00 49 8d bf 10 0d 00 00 0f 45 c8 41 89 4f 50" At="6"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="Resolution Patch - 900p" Note="Renders at 1600x900." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x004bb1ea" Value="40060000" Pattern="b8 00 0f 00 00 b9 80 07 00 00 0f 45 c8 41 89 4f 4c" At="6"/>
+            <Line Type="bytes" Address="0x004bb202" Value="84030000" Pattern="b8 70 08 00 00 b9 38 04 00 00 49 8d bf 10 0d 00 00 0f 45 c8 41 89 4f 50" At="6"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="Resolution Patch - 1440p" Note="Renders at 2560x1440." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x004bb1ea" Value="000a0000" Pattern="b8 00 0f 00 00 b9 80 07 00 00 0f 45 c8 41 89 4f 4c" At="6"/>
+            <Line Type="bytes" Address="0x004bb202" Value="a0050000" Pattern="b8 70 08 00 00 b9 38 04 00 00 49 8d bf 10 0d 00 00 0f 45 c8 41 89 4f 50" At="6"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="Resolution Patch - 1800p" Note="Renders at 3200x1800." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x004bb1ea" Value="800c0000" Pattern="b8 00 0f 00 00 b9 80 07 00 00 0f 45 c8 41 89 4f 4c" At="6"/>
+            <Line Type="bytes" Address="0x004bb202" Value="08070000" Pattern="b8 70 08 00 00 b9 38 04 00 00 49 8d bf 10 0d 00 00 0f 45 c8 41 89 4f 50" At="6"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="Resolution Patch - 4K" Note="Renders at 3840x2160." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x004bb1ea" Value="000f0000" Pattern="b8 00 0f 00 00 b9 80 07 00 00 0f 45 c8 41 89 4f 4c" At="6"/>
+            <Line Type="bytes" Address="0x004bb202" Value="70080000" Pattern="b8 70 08 00 00 b9 38 04 00 00 49 8d bf 10 0d 00 00 0f 45 c8 41 89 4f 50" At="6"/>
+        </PatchList>
+    </Metadata>
+</Patch>

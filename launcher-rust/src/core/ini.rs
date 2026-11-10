@@ -1,4 +1,4 @@
-//! The game's `gow3.ini`: defaults, tolerant reading and in-place rewriting.
+//! The game's `sanctuary.ini`: defaults, tolerant reading and in-place rewriting.
 
 use std::io;
 use std::path::Path;
@@ -28,7 +28,7 @@ pub static INI_DEFAULTS: LazyLock<Vec<(&'static str, &'static str)>> = LazyLock:
 });
 
 /// The first line of a file the launcher or the runner starts.
-pub const HEADER: &str = "# spartanport settings (in-game menu: Insert / R3+L2)";
+pub const HEADER: &str = "# sanctuary settings (in-game menu: Insert / R3+L2)";
 
 pub struct Ini {
     pub values: IndexMap<String, String>,
@@ -159,7 +159,7 @@ mod tests {
 
     fn ini_file(text: &str) -> (tempfile::TempDir, std::path::PathBuf) {
         let dir = tempfile::tempdir().unwrap();
-        let path = dir.path().join("gow3.ini");
+        let path = dir.path().join("sanctuary.ini");
         fs::write(&path, text).unwrap();
         (dir, path)
     }
@@ -199,7 +199,7 @@ mod tests {
     #[test]
     fn a_file_that_is_not_utf8_keeps_its_lines() {
         let dir = tempfile::tempdir().unwrap();
-        let path = dir.path().join("gow3.ini");
+        let path = dir.path().join("sanctuary.ini");
         fs::write(
             &path,
             b"# caf\xe9 au lait\nupscaler=fsr4\nvsync=0\nmy_key=1\n".as_slice(),
@@ -224,7 +224,7 @@ mod tests {
     #[test]
     fn only_a_file_that_is_there_can_be_unreadable() {
         let dir = tempfile::tempdir().unwrap();
-        let (ini, unreadable) = read_ini(&dir.path().join("gow3.ini"));
+        let (ini, unreadable) = read_ini(&dir.path().join("sanctuary.ini"));
         assert!(!unreadable);
         assert!(ini.lines.is_empty());
         // A folder in its place cannot be read.
@@ -238,20 +238,20 @@ mod tests {
     #[test]
     fn save_writes_the_header_into_an_empty_file() {
         let dir = tempfile::tempdir().unwrap();
-        let path = dir.path().join("gow3.ini");
+        let path = dir.path().join("sanctuary.ini");
         let mut edited = IndexMap::new();
         edited.insert("vsync".to_string(), "0".to_string());
         save_ini(&path, &edited, &[]).unwrap();
         assert_eq!(
             fs::read_to_string(&path).unwrap(),
-            "# spartanport settings (in-game menu: Insert / R3+L2)\nvsync=0\n"
+            "# sanctuary settings (in-game menu: Insert / R3+L2)\nvsync=0\n"
         );
     }
 
     #[test]
     fn menu_confirm_swap_default_is_zero() {
         let dir = tempfile::tempdir().unwrap();
-        let ini = load_ini(&dir.path().join("gow3.ini"));
+        let ini = load_ini(&dir.path().join("sanctuary.ini"));
         assert_eq!(ini.values["menu_confirm_swap"], "0");
     }
 

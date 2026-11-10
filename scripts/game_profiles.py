@@ -7,12 +7,12 @@ from pathlib import Path
 
 # Red-zone protection always: the startup probe sees no overwrite, but a leaf function at
 # 0x55c410 keeps pointers below the stack pointer and wrote to address 0 after a GPU write fault.
-KNACK_ENV = {'GOW3_NGS2_SKIP_UNKNOWN': '1', 'GOW3_DISABLED_OPTIMIZATIONS': str(4096 | 8192),
+KNACK_ENV = {'SANCTUARY_NGS2_SKIP_UNKNOWN': '1', 'SANCTUARY_DISABLED_OPTIMIZATIONS': str(4096 | 8192),
              # The engine steps by the real time (48-120 FPS in play, normal speed), so the frame rate
              # limit may go up to the vblank rate; without this run.py took it for a 60 FPS engine.
-             'GOW3_VBLANK_HZ': '120', 'GOW3_ENGINE_FPS': '120', 'GOW3_RED_ZONE': '1',
+             'SANCTUARY_VBLANK_HZ': '120', 'SANCTUARY_ENGINE_FPS': '120', 'SANCTUARY_RED_ZONE': '1',
              # The resolution patches of patches/Knack.xml (update 1.10, #6); the other sizes did nothing.
-             'GOW3_ALLOWED_RESOLUTIONS': 'native;1440p;3440x1440'}
+             'SANCTUARY_ALLOWED_RESOLUTIONS': 'native;1440p;3440x1440'}
 
 PROFILES = {
     # WipEout Omega Collection. NpToolkit2 is the game's own PSN toolkit. Red-zone protection
@@ -22,19 +22,18 @@ PROFILES = {
     # at 240 Hz, and the frame rate limit (launcher, in-game menu) caps it.
     # Vblank stays at the console's 60 Hz: the menu waits one vblank per frame, so a higher
     # rate ran it that many times faster (240 Hz = 4x). The race engine steps by rdtsc, not
-    # vblank, so GOW3_ENGINE_FPS=240 + a Frame rate limit above 60 still gets high-FPS races:
+    # vblank, so SANCTUARY_ENGINE_FPS=240 + a Frame rate limit above 60 still gets high-FPS races:
     # the frame limit turns on immediate flips, which flip above the vblank rate on demand.
-    # GOW3_ALLOWED_RESOLUTIONS: only these built-in sizes have a resolution patch in
+    # SANCTUARY_ALLOWED_RESOLUTIONS: only these built-in sizes have a resolution patch in
     # patches/WipEout_Omega_Collection.xml; the other built-ins are hidden from the in-game menu.
     'CUSA07671': {'name': 'WipEout Omega Collection',
                   'modules': ('libc.prx', 'libSceFios2.prx', 'libSceNpToolkit2.prx'),
-                  'env': {'GOW3_RED_ZONE': '1', 'GOW3_ENGINE_FPS': '240',
-                          'GOW3_ALLOWED_RESOLUTIONS': 'native;2560x1080;5120x2160'}},
+                  'env': {'SANCTUARY_RED_ZONE': '1', 'SANCTUARY_ENGINE_FPS': '240',
+                          'SANCTUARY_ALLOWED_RESOLUTIONS': 'native;2560x1080;5120x2160'}},
     'CUSA05670': {'name': 'WipEout Omega Collection',
                   'modules': ('libc.prx', 'libSceFios2.prx', 'libSceNpToolkit2.prx'),
-                  'env': {'GOW3_RED_ZONE': '1', 'GOW3_ENGINE_FPS': '240',
-                          'GOW3_ALLOWED_RESOLUTIONS': 'native;2560x1080;5120x2160'}},
-    'CUSA01623': {'name': 'God of War III', 'modules': ('libc.prx', 'libSceFios2.prx')},
+                  'env': {'SANCTUARY_RED_ZONE': '1', 'SANCTUARY_ENGINE_FPS': '240',
+                          'SANCTUARY_ALLOWED_RESOLUTIONS': 'native;2560x1080;5120x2160'}},
     # Knack (US 1.10, the development target; EU CUSA00006/CUSA00202 untested). NGS2 parameters
     # not implemented yet (none in the first level) are skipped and logged instead of stopping, so a
     # later level plays on with that one effect missing.
@@ -51,15 +50,20 @@ PROFILES = {
     'CUSA00242': {'name': 'Diablo III', 'modules': ('libc.prx', 'libSceFios2.prx'),
                   # The draw-preparation workers (4096 | 8192) read resource descriptors before the
                   # game has written them, as in Knack: the world rendered as a flat grey screen.
-                  'env': {'GOW3_DEFERRED_READBACK': '0', 'GOW3_STALE_READBACK': '0',
-                          'GOW3_DISABLED_OPTIMIZATIONS': str(4096 | 8192),
+                  'env': {'SANCTUARY_DEFERRED_READBACK': '0', 'SANCTUARY_STALE_READBACK': '0',
+                          'SANCTUARY_DISABLED_OPTIMIZATIONS': str(4096 | 8192),
                           # The engine waits for GPU idle after every frame (sceGnmSubmitDone); with
                           # a FIFO swapchain that wait includes the display's vsync and three
                           # vblanks pass per frame (19.8 FPS). Mailbox presents keep it at 60.
-                          'GOW3_VSYNC': '0'}},
+                          'SANCTUARY_VSYNC': '0',
+                          # The in-game menu leaves out what the profile fixes (VSync, readbacks) and
+                          # the frame rate patch the game does not have; its render resolutions are
+                          # those patches/Diablo_III.xml has.
+                          'SANCTUARY_MENU_HIDE': 'vsync,engine_fps,readbacks',
+                          'SANCTUARY_ALLOWED_RESOLUTIONS': 'native;480p;720p;900p;1440p;1800p;4K'}},
 }
 # Diablo III: Reaper of Souls - Ultimate Evil Edition, Brazilian release (Portuguese and Spanish
-# text; usually played with its 1.47 update in GOW3_PATCH_DIR): the same engine and needs.
+# text; usually played with its 1.47 update in SANCTUARY_PATCH_DIR): the same engine and needs.
 # Its updates ship the game's own PSN toolkit (libSceNpToolkit2.prx, as WipEout): linked when present.
 PROFILES['CUSA00243'] = {**PROFILES['CUSA00242'],
                          'modules': ('libc.prx', 'libSceFios2.prx', 'libSceNpToolkit2.prx')}

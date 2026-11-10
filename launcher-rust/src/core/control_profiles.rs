@@ -53,8 +53,8 @@ pub struct Profile {
     pub deadzone_right: u32,
 }
 
-/// A built-in profile, by its English name. The mouse layout is the one proposed in #616: block
-/// and dodge under the thumb, so L1 combos stay on the mouse and Q stays free for magic.
+/// A built-in profile, by its English name. The mouse layout puts the shoulder buttons L1 and R1
+/// under the thumb, R2 on Q and L2 on Left Ctrl.
 pub fn built_in(name: &str) -> Option<Profile> {
     let mut profile = Profile::default();
     match name {
@@ -62,7 +62,7 @@ pub fn built_in(name: &str) -> Option<Profile> {
         MOUSE_SIDE_BUTTONS => {
             for (button, input) in [
                 ("l1", "Mouse Back"),
-                ("dodge", "Mouse Forward"),
+                ("r1", "Mouse Forward"),
                 ("r2", "Q"),
                 ("l2", "Left Ctrl"),
             ] {
@@ -333,9 +333,9 @@ mod tests {
                 [&mut values, &mut alternatives, &mut IndexMap::new()],
                 "l1",
                 Slot::Main,
-                "G"
+                "W"
             ),
-            Some(("camera".to_string(), Slot::Main))
+            Some(("move_up".to_string(), Slot::Main))
         );
     }
 

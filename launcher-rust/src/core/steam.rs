@@ -734,7 +734,7 @@ mod tests {
         let f = fixture();
         let mut old = IndexMap::new();
         old.insert("appid".to_string(), Vdf::U32(7));
-        old.insert("AppName".to_string(), Vdf::Str("God of War III".into()));
+        old.insert("AppName".to_string(), Vdf::Str("Diablo III".into()));
         old.insert("Exe".to_string(), Vdf::Str("\"/old\"".into()));
         write_shortcuts(&f.root, "1111", vec![("0", old)]);
         let added = add(&f).unwrap();
@@ -747,7 +747,7 @@ mod tests {
                 other => panic!("{other:?}"),
             })
             .collect();
-        assert_eq!(names, ["God of War III", "SanctuaryPort"]);
+        assert_eq!(names, ["Diablo III", "SanctuaryPort"]);
         let old = entry(&shortcuts, "0");
         assert_eq!(text(old, "Exe"), "\"/old\"");
         assert!(matches!(old["appid"], Vdf::U32(7)));

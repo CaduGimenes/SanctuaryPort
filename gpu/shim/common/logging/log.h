@@ -1,5 +1,5 @@
-// gow3: replaces shadPS4's spdlog-based logger with a small fmt sink.
-// Level from GOW3_GPU_LOG (trace|debug|info|warning|error; default warning).
+// sanctuary: replaces shadPS4's spdlog-based logger with a small fmt sink.
+// Level from SANCTUARY_GPU_LOG (trace|debug|info|warning|error; default warning).
 #pragma once
 #include <algorithm>
 #include <array>

@@ -99,7 +99,7 @@ public:
                      bool preloading);
     ~GraphicsPipeline();
 
-    // gow3: switch from compiler-owned snapshots to live stage data on publication.
+    // sanctuary: switch from compiler-owned snapshots to live stage data on publication.
     void PublishStages(std::span<const Shader::Info*, MaxShaderStages> infos) {
         std::ranges::copy(infos, stages.begin());
     }
@@ -112,7 +112,7 @@ public:
         return key;
     }
 
-    /// gow3: second draw squaring a self-scaled MIN/MAX blend, or null (vk_blend_rewrite.h).
+    /// sanctuary: second draw squaring a self-scaled MIN/MAX blend, or null (vk_blend_rewrite.h).
     vk::Pipeline SquarePassHandle() const noexcept {
         return *square_pipeline;
     }

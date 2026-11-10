@@ -1,4 +1,4 @@
-// gow3: SDL3 window for the Vulkan swapchain (X11 or Wayland).
+// sanctuary: SDL3 window for the Vulkan swapchain (X11 or Wayland).
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
@@ -7,27 +7,33 @@
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "sdl_window.h"
-#include "gow3_overlay.h"
-#include "gow3_graphics.h"
-#include "gow3_settings.h"
+#include "sanctuary_overlay.h"
+#include "sanctuary_graphics.h"
+#include "sanctuary_settings.h"
 
 namespace Frontend {
 
-// gow3: set by the pause key (any thread), cleared by it or a click in the window.
+// sanctuary: set by the pause key (any thread), cleared by it or a click in the window.
 static std::atomic<bool> mouse_paused{false};
 
 void ToggleMousePause() {
     mouse_paused.store(!mouse_paused.load(std::memory_order_relaxed), std::memory_order_relaxed);
 }
 
-// gow3: a window opens at the render resolution chosen in the launcher (or the in-game menu); one too
+// sanctuary: a window opens at the render resolution chosen in the launcher (or the in-game menu); one too
 // large for the screen's usable area (with room for the title bar) opens maximized, restoring to that
 // size shrunk to fit. The picture is scaled to the window either way. True when shrunk.
 static bool StartSize(s32& width, s32& height) {
     constexpr int title_room = 48;
-    const std::vector<std::string> names = Gow3Graphics::ResolutionNames();
-    const int index = std::clamp(Gow3Settings::Get().render_resolution.load(), 0, int(names.size()) - 1);
-    const auto [w, h] = Gow3Graphics::ResolutionSize(names[index]);
+    const std::vector<std::string> names = SanctuaryGraphics::ResolutionNames();
+    const int index = std::clamp(SanctuarySettings::Get().render_resolution.load(), 0, int(names.size()) - 1);
+    auto [w, h] = SanctuaryGraphics::ResolutionSize(names[index]);
+    // SanctuaryPort: with FSR 1 a render resolution below 1080p opens a 1080p window, which FSR 1
+    // upscales the picture to (borderless and fullscreen cover the screen either way).
+    if (SanctuarySettings::Get().fsr1.load() && w < 1920) {
+        h = h * 1920 / w;
+        w = 1920;
+    }
     double scale = 1.0;
     SDL_Rect usable{};
     if (SDL_GetDisplayUsableBounds(SDL_GetPrimaryDisplay(), &usable) && usable.w > 0 && usable.h > title_room) {
@@ -44,9 +50,9 @@ WindowSDL::WindowSDL(s32 width_, s32 height_, const char* title) : width{width_}
         UNREACHABLE_MSG("Failed to initialize SDL video: {}", SDL_GetError());
     }
     const bool too_large = StartSize(width_, height_);
-    // GOW3_BACKGROUND_WINDOW=1 (test runs while the PC is in use): the window opens off-screen, is not
+    // SANCTUARY_BACKGROUND_WINDOW=1 (test runs while the PC is in use): the window opens off-screen, is not
     // activated and cannot take the focus; screenshots (F12, pad file) still save the game's picture.
-    const char* background_env = std::getenv("GOW3_BACKGROUND_WINDOW");
+    const char* background_env = std::getenv("SANCTUARY_BACKGROUND_WINDOW");
     const bool background = background_env && background_env[0] == '1';
     if (background) {
         SDL_SetHint(SDL_HINT_WINDOW_ACTIVATE_WHEN_SHOWN, "0");
@@ -66,8 +72,8 @@ WindowSDL::WindowSDL(s32 width_, s32 height_, const char* title) : width{width_}
     window = SDL_CreateWindowWithProperties(props);
     SDL_DestroyProperties(props);
     ASSERT_MSG(window, "Failed to create window: {}", SDL_GetError());
-    // gow3: the game's own icon (run.py converts sce_sys/icon0.png to BMP, SDL's built-in format).
-    if (const char* icon_path = std::getenv("GOW3_WINDOW_ICON")) {
+    // sanctuary: the game's own icon (run.py converts sce_sys/icon0.png to BMP, SDL's built-in format).
+    if (const char* icon_path = std::getenv("SANCTUARY_WINDOW_ICON")) {
         if (SDL_Surface* icon = SDL_LoadBMP(icon_path)) {
             SDL_SetWindowIcon(window, icon);
             SDL_DestroySurface(icon);
@@ -93,13 +99,13 @@ WindowSDL::WindowSDL(s32 width_, s32 height_, const char* title) : width{width_}
     } else {
         UNREACHABLE_MSG("Unsupported SDL video driver {}", driver ? driver : "(none)");
     }
-    // gow3: GOW3_FULLSCREEN=1 (older launchers) still asks for fullscreen.
-    if (const char* fullscreen = std::getenv("GOW3_FULLSCREEN"); fullscreen && fullscreen[0] == '1' &&
-        Gow3Settings::Get().display_mode == Gow3Graphics::Windowed) {
-        Gow3Settings::Get().display_mode = Gow3Graphics::Borderless;
+    // sanctuary: SANCTUARY_FULLSCREEN=1 (older launchers) still asks for fullscreen.
+    if (const char* fullscreen = std::getenv("SANCTUARY_FULLSCREEN"); fullscreen && fullscreen[0] == '1' &&
+        SanctuarySettings::Get().display_mode == SanctuaryGraphics::Windowed) {
+        SanctuarySettings::Get().display_mode = SanctuaryGraphics::Borderless;
     }
-    ApplyDisplayMode(Gow3Settings::Get().display_mode);
-    // gow3: the game has no mouse; the in-game menu draws its own cursor (Gow3Overlay::SetOpen).
+    ApplyDisplayMode(SanctuarySettings::Get().display_mode);
+    // sanctuary: the game has no mouse; the in-game menu draws its own cursor (SanctuaryOverlay::SetOpen).
     SDL_HideCursor();
     int w = 0, h = 0;
     SDL_GetWindowSizeInPixels(window, &w, &h);
@@ -112,18 +118,18 @@ WindowSDL::WindowSDL(s32 width_, s32 height_, const char* title) : width{width_}
 // mode. Window thread only (SDL). The swapchain follows the size events.
 void WindowSDL::ApplyDisplayMode(int mode) {
     display_mode = mode;
-    if (mode == Gow3Graphics::Windowed) {
+    if (mode == SanctuaryGraphics::Windowed) {
         SDL_SetWindowFullscreen(window, false);
     } else {
         const SDL_DisplayMode* desktop = SDL_GetDesktopDisplayMode(SDL_GetDisplayForWindow(window));
-        const bool exclusive = mode == Gow3Graphics::Fullscreen && desktop;
+        const bool exclusive = mode == SanctuaryGraphics::Fullscreen && desktop;
         if (!SDL_SetWindowFullscreenMode(window, exclusive ? desktop : nullptr)) {
             LOG_WARNING(Frontend, "Fullscreen mode: {}", SDL_GetError());
         }
         SDL_SetWindowFullscreen(window, true);
     }
     SDL_SyncWindow(window);
-    std::printf("Window: %s\n", Gow3Graphics::DisplayModeNames[mode]);
+    std::printf("Window: %s\n", SanctuaryGraphics::DisplayModeNames[mode]);
 }
 
 WindowSDL::~WindowSDL() {
@@ -148,7 +154,7 @@ void WindowSDL::UpdateTextTitle() {
     const std::string title = text_active ? base_title + " \u2014 " + text_prompt + ": " + text + "_  (Enter = OK, Esc = cancel)"
                                           : base_title;
     SDL_SetWindowTitle(window, title.c_str());
-    Gow3Overlay::SetTextEntry(text_active, text_prompt, text);
+    SanctuaryOverlay::SetTextEntry(text_active, text_prompt, text);
 }
 
 bool WindowSDL::PollEvents() {
@@ -162,9 +168,9 @@ bool WindowSDL::PollEvents() {
         }
     }
     if (!text_active) {
-        Gow3Overlay::UpdateTextInput(window);
+        SanctuaryOverlay::UpdateTextInput(window);
     }
-    if (const int mode = Gow3Settings::Get().display_mode; mode != display_mode) {
+    if (const int mode = SanctuarySettings::Get().display_mode; mode != display_mode) {
         ApplyDisplayMode(mode);
     }
     SDL_Event event;
@@ -196,7 +202,7 @@ bool WindowSDL::PollEvents() {
             UpdateTextTitle();
             continue;
         }
-        if (Gow3Overlay::HandleEvent(event)) {
+        if (SanctuaryOverlay::HandleEvent(event)) {
             continue;
         }
         switch (event.type) {
@@ -219,13 +225,13 @@ bool WindowSDL::PollEvents() {
             break;
         }
     }
-    // gow3: while the game has the mouse it stays in the window (relative mode: hidden, no edges,
+    // sanctuary: while the game has the mouse it stays in the window (relative mode: hidden, no edges,
     // so a click cannot land on another monitor); the menu, the save list, a text dialog,
     // another window or the game's pause menu (the pause key) get it back. Taken back, it starts
     // at the window's centre; let go by the pause key, the system cursor shows.
     const bool paused = mouse_paused.load(std::memory_order_relaxed);
-    const bool lock = Gow3Settings::Get().mouse_lock.load(std::memory_order_relaxed) && !text_active && !paused &&
-                      !Gow3Overlay::CapturesInput() && (SDL_GetWindowFlags(window) & SDL_WINDOW_INPUT_FOCUS);
+    const bool lock = SanctuarySettings::Get().mouse_lock.load(std::memory_order_relaxed) && !text_active && !paused &&
+                      !SanctuaryOverlay::CapturesInput() && (SDL_GetWindowFlags(window) & SDL_WINDOW_INPUT_FOCUS);
     if (lock != mouse_locked) {
         if (lock) SDL_WarpMouseInWindow(window, width / 2.0f, height / 2.0f);
         if (SDL_SetWindowRelativeMouseMode(window, lock)) mouse_locked = lock;

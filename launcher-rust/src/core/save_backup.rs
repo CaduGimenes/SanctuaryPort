@@ -167,7 +167,7 @@ mod tests {
     fn fixture() -> Fixture {
         let temp = tempfile::tempdir().unwrap();
         let user = temp.path().to_path_buf();
-        let save = user.join("savedata/1/CUSA01623/AUTOSAVE/data.bin");
+        let save = user.join("savedata/1/CUSA00243/AUTOSAVE/data.bin");
         let clock = Local.with_ymd_and_hms(2026, 10, 9, 18, 0, 0).unwrap();
         Fixture {
             _temp: temp,

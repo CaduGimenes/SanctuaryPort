@@ -16,14 +16,10 @@ fn walk(root: impl AsRef<Path>) -> Vec<PathBuf> {
 }
 
 #[test]
-fn core_and_runner_never_mention_iced() {
-    for root in [
-        concat!(env!("CARGO_MANIFEST_DIR"), "/src/core"),
-        concat!(env!("CARGO_MANIFEST_DIR"), "/src/runner"),
-    ] {
+fn core_never_mentions_iced() {
+    for root in [concat!(env!("CARGO_MANIFEST_DIR"), "/src/core")] {
         for entry in walk(root) {
-            // `iced_x86` is the x86 decoder of `runner/isa_rewrite.rs`, not the UI toolkit; only
-            // that exact token is allowed.
+            // `iced_x86` (an x86 decoder) is not the UI toolkit: only that exact token is allowed.
             let text = std::fs::read_to_string(&entry)
                 .unwrap()
                 .replace("iced_x86", "");

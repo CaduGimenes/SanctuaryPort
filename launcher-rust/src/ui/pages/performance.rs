@@ -3,7 +3,6 @@
 //! The Aspect ratio box is not saved: it follows the render resolution, and choosing another
 //! aspect moves the resolution to that aspect's closest size.
 
-use std::path::PathBuf;
 
 use iced::widget::{button, column, pick_list, text};
 use iced::Element;
@@ -11,12 +10,10 @@ use serde_json::Value;
 
 use crate::core::gpu::{no_msaa_decision, MsaaDecision};
 use crate::core::i18n::{tr, tr_fmt};
-use crate::core::mods::{patch_files, selected};
 use crate::core::options::{
     aspect_of, aspects, closest_resolution, resolution_label, resolutions_for, DRAW_PIPE,
     FPS_LIMITS, FRAMES_QUEUED, NO_MSAA, READBACKS, RESOLUTIONS, STREAM_MEMORY,
 };
-use crate::core::patches::resolution_names;
 use crate::ui::app::{Message, State};
 use crate::ui::theme;
 use crate::ui::widgets::{
@@ -28,40 +25,6 @@ const MOD_SUFFIX: &str = " (mod)";
 
 pub const NO_MSAA_HINT: &str = "The game's 2-sample depth buffer, read as a texture by its lighting. AMD's and Intel's Windows drivers read it wrong and the lighting shows black lines, so Automatic turns multisampling off on those cards (Radeon, Arc) and keeps it on elsewhere (NVIDIA). Off and On force the choice on any card.";
 
-/// Reads the sizes the enabled mods add (the "Resolution Patch - <size>" entries of their patch
-/// files) into `state.mod_resolutions`. Task 29 calls it again when a mod is toggled.
-pub(crate) fn refresh_mod_resolutions(state: &mut State) {
-    state.mod_resolutions = mod_sizes(state);
-}
-
-fn mod_sizes(state: &State) -> Vec<String> {
-    if !state.store.flag("mods_enabled") {
-        return Vec::new();
-    }
-    let root = state.paths.mods_dir(&state.store.text("mods_dir"));
-    let game = state.store.text("game_dir");
-    let game = (!game.is_empty()).then(|| PathBuf::from(game));
-    // The Mods page's order and switches, which Save (Task 32) has not written to mods.json yet.
-    let names = if state.mods.order.is_empty() {
-        selected(&root, Some(&state.paths.mods_json()), game.as_deref()).unwrap_or_default()
-    } else {
-        state
-            .mods
-            .order
-            .iter()
-            .filter(|name| state.mods.enabled.get(*name).copied().unwrap_or(false))
-            .cloned()
-            .collect()
-    };
-    let files: Vec<PathBuf> = names
-        .iter()
-        .flat_map(|name| patch_files(&root.join(name)))
-        .collect();
-    resolution_names(&files)
-        .into_iter()
-        .filter(|size| !RESOLUTIONS.contains(&size.as_str()))
-        .collect()
-}
 
 /// A built-in render resolution's label in `lang`, as the Python's `_()` of it: the whole label
 /// when the tables have it, else the English label with its "Native" word translated.
@@ -75,15 +38,16 @@ fn shown_label(lang: &str, name: &str, aspect: bool) -> String {
 }
 
 /// The render resolutions to choose from: the built-in ones and those of the enabled mods.
+/// The render resolutions Diablo III has a patch for (patches/Diablo_III.xml), and native.
+pub const DIABLO_III_RESOLUTIONS: [&str; 7] = ["native", "480p", "720p", "900p", "1440p", "1800p", "4K"];
+
 pub fn resolution_options(state: &State) -> Vec<(String, String)> {
+    // SanctuaryPort: the sizes patches/Diablo_III.xml has a Resolution Patch for (16:9).
     let builtin = RESOLUTIONS
         .iter()
+        .filter(|name| DIABLO_III_RESOLUTIONS.contains(name))
         .map(|name| (name.to_string(), shown_label(&state.lang, name, true)));
-    let mods = state
-        .mod_resolutions
-        .iter()
-        .map(|name| (name.clone(), resolution_label(name, true) + MOD_SUFFIX));
-    builtin.chain(mods).collect()
+    builtin.collect()
 }
 
 fn resolution_values(state: &State) -> Vec<String> {
@@ -262,6 +226,9 @@ fn select_from<'a>(rows: &[SelectRow], key: &str) -> Element<'a, Message> {
     }
 }
 
+/// SanctuaryPort: not here for Diablo III: the shader cache switches the runtime does not read
+/// (disk reuse, prefetch, corner notes), screen effect switches the game lacks, and the deferred and
+/// stale readbacks the game profile keeps off (with them the 3D hero of hero creation does not draw).
 pub fn view(state: &State) -> Element<'_, Message> {
     let lang = state.lang.as_str();
     let hint = |english: &str| tr(lang, english);
@@ -298,7 +265,7 @@ pub fn view(state: &State) -> Element<'_, Message> {
                 "1 is the lowest input latency; more can raise FPS when the graphics card is the limit."
             )),
         ),
-        // SanctuaryPort: no engine frame rate or physics fix (God of War III patches).
+        // No engine frame rate or physics patches: Diablo III has none.
         row(
             state.rtl,
             &tr(lang, "Aspect ratio"),
@@ -341,33 +308,6 @@ pub fn view(state: &State) -> Element<'_, Message> {
                 "Fewer stutters in new areas: the game keeps running while new shaders compile. An object or effect may appear a moment later. Switch it off if something stays missing."
             )),
         ),
-        checkbox(
-            state.rtl,
-            "disk_shaders",
-            &restart("Reuse compiled shaders from disk"),
-            state.store.flag("disk_shaders"),
-            Some(&hint(
-                "Shaders compiled in earlier sessions load from the shader cache instead of compiling again, so objects no longer appear a few frames late after starting or loading a save, and the cache is not rewritten every session (antivirus scans each written file). The first launch with it on rebuilds the cache once. Switch it off if an object, effect or color looks wrong only after a restart and is fine on the first run of a new cache."
-            )),
-        ),
-        checkbox(
-            state.rtl,
-            "shader_prefetch",
-            &restart("Read the shader cache into memory at start"),
-            state.store.flag("shader_prefetch"),
-            Some(&hint(
-                "A background thread reads the saved shaders into memory while the game starts; a note in the lower right corner shows the progress. Loading a shader then does not hold up a frame. Needs the option above. Switch it off on a slow hard drive or with little free RAM if the first minute stutters more or the game starts slower."
-            )),
-        ),
-        checkbox(
-            state.rtl,
-            "shader_notes",
-            &restart("Show shader notes in the corner"),
-            state.store.flag("shader_notes"),
-            Some(&hint(
-                "A note in the lower right corner shows the shader cache being read at start and the shaders being compiled, so a short stutter has a visible reason. Switch it off to keep the screen clean."
-            )),
-        ),
         row(
             state.rtl,
             &tr(lang, "Shader cache"),
@@ -400,33 +340,6 @@ pub fn view(state: &State) -> Element<'_, Message> {
             pick("stream_memory"),
             Some(&hint(
                 "System RAM can improve FPS on NVIDIA laptops. Choose GPU memory to restore the previous behavior. Applies on the next game launch."
-            )),
-        ),
-        checkbox(
-            state.rtl,
-            "stale_readback",
-            &restart("Game reads GPU data without waiting (big FPS gain)"),
-            state.store.flag("stale_readback"),
-            Some(&hint(
-                "About 40 to 66 FPS in a heavy scene. Needs deferred GPU readbacks. Switch it off if lighting or objects look wrong."
-            )),
-        ),
-        checkbox(
-            state.rtl,
-            "deferred_readback",
-            &restart("Deferred GPU readbacks"),
-            state.store.flag("deferred_readback"),
-            Some(&hint(
-                "Fewer waits for the GPU. Switch it off if textures or shadows look wrong."
-            )),
-        ),
-        checkbox(
-            state.rtl,
-            "partial_height_views",
-            &restart("Fast screen effects (Rage of Sparta, weapons)"),
-            state.store.flag("partial_height_views"),
-            Some(&hint(
-                "Keeps powers and weapon effects at full FPS. Switch it off if a screen effect (blur, distortion, the color change of a power) looks stretched, shifted or wrong."
             )),
         ),
         row(

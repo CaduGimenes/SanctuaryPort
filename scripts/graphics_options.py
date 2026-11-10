@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-2.0-or-later
-"""Startup graphics options of gow3.ini (gpu/shim/gow3_graphics.h) for run.py.
+"""Startup graphics options of sanctuary.ini (gpu/shim/sanctuary_graphics.h) for run.py.
 
 The in-game menu and the launcher write them; run.py turns them into game patches and
 environment variables at every start, so "Apply and restart" uses the new values. After a
@@ -50,7 +50,7 @@ def write_keys(path, updates):
     try:
         lines = path.read_text(encoding='utf-8').splitlines()
     except OSError:
-        lines = ['# gow3 settings (in-game menu: Insert / R3+L2)']
+        lines = ['# sanctuary settings (in-game menu: Insert / R3+L2)']
     done, out = set(), []
     for line in lines:
         key = line.split('=', 1)[0].strip() if '=' in line and not line.lstrip().startswith('#') else None
@@ -174,8 +174,6 @@ def patch_names(names, options, texture_fix_available=True):
     resolution = options['render_resolution']
     if resolution != 'native':
         names = [n for n in names if n != TEXTURE_FIX] + [f'{RESOLUTION_PREFIX} - {resolution}']
-    elif texture_fix_available and TEXTURE_FIX not in names:
-        names.insert(0, TEXTURE_FIX)
     if options['engine_fps'] != '60':
         names.append(f'{FPS_PREFIX} - {options["engine_fps"]} FPS')
     return names
@@ -183,12 +181,14 @@ def patch_names(names, options, texture_fix_available=True):
 
 def restrict_to_available(names, available):
     """names without the patches this XML lacks. A missing frame rate patch is replaced by the
-    highest one it has below the requested rate (the 240 FPS patch of the first XML has no
-    counterpart in the second)."""
+    highest one it has below the requested rate; an XML without any drops the request silently."""
     kept = [n for n in names if n in available]
+    has_rates = any(n.startswith(f'{FPS_PREFIX} - ') for n in available)
     for name in names:
         if name in available:
             continue
+        if name.startswith(f'{FPS_PREFIX} - ') and not has_rates:
+            continue  # a game without frame rate patches (Diablo III): nothing to report
         print(f'Patches: {name} is not available for this game build: skipped', flush=True)
         if name.startswith(f'{FPS_PREFIX} - '):
             wanted = int(name.split(' - ')[1].split()[0])
@@ -206,6 +206,6 @@ def applied_engine_fps(names):
 
 
 def environment(options):
-    return {'GOW3_DEFERRED_READBACK': options['deferred_readback'],
-            'GOW3_STALE_READBACK': options['stale_readback'],
-            'GOW3_ASYNC_SHADERS': options['async_shaders']}
+    return {'SANCTUARY_DEFERRED_READBACK': options['deferred_readback'],
+            'SANCTUARY_STALE_READBACK': options['stale_readback'],
+            'SANCTUARY_ASYNC_SHADERS': options['async_shaders']}

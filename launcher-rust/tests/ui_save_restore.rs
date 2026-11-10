@@ -24,7 +24,7 @@ fn lists_legacy_and_safety_and_warns_for_a_different_title() {
         "legacy",
     );
     put(
-        &user.join("save-restore-safety/20261021-100000/savedata/1/CUSA01623/a"),
+        &user.join("save-restore-safety/20261021-100000/savedata/1/CUSA00243/a"),
         "safety",
     );
     let _ = app::update(&mut state, Message::Backup(BackupMessage::Refresh));

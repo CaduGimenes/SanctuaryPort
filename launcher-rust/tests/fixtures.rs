@@ -34,12 +34,12 @@ struct DecidedDefault {
 /// The only differences from the Python's defaults the fixtures allow, each a user's ruling. They
 /// apply to a case whose input neither stores nor edits the key, so the file holds the default.
 const DECIDED_DEFAULTS: &[DecidedDefault] = &[
-    // R91: Discord Rich Presence is on by default, so the game gets SPARTAN_DISCORD=1.
+    // R91: Discord Rich Presence is on by default, so the game gets SANCTUARY_DISCORD=1.
     DecidedDefault {
         key: "discord_rpc",
         python: "false",
         rust: "true",
-        env: Some(("SPARTAN_DISCORD", "0", "1")),
+        env: Some(("SANCTUARY_DISCORD", "0", "1")),
     },
 ];
 
@@ -81,12 +81,12 @@ fn ini_matches_python_for_case_edited() {
         serde_json::from_value(input["edits"]["ini"].clone()).unwrap();
 
     let dir = tempfile::tempdir().unwrap();
-    let path = dir.path().join("spartanport.ini");
+    let path = dir.path().join("sanctuary.ini");
     fs::write(&path, text).unwrap();
     let ini = load_ini(&path);
     save_ini(&path, &edits, &ini.lines).unwrap();
 
-    let expected = fs::read(fixture_dir("edited").join("spartanport.ini")).unwrap();
+    let expected = fs::read(fixture_dir("edited").join("sanctuary.ini")).unwrap();
     assert_eq!(fs::read(&path).unwrap(), expected);
 }
 
@@ -132,7 +132,7 @@ fn legacy_controls_settings_match_python() {
 /// The Save flow against `fixtures/collected/`: what the Python launcher's own `collect()` wrote for
 /// the `edited` input (`tools/launcher_fixtures.py`), not the `edited` case, which saves the ini edits
 /// and the app dict without the window. The launcher opens over the input's `settings.json` and
-/// `spartanport.ini`, lists no monitors (the generator's probe lists none), takes the edits through
+/// `sanctuary.ini`, lists no monitors (the generator's probe lists none), takes the edits through
 /// `Set` and collects.
 #[test]
 fn collect_matches_python_for_edited_case() {
@@ -152,10 +152,10 @@ fn collect_matches_python_for_edited_case() {
         ini.push_str(line.as_str().unwrap());
         ini.push('\n');
     }
-    fs::write(dir.path().join("spartanport.ini"), ini).unwrap();
-    // The input's settings name the game folder, so the SPARTAN_GAME_DIR default never shows.
+    fs::write(dir.path().join("sanctuary.ini"), ini).unwrap();
+    // The input's settings name the game folder, so the SANCTUARY_GAME_DIR default never shows.
     let env = move |key: &str| match key {
-        "SPARTAN_DATA_DIR" | "APPDATA" | "USERPROFILE" | "HOME" | "XDG_CONFIG_HOME" => {
+        "SANCTUARY_DATA_DIR" | "APPDATA" | "USERPROFILE" | "HOME" | "XDG_CONFIG_HOME" => {
             Some(data.clone())
         }
         _ => None,
@@ -171,7 +171,7 @@ fn collect_matches_python_for_edited_case() {
     collect(&mut state).unwrap();
 
     let expected = fixture_dir("collected");
-    for name in ["settings.json", "spartanport.ini"] {
+    for name in ["settings.json", "sanctuary.ini"] {
         // Byte for byte; as text so a failure shows the differing lines.
         let got = String::from_utf8(fs::read(dir.path().join(name)).unwrap()).unwrap();
         let want = if name == "settings.json" {
@@ -195,7 +195,7 @@ fn environment_for_case(case: &str) -> (IndexMap<String, String>, String) {
     let dir = tempfile::tempdir().unwrap();
     let data = dir.path().to_string_lossy().into_owned();
     let data_for_paths = data.clone();
-    let path_env = move |key: &str| (key == "SPARTAN_DATA_DIR").then(|| data_for_paths.clone());
+    let path_env = move |key: &str| (key == "SANCTUARY_DATA_DIR").then(|| data_for_paths.clone());
     let paths = Paths::from_env(dir.path(), &path_env);
     let env = |key: &str| input["env"][key].as_str().map(str::to_string);
     let mut merged = app_defaults(&env);
@@ -225,7 +225,7 @@ fn environment_for_case(case: &str) -> (IndexMap<String, String>, String) {
     let kept = result
         .into_iter()
         .filter(|(k, _)| {
-            ["SPARTAN_", "SDL_", "PYTHON"]
+            ["SANCTUARY_", "SDL_", "PYTHON"]
                 .iter()
                 .any(|p| k.starts_with(p))
         })

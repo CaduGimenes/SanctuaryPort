@@ -14,7 +14,7 @@ use crate::core::env::Lookup;
 
 pub const DESKTOP_MARKER: &str = "X-SPARTAN-Integration=true";
 /// The menu entry's file name; it is also the window's application id.
-const ENTRY_FILE: &str = "spartanport.desktop";
+const ENTRY_FILE: &str = "sanctuaryport.desktop";
 /// The variables of the bundle's own runtime, which programs outside it must not inherit.
 const BUNDLE_VARIABLES: [&str; 5] = [
     "LD_LIBRARY_PATH",
@@ -31,7 +31,7 @@ type Env<'a> = Lookup<'a>;
 pub fn desktop_entry(command: &str, icon: &str, marker: bool) -> String {
     let mut text = format!(
         "[Desktop Entry]\nType=Application\nName=SanctuaryPort\nExec={command}\nIcon={icon}\n\
-         Terminal=false\nCategories=Game;\nStartupWMClass=spartanport\n"
+         Terminal=false\nCategories=Game;\nStartupWMClass=sanctuaryport\n"
     );
     if marker {
         text.push_str(DESKTOP_MARKER);
@@ -253,7 +253,7 @@ pub fn write_linux_shortcut(
     let icon = match fs::create_dir_all(&icon_dir).and_then(|()| fs::copy(icon_source, &icon_file))
     {
         Ok(_) => icon_file.to_string_lossy().into_owned(),
-        Err(_) => "spartanport".to_string(),
+        Err(_) => "sanctuaryport".to_string(),
     };
     let entry = desktop_entry(command, &icon, false);
     let applications = home.join(".local").join("share").join("applications");
@@ -450,7 +450,7 @@ mod tests {
             .join(".local")
             .join("share")
             .join("applications")
-            .join("spartanport.desktop");
+            .join("sanctuaryport.desktop");
         Fixture {
             data: home.join("data"),
             _temp: temp,
@@ -524,7 +524,7 @@ mod tests {
             "Icon={}",
             f.data.join("sanctuaryport.png").display()
         )));
-        assert!(text.contains("StartupWMClass=spartanport"));
+        assert!(text.contains("StartupWMClass=sanctuaryport"));
         assert_eq!(
             fs::read(f.data.join("sanctuaryport.png")).unwrap(),
             b"png one"
@@ -536,7 +536,7 @@ mod tests {
         assert_eq!(
             desktop_entry("\"/a b\"", "icon.png", true),
             "[Desktop Entry]\nType=Application\nName=SanctuaryPort\nExec=\"/a b\"\nIcon=icon.png\n\
-             Terminal=false\nCategories=Game;\nStartupWMClass=spartanport\nX-SPARTAN-Integration=true\n"
+             Terminal=false\nCategories=Game;\nStartupWMClass=sanctuaryport\nX-SPARTAN-Integration=true\n"
         );
         assert!(!desktop_entry("x", "y", false).contains(DESKTOP_MARKER));
     }
@@ -871,7 +871,7 @@ mod tests {
             let text = fs::read_to_string(path).unwrap();
             assert!(text.contains(&format!("Exec=\"{APPIMAGE}\"")));
             assert!(text.contains(&format!("Icon={}", icon.display())));
-            assert!(text.contains("StartupWMClass=spartanport"));
+            assert!(text.contains("StartupWMClass=sanctuaryport"));
             assert!(!text.contains(DESKTOP_MARKER));
         }
     }
@@ -895,7 +895,7 @@ mod tests {
         let created = c.click();
         assert!(fs::read_to_string(&created[0])
             .unwrap()
-            .contains("Icon=spartanport\n"));
+            .contains("Icon=sanctuaryport\n"));
     }
 
     #[test]

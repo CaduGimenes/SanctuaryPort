@@ -81,7 +81,7 @@ bool AvPlayerSource::Init(const AvPlayerInitData& init_data, std::string_view pa
             return false;
         }
     } else {
-        // gow3: guest paths are translated by the port's file system (runtime_file.c).
+        // sanctuary: guest paths are translated by the port's file system (runtime_file.c).
         char host[1024];
         if (runtime_file_translate(std::string(path).c_str(), host, sizeof(host)) != 0) {
             LOG_ERROR(Lib_AvPlayer, "Cannot translate guest path {}", path);
@@ -599,7 +599,7 @@ void AvPlayerSource::DemuxerThread(std::stop_token stop) {
     m_video_buffers_cv.Notify();
     m_audio_buffers_cv.Notify();
 
-    // gow3 (#11): the decoders end on their own at EOF (their packet waits see m_is_eof); wait
+    // sanctuary (#11): the decoders end on their own at EOF (their packet waits see m_is_eof); wait
     // for their finished flags. Joining them here raced with each decoder detaching itself and
     // with Stop(): on Windows the join failed and was given up after a wait, on Linux (Steam
     // Deck) it could block forever, and the game hung at the end of every cutscene. Stop() and

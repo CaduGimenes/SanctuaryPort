@@ -15,14 +15,12 @@ use sanctuaryport_launcher::core::gpu::parse_display_list;
 use sanctuaryport_launcher::core::i18n::tr;
 use sanctuaryport_launcher::core::ini::{load_ini, INI_FLAGS};
 use sanctuaryport_launcher::core::pad_model::PadModel;
-use sanctuaryport_launcher::core::patches::PatchMeta;
 use sanctuaryport_launcher::core::paths::Paths;
 use sanctuaryport_launcher::core::release::{Channel, Release, ReleaseId};
 use sanctuaryport_launcher::core::settings::app_defaults;
 use sanctuaryport_launcher::ui::app::{self, Message, State};
 use sanctuaryport_launcher::ui::drawer::DrawerState;
 use sanctuaryport_launcher::ui::pages::controls::ControlsMessage;
-use sanctuaryport_launcher::ui::pages::mods::{self, ModsMessage};
 use sanctuaryport_launcher::ui::pages::Page;
 use sanctuaryport_launcher::ui::persist::{dirty, gather, SHOWN_INI_KEYS};
 use sanctuaryport_launcher::ui::play::GameState;
@@ -104,7 +102,7 @@ fn saving_normalizes_legacy_frame_generation_multipliers() {
     for frames in ["1", "2", "3", "9"] {
         let dir = tempfile::tempdir().unwrap();
         fs::write(
-            dir.path().join("spartanport.ini"),
+            dir.path().join("sanctuary.ini"),
             format!("frame_generation=fsr\nframe_generation_frames={frames}\nexternal_runtime_key=keep\n"),
         )
         .unwrap();
@@ -400,97 +398,22 @@ fn picking_a_language_in_the_menu_saves_it() {
     assert_eq!(config["ui_language"], json!("pt"));
 }
 
-fn make_mod(dir: &Path, name: &str) {
-    let folder = dir.join("mods").join(name).join("EXEC");
-    fs::create_dir_all(&folder).unwrap();
-    fs::write(folder.join("file.bin"), b"data").unwrap();
-}
-
-#[test]
-fn visiting_the_mods_page_is_not_a_change() {
-    let dir = tempfile::tempdir().unwrap();
-    make_mod(dir.path(), "a");
-    let mut state = state_in(dir.path());
-    assert_eq!(state.mods.order, ["a"]);
-    // What the page's refresh brings back on a visit.
-    let view = mods::load(&state.paths, &state.store, &state.installation);
-    send(
-        &mut state,
-        Message::Mods(ModsMessage::Loaded(Box::new(view))),
-    );
-    assert!(!dirty(&state));
-}
-
-#[test]
-fn saving_writes_the_mod_order_as_python_json_does() {
-    let dir = tempfile::tempdir().unwrap();
-    make_mod(dir.path(), "b");
-    make_mod(dir.path(), "Мод");
-    let mut state = state_in(dir.path());
-    assert_eq!(state.mods.order, ["b", "Мод"]);
-    send(&mut state, Message::Mods(ModsMessage::Toggle("b".into())));
-    assert!(dirty(&state));
-    save(&mut state);
-    // json.dumps({'order': ['b', 'Мод'], 'disabled': ['b']}, indent=2)
-    assert_eq!(
-        fs::read_to_string(state.paths.mods_json()).unwrap(),
-        "{\n  \"order\": [\n    \"b\",\n    \"\\u041c\\u043e\\u0434\"\n  ],\n  \"disabled\": [\n    \"b\"\n  ]\n}"
-    );
-    assert!(!state.paths.patches_json().exists());
-    assert!(!dirty(&state));
-}
-
-#[test]
-fn saving_patches_keeps_the_choice_of_other_game_versions() {
-    let dir = tempfile::tempdir().unwrap();
-    let mut state = state_in(dir.path());
-    fs::write(
-        state.paths.patches_json(),
-        r#"{"enabled": ["v1.00 patch"], "disabled": ["shown on", "zz other"]}"#,
-    )
-    .unwrap();
-    let meta = |name: &str| PatchMeta {
-        name: name.to_string(),
-        author: None,
-        note: None,
-        enabled_by_default: false,
-    };
-    // The third-party patches the Mods page lists for this game version.
-    for key in ["shown on", "shown off"] {
-        state
-            .mods
-            .external
-            .push((key.to_string(), dir.path().join(key), meta(key)));
-    }
-    state.mods.external_enabled.insert("shown on".to_string());
-    assert!(dirty(&state));
-    save(&mut state);
-    assert_eq!(
-        fs::read_to_string(state.paths.patches_json()).unwrap(),
-        "{\n  \"enabled\": [\n    \"shown on\",\n    \"v1.00 patch\"\n  ],\n  \"disabled\": [\n    \
-         \"shown off\",\n    \"zz other\"\n  ]\n}"
-    );
-    assert!(!dirty(&state));
-}
-
 const HIDDEN_UPSCALING_INI: &str = "upscaler=fsr3\npreset=3\nfsr1=1\nsharpen=1\nsharpness=0.73\n\
      rcas=1\nrcas_strength=42\nobject_motion=0\noutput_res=2560x1440\n";
 
 #[test]
 fn hidden_settings_are_preserved_without_migration() {
     let dir = tempfile::tempdir().unwrap();
-    fs::write(dir.path().join("spartanport.ini"), HIDDEN_UPSCALING_INI).unwrap();
+    fs::write(dir.path().join("sanctuary.ini"), HIDDEN_UPSCALING_INI).unwrap();
     let mut state = state_in(dir.path());
     let before = load_ini(&state.paths.ini_path()).values;
-    for key in ["upscaler", "preset"] {
+    // SanctuaryPort: FSR 1 and RCAS are on the Graphics page.
+    for key in ["upscaler", "preset", "fsr1", "rcas", "rcas_strength"] {
         assert!(SHOWN_INI_KEYS.contains(&key), "{key}");
     }
     for key in [
-        "fsr1",
         "sharpen",
         "sharpness",
-        "rcas",
-        "rcas_strength",
         "object_motion",
         "output_res",
         "live_resolution",
@@ -697,11 +620,6 @@ fn every_setting_lights_save_persists_and_comes_back() {
     );
     change_and_save(
         &mut state,
-        "glyph_keys",
-        Message::Set("glyph_keys".into(), json!("alternative")),
-    );
-    change_and_save(
-        &mut state,
         "pad cross",
         Message::Controls(ControlsMessage::PadPick("cross".into(), "b".into())),
     );
@@ -716,7 +634,6 @@ fn every_setting_lights_save_persists_and_comes_back() {
     assert_eq!(reopened.controls.pad_style, "xbox");
     assert_eq!(reopened.controls.key["cross"], "Q");
     assert_eq!(reopened.controls.key_alt["square"], "J");
-    assert_eq!(reopened.store.text("glyph_keys"), "alternative");
     assert_eq!(reopened.controls.pad["cross"], "b");
     assert!(!dirty(&reopened));
 }
@@ -731,42 +648,6 @@ fn save_failed_shown(state: &State) -> bool {
         .modal
         .as_ref()
         .is_some_and(|modal| matches!(modal.kind, ModalKind::Error) && modal.text == SAVE_FAILED)
-}
-
-#[test]
-fn the_key_colors_are_saved_and_come_back() {
-    let dir = tempfile::tempdir().unwrap();
-    let mut state = state_in(dir.path());
-    for (name, key, value) in [
-        ("style", "glyph_key_colors", "custom"),
-        ("cross", "glyph_color_cross", "blue"),
-        ("circle", "glyph_color_circle", "orange"),
-    ] {
-        change_and_save(&mut state, name, Message::Set(key.into(), json!(value)));
-    }
-    let reopened = state_in(dir.path());
-    assert_eq!(reopened.store.text("glyph_key_colors"), "custom");
-    assert_eq!(reopened.store.text("glyph_color_cross"), "blue");
-    assert_eq!(reopened.store.text("glyph_color_circle"), "orange");
-    // A button left alone stays gray, and a file from before the colours loads as gray.
-    assert_eq!(reopened.store.text("glyph_color_square"), "gray");
-    assert!(!dirty(&reopened));
-    let old = tempfile::tempdir().unwrap();
-    assert_eq!(state_in(old.path()).store.text("glyph_key_colors"), "gray");
-}
-
-#[test]
-fn the_lyre_only_icon_keys_choice_is_saved_and_comes_back() {
-    let dir = tempfile::tempdir().unwrap();
-    let mut state = state_in(dir.path());
-    change_and_save(
-        &mut state,
-        "glyph_keys",
-        Message::Set("glyph_keys".into(), json!("lyre")),
-    );
-    let reopened = state_in(dir.path());
-    assert_eq!(reopened.store.text("glyph_keys"), "lyre");
-    assert!(!dirty(&reopened));
 }
 
 #[test]
@@ -813,7 +694,7 @@ fn opening_the_ini_saves_first() {
             iced::Size::new(1280.0, 4000.0),
             app::view(&state),
         );
-        ui.click("spartanport.ini").unwrap();
+        ui.click("sanctuary.ini").unwrap();
         ui.into_messages().collect()
     };
     assert!(matches!(sent.as_slice(), [Message::OpenIni]), "{sent:?}");
@@ -866,7 +747,7 @@ const LATIN1_INI: &[u8] = b"# caf\xe9 au lait\nupscaler=fsr4\nmy_key=1\nvsync=1\
 fn unreadable_settings_files_warn_once_at_start() {
     let dir = tempfile::tempdir().unwrap();
     fs::write(dir.path().join("settings.json"), "{not json").unwrap();
-    fs::write(dir.path().join("spartanport.ini"), LATIN1_INI).unwrap();
+    fs::write(dir.path().join("sanctuary.ini"), LATIN1_INI).unwrap();
     let state = state_in(dir.path());
     // One dialog names both files.
     let shown = state.modal.clone().expect("a warning");
@@ -886,7 +767,7 @@ fn unreadable_settings_files_warn_once_at_start() {
         shown.text
     );
     // The defaults are shown and nothing is written before a save.
-    assert_eq!(state.store.text("ui_language"), "en");
+    assert_eq!(state.store.text("ui_language"), ""); // the default: follow the system
     assert_eq!(fs::read(state.paths.config_file()).unwrap(), b"{not json");
     assert_eq!(fs::read(state.paths.ini_path()).unwrap(), LATIN1_INI);
     assert!(!dirty(&state));
@@ -901,7 +782,7 @@ fn unreadable_settings_files_warn_once_at_start() {
 /// A state over a corrupt `settings.json` and an ini that is not UTF-8, its warning dismissed.
 fn state_over_unreadable_files(dir: &Path) -> State {
     fs::write(dir.join("settings.json"), "{not json").unwrap();
-    fs::write(dir.join("spartanport.ini"), LATIN1_INI).unwrap();
+    fs::write(dir.join("sanctuary.ini"), LATIN1_INI).unwrap();
     let mut state = state_in(dir);
     assert!(state.modal.take().is_some(), "the start-up warning");
     state
@@ -957,7 +838,7 @@ fn opening_the_ini_or_adding_to_steam_keeps_an_unreadable_file() {
 #[test]
 fn a_save_keeps_the_lines_of_an_ini_that_is_not_utf8() {
     let dir = tempfile::tempdir().unwrap();
-    fs::write(dir.path().join("spartanport.ini"), LATIN1_INI).unwrap();
+    fs::write(dir.path().join("sanctuary.ini"), LATIN1_INI).unwrap();
     let mut state = state_in(dir.path());
     state.modal = None;
     set(&mut state, "vsync", json!(false));
@@ -973,7 +854,7 @@ fn a_save_keeps_the_lines_of_an_ini_that_is_not_utf8() {
     assert!(text.lines().any(|line| line == "fps_limit=0"), "{text}");
 }
 
-/// The audio and effects options of the game's `spartanport.ini` (#968): the keys, values and
+/// The audio and effects options of the game's `sanctuary.ini` (#968): the keys, values and
 /// defaults the runtime (`gpu/shim/spartanport_settings.cpp`) reads.
 const AUDIO_AND_EFFECTS: [(&str, &str); 4] = [
     ("master_volume", "100"),

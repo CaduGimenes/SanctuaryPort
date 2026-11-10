@@ -3,3 +3,9 @@
 # runs inside launcher-rust/, as the CI workflow does.
 [target.x86_64-pc-windows-msvc]
 rustflags = ["-C", "target-feature=+crt-static"]
+
+# The launcher follows the system language (LC_ALL / LC_MESSAGES / LANG). Tests read its English
+# texts, so the processes cargo starts here (tests, `cargo run`) see an English locale whatever the
+# machine's language is.
+[env]
+LC_ALL = { value = "en_US.UTF-8", force = true }

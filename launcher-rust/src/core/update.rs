@@ -16,9 +16,9 @@ pub use crate::core::release::version_tuple;
 use crate::core::release::{self, ReleaseId};
 
 pub const RELEASES_API: &str =
-    "https://api.github.com/repos/FelipePrado0/SpartanPort/releases?per_page=100";
-pub const RELEASES_PAGE: &str = "https://github.com/FelipePrado0/SpartanPort/releases/latest";
-const USER_AGENT: &str = "spartanport-launcher";
+    "https://api.github.com/repos/CaduGimenes/SanctuaryPort/releases?per_page=100";
+pub const RELEASES_PAGE: &str = "https://github.com/CaduGimenes/SanctuaryPort/releases/latest";
+const USER_AGENT: &str = "sanctuaryport-launcher";
 const CHUNK: usize = 1 << 20;
 
 #[derive(Debug, Error)]
@@ -263,7 +263,7 @@ pub const USER_FILES: [&str; 12] = [
     "user",
     "out",
     "mods",
-    "gow3.ini",
+    "sanctuary.ini",
     "settings.json",
     "game_icon.ico",
     "mods.json",
@@ -724,7 +724,7 @@ mod tests {
                 "user",
                 "out",
                 "mods",
-                "gow3.ini",
+                "sanctuary.ini",
                 "settings.json",
                 "game_icon.ico",
                 "mods.json",

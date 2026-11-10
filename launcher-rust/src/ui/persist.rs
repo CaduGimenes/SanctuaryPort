@@ -21,12 +21,11 @@ use crate::core::i18n::{is_rtl, launcher_language, system_language, tr, tr_fmt};
 use crate::core::ini::{load_ini, save_ini};
 use crate::core::platform::tool::SystemTools;
 use crate::core::settings::{mark_default_patches_offered, save_settings, Settings};
-use crate::core::trophy_sound::{self, TrophySound};
 use crate::ui::app::{self, Message, State};
 use crate::ui::follow::{follow, Cause};
 use crate::ui::widgets::Modal;
 
-/// The `gow3.ini` keys with visible controls, in catalog order. Saving also writes the
+/// The `sanctuary.ini` keys with visible controls, in catalog order. Saving also writes the
 /// fixed legacy frame generation multiplier returned by `Store::ini_to_write`. Hidden settings
 /// outside that map keep their existing values.
 pub static SHOWN_INI_KEYS: LazyLock<Vec<&'static str>> = LazyLock::new(|| {
@@ -65,8 +64,6 @@ pub struct Persisted {
     pub ini: IndexMap<String, String>,
     pub mods: Option<Value>,
     pub patches: Option<Value>,
-    /// `custom_trophy/notifications.ini`'s sound keys (#1243).
-    pub trophy_sound: TrophySound,
 }
 
 /// A file of the save could not be written.
@@ -147,33 +144,14 @@ pub fn gather(state: &State) -> Persisted {
             Value::from(state.controls.device.value()),
         );
     }
-    let view = &state.mods;
-    let mods = (!view.order.is_empty()).then(|| {
-        let disabled = view
-            .order
-            .iter()
-            .filter(|name| !view.enabled.get(*name).copied().unwrap_or(false));
-        let mut map = Map::new();
-        map.insert("order".to_string(), strings(&view.order));
-        map.insert("disabled".to_string(), strings(disabled));
-        Value::Object(map)
-    });
-    let patches = (!view.external.is_empty()).then(|| {
-        let keys: BTreeSet<&String> = view.external.iter().map(|(key, _, _)| key).collect();
-        let (enabled, disabled): (Vec<&String>, Vec<&String>) = keys
-            .into_iter()
-            .partition(|key| view.external_enabled.contains(*key));
-        let mut map = Map::new();
-        map.insert("enabled".to_string(), strings(enabled));
-        map.insert("disabled".to_string(), strings(disabled));
-        Value::Object(map)
-    });
+    // The launcher has no Mods page; mods.json is left as it is.
+    let mods: Option<Value> = None;
+    let patches: Option<Value> = None;
     Persisted {
         app,
         ini,
         mods,
         patches,
-        trophy_sound: state.trophy_sound,
     }
 }
 
@@ -228,7 +206,7 @@ pub fn follow_monitor_list(state: &mut State, displays: &[Display]) {
     }
 }
 
-/// Writes `settings.json`, `gow3.ini`, `mods.json` and `patches.json` (Python `collect`).
+/// Writes `settings.json`, `sanctuary.ini`, `mods.json` and `patches.json` (Python `collect`).
 /// The ini gets the shown keys whose value changed since the last save or that the file lacks;
 /// every other line, comment and key in it stays, so changes made outside the launcher survive.
 /// On failure the settings, the ini values and the baseline stay as they were, so the edits stay
@@ -285,20 +263,13 @@ fn write_files(
     let paths = &state.paths;
     save_ini(&paths.ini_path(), edited, lines)?;
     save_settings(&paths.config_file(), &Settings(pending.app.clone()))?;
-    // Only an edit: a folder nobody touched gets no custom_trophy file.
-    if state.saved.as_ref().map(|saved| saved.trophy_sound) != Some(pending.trophy_sound) {
-        trophy_sound::write(
-            &paths.user_dir(&state.store.text("user_dir")),
-            pending.trophy_sound,
-        )?;
-    }
     if let Some(mods) = &pending.mods {
         atomic_write(&paths.mods_json(), &python_json(mods)?)?;
     }
     if let Some(patches) = &pending.patches {
         // Patches of other game versions keep their choice.
         let chosen: Value = load_json(&paths.patches_json(), Value::Null);
-        let shown: BTreeSet<&String> = state.mods.external.iter().map(|(key, _, _)| key).collect();
+        let shown: BTreeSet<&String> = BTreeSet::new();
         let merged = |field: &str| -> BTreeSet<String> {
             let names = |value: Option<&Value>| -> Vec<String> {
                 value

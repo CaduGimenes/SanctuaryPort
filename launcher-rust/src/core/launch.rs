@@ -4,7 +4,6 @@ use super::i18n::tr;
 use super::log::{exit_hint, ExitHint, RunLog};
 use super::platform;
 use indexmap::IndexMap;
-use std::ffi::OsString;
 use std::io::{BufRead, BufReader, Read};
 use std::path::Path;
 use std::process::{Command, ExitStatus, Stdio};
@@ -59,13 +58,6 @@ pub enum LaunchError {
     EmptyCommand,
     #[error("could not start the game: {0}")]
     Spawn(#[from] std::io::Error),
-}
-
-/// The command that runs the game: the launcher's own `exe` with `--run` and `args`.
-pub fn run_command(exe: &Path, args: &[OsString]) -> Vec<String> {
-    let mut command = vec![exe.to_string_lossy().into_owned(), "--run".to_string()];
-    command.extend(args.iter().map(|arg| arg.to_string_lossy().into_owned()));
-    command
 }
 
 /// The exit code of a process; on Linux one ended by a signal N gives `-N`, as Python's

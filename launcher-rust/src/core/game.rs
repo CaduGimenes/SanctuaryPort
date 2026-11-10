@@ -202,10 +202,10 @@ pub struct GameProfile {
 }
 
 static GAMES: &[GameProfile] = &[GameProfile {
-    ids: &["CUSA01623", "CUSA01715", "CUSA01720", "CUSA01740"],
-    xml: "CUSA01623.xml",
-    app_version: "01.02",
-    title: "God of War III",
+    ids: &["CUSA00243", "CUSA00242"],
+    xml: "Diablo_III.xml",
+    app_version: "01.47",
+    title: "Diablo III",
 }];
 
 /// The profile of a known game, by title ID or by its title appearing in the SFO title.
@@ -377,11 +377,11 @@ mod tests {
         out
     }
 
-    fn gow(version: &str) -> Vec<u8> {
+    fn diablo(version: &str) -> Vec<u8> {
         sfo(&[
-            ("TITLE_ID", "CUSA01623"),
+            ("TITLE_ID", "CUSA00243"),
             ("APP_VER", version),
-            ("TITLE", "God of War\u{ae} III Remastered"),
+            ("TITLE", "Diablo\u{ae} III: Eternal Collection"),
         ])
     }
 
@@ -393,7 +393,7 @@ mod tests {
 
     fn complete_dump(root: &Path) {
         put(root, "eboot.bin", b"elf");
-        put(root, "sce_sys/param.sfo", &gow("01.00"));
+        put(root, "sce_sys/param.sfo", &diablo("01.00"));
         put(root, "sce_module/libc.prx", b"prx");
         put(root, "sce_module/libSceFios2.prx", b"prx");
     }
@@ -444,14 +444,14 @@ mod tests {
         put(
             dir.path(),
             "sce_sys/param.sfo",
-            &sfo(&[("TITLE_ID", "CUSA01623"), ("APP_VER", "01.02")]),
+            &sfo(&[("TITLE_ID", "CUSA00243"), ("APP_VER", "01.47")]),
         );
         let folder = GameFolder::read(dir.path());
         fs::remove_file(dir.path().join("sce_sys/param.sfo")).unwrap();
-        assert_eq!(folder.title_id(), Some("CUSA01623"));
-        assert_eq!(folder.app_version(), Some("01.02"));
+        assert_eq!(folder.title_id(), Some("CUSA00243"));
+        assert_eq!(folder.app_version(), Some("01.47"));
         assert!(folder.profile().is_some());
-        assert_eq!(folder.info().map(|info| info.version), Some("01.02".into()));
+        assert_eq!(folder.info().map(|info| info.version), Some("01.47".into()));
         let none = GameFolder::read(Path::new(""));
         assert_eq!(none.title_id(), None);
         assert!(none.profile().is_none());
@@ -473,14 +473,14 @@ mod tests {
             dir.path(),
             "sce_sys/param.sfo",
             &sfo(&[
-                ("TITLE", " God of War\u{ae} III\u{2122} "),
+                ("TITLE", " Diablo\u{ae} III\u{2122} "),
                 ("APP_VER", "01.02"),
             ]),
         );
         assert_eq!(
             GameFolder::read(dir.path()).info(),
             Some(GameInfo {
-                title: "God of War III".into(),
+                title: "Diablo III".into(),
                 version: "01.02".into()
             })
         );
@@ -488,18 +488,21 @@ mod tests {
 
     #[test]
     fn profile_matches_by_id_or_title() {
-        let by_id = game_profile(Some("CUSA01740"), None).unwrap();
-        assert_eq!(by_id.xml, "CUSA01623.xml");
-        assert_eq!(by_id.app_version, "01.02");
-        let by_title = game_profile(Some("CUSA99999"), Some("God of War\u{ae} III Remastered"));
-        assert_eq!(by_title.map(|p| p.title), Some("God of War III"));
+        let by_id = game_profile(Some("CUSA00242"), None).unwrap();
+        assert_eq!(by_id.xml, "Diablo_III.xml");
+        assert_eq!(by_id.app_version, "01.47");
+        let by_title = game_profile(
+            Some("CUSA99999"),
+            Some("Diablo\u{ae} III: Reaper of Souls \u{2013} Ultimate Evil Edition"),
+        );
+        assert_eq!(by_title.map(|p| p.title), Some("Diablo III"));
         assert!(game_profile(Some("CUSA99999"), Some("Another Game")).is_none());
         assert!(game_profile(None, None).is_none());
 
         let dir = tempfile::tempdir().unwrap();
-        put(dir.path(), "sce_sys/param.sfo", &gow("01.00"));
+        put(dir.path(), "sce_sys/param.sfo", &diablo("01.00"));
         let folder = GameFolder::read(dir.path());
-        assert_eq!(folder.title_id(), Some("CUSA01623"));
+        assert_eq!(folder.title_id(), Some("CUSA00243"));
         assert!(folder.profile().is_some());
         assert!(GameFolder::read(Path::new("")).profile().is_none());
     }
@@ -509,12 +512,12 @@ mod tests {
         let root = tempfile::tempdir().unwrap();
         let image = root.path().join("Image0");
         put(&image, "eboot.bin", b"elf");
-        put(root.path(), "Sc0/param.sfo", &gow("01.00"));
+        put(root.path(), "Sc0/param.sfo", &diablo("01.00"));
         let sc0 = system_files_beside(&image, None, None).unwrap();
         assert_eq!(sc0.file_name().unwrap(), "Sc0");
 
         let reference_dir = root.path().join("Ref");
-        put(&reference_dir, "sce_sys/param.sfo", &gow("01.00"));
+        put(&reference_dir, "sce_sys/param.sfo", &diablo("01.00"));
         let reference = GameFolder::read(&reference_dir);
         assert!(system_files_beside(&image, Some(&reference), None).is_some());
         let foreign_dir = root.path().join("Foreign");
@@ -530,7 +533,7 @@ mod tests {
         assert!(system_files_beside(&image, Some(&reference), Some(image.as_path())).is_none());
 
         // A usable param.sfo in the folder means nothing to adopt.
-        put(&image, "sce_sys/param.sfo", &gow("01.00"));
+        put(&image, "sce_sys/param.sfo", &diablo("01.00"));
         assert!(system_files_beside(&image, None, None).is_none());
         // An unusable one does not.
         put(&image, "sce_sys/param.sfo", b"junk");
@@ -546,7 +549,7 @@ mod tests {
     fn adoption_copies_missing_files_keeps_usable_ones_and_writes_param_sfo_last() {
         let root = tempfile::tempdir().unwrap();
         let source = root.path().join("Sc0");
-        put(&source, "param.sfo", &gow("01.00"));
+        put(&source, "param.sfo", &diablo("01.00"));
         put(&source, "icon0.png", b"new icon");
         put(&source, "pic1.png", b"new pic");
         put(&source, "trophy/trophy00.trp", b"trophy");

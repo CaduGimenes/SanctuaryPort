@@ -9,55 +9,28 @@ use iced::Element;
 
 use crate::core::i18n::tr;
 use crate::core::options::{
-    ANISOTROPY, ANTI_ALIASING, DISPLAY_MODES, FRAME_GENERATION, PRESETS, UPSCALERS,
+    ANISOTROPY, DISPLAY_MODES,
 };
 use crate::ui::app::{Message, State};
 use crate::ui::theme;
-use crate::ui::widgets::{checkbox, choice_pairs, row, section, select, select_pairs};
+use crate::ui::pages::controls::ini_number;
+use crate::ui::widgets::{checkbox, row, section, select, slider};
+
+/// The hint of the FSR 1 switch (SanctuaryPort).
+pub const FSR1_HINT: &str = "With a Render resolution (Performance page) below the window, AMD FSR 1 upscales the game's picture instead of a plain stretch: render at 720p or 900p for more FPS and keep a sharp 1080p window. Works on any graphics card; borderless and fullscreen upscale to the whole screen.";
 
 /// The hint of the Anti-aliasing row: FXAA / SMAA here, and the port's own TAA under Upscaler.
 pub const AA_HINT: &str = "Smooths jagged edges. FXAA is cheap and a little soft; SMAA keeps the picture sharper and costs a bit more. Both also touch the HUD slightly. For temporal anti-aliasing at native resolution choose TAA under Upscaler (Native AA preset): the port's own, tuned for this game. Its default values are the optimized ones, and every setting can be adjusted to your taste in the in-game menu (Insert / R3+L2) > Image. Use TAA with this set to Off.";
 
+/// SanctuaryPort: Diablo III shows only what its runtime reads. Not here: the monitor (the game
+/// opens on the primary one), VSync (the profile keeps it off: FIFO presents capped the engine at
+/// 20 FPS), the upscalers and frame generation (run.py keeps them off, not calibrated for this
+/// game) and the screen effect switches the game does not have (motion blur, depth of field,
+/// anti-aliasing).
 pub fn view(state: &State) -> Element<'_, Message> {
     let lang = state.lang.as_str();
     let hint = |english: &str| tr(lang, english);
     let ini = |key: &str| state.store.text(key);
-    // Each preset with the size the game renders at for the chosen Render resolution (Performance
-    // page), as the game's menus show it: "Quality (1706x960)".
-    let output =
-        crate::core::options::resolution_size(&ini("render_resolution")).unwrap_or((1920, 1080));
-    let preset_pairs: Vec<(String, String)> = choice_pairs(PRESETS, lang)
-        .into_iter()
-        .map(|(value, label)| {
-            let name = label
-                .rsplit_once(" (")
-                .map_or(label.as_str(), |(name, _)| name)
-                .to_string();
-            match crate::core::graphics_options::upscale_render_size(&value, output) {
-                Some((w, h)) => (value, format!("{name} ({w}x{h})")),
-                None => (value, label),
-            }
-        })
-        .collect();
-
-    // The list the probe made, or just the primary default while it has not answered.
-    let pairs: Vec<(String, String)> = if state.monitor_pairs.is_empty() {
-        crate::core::gpu::monitor_options(&[])
-    } else {
-        state.monitor_pairs.clone()
-    }
-    .into_iter()
-    .map(|(value, label)| {
-        let label = if value.is_empty() {
-            tr(lang, &label)
-        } else {
-            label
-        };
-        (value, label)
-    })
-    .collect();
-    let monitor = state.store.text("monitor");
-
     // The Python marks a row that needs a new start of the game with a small `restart` note.
     let anisotropy_label = format!(
         "{}  ·  {}",
@@ -84,21 +57,6 @@ pub fn view(state: &State) -> Element<'_, Message> {
                 "Borderless covers the screen without changing the display mode."
             )),
         ),
-        row(
-            state.rtl,
-            &tr(lang, "Monitor"),
-            select_pairs("monitor", &pairs, &monitor),
-            Some(&hint(
-                "The screen the game opens its window on. Primary is the monitor the system considers the main one."
-            )),
-        ),
-        checkbox(
-            state.rtl,
-            "vsync",
-            &tr(lang, "VSync"),
-            state.store.flag("vsync"),
-            Some(&hint("Off allows tearing for the lowest latency.")),
-        ),
         checkbox(
             state.rtl,
             "hdr",
@@ -107,56 +65,25 @@ pub fn view(state: &State) -> Element<'_, Message> {
             Some(&hint("When HDR is on in Windows and the display supports it.")),
         ),
         section(state.rtl, &tr(lang, "Upscaling")),
-        row(
-            state.rtl,
-            &tr(lang, "Upscaler"),
-            select("upscaler", UPSCALERS, &ini("upscaler"), lang),
-            Some(&hint(if ini("upscaler") == "fsr3ui" {
-                "FSR 3.1 (native HUD and text): the game keeps its own 1920x1080 targets, so the HUD, text and loading screens are not stretched (FSR 3.1 draws everything at 1918x1078 with Native AA). Has the port's own sharpening in the in-game menu. Experimental."
-            } else {
-                "FSR 4.1 requires AMD Adrenalin 26.10.1 or newer. The log shows the active provider; fallback to FSR 3.1 is not FSR 4.1."
-            })),
-        ),
-        row(
-            state.rtl,
-            &format!("{}  ·  {}", tr(lang, "Quality preset"), tr(lang, "restart")),
-            select_pairs("preset", &preset_pairs, &ini("preset")),
-            Some(&hint(
-                "Share of the Render resolution (Performance page) the game renders at; the upscaler rebuilds the full Render resolution. Lower renders faster. Native AA keeps the full resolution."
-            )),
-        ),
-        row(
-            state.rtl,
-            &format!("{}  ·  {}", tr(lang, "Frame generation"), tr(lang, "Experimental")),
-            select("frame_generation", FRAME_GENERATION, &ini("frame_generation"), lang),
-            Some(&hint(
-                "A generated frame between game frames: up to twice the frames on screen. Needs an upscaler. AMD FSR: any graphics card."
-            )),
-        ),
-        section(state.rtl, &tr(lang, "Effects")),
         checkbox(
             state.rtl,
-            "motion_blur",
-            &tr(lang, "Motion blur"),
-            state.store.flag("motion_blur"),
-            Some(&hint(
-                "The game's own motion blur on fast moving objects and the camera. Off removes it."
-            )),
+            "fsr1",
+            &tr(lang, "Upscale with FSR 1"),
+            state.store.flag("fsr1"),
+            Some(&hint(FSR1_HINT)),
         ),
         checkbox(
             state.rtl,
-            "depth_of_field",
-            &tr(lang, "Depth of field"),
-            state.store.flag("depth_of_field"),
-            Some(&hint(
-                "The game's own blur of distant objects, strongest in cutscenes. Off keeps the whole picture sharp."
-            )),
+            "rcas",
+            &tr(lang, "Sharpening (RCAS)"),
+            state.store.flag("rcas"),
+            Some(&hint("Sharpens the game's picture on its way to the window. Also in the in-game menu.")),
         ),
         row(
             state.rtl,
-            &tr(lang, "Anti-aliasing"),
-            select("anti_aliasing", ANTI_ALIASING, &ini("anti_aliasing"), lang),
-            Some(&hint(AA_HINT)),
+            &tr(lang, "Sharpening strength"),
+            slider("rcas_strength", 0.0, 100.0, "%", ini_number(state, "rcas_strength")),
+            None,
         ),
         section(state.rtl, &tr(lang, "Textures")),
         row(

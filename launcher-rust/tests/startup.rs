@@ -5,7 +5,7 @@ use std::ffi::OsString;
 use std::path::Path;
 
 use iced::{window, Point, Size};
-use sanctuaryport_launcher::core::i18n::launcher_language;
+use sanctuaryport_launcher::core::i18n::{launcher_language, tr};
 use sanctuaryport_launcher::core::paths::Paths;
 use sanctuaryport_launcher::core::release::ReleaseId;
 use sanctuaryport_launcher::core::settings::app_defaults;
@@ -70,19 +70,7 @@ fn install_update_carries_target_and_pid() {
 }
 
 #[test]
-fn run_carries_everything_after_it() {
-    let args = |list: &[&str]| list.iter().map(OsString::from).collect::<Vec<_>>();
-    assert_eq!(route(&["--run"]), Route::Run { args: Vec::new() });
-    assert_eq!(
-        route(&["--run", "--timeout", "5", "--play"]),
-        Route::Run {
-            args: args(&["--timeout", "5", "--play"])
-        }
-    );
-}
-
-#[test]
-fn run_and_play_are_their_own_routes() {
+fn play_is_its_own_route() {
     // `--play` counts anywhere, as in the Python `main`.
     assert_eq!(route(&["--play"]), Route::Play);
     assert_eq!(route(&["--fullscreen", "--play"]), Route::Play);
@@ -98,7 +86,7 @@ fn install_update_copies_and_starts_the_new_launcher() {
     std::fs::create_dir_all(&target).unwrap();
     std::fs::copy(
         env!("CARGO_BIN_EXE_fake-game"),
-        source.join("SpartanPort.exe"),
+        source.join("SanctuaryPort.exe"),
     )
     .unwrap();
     std::fs::write(source.join("bin").join("x"), "new").unwrap();
@@ -117,23 +105,6 @@ fn install_update_copies_and_starts_the_new_launcher() {
     );
 }
 
-#[test]
-fn run_without_a_probe_fails_with_the_python_message() {
-    let dir = tempfile::tempdir().unwrap();
-    let out = std::process::Command::new(LAUNCHER)
-        .arg("--run")
-        .env("SPARTAN_PORT_DIR", dir.path())
-        .output()
-        .unwrap();
-    assert_eq!(out.status.code(), Some(1));
-    let stdout = String::from_utf8_lossy(&out.stdout);
-    assert!(stdout.contains("spartanport-probe"), "{stdout}");
-    assert!(
-        stdout.contains("not found: build it with build.sh"),
-        "{stdout}"
-    );
-}
-
 /// The launcher program cargo built for these tests.
 const LAUNCHER: &str = env!("CARGO_BIN_EXE_sanctuaryport-launcher");
 
@@ -146,7 +117,7 @@ fn version_prints_the_name_and_the_version() {
     assert!(out.status.success());
     assert_eq!(
         String::from_utf8_lossy(&out.stdout).trim(),
-        format!("SpartanPort {}", ReleaseId::this().plain())
+        format!("SanctuaryPort {}", ReleaseId::this().plain())
     );
 }
 
@@ -203,12 +174,15 @@ fn the_launcher_carries_its_icon() {
 }
 
 #[test]
-fn first_start_is_in_english_when_the_system_language_is_unknown() {
-    // The translations are partial; 'System' stays a choice in Advanced.
+fn first_start_follows_the_system_language_and_english_when_it_is_unknown() {
+    // SanctuaryPort: the first start follows the system ('System', empty); a language without
+    // translations falls back to English.
     let defaults = app_defaults(&|_| None);
     let ui_language = defaults["ui_language"].as_str().unwrap();
-    assert_eq!(ui_language, "en");
-    assert_eq!(launcher_language(ui_language, || "xx".to_string()), "en");
+    assert_eq!(ui_language, "");
+    let unknown = launcher_language(ui_language, || "xx".to_string());
+    assert_eq!(tr(&unknown, "Graphics"), "Graphics");
+    assert_eq!(launcher_language("en", || "pt".to_string()), "en");
     // 'System' (empty) follows the system language.
     assert_eq!(launcher_language("", || "pt".to_string()), "pt");
 }
@@ -424,23 +398,6 @@ fn the_desktop_scale_is_read_when_the_window_opens() {
     assert_eq!(state.window_size, WINDOW_SIZE);
 }
 
-#[test]
-fn voice_swap_is_its_own_role() {
-    let args = |list: &[&str]| list.iter().map(OsString::from).collect::<Vec<_>>();
-    assert_eq!(
-        route(&["--voice-swap", "--help"]),
-        Route::VoiceSwap {
-            args: args(&["--help"])
-        }
-    );
-    assert_eq!(
-        route(&["--voice-swap", "a", "--play"]),
-        Route::VoiceSwap {
-            args: args(&["a", "--play"])
-        }
-    );
-}
-
 fn vars(pairs: &[(&str, &str)]) -> Vec<(OsString, OsString)> {
     pairs
         .iter()
@@ -449,24 +406,10 @@ fn vars(pairs: &[(&str, &str)]) -> Vec<(OsString, OsString)> {
 }
 
 #[test]
-fn run_paths_start_at_the_resolved_port() {
-    let dir = tempfile::tempdir().unwrap();
-    std::fs::create_dir(dir.path().join("a")).unwrap();
-    std::fs::create_dir(dir.path().join("port")).unwrap();
-    let crooked = dir.path().join("a").join("..").join("port");
-    let (_, context) = start(&[OsString::from("--run")], &crooked, Vec::new(), true);
-    let found = std::fs::canonicalize(dir.path().join("port")).unwrap();
-    let found = found.to_string_lossy().replace(r"\\?\", "");
-    assert_eq!(context.paths.port_dir.to_string_lossy(), found);
-    // Their data folder follows.
-    assert_eq!(context.paths.data_dir, context.paths.port_dir);
-}
-
-#[test]
 fn windows_names_are_upper_case() {
-    let (_, context) = start(&[], Path::new("."), vars(&[("spartan_x", "1")]), true);
-    assert_eq!(context.env["SPARTAN_X"], "1");
-    assert!(!context.env.contains_key("spartan_x"));
+    let (_, context) = start(&[], Path::new("."), vars(&[("sanctuary_x", "1")]), true);
+    assert_eq!(context.env["SANCTUARY_X"], "1");
+    assert!(!context.env.contains_key("sanctuary_x"));
 }
 
 #[test]
@@ -596,4 +539,18 @@ fn the_window_start_is_confirmed_after_it_has_run_a_while() {
     assert!(marker.exists());
     let _ = app::update(&mut state, Message::Tick(opened + app::WINDOW_CONFIRM));
     assert!(!marker.exists());
+}
+
+#[test]
+fn an_old_gow3_ini_becomes_sanctuary_ini() {
+    let dir = tempfile::tempdir().unwrap();
+    let paths = Paths::from_env(dir.path(), &|_| None);
+    std::fs::write(dir.path().join("gow3.ini"), "vsync=0\n").unwrap();
+    sanctuaryport_launcher::startup::migrate_settings_file(&paths);
+    assert_eq!(std::fs::read_to_string(paths.ini_path()).unwrap(), "vsync=0\n");
+    assert!(!dir.path().join("gow3.ini").exists());
+    // An existing sanctuary.ini wins: the old file stays where it is.
+    std::fs::write(dir.path().join("gow3.ini"), "vsync=1\n").unwrap();
+    sanctuaryport_launcher::startup::migrate_settings_file(&paths);
+    assert_eq!(std::fs::read_to_string(paths.ini_path()).unwrap(), "vsync=0\n");
 }

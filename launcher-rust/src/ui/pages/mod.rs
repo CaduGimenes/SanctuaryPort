@@ -8,9 +8,7 @@ pub mod game;
 pub mod graphics;
 pub mod log;
 pub mod mapper;
-pub mod mods;
 pub mod performance;
-pub mod trophies;
 
 use iced::widget::text;
 use iced::Element;
@@ -25,9 +23,7 @@ pub enum Page {
     Graphics,
     Performance,
     Game,
-    Trophies,
     Controls,
-    Mods,
     Advanced,
     Log,
     /// "Set up a controller", opened from the Controls page; it has no tab of its own.
@@ -36,13 +32,11 @@ pub enum Page {
 
 impl Page {
     /// Tab order, which is also the order of the arrow keys.
-    /// SanctuaryPort: no Mods tab (the mods and patches were God of War III's).
-    pub const ALL: [Page; 8] = [
+    pub const ALL: [Page; 7] = [
         Page::Home,
         Page::Graphics,
         Page::Performance,
         Page::Game,
-        Page::Trophies,
         Page::Controls,
         Page::Advanced,
         Page::Log,
@@ -55,9 +49,7 @@ impl Page {
             Page::Graphics => "Graphics",
             Page::Performance => "Performance",
             Page::Game => "Game",
-            Page::Trophies => "Trophies",
             Page::Controls => "Controls",
-            Page::Mods => "Mods",
             Page::Advanced => "Advanced",
             Page::Log => "Log",
             Page::Mapper => "Set up a controller",
@@ -70,15 +62,13 @@ impl Page {
         match self {
             Page::Home => "",
             Page::Graphics => {
-                "Stored in gow3.ini; the in-game menu (Insert or R3+L2) changes the same values."
+                "Stored in sanctuary.ini; the in-game menu (Insert or R3+L2) changes the same values."
             }
             Page::Performance => {
                 "Frame rate, shaders and GPU data paths. Applied when the game starts."
             }
             Page::Game => "Your game dump, saves and language.",
-            Page::Trophies => "The trophies this port recorded while you played.",
             Page::Controls => "Keyboard, mouse and gamepad mapping.",
-            Page::Mods => "Change textures, sounds and text. Your game files stay untouched.",
             Page::Advanced => "Launcher options, diagnostics and system tools.",
             Page::Log => "Output of the last start. last_run.log holds the same text.",
             Page::Mapper => "Choose Configure next to a control. Each change is saved immediately.",
@@ -90,9 +80,7 @@ impl Page {
         matches!(
             self,
             Page::Performance
-                | Page::Trophies
                 | Page::Controls
-                | Page::Mods
                 | Page::Log
                 | Page::Mapper
         )
@@ -131,9 +119,7 @@ pub fn view(state: &State, page: Page) -> Element<'_, Message> {
         Page::Graphics => graphics::view(state),
         Page::Performance => performance::view(state),
         Page::Game => game::view(state),
-        Page::Trophies => trophies::view(state),
         Page::Controls => controls::view(state),
-        Page::Mods => mods::view(state),
         Page::Advanced => advanced::view(state),
         Page::Log => log::view(state),
         Page::Mapper => mapper::view(state),

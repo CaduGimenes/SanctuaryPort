@@ -92,11 +92,6 @@ pub fn ui_scale_choice(stored: &str) -> &'static str {
     }
 }
 
-pub static STICK_PROMPTS: &[Choice] = &[
-    c("keyboard", "Keyboard (native)"),
-    c("mouse", "Adaptive mouse (experimental)"),
-];
-
 pub static AIM_STYLES: &[Choice] = &[c("0", "Relative"), c("1", "Absolute")];
 
 pub static MENU_CONFIRM_STYLES: &[Choice] = &[
@@ -105,7 +100,7 @@ pub static MENU_CONFIRM_STYLES: &[Choice] = &[
 ];
 
 /// Speaker layout of the game's 7.1 mix (`audio_channels`): the values the runtime reads
-/// (`SpartanSettings::AudioChannelKeys`).
+/// (`SanctuarySettings::AudioChannelKeys`).
 pub static AUDIO_CHANNELS: &[Choice] = &[
     c("auto", "Automatic"),
     c("stereo", "Stereo"),
@@ -128,33 +123,6 @@ pub static D3_GLYPH_STYLES: &[Choice] = &[
     c("xbox", "Xbox"),
 ];
 
-/// Which input of a keyboard row the in-game keyboard icons show.
-pub static GLYPH_KEYS: &[Choice] = &[
-    c("main", "Main key (default)"),
-    c("alternative", "Alternative key"),
-    c("lyre", "Alternative key on the lyre only"),
-];
-
-/// How the keyboard icons colour the key labels of the four face buttons.
-pub static KEY_COLOR_STYLES: &[Choice] = &[
-    c("gray", "Gray (default)"),
-    c("playstation", "PlayStation colors"),
-    c("custom", "Custom"),
-];
-
-/// The palette of a custom colour; `gray` is the ink of every other label.
-pub static KEY_COLORS: &[Choice] = &[
-    c("gray", "Gray"),
-    c("white", "White"),
-    c("blue", "Blue"),
-    c("orange", "Orange"),
-    c("green", "Green"),
-    c("red", "Red"),
-    c("pink", "Pink"),
-    c("yellow", "Yellow"),
-    c("purple", "Purple"),
-];
-
 pub static UPSCALERS: &[Choice] = &[
     cr("off", "Off", "Выключен"),
     cr("fsr3", "FSR 3.1 (every GPU)", "FSR 3.1 (любая видеокарта)"),
@@ -169,11 +137,11 @@ pub static UPSCALERS: &[Choice] = &[
     ),
 ];
 
-/// Spatial anti-aliasing of the finished frame (`anti_aliasing` in gow3.ini): FXAA or SMAA.
+/// Spatial anti-aliasing of the finished frame (`anti_aliasing` in sanctuary.ini): FXAA or SMAA.
 /// The temporal TAA is the Upscaler choice "TAA", not a value of this key.
 pub static ANTI_ALIASING: &[Choice] = &[c("off", "Off"), c("fxaa", "FXAA"), c("smaa", "SMAA")];
 
-/// gow3.ini frame_generation; the game reads the same values (frame_generation_policy.h).
+/// sanctuary.ini frame_generation; the game reads the same values (frame_generation_policy.h).
 pub static FRAME_GENERATION: &[Choice] = &[
     cr("off", "Off", "Выключен"),
     c("fsr", "AMD FSR (every GPU)"),
@@ -555,21 +523,17 @@ mod tests {
 
     #[test]
     fn every_table_has_unique_values() {
-        let tables: [&[Choice]; 27] = [
+        let tables: [&[Choice]; 23] = [
             ANTI_ALIASING,
             FRAME_GENERATION,
             DISPLAY_MODES,
             ANISOTROPY,
             FPS_LIMITS,
             UI_SCALES,
-            STICK_PROMPTS,
             AIM_STYLES,
             MENU_CONFIRM_STYLES,
             AUDIO_CHANNELS,
             GLYPH_STYLES,
-            GLYPH_KEYS,
-            KEY_COLOR_STYLES,
-            KEY_COLORS,
             UPSCALERS,
             PRESETS,
             OUTPUTS,

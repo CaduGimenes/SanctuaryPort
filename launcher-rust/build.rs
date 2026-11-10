@@ -1,12 +1,12 @@
 //! Embeds `assets/sanctuaryport.ico` into the Windows executable, so Explorer, the taskbar and a
 //! shortcut to the exe show the SanctuaryPort icon (R92). Nothing happens on other systems.
-//! It also forwards the release tag (`GOW3_RELEASE_TAG`) into the binary.
+//! It also forwards the release tag (`SANCTUARY_RELEASE_TAG`) into the binary.
 
 fn main() {
-    println!("cargo:rerun-if-env-changed=GOW3_RELEASE_TAG");
-    if let Ok(tag) = std::env::var("GOW3_RELEASE_TAG") {
+    println!("cargo:rerun-if-env-changed=SANCTUARY_RELEASE_TAG");
+    if let Ok(tag) = std::env::var("SANCTUARY_RELEASE_TAG") {
         if !tag.is_empty() {
-            println!("cargo:rustc-env=GOW3_RELEASE_TAG={tag}");
+            println!("cargo:rustc-env=SANCTUARY_RELEASE_TAG={tag}");
         }
     }
     println!("cargo:rerun-if-changed=build.rs");

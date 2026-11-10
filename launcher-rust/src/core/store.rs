@@ -1,4 +1,4 @@
-//! The two settings files in one value: `settings.json` and the game's `gow3.ini`.
+//! The two settings files in one value: `settings.json` and the game's `sanctuary.ini`.
 
 use std::path::PathBuf;
 
@@ -216,7 +216,7 @@ mod tests {
     fn removed_upscaler_and_frame_generation_choices_are_saved_as_off() {
         let (dir, _) = fresh();
         std::fs::write(
-            dir.path().join("gow3.ini"),
+            dir.path().join("sanctuary.ini"),
             "upscaler=dlss\nframe_generation=dlss\nframe_generation_frames=3\n",
         )
         .unwrap();
@@ -234,7 +234,7 @@ mod tests {
         for frames in ["1", "2", "3", "9"] {
             let (dir, _) = fresh();
             std::fs::write(
-                dir.path().join("gow3.ini"),
+                dir.path().join("sanctuary.ini"),
                 format!("frame_generation=fsr\nframe_generation_frames={frames}\n"),
             )
             .unwrap();
@@ -319,7 +319,7 @@ mod tests {
         // A parked key is not written; the upscaler and its preset are shown, so they are.
         assert!(!out.contains_key("object_motion"));
         assert!(out.contains_key("upscaler") && out.contains_key("preset"));
-        assert_eq!(out.len(), 45);
+        assert_eq!(out.len(), 48);
         assert_eq!(out.keys().next().unwrap(), "display_mode");
     }
 

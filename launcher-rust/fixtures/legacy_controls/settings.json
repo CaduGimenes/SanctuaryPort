@@ -1,7 +1,7 @@
 {
-  "ui_language": "en",
+  "ui_language": "",
   "ui_scale": "auto",
-  "game_dir": "D:\\Games\\CUSA01623",
+  "game_dir": "D:\\Games\\CUSA00243",
   "update_dir": "",
   "video_backend": "auto",
   "gamemode": false,
@@ -37,14 +37,10 @@
   "game_patches": {},
   "controls": {
     "key": {
-      "cross": "Space",
-      "rage": "Mouse Middle"
+      "cross": "Space"
     }
   },
   "pad_style": "playstation",
-  "rage_one_input": false,
-  "stick_prompts": "keyboard",
   "controls_layout": 5,
-  "switch_attacks": false,
   "glyph_style": "off"
 }

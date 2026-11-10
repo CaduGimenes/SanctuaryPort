@@ -216,10 +216,7 @@ fn glow_pixels(colour: [u8; 3]) -> Vec<u8> {
             let dx = (x as f32 + 0.5 - half) / half;
             let dy = (y as f32 + 0.5 - half) / half;
             let alpha = (falloff(dx.hypot(dy)) * 255.0).round() as u8;
-            // Premultiplied: renderers that blend premultiplied colour otherwise add the full
-            // colour where alpha is 0, and the sprite shows as a hard-edged rectangle.
-            let pre = |c: u8| ((u16::from(c) * u16::from(alpha) + 127) / 255) as u8;
-            pixels.extend_from_slice(&[pre(colour[0]), pre(colour[1]), pre(colour[2]), alpha]);
+            pixels.extend_from_slice(&[colour[0], colour[1], colour[2], alpha]);
         }
     }
     pixels
@@ -577,7 +574,7 @@ pub fn status_line(state: &State) -> String {
 }
 
 /// The settings line under PLAY in pieces (mockup `#quick`): output resolution, FPS limit, window
-/// mode and monitor, the keys the Graphics page offers (ruling R78: not the parked upscaler and
+/// mode (SanctuaryPort: no monitor, the game opens on the primary one), the keys the Graphics page offers (ruling R78: not the parked upscaler and
 /// preset). Each text comes with whether it stands out (`<b>`: the resolution and the FPS); the
 /// other two and the separators are muted. The options show their short names, and the monitor
 /// counts from 1.
@@ -590,12 +587,6 @@ pub fn quick_segments(state: &State) -> Vec<(String, bool)> {
         "0" => choice_label(FPS_LIMITS, "0", lang),
         limit => format!("{limit} FPS"),
     };
-    // The saved index of the probe's list, or empty for the primary monitor.
-    let monitor = state
-        .store
-        .text("monitor")
-        .parse::<u32>()
-        .map_or(1, |index| index.saturating_add(1));
     let items = [
         (short(OUTPUTS, "output_res"), true),
         (fps, true),
@@ -603,7 +594,6 @@ pub fn quick_segments(state: &State) -> Vec<(String, bool)> {
             choice_label(DISPLAY_MODES, &state.store.text("display_mode"), lang),
             false,
         ),
-        (format!("{} {monitor}", tr(lang, "Monitor")), false),
     ];
     let mut segments = Vec::with_capacity(2 * items.len());
     for (index, item) in items.into_iter().enumerate() {

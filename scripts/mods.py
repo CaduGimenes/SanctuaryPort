@@ -23,10 +23,10 @@ def child(folder, name):
     return folder / name
 
 
-# Top-level folders a mod may shadow (casefolded). The GOW3PC game keeps its data in EXEC and one
-# folder per language at the game root; dvdroot_ps4 is the shadPS4 layout many mods still use.
-GAME_ROOTS = frozenset({'dvdroot_ps4', 'exec', 'dutch', 'english', 'french', 'german', 'italian',
-                        'polish', 'portuguese', 'russian', 'spanish'})
+# Top-level folders a mod may shadow (casefolded). Diablo III keeps its data in CPKs (the packs,
+# one set per language) and Data at the game root; dvdroot_ps4 is the shadPS4 layout some mods use.
+# data_roots also learns the other folders of the game at hand.
+GAME_ROOTS = frozenset({'dvdroot_ps4', 'cpks', 'data'})
 # Never replaced through the overlay: executable patches go through the patch compiler.
 PROTECTED = frozenset({'eboot.bin', 'sce_module', 'sce_sys'})
 
@@ -47,7 +47,7 @@ def has_game_root(folder, roots=GAME_ROOTS):
 
 def game_path(relative, flat):
     """Where a mod file lands: in a game without dvdroot_ps4 (`flat`), a mod's dvdroot_ps4/
-    prefix is dropped so dvdroot_ps4/EXEC/... replaces EXEC/... (#473)."""
+    prefix is dropped so dvdroot_ps4/CPKs/... replaces CPKs/... (#473)."""
     if flat and len(relative.parts) > 1 and relative.parts[0].casefold() == 'dvdroot_ps4':
         relative = Path(*relative.parts[1:])
     if relative.parts[0].casefold() in PROTECTED:
@@ -59,8 +59,8 @@ def content_root(folder, roots=GAME_ROOTS):
     """(root, prefix): where a mod's files are and the game path they go to, or None.
 
     Accepted layouts: <mod>/<game folder>, <mod>/app0/<game folder> and one wrapper folder
-    around either (an archive extracted into a folder of its name), where <game folder> is EXEC,
-    a language folder or dvdroot_ps4 (GAME_ROOTS)."""
+    around either (an archive extracted into a folder of its name), where <game folder> is CPKs,
+    Data, dvdroot_ps4 (GAME_ROOTS) or another folder of the game."""
     folder = Path(folder)
     if not folder.is_dir():
         return None
@@ -185,7 +185,7 @@ def unpack_zips(root, game=None):
             target.mkdir(exist_ok=True)
             marker.write_text(stamp)
             done.append(archive_path.stem)
-            kind = 'a mod' if (content_root(target, data_roots(game)) or patch_files(target)) else 'not a mod (no EXEC, language folder, dvdroot_ps4 or patches)'
+            kind = 'a mod' if (content_root(target, data_roots(game)) or patch_files(target)) else 'not a mod (no CPKs, Data, dvdroot_ps4 or patches)'
             print(f'Mods: {archive_path.name} unpacked: {kind}', file=sys.stderr)
         except (OSError, ValueError, RuntimeError, zipfile.BadZipFile) as error:
             shutil.rmtree(target, ignore_errors=True)
@@ -258,7 +258,7 @@ def mod_files(folder, game=None):
     if not layout:
         if patch_files(folder):
             return  # patches only
-        raise ValueError(f'{folder}: expected EXEC, a language folder or dvdroot_ps4 inside the mod folder')
+        raise ValueError(f'{folder}: expected CPKs, Data or dvdroot_ps4 inside the mod folder')
     root, prefix = layout
     root = root.resolve()
     for directory, folders, files in os.walk(root, followlinks=False):
@@ -291,7 +291,7 @@ def conflicts(root, names, game=None):
     for name in names:
         try:
             for relative, _source in mod_files(Path(root) / name, game):
-                relative = game_path(relative, flat=True)  # the GOW3PC game has no dvdroot_ps4
+                relative = game_path(relative, flat=True)  # the SANCTUARYPC game has no dvdroot_ps4
                 key = relative.as_posix().casefold()
                 owners.setdefault(key, (relative.as_posix(), []))[1].append(name)
         except (OSError, ValueError):

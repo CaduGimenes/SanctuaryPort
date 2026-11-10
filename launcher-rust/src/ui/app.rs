@@ -26,7 +26,6 @@ use crate::core::platform::tool::SystemTools;
 use crate::core::release::ReleaseId;
 use crate::core::settings::SettingsFile;
 use crate::core::store::Store;
-use crate::core::trophy_sound::TrophySound;
 use crate::core::update::{GitHubReleases, ReleaseHost};
 use crate::startup::confirm_window;
 use crate::ui::drawer::{self, DrawerState};
@@ -41,9 +40,7 @@ use crate::ui::pages::controls::{self, ControlsMessage, ControlsView};
 use crate::ui::pages::game::{self, BackupMessage, PatchesView};
 use crate::ui::pages::log::{self, LogMessage};
 use crate::ui::pages::mapper::{self, MapperMessage, MapperState};
-use crate::ui::pages::mods::{self, ModsMessage, ModsView};
 use crate::ui::pages::performance;
-use crate::ui::pages::trophies::{self, TrophiesMessage, TrophiesView};
 use crate::ui::pages::Page;
 use crate::ui::persist::{self, Persisted};
 use crate::ui::play::{self, GameMessage, GameState};
@@ -73,8 +70,6 @@ pub struct State {
     /// What the files held after the last save (or at the start): Save is active while the
     /// window differs from it (`persist::dirty`).
     pub saved: Option<Persisted>,
-    /// The trophy notification sound, read from the saves folder's `custom_trophy` (#1243).
-    pub trophy_sound: TrophySound,
     pub page: Page,
     pub drawer: DrawerState,
     pub drawer_progress: Animation<bool>,
@@ -105,15 +100,11 @@ pub struct State {
     pub gpus: Vec<GpuRow>,
     /// The Aspect ratio filter of the Performance page: not saved, it follows the render resolution.
     pub aspect: String,
-    /// Sizes the enabled mods add to the render resolutions; see `performance::refresh_mod_resolutions`.
-    pub mod_resolutions: Vec<String>,
     pub displays: Vec<Display>,
     /// The window system the monitors were listed under; `persist::refresh_monitors` lists them
     /// again when the pending one differs.
     pub displays_backend: String,
     pub monitor_pairs: Vec<(String, String)>,
-    pub trophies: TrophiesView,
-    pub mods: ModsView,
     pub controls: ControlsView,
     /// The "Set up a controller" page while it is open, with the joysticks it reads.
     pub mapper: Option<MapperState>,
@@ -239,13 +230,9 @@ impl State {
             // What a render resolution without an aspect shows; the start's read below sets the
             // aspect of the saved one.
             aspect: "16:9".to_string(),
-            mod_resolutions: Vec::new(),
             displays: Vec::new(),
             displays_backend,
             monitor_pairs: Vec::new(),
-            trophies: Default::default(),
-            trophy_sound: Default::default(),
-            mods: Default::default(),
             controls,
             mapper: None,
             live_pad: None,
@@ -311,9 +298,6 @@ pub enum Message {
     /// A game patch check box of the Game page.
     PatchToggled(String, bool),
     /// Turn off all cheats (Game page): every cheat off, every multiplier 1x (#1135).
-    CheatsOff,
-    /// The trophy notification sound of the Game page (#1243).
-    TrophySound(TrophySound),
     Backup(BackupMessage),
     /// The monitors the probe listed, in the background.
     MonitorsListed(Vec<Display>),
@@ -321,7 +305,7 @@ pub enum Message {
     OpenPath(PathBuf),
     /// Makes the folder when it is missing, then opens it (Python `open_path`).
     OpenFolder(PathBuf),
-    /// Saves, then opens `gow3.ini` (Python `open_path` of an `.ini`).
+    /// Saves, then opens `sanctuary.ini` (Python `open_path` of an `.ini`).
     OpenIni,
     /// The window's close button: saves first (Python `close`).
     CloseRequested(window::Id),
@@ -348,8 +332,6 @@ pub enum Message {
     Setup(SetupMessage),
     Update(UpdateMessage),
     Modal(ModalMessage),
-    Trophies(TrophiesMessage),
-    Mods(ModsMessage),
     Log(LogMessage),
     Controls(ControlsMessage),
     Mapper(MapperMessage),
@@ -578,8 +560,6 @@ pub fn update(state: &mut State, message: Message) -> Task<Message> {
         Message::InstallPicked(files) => game::start_pkg_install(state, files),
         Message::PatchToggled(name, on) => game::patch_toggled(state, &name, on),
         Message::Backup(message) => return game::backup_update(state, message),
-        Message::CheatsOff => return game::cheats_off(state),
-        Message::TrophySound(sound) => state.trophy_sound = sound,
         Message::WindowFocused(focused) => {
             state.focused = focused;
             // As the Python's <FocusOut>: a key box of the Controls page gives up.
@@ -618,8 +598,6 @@ pub fn update(state: &mut State, message: Message) -> Task<Message> {
         Message::Game(message) => return play::update(state, message),
         Message::Setup(message) => return setup::update(state, message),
         Message::Update(message) => return update::update(state, message),
-        Message::Trophies(message) => return trophies::update(state, message),
-        Message::Mods(message) => return mods::update(state, message),
         Message::Log(message) => return log::update(state, message),
         Message::Controls(message) => return controls::update(state, message),
         Message::Mapper(message) => return mapper::update(state, message),
@@ -734,9 +712,8 @@ pub fn scene_size(state: &State) -> Size {
     )
 }
 
-/// Home closes the drawer; any other page opens it, sliding in when it was closed. The Trophies
-/// page reloads its list each time it opens, and the Mods page the game folders and its lists; the
-/// first open of Controls looks for a gamepad. Leaving the controller mapper closes it.
+/// Home closes the drawer; any other page opens it, sliding in when it was closed. The first open
+/// of Controls looks for a gamepad. Leaving the controller mapper closes it.
 pub fn show_page(state: &mut State, page: Page) -> Task<Message> {
     if state.page == Page::Mapper && page != Page::Mapper {
         mapper::close(state);
@@ -762,14 +739,7 @@ pub fn show_page(state: &mut State, page: Page) -> Task<Message> {
     };
     state.drawer_progress.go_mut(open, now);
     match page {
-        Page::Trophies => trophies::refresh(state),
         Page::Controls => controls::opened(state),
-        // As the Python's page refresh: the game folders are read again, so the third-party
-        // patches follow an update extracted meanwhile.
-        Page::Mods => {
-            refresh_installation(state);
-            mods::refresh(state)
-        }
         _ => Task::none(),
     }
 }
@@ -1089,7 +1059,7 @@ fn window_settings() -> window::Settings {
         icon: window::icon::from_file_data(home::MONOGRAM_PNG, None).ok(),
         #[cfg(target_os = "linux")]
         platform_specific: window::settings::PlatformSpecific {
-            application_id: "spartanport".to_string(),
+            application_id: "sanctuaryport".to_string(),
             ..Default::default()
         },
         ..window::Settings::default()

@@ -2,7 +2,7 @@
 //! The Home page (chips, quick line, PLAY) and the language menu.
 
 mod common;
-use common::releases::{downloading_state, next_call, state_installed, Call, FakeReleases};
+use common::releases::{next_call, state_installed, Call, FakeReleases};
 use common::state_with;
 
 use std::path::Path;
@@ -25,7 +25,6 @@ use sanctuaryport_launcher::ui::lang_menu::LangMessage;
 use sanctuaryport_launcher::ui::pages::Page;
 use sanctuaryport_launcher::ui::update::{Listing, UpdateMessage};
 use sanctuaryport_launcher::ui::version_menu::VersionMessage;
-use sanctuaryport_launcher::ui::widgets::modal::{Modal, ModalKind};
 
 /// A state over `dir` only, with the splash already gone.
 fn state_in(dir: &Path) -> State {
@@ -64,7 +63,7 @@ fn home_shows_play_and_the_three_chips() {
     );
     assert_eq!(
         home::quick_line(&state),
-        "1920 × 1080 · Unlimited · Windowed · Monitor 1"
+        "1920 × 1080 · Unlimited · Windowed"
     );
 
     let mut ui = simulator(app::view(&state));
@@ -114,7 +113,7 @@ fn the_settings_line_reads_like_the_mockup() {
     // not offer (rulings R35 and R78).
     assert_eq!(
         home::quick_line(&state),
-        "2560 × 1440 · 120 FPS · Fullscreen · Monitor 1"
+        "2560 × 1440 · 120 FPS · Fullscreen"
     );
     // `<b>` of the mockup: the resolution and the FPS stand out.
     let segments = home::quick_segments(&state);
@@ -129,11 +128,11 @@ fn the_settings_line_reads_like_the_mockup() {
         .filter(|(_, bright)| !*bright)
         .map(|(text, _)| format!("[{text}]"))
         .collect();
-    assert_eq!(muted, "[ · ][ · ][Fullscreen][ · ][Monitor 1]");
+    assert_eq!(muted, "[ · ][ · ][Fullscreen]");
     state.lang = "pt".into();
     assert_eq!(
         home::quick_line(&state),
-        "2560 × 1440 · 120 FPS · Tela cheia · Monitor 1"
+        "2560 × 1440 · 120 FPS · Tela cheia"
     );
 }
 
@@ -148,21 +147,6 @@ fn the_settings_line_leaves_out_the_parked_keys() {
         state.store.set(key, json!(value));
     }
     assert_eq!(home::quick_line(&state), before);
-}
-
-#[test]
-fn the_monitor_counts_from_one() {
-    let dir = tempfile::tempdir().unwrap();
-    let mut state = state_in(dir.path());
-    mockup_settings(&mut state);
-    for (saved, shown) in [("", "Monitor 1"), ("0", "Monitor 1"), ("1", "Monitor 2")] {
-        state.store.set("monitor", json!(saved));
-        assert!(
-            home::quick_line(&state).ends_with(&format!(" · {shown}")),
-            "{saved:?}: {}",
-            home::quick_line(&state)
-        );
-    }
 }
 
 #[test]
@@ -244,19 +228,21 @@ fn the_home_shows_the_launcher_key_art_without_a_game_folder() {
 }
 
 #[test]
-fn the_key_art_is_the_embedded_1920_by_1080_picture() {
+fn the_key_art_is_the_embedded_1280_by_720_picture() {
     let art = home::art();
     assert_eq!(art.id(), home::art().id(), "one handle per process");
     let Handle::Bytes(_, bytes) = art else {
         panic!("the key art is not embedded: {art:?}");
     };
     let picture = image::load_from_memory(&bytes).unwrap();
-    assert_eq!((picture.width(), picture.height()), (1920, 1080));
-    assert_eq!(home::ART_SIZE, (1920, 1080));
+    // SanctuaryPort: the fallback art is 1280 x 720 (the user's own pic1.png is scaled to that
+    // width at most), which the scene scales up.
+    assert_eq!((picture.width(), picture.height()), (1280, 720));
+    assert_eq!(home::ART_SIZE, (1280, 720));
     // A scene of the picture's own size shows all of it.
     assert_eq!(
-        home::art_crop(home::ART_SIZE, Size::new(1920.0, 1080.0)),
-        crop(0, 0, 1920, 1080)
+        home::art_crop(home::ART_SIZE, Size::new(1280.0, 720.0)),
+        crop(0, 0, 1280, 720)
     );
 }
 
@@ -331,17 +317,17 @@ fn the_key_art_covers_the_scene_anchored_at_70_and_30_percent() {
     // A narrow scene shows a slice 70 % of the way across the picture.
     assert_eq!(
         home::art_crop(home::ART_SIZE, Size::new(960.0, 1080.0)),
-        crop(672, 0, 960, 1080)
+        crop(448, 0, 640, 720)
     );
     // A wide scene shows a band 30 % of the way down.
     assert_eq!(
         home::art_crop(home::ART_SIZE, Size::new(1920.0, 540.0)),
-        crop(0, 162, 1920, 540)
+        crop(0, 108, 1280, 360)
     );
     // A larger scene of the same shape scales the whole picture up.
     assert_eq!(
         home::art_crop(home::ART_SIZE, Size::new(3840.0, 2160.0)),
-        crop(0, 0, 1920, 1080)
+        crop(0, 0, 1280, 720)
     );
     // Any picture size: a 32 x 18 placeholder in a half-width scene.
     assert_eq!(
@@ -351,7 +337,7 @@ fn the_key_art_covers_the_scene_anchored_at_70_and_30_percent() {
     // A minimised window has no scene: the whole picture, no division by zero.
     assert_eq!(
         home::art_crop(home::ART_SIZE, Size::ZERO),
-        crop(0, 0, 1920, 1080)
+        crop(0, 0, 1280, 720)
     );
 }
 
@@ -550,7 +536,7 @@ fn play_gets_the_click_under_the_narrow_drawer() {
 fn play_is_disabled_behind_the_wide_drawer() {
     let dir = tempfile::tempdir().unwrap();
     let mut state = state_in(dir.path());
-    let _ = app::update(&mut state, Message::ShowPage(Page::Trophies));
+    let _ = app::update(&mut state, Message::ShowPage(Page::Controls));
     tick(&mut state, Instant::now() + Duration::from_secs(1));
     let mut ui = simulator(app::view(&state));
     let _ = ui.click("PLAY");
@@ -587,189 +573,6 @@ fn stable_2_6_0() -> ReleaseId {
         version: "2.6.0".into(),
         build: None,
     }
-}
-
-#[test]
-fn the_version_button_names_the_installed_release() {
-    let dir = tempfile::tempdir().unwrap();
-    let state = state_installed(dir.path(), ReleaseId::this());
-    let mut ui = simulator(app::view(&state));
-    assert!(ui
-        .find(format!("{} ▾", ReleaseId::this().label("en")).as_str())
-        .is_ok());
-    drop(ui);
-    let state = state_installed(
-        dir.path(),
-        ReleaseId {
-            channel: Channel::PreRelease,
-            version: "2.6.0".into(),
-            build: Some("issue209-test1".into()),
-        },
-    );
-    let mut ui = simulator(app::view(&state));
-    assert!(ui.find("Pre-release · 2.6.0 · issue209-test1 ▾").is_ok());
-}
-
-#[test]
-fn the_version_button_offers_a_newer_stable() {
-    let dir = tempfile::tempdir().unwrap();
-    let mut state = state_installed(dir.path(), stable_2_6_0());
-    ready_with(&mut state, vec![release(Channel::Release, "2.7.0", None)]);
-    let mut ui = simulator(app::view(&state));
-    assert!(ui.find("Release · 2.6.0 · 2.7.0 available ▾").is_ok());
-    drop(ui);
-    state.lang = "pt".into();
-    let mut ui = simulator(app::view(&state));
-    assert!(ui.find("Lançamento · 2.6.0 · 2.7.0 disponível ▾").is_ok());
-    drop(ui);
-    state.lang = "en".into();
-    ready_with(
-        &mut state,
-        vec![release(Channel::PreRelease, "2.6.0", Some("x"))],
-    );
-    let mut ui = simulator(app::view(&state));
-    assert!(ui.find("Release · 2.6.0 ▾").is_ok());
-}
-
-#[test]
-fn the_version_button_offers_the_next_build_of_the_series() {
-    let dir = tempfile::tempdir().unwrap();
-    let installed = ReleaseId {
-        channel: Channel::PreRelease,
-        version: "2.8.0".into(),
-        build: Some("issue1-test1".into()),
-    };
-    let list = vec![
-        release(Channel::PreRelease, "2.8.0", Some("issue2-test5")),
-        release(Channel::PreRelease, "2.8.0", Some("issue1-test2")),
-        release(Channel::Release, "2.8.0", None),
-    ];
-    let mut state = state_installed(dir.path(), installed);
-    ready_with(&mut state, list.clone());
-    let mut ui = simulator(app::view(&state));
-    assert!(ui
-        .find("Pre-release · 2.8.0 · issue1-test1 · issue1-test2 available ▾")
-        .is_ok());
-    drop(ui);
-    open_menu(&mut state);
-    let mut ui = simulator(app::view(&state));
-    assert!(ui.find("new").is_ok());
-    drop(ui);
-
-    // A stable user sees the same list with nothing new.
-    let mut state = state_installed(dir.path(), release(Channel::Release, "2.8.0", None).id);
-    ready_with(&mut state, list);
-    open_menu(&mut state);
-    let mut ui = simulator(app::view(&state));
-    assert!(ui.find("Release · 2.8.0 ▾").is_ok());
-    assert!(ui.find("new").is_err());
-}
-
-#[test]
-fn the_version_button_offers_the_build_of_a_promoted_series_release() {
-    let dir = tempfile::tempdir().unwrap();
-    let installed = ReleaseId {
-        channel: Channel::PreRelease,
-        version: "2.8.0".into(),
-        build: Some("issue1-test1".into()),
-    };
-    let mut state = state_installed(dir.path(), installed);
-    ready_with(
-        &mut state,
-        vec![release(Channel::Release, "2.8.0", Some("issue1-test2"))],
-    );
-    let mut ui = simulator(app::view(&state));
-    assert!(ui
-        .find("Pre-release · 2.8.0 · issue1-test1 · issue1-test2 available ▾")
-        .is_ok());
-}
-
-#[test]
-fn the_version_button_sits_before_the_language_one() {
-    let dir = tempfile::tempdir().unwrap();
-    let mut state = state_installed(dir.path(), stable_2_6_0());
-    let label = "Release · 2.6.0 ▾";
-    let x = |state: &State, label: &str| {
-        let mut ui = simulator(app::view(state));
-        ui.find(label).unwrap().bounds().x
-    };
-    assert!(x(&state, label) < x(&state, "English ▾"));
-    state.rtl = true;
-    assert!(x(&state, label) > x(&state, "English ▾"));
-}
-
-#[test]
-fn the_version_button_is_not_pressable_while_downloading_or_dimmed() {
-    let dir = tempfile::tempdir().unwrap();
-    let newest = release(Channel::Release, "2.7.0", None);
-    let state = downloading_state(dir.path(), stable_2_6_0(), newest, 42);
-    let label = "Downloading version 2.7.0… 42%";
-    assert!(simulator(app::view(&state)).find(label).is_ok());
-    assert!(!click(&state, label)
-        .iter()
-        .any(|message| matches!(message, Message::VersionMenu(VersionMessage::Toggle))));
-
-    let mut state = state_installed(dir.path(), stable_2_6_0());
-    state.modal = Some(Modal {
-        kind: ModalKind::Info,
-        title: "T".into(),
-        text: "X".into(),
-    });
-    // The dialog's backdrop takes the press.
-    let sent = click(&state, "Release · 2.6.0 ▾");
-    assert!(!sent
-        .iter()
-        .any(|message| matches!(message, Message::VersionMenu(VersionMessage::Toggle))));
-
-    // Dimmed behind a wide drawer: the dim layer takes the click, the button hears nothing.
-    state.modal = None;
-    state.drawer = DrawerState::Open(Page::Log);
-    let sent = click(&state, "Release · 2.6.0 ▾");
-    assert!(
-        !sent
-            .iter()
-            .any(|message| matches!(message, Message::VersionMenu(_))),
-        "{sent:?}"
-    );
-}
-
-#[test]
-fn the_version_menu_stays_closed_while_downloading() {
-    let dir = tempfile::tempdir().unwrap();
-    let newest = release(Channel::Release, "2.7.0", None);
-    let (fake, calls) = FakeReleases::new();
-    let mut state = state_with(dir.path(), fake.progress(42).host());
-    let t0 = Instant::now();
-    state.now = t0;
-    // A download that starts closes an open list.
-    ready_with(&mut state, vec![newest.clone()]);
-    open_menu(&mut state);
-    let _ = app::update(
-        &mut state,
-        Message::Update(UpdateMessage::Confirmed(newest.clone())),
-    );
-    assert_eq!(next_call(&calls), Call::Install(newest.url));
-    tick(&mut state, t0 + Duration::from_millis(500));
-    assert!(!state.version_menu.open);
-
-    for message in [
-        VersionMessage::Enter,
-        VersionMessage::Tick(t0 + Duration::from_millis(450)),
-        VersionMessage::Toggle,
-    ] {
-        let task = version(&mut state, message.clone());
-        assert!(!state.version_menu.open, "{message:?}");
-        assert!(state.version_menu.hover_since.is_none(), "{message:?}");
-        assert_eq!(task.units(), 0, "{message:?}");
-    }
-    // The bare button: neither the pointer nor a press reaches the menu.
-    let sent = click(&state, "Downloading version 2.7.0… 42%");
-    assert!(
-        !sent
-            .iter()
-            .any(|message| matches!(message, Message::VersionMenu(_))),
-        "{sent:?}"
-    );
 }
 
 #[test]

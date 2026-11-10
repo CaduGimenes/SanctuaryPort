@@ -96,16 +96,7 @@ fn check_row(
 /// The check boxes of the Launcher section, the Effects row last.
 pub fn launcher_checks(state: &State, lang: &str) -> Vec<CheckRow> {
     let mut checks = vec![
-        check_row(
-            state,
-            "discord_rpc",
-            tr(lang, "Show Discord Rich Presence"),
-            tr(
-                lang,
-                "Shows only the game name and the time played on your Discord profile.",
-            ),
-            true,
-        ),
+        // SanctuaryPort: no Discord Rich Presence (the port has no Discord application yet).
         check_row(
             state,
             "close_on_play",
@@ -156,7 +147,7 @@ pub fn linux_checks(state: &State, lang: &str) -> Vec<CheckRow> {
             tr(lang, "Menu entry and icon (AppImage)"),
             tr(
                 lang,
-                "Creates spartanport.desktop in ~/.local/share/applications so the launcher and the game show their icon in the dock and the menu. Turning it off removes the entry.",
+                "Creates sanctuaryport.desktop in ~/.local/share/applications so the launcher and the game show their icon in the dock and the menu. Turning it off removes the entry.",
             ),
             true,
         ),
@@ -348,7 +339,7 @@ pub fn view(state: &State) -> Element<'_, Message> {
             tr(lang, "Port folder"),
             Message::OpenFolder(state.paths.data_dir.clone())
         ),
-        flat("gow3.ini".to_string(), Message::OpenIni),
+        flat("sanctuary.ini".to_string(), Message::OpenIni),
         clear,
     ]
     .spacing(6)
@@ -509,7 +500,7 @@ fn add_to_steam(paths: &Paths, settings: &Settings, lang: &str) -> Result<String
     if !Installation::read(&game, "").has_game() {
         return Err(tr(
             lang,
-            "Choose the game folder with eboot.bin (CUSA01623).",
+            "Choose the game folder with eboot.bin (CUSA00243).",
         ));
     }
     let result = steam::add_to_steam(

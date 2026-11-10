@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Builds dist/knack-windows/ (and dist/knack-windows.zip): Knack.exe (the launcher, frozen
-# with PyInstaller so players need no Python), gow3-probe.exe with the MSYS2 CLANG64 DLLs it needs,
+# with PyInstaller so players need no Python), sanctuary-probe.exe with the MSYS2 CLANG64 DLLs it needs,
 # the preparation scripts and run.py. Run from an MSYS2 CLANG64 shell after `bash build.sh`.
 # Freezing uses a Windows Python 3.10+ (python.org; WINPYTHON overrides) and a private venv in
 # out/pyenv with PyInstaller and Pillow (the game icon and the Steam pictures need it). The
@@ -9,7 +9,7 @@
 set -euo pipefail
 cd -- "$(dirname -- "$0")/../.."
 source ./msys2-env.sh
-[[ -f out/gow3-probe.exe && -f out/gow3-gpu-capabilities.exe && -f out/gow3-play.exe ]] || { echo 'Build first: bash build.sh' >&2; exit 1; }
+[[ -f out/sanctuary-probe.exe && -f out/sanctuary-gpu-capabilities.exe && -f out/sanctuary-play.exe ]] || { echo 'Build first: bash build.sh' >&2; exit 1; }
 
 # A Windows Python (not MSYS2's) for PyInstaller.
 python=${WINPYTHON:-}
@@ -32,9 +32,9 @@ for module in argparse base64 collections hashlib json re shutil socket struct t
     hidden+=(--hidden-import "$module")
 done
 out/pyenv/Scripts/python.exe -m PyInstaller --noconfirm --clean --log-level WARN --windowed --copy-metadata pillow \
-    --name "Knack" --icon "$(cygpath -w "$PWD/launcher/gow3.ico")" --distpath out/pyi-dist \
+    --name "Knack" --icon "$(cygpath -w "$PWD/launcher/sanctuary.ico")" --distpath out/pyi-dist \
     --workpath out/pyi-work --specpath out/pyi-work --paths "$(cygpath -w "$PWD/scripts")" "${hidden[@]}" \
-    "$(cygpath -w "$PWD/launcher/gow3_launcher_win.py")"
+    "$(cygpath -w "$PWD/launcher/sanctuary_launcher_win.py")"
 
 # The package is assembled in a fresh staging folder and zipped from there; dist/knack-windows
 # (a playable copy that may hold saves and settings) is only refreshed afterwards.
@@ -42,14 +42,14 @@ dest=out/stage/knack-windows
 rm -rf -- out/stage
 mkdir -p "$dest/bin" "$dest/launcher"
 cp -r "out/pyi-dist/Knack/." "$dest/"
-llvm-strip -o "$dest/Play Knack.exe" out/gow3-play.exe
-cp launcher/gow3.ico launcher/gow3.png launcher/Cinzel-Black.ttf launcher/OFL-Cinzel.txt "$dest/launcher/"
+llvm-strip -o "$dest/Play Knack.exe" out/sanctuary-play.exe
+cp launcher/sanctuary.ico launcher/sanctuary.png launcher/Cinzel-Black.ttf launcher/OFL-Cinzel.txt "$dest/launcher/"
 # The executables without debug information (out/ keeps the symbols for crash reports).
-for exe in gow3-probe.exe gow3-gpu-capabilities.exe; do
+for exe in sanctuary-probe.exe sanctuary-gpu-capabilities.exe; do
     llvm-strip --strip-debug -o "$dest/bin/$exe" "out/$exe"
 done
 # Every DLL the executables load from the CLANG64 tree (SDL3, FFmpeg, Vulkan loader, ...).
-ldd "$dest/bin/gow3-probe.exe" "$dest/bin/gow3-gpu-capabilities.exe" |
+ldd "$dest/bin/sanctuary-probe.exe" "$dest/bin/sanctuary-gpu-capabilities.exe" |
     awk '/\/clang64\/bin\// {print $3}' | sort -u | while read -r dll; do
         cp -u "$dll" "$dest/bin/"
     done
@@ -60,7 +60,7 @@ find "$dest" -name __pycache__ -prune -exec rm -r {} +
 # No game files and nothing a player made (saves, shader caches built from the game's shaders,
 # settings, logs) may ship: stop when one is found.
 forbidden=$(find "$dest" \( -iname eboot.bin -o -iname sce_module -o -iname sce_sys -o -iname savedata \
-    -o -iname user -o -iname cache -o -iname '*.log' -o -iname gow3.ini -o -iname settings.json \
+    -o -iname user -o -iname cache -o -iname '*.log' -o -iname sanctuary.ini -o -iname settings.json \
     -o -iname mods.json -o -iname patches.json -o -iname fsr4_shaders -o -iname 'nvngx_dlss*.dll' \
     -o -iname '*.spv' -o -iname '*.pkg' -o -iname '*.sprx' -o -iname '*.prx' \) -print)
 if [[ -n $forbidden ]]; then
@@ -82,7 +82,7 @@ if [[ ${running:-0} != 0 ]]; then
     echo "dist/knack-windows is in use ($running processes): not refreshed; the zip is ready." >&2
 else
     mkdir -p "$play"
-    find "$play" -mindepth 1 -maxdepth 1 ! -name user ! -name mods ! -name gow3.ini \
+    find "$play" -mindepth 1 -maxdepth 1 ! -name user ! -name mods ! -name sanctuary.ini \
         ! -name mods.json ! -name patches.json -exec rm -rf {} +
     cp -r "$dest/." "$play/"
 fi

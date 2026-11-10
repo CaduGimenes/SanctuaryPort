@@ -53,7 +53,7 @@ void AddBuffers(Entry& entry) {
 bool pass_open = false;
 std::mutex display_mutex;
 std::vector<VAddr> display_buffers;
-// gow3: read on every draw; the game registers a handful of display buffers once.
+// sanctuary: read on every draw; the game registers a handful of display buffers once.
 std::array<std::atomic<VAddr>, 16> display_list{};
 std::atomic<u32> display_count{0};
 
@@ -93,12 +93,12 @@ void SetResult(std::string text) {
     result = std::move(text);
 }
 
-// GOW3_CAPTURE_DIR, else <user>/captures (GOW3_GPU_USER_DIR, the saves folder).
+// SANCTUARY_CAPTURE_DIR, else <user>/captures (SANCTUARY_GPU_USER_DIR, the saves folder).
 std::filesystem::path CaptureDir() {
-    if (const char* dir = std::getenv("GOW3_CAPTURE_DIR"); dir && dir[0]) {
+    if (const char* dir = std::getenv("SANCTUARY_CAPTURE_DIR"); dir && dir[0]) {
         return dir;
     }
-    const char* user = std::getenv("GOW3_GPU_USER_DIR");
+    const char* user = std::getenv("SANCTUARY_GPU_USER_DIR");
     return std::filesystem::path(user && user[0] ? user : "user") / "captures";
 }
 
@@ -159,7 +159,7 @@ void Write(VAddr presented) {
 void FrameCapture::OnFlip(VAddr presented_address) {
     last_presented.store(presented_address, std::memory_order_relaxed);
     flips.fetch_add(1, std::memory_order_release);
-    static const char* trigger = std::getenv("GOW3_CAPTURE_TRIGGER");
+    static const char* trigger = std::getenv("SANCTUARY_CAPTURE_TRIGGER");
     if (state.load(std::memory_order_relaxed) != Idle) {
         return;
     }
@@ -226,14 +226,14 @@ void FrameCapture::BeginPass(const VideoCore::ImageInfo* const* colors, u32 num_
         }
     }
     // Frame boundaries in the command stream: the pass that writes a display buffer as its only
-    // target. gow3: God of War III also draws scene passes (two targets) into display buffers.
+    // target. sanctuary: some games also draw scene passes (two targets) into display buffers.
     display = display && targets.size() == 1;
     const bool new_pass = !(pass_open && !entries.empty() && !entries.back().compute &&
                             entries.back().colors == targets);
-    // Diablo III: GOW3_CAPTURE_DISPLAY_PASSES=N keeps recording across N display-buffer passes
+    // Diablo III: SANCTUARY_CAPTURE_DISPLAY_PASSES=N keeps recording across N display-buffer passes
     // (the scene composite and the UI both write the display buffer within one frame).
     static const int display_passes = [] {
-        const char* v = std::getenv("GOW3_CAPTURE_DISPLAY_PASSES");
+        const char* v = std::getenv("SANCTUARY_CAPTURE_DISPLAY_PASSES");
         return v ? std::max(1, std::atoi(v)) : 1;
     }();
     static int display_seen = 0;
@@ -283,9 +283,9 @@ void FrameCapture::Draw(u64 vs_hash, u64 ps_hash, u32 num_indices, u32 num_insta
     AddShader(e, vs_hash);
     AddShader(e, ps_hash);
     AddSampled(e);
-    // knack_pc: GOW3_CAPTURE_PS=<hex hash>: every draw with that pixel shader keeps its constants.
+    // knack_pc: SANCTUARY_CAPTURE_PS=<hex hash>: every draw with that pixel shader keeps its constants.
     static const u64 watched = [] {
-        const char* v = std::getenv("GOW3_CAPTURE_PS");
+        const char* v = std::getenv("SANCTUARY_CAPTURE_PS");
         return v ? std::strtoull(v, nullptr, 16) : 0;
     }();
     if (watched && ps_hash == watched) {
@@ -322,9 +322,9 @@ void FrameCapture::Buffer(u64 stage_hash, u32 slot, VAddr address, const void* d
     if (!data) {
         return;
     }
-    // knack_pc: GOW3_CAPTURE_FULL=<hex address>: that buffer is dumped whole (up to 1 MB).
+    // knack_pc: SANCTUARY_CAPTURE_FULL=<hex address>: that buffer is dumped whole (up to 1 MB).
     static const u64 full = [] {
-        const char* v = std::getenv("GOW3_CAPTURE_FULL");
+        const char* v = std::getenv("SANCTUARY_CAPTURE_FULL");
         return v ? std::strtoull(v, nullptr, 16) : 0;
     }();
     // Once per captured frame (the first binding of it).

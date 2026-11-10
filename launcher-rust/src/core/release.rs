@@ -92,7 +92,7 @@ impl ReleaseId {
 
     /// The release this binary is: the tag it was built with, else `fallback()`.
     pub fn this() -> ReleaseId {
-        Self::from_tag(option_env!("GOW3_RELEASE_TAG"))
+        Self::from_tag(option_env!("SANCTUARY_RELEASE_TAG"))
     }
 
     /// `2.8.0`, `2.8.0-beta2`: the tag without its system prefix.
@@ -387,7 +387,7 @@ mod tests {
     fn this_binary_is_the_tag_it_was_built_with() {
         assert_eq!(
             ReleaseId::this(),
-            ReleaseId::from_tag(option_env!("GOW3_RELEASE_TAG"))
+            ReleaseId::from_tag(option_env!("SANCTUARY_RELEASE_TAG"))
         );
     }
 

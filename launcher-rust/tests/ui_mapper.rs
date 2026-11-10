@@ -173,9 +173,9 @@ fn full_dump(folder: &Path) {
     fs::write(
         folder.join("sce_sys").join("param.sfo"),
         common::sfo(&[
-            ("TITLE_ID", "CUSA01623"),
-            ("TITLE", "God of War III"),
-            ("APP_VER", "01.02"),
+            ("TITLE_ID", "CUSA00243"),
+            ("TITLE", "Diablo III"),
+            ("APP_VER", "01.47"),
         ]),
     )
     .unwrap();

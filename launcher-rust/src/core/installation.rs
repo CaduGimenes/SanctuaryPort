@@ -147,10 +147,6 @@ impl Installation {
             .map(|folder| folder.join("sce_sys").join(rel))
             .find(|path| path.is_file())
     }
-
-    pub fn trophy_package(&self) -> Option<PathBuf> {
-        self.system_file("trophy/trophy00.trp")
-    }
 }
 
 #[cfg(test)]
@@ -185,11 +181,11 @@ mod tests {
         out
     }
 
-    fn gow(version: &str) -> Vec<u8> {
+    fn diablo(version: &str) -> Vec<u8> {
         sfo(&[
-            ("TITLE_ID", "CUSA01623"),
+            ("TITLE_ID", "CUSA00243"),
             ("APP_VER", version),
-            ("TITLE", "God of War III"),
+            ("TITLE", "Diablo III: Eternal Collection"),
         ])
     }
 
@@ -201,14 +197,14 @@ mod tests {
 
     fn complete_dump(root: &Path) {
         put(root, "eboot.bin", b"elf");
-        put(root, "sce_sys/param.sfo", &gow("01.00"));
+        put(root, "sce_sys/param.sfo", &diablo("01.00"));
         put(root, "sce_module/libc.prx", b"prx");
         put(root, "sce_module/libSceFios2.prx", b"prx");
     }
 
     fn complete_update(root: &Path) {
         put(root, "eboot.bin", b"elf");
-        put(root, "sce_sys/param.sfo", &gow("01.02"));
+        put(root, "sce_sys/param.sfo", &diablo("01.47"));
     }
 
     fn s(path: &Path) -> &str {
@@ -240,13 +236,13 @@ mod tests {
         let update = tempfile::tempdir().unwrap();
         complete_dump(game.path());
         let base = Installation::read(s(game.path()), s(update.path()));
-        assert_eq!(base.title_id(), Some("CUSA01623"));
+        assert_eq!(base.title_id(), Some("CUSA00243"));
         assert_eq!(base.info().map(|i| i.version.as_str()), Some("01.00"));
         assert!(base.patchable());
         assert!(base.has_game());
         complete_update(update.path());
         let both = Installation::read(s(game.path()), s(update.path()));
-        assert_eq!(both.info().map(|i| i.version.as_str()), Some("01.02"));
+        assert_eq!(both.info().map(|i| i.version.as_str()), Some("01.47"));
         assert!(both.profile().is_some());
         let empty = tempfile::tempdir().unwrap();
         let nothing = Installation::read(s(empty.path()), "");
@@ -270,18 +266,18 @@ mod tests {
             Some(game.path().join("sce_sys/pic1.png"))
         );
         assert_eq!(installation.system_file("none.png"), None);
-        assert_eq!(installation.trophy_package(), None);
+        assert_eq!(installation.system_file("trophy/trophy00.trp"), None);
         put(game.path(), "sce_sys/trophy/trophy00.trp", b"g");
         assert_eq!(
-            Installation::read(s(game.path()), s(update.path())).trophy_package(),
+            Installation::read(s(game.path()), s(update.path())).system_file("trophy/trophy00.trp"),
             Some(game.path().join("sce_sys/trophy/trophy00.trp"))
         );
         put(update.path(), "sce_sys/trophy/trophy00.trp", b"u");
         assert_eq!(
-            Installation::read(s(game.path()), s(update.path())).trophy_package(),
+            Installation::read(s(game.path()), s(update.path())).system_file("trophy/trophy00.trp"),
             Some(update.path().join("sce_sys/trophy/trophy00.trp"))
         );
-        assert_eq!(Installation::read("", "").trophy_package(), None);
+        assert_eq!(Installation::read("", "").system_file("trophy/trophy00.trp"), None);
     }
 
     #[test]
@@ -319,7 +315,7 @@ mod tests {
         assert_eq!(installation.title_id(), None);
         assert!(installation.profile().is_none() && !installation.patchable());
         assert_eq!(installation.system_file("param.sfo"), None);
-        assert_eq!(installation.trophy_package(), None);
+        assert_eq!(installation.system_file("trophy/trophy00.trp"), None);
         assert!(installation.info().is_some() && installation.has_game());
         assert!(installation.verdict().passes());
         let same = Installation::read_from("", s(here.path()), here.path());

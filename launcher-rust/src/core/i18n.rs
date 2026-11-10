@@ -27,14 +27,6 @@ pub enum Region {
 }
 
 #[derive(Deserialize, Default)]
-struct Trophies {
-    #[serde(default)]
-    texts: HashMap<String, Vec<(String, String)>>,
-    #[serde(default)]
-    ui: HashMap<String, HashMap<String, String>>,
-}
-
-#[derive(Deserialize, Default)]
 struct Table {
     #[serde(default)]
     keys: Vec<String>,
@@ -46,8 +38,6 @@ struct Table {
     ru: HashMap<String, String>,
     #[serde(default)]
     windows_languages: HashMap<String, String>,
-    #[serde(default)]
-    trophies: Trophies,
     #[serde(skip)]
     index: HashMap<String, usize>,
 }
@@ -114,16 +104,6 @@ static UI_EXTRA: &[(&str, &[(&str, &str)])] = &[
             ("cs", "Útoky při výměně zbraně na L1 + D-pad a L1 + Křížek"),
         ],
     ),
-    (
-        "L1 + a d-pad direction switches to that weapon with its switch attack (the weapon in Kratos' hands does its attack again). L1 + Cross does the switch attack of the weapon in his hands instead of cycling to the next weapon. The d-pad alone switches as before. Applied when the game starts.",
-        &[
-            ("zh", "L1 + 方向键会切换至对应武器并使出切换攻击（若已持有该武器，则再次使出攻击）。L1 + 叉键会使出当前武器的切换攻击，不再轮换到下一把武器。单独按方向键仍按原方式切换。启动游戏时生效。"),
-            ("pt", "L1 + uma direção do direcional troca para essa arma com o ataque de troca dela (a arma que já está na mão de Kratos repete o ataque). L1 + X faz o ataque de troca da arma na mão em vez de passar para a próxima arma. O direcional sozinho troca como antes. Aplicado ao iniciar o jogo."),
-            ("es", "L1 + una dirección de la cruceta cambia a esa arma con su ataque de cambio (el arma que Kratos ya tiene en la mano repite su ataque). L1 + X hace el ataque de cambio del arma en la mano en lugar de pasar a la siguiente arma. La cruceta sola cambia como antes. Se aplica al iniciar el juego."),
-            ("cs", "L1 + směr D-padu přepne na danou zbraň jejím útokem při výměně (zbraň v rukou Krata svůj útok zopakuje). L1 + Křížek provede útok při výměně zbraně v rukou místo přepnutí na další zbraň. Samotný D-pad přepíná jako dřív. Použije se při spuštění hry."),
-        ],
-    ),
-    // Alternative keys of the Controls page.
     (
         "(alternative)",
         &[
@@ -835,143 +815,8 @@ static UI_EXTRA: &[(&str, &[(&str, &str)])] = &[
         ],
     ),
     (
-        "Tap R3",
-        &[("pt", "Toque no R3"), ("es", "Toque de R3"), ("zh", "轻按 R3"), ("id", "Ketuk R3")],
-    ),
-    (
-        "Experimental. The right stick or the mouse turns the camera all the way around Kratos and Kratos moves the way the camera looks; L1 + right stick dodges. In play, the Free camera key (G by default) or a tap of R3 on the gamepad switches it off and on, for boss fights; quick-time events and the game's camera cuts go back to the game's camera. Also in the in-game menu.",
-        &[
-            ("pt", "Experimental. O analógico direito ou o mouse gira a câmera em volta do Kratos, por completo, e o Kratos anda para onde a câmera olha; L1 + analógico direito faz a esquiva. No jogo, a tecla da câmera livre (G por padrão) ou um toque no R3 do controle a desliga e liga, para as lutas de chefe; os quick-time events e os cortes de câmera do jogo voltam à câmera do jogo. Também no menu do jogo."),
-            ("es", "Experimental. El stick derecho o el ratón gira la cámara alrededor de Kratos, por completo, y Kratos se mueve hacia donde mira la cámara; L1 + stick derecho esquiva. En el juego, la tecla de la cámara libre (G por defecto) o un toque de R3 en el mando la desactiva y activa, para las peleas contra jefes; los quick-time events y los cortes de cámara del juego vuelven a la cámara del juego. También en el menú del juego."),
-            ("zh", "实验性功能。右摇杆或鼠标可让镜头围绕奎托斯完整旋转，奎托斯会朝镜头所看的方向移动；L1 + 右摇杆为闪避。游戏中，自由镜头按键（默认为 G）或轻按手柄上的 R3 可将其关闭和开启，适用于首领战；快速反应事件和游戏自带的镜头切换会回到游戏的镜头。游戏内菜单中也有此选项。"),
-            ("id", "Eksperimental. Stik kanan atau mouse memutar kamera sepenuhnya di sekitar Kratos, dan Kratos bergerak ke arah pandangan kamera; L1 + stik kanan untuk menghindar. Dalam permainan, tombol Kamera bebas (bawaan G) atau ketukan R3 pada gamepad mematikan dan menyalakannya, untuk pertarungan bos; quick-time event dan potongan kamera game kembali ke kamera game. Juga tersedia di menu dalam game."),
-        ],
-    ),
-    // Game page: the in-game menu's cheats and multipliers (texts of gpu/shim's tables), the
-    // button that turns them all off and the trophy sound (#1135, #320, #1243).
-    (
-        "Automatic QTE",
-        &[("zh", "自动完成 QTE"), ("pt", "QTE automático"), ("es", "QTE automático"), ("cs", "Automatické QTE"), ("ru", "Автоматические QTE"), ("fr", "QTE automatiques"), ("de", "Automatische QTEs"), ("it", "QTE automatici"), ("pl", "Automatyczne QTE"), ("tr", "Otomatik QTE"), ("id", "QTE otomatis")],
-    ),
-    (
-        "Blue orbs (magic)",
-        &[("zh", "蓝魂（魔法）"), ("pt", "Orbes azuis (magia)"), ("es", "Orbes azules (magia)"), ("cs", "Modré orby (magie)"), ("ru", "Синие сферы (магия)"), ("fr", "Orbes bleus (magie)"), ("de", "Blaue Orbs (Magie)"), ("it", "Sfere blu (magia)"), ("pl", "Niebieskie kule (magia)"), ("tr", "Mavi küreler (büyü)"), ("id", "Orb biru (sihir)")],
-    ),
-    (
-        "Damage Kratos does to enemies.",
-        &[("zh", "奎托斯对敌人造成的伤害。"), ("pt", "Dano que Kratos causa nos inimigos."), ("es", "Daño que Kratos hace a los enemigos."), ("cs", "Poškození, které Kratos působí nepřátelům."), ("ru", "Урон, который Кратос наносит врагам."), ("fr", "Dégâts que Kratos inflige aux ennemis."), ("de", "Schaden, den Kratos Gegnern zufügt."), ("it", "Danni che Kratos infligge ai nemici."), ("pl", "Obrażenia, które Kratos zadaje przeciwnikom."), ("tr", "Kratos'un düşmanlara verdiği hasar."), ("id", "Damage yang Kratos berikan ke musuh.")],
-    ),
-    (
-        "Damage Kratos takes.",
-        &[("zh", "奎托斯受到的伤害。"), ("pt", "Dano que Kratos recebe."), ("es", "Daño que recibe Kratos."), ("cs", "Poškození, které Kratos utrpí."), ("ru", "Урон, который получает Кратос."), ("fr", "Dégâts que subit Kratos."), ("de", "Schaden, den Kratos erleidet."), ("it", "Danni che Kratos subisce."), ("pl", "Obrażenia, które otrzymuje Kratos."), ("tr", "Kratos'un aldığı hasar."), ("id", "Damage yang Kratos terima.")],
-    ),
-    (
-        "Damage dealt",
-        &[("zh", "造成伤害"), ("pt", "Dano causado"), ("es", "Daño causado"), ("cs", "Způsobené poškození"), ("ru", "Наносимый урон"), ("fr", "Dégâts infligés"), ("de", "Verursachter Schaden"), ("it", "Danni inflitti"), ("pl", "Zadawane obrażenia"), ("tr", "Verilen hasar"), ("id", "Damage diberikan")],
-    ),
-    (
-        "Damage taken",
-        &[("zh", "受到伤害"), ("pt", "Dano recebido"), ("es", "Daño recibido"), ("cs", "Utržené poškození"), ("ru", "Получаемый урон"), ("fr", "Dégâts subis"), ("de", "Erlittener Schaden"), ("it", "Danni subiti"), ("pl", "Otrzymywane obrażenia"), ("tr", "Alınan hasar"), ("id", "Damage diterima")],
-    ),
-    (
-        "Gold orbs (Rage of Sparta)",
-        &[("zh", "金魂（斯巴达之怒）"), ("pt", "Orbes dourados (Fúria de Esparta)"), ("es", "Orbes dorados (Furia de Esparta)"), ("cs", "Zlaté orby (Sparťanův hněv)"), ("ru", "Золотые сферы (Ярость Спарты)"), ("fr", "Orbes dorés (Rage de Sparte)"), ("de", "Goldene Orbs (Zorn von Sparta)"), ("it", "Sfere d'oro (Furia di Sparta)"), ("pl", "Złote kule (Furia Sparty)"), ("tr", "Altın küreler (Sparta Öfkesi)"), ("id", "Orb emas (Rage of Sparta)")],
-    ),
-    (
-        "Green orbs (health)",
-        &[("zh", "绿魂（生命）"), ("pt", "Orbes verdes (vida)"), ("es", "Orbes verdes (vida)"), ("cs", "Zelené orby (zdraví)"), ("ru", "Зелёные сферы (здоровье)"), ("fr", "Orbes verts (santé)"), ("de", "Grüne Orbs (Leben)"), ("it", "Sfere verdi (salute)"), ("pl", "Zielone kule (zdrowie)"), ("tr", "Yeşil küreler (sağlık)"), ("id", "Orb hijau (nyawa)")],
-    ),
-    (
-        "Health from each green orb. The bar stays within its maximum.",
-        &[("zh", "每个绿魂恢复的生命，最高不超过生命上限。"), ("pt", "Vida de cada orbe verde. A barra fica dentro do máximo."), ("es", "Vida de cada orbe verde. La barra no pasa de su máximo."), ("cs", "Zdraví z každého zeleného orbu. Ukazatel zůstane v mezích maxima."), ("ru", "Здоровье от каждой зелёной сферы. Полоска не превышает максимум."), ("fr", "Santé de chaque orbe vert. La barre ne dépasse pas son maximum."), ("de", "Leben pro grünem Orb. Der Balken bleibt innerhalb seines Maximums."), ("it", "Salute da ogni sfera verde. La barra resta entro il suo massimo."), ("pl", "Zdrowie z każdej zielonej kuli. Pasek nie przekracza maksimum."), ("tr", "Her yeşil küreden gelen sağlık. Çubuk en yüksek değerini aşmaz."), ("id", "Nyawa dari setiap orb hijau. Bar tidak melebihi batas maksimum.")],
-    ),
-    (
-        "Health stays full. Only Kratos is protected. Turning it off does not undo past refills.",
-        &[("zh", "生命保持满值，仅保护奎托斯。关闭后不会撤销已恢复的生命。"), ("pt", "A vida fica cheia. Só Kratos é protegido. Desligar não desfaz o que já foi recuperado."), ("es", "La vida se mantiene llena. Solo protege a Kratos. Al desactivarlo no se deshace lo ya recuperado."), ("cs", "Zdraví zůstává plné. Chráněn je jen Kratos. Vypnutím se dřívější doplnění nevrátí."), ("ru", "Здоровье остаётся полным. Защищён только Кратос. Выключение не отменяет уже восполненное."), ("fr", "La santé reste pleine. Seul Kratos est protégé. Le désactiver n'annule pas ce qui a été rendu."), ("de", "Das Leben bleibt voll. Nur Kratos ist geschützt. Ausschalten macht bisherige Auffüllungen nicht rückgängig."), ("it", "La salute resta piena. Solo Kratos è protetto. Disattivarlo non annulla le ricariche già avvenute."), ("pl", "Zdrowie pozostaje pełne. Chroniony jest tylko Kratos. Wyłączenie nie cofa wcześniejszych uzupełnień."), ("tr", "Sağlık dolu kalır. Yalnızca Kratos korunur. Kapatmak önceki dolumları geri almaz."), ("id", "Nyawa tetap penuh. Hanya Kratos yang terlindungi. Mematikannya tidak membatalkan isi ulang sebelumnya.")],
-    ),
-    (
-        "Infinite Rage of Sparta",
-        &[("zh", "无限斯巴达之怒"), ("pt", "Fúria de Esparta infinita"), ("es", "Furia de Esparta infinita"), ("cs", "Nekonečný Sparťanův hněv"), ("ru", "Бесконечная Ярость Спарты"), ("fr", "Rage de Sparte infinie"), ("de", "Unendlicher Zorn von Sparta"), ("it", "Furia di Sparta infinita"), ("pl", "Nieskończona Furia Sparty"), ("tr", "Sonsuz Sparta Öfkesi"), ("id", "Rage of Sparta tanpa batas")],
-    ),
-    (
-        "Infinite health",
-        &[("zh", "无限生命"), ("pt", "Vida infinita"), ("es", "Vida infinita"), ("cs", "Nekonečné zdraví"), ("ru", "Бесконечное здоровье"), ("fr", "Santé infinie"), ("de", "Unendliches Leben"), ("it", "Salute infinita"), ("pl", "Nieskończone zdrowie"), ("tr", "Sonsuz sağlık"), ("id", "Nyawa tanpa batas")],
-    ),
-    (
-        "Infinite item meter",
-        &[("zh", "无限道具能量"), ("pt", "Barra de item infinita"), ("es", "Barra de objeto infinita"), ("cs", "Nekonečný ukazatel předmětů"), ("ru", "Бесконечная шкала предмета"), ("fr", "Jauge d'objet infinie"), ("de", "Unendliche Gegenstandsleiste"), ("it", "Barra degli oggetti infinita"), ("pl", "Nieskończony pasek przedmiotu"), ("tr", "Sonsuz eşya çubuğu"), ("id", "Meter item tanpa batas")],
-    ),
-    (
-        "Infinite magic",
-        &[("zh", "无限魔法"), ("pt", "Magia infinita"), ("es", "Magia infinita"), ("cs", "Nekonečná magie"), ("ru", "Бесконечная магия"), ("fr", "Magie infinie"), ("de", "Unendliche Magie"), ("it", "Magia infinita"), ("pl", "Nieskończona magia"), ("tr", "Sonsuz büyü"), ("id", "Sihir tanpa batas")],
-    ),
-    (
-        "Magic from each blue orb. The bar stays within its maximum.",
-        &[("zh", "每个蓝魂恢复的魔法，最高不超过魔法上限。"), ("pt", "Magia de cada orbe azul. A barra fica dentro do máximo."), ("es", "Magia de cada orbe azul. La barra no pasa de su máximo."), ("cs", "Magie z každého modrého orbu. Ukazatel zůstane v mezích maxima."), ("ru", "Магия от каждой синей сферы. Полоска не превышает максимум."), ("fr", "Magie de chaque orbe bleu. La barre ne dépasse pas son maximum."), ("de", "Magie pro blauem Orb. Der Balken bleibt innerhalb seines Maximums."), ("it", "Magia da ogni sfera blu. La barra resta entro il suo massimo."), ("pl", "Magia z każdej niebieskiej kuli. Pasek nie przekracza maksimum."), ("tr", "Her mavi küreden gelen büyü. Çubuk en yüksek değerini aşmaz."), ("id", "Sihir dari setiap orb biru. Bar tidak melebihi batas maksimum.")],
-    ),
-    (
-        "Magic stays full.",
-        &[("zh", "魔法保持满值。"), ("pt", "A magia fica cheia."), ("es", "La magia se mantiene llena."), ("cs", "Magie zůstává plná."), ("ru", "Магия остаётся полной."), ("fr", "La magie reste pleine."), ("de", "Die Magie bleibt voll."), ("it", "La magia resta piena."), ("pl", "Magia pozostaje pełna."), ("tr", "Büyü dolu kalır."), ("id", "Sihir tetap penuh.")],
-    ),
-    (
-        "Max red orbs",
-        &[("zh", "最大红魂"), ("pt", "Orbes vermelhos no máximo"), ("es", "Orbes rojos al máximo"), ("cs", "Maximum rudých orbů"), ("ru", "Максимум красных сфер"), ("fr", "Orbes rouges au maximum"), ("de", "Maximale rote Orbs"), ("it", "Sfere rosse al massimo"), ("pl", "Maksimum czerwonych kul"), ("tr", "En fazla kırmızı küre"), ("id", "Orb merah maksimum")],
-    ),
-    (
-        "Multipliers",
-        &[("zh", "倍率"), ("pt", "Multiplicadores"), ("es", "Multiplicadores"), ("cs", "Násobiče"), ("ru", "Множители"), ("fr", "Multiplicateurs"), ("de", "Multiplikatoren"), ("it", "Moltiplicatori"), ("pl", "Mnożniki"), ("tr", "Çarpanlar"), ("id", "Pengali")],
-    ),
-    (
-        "Quick-time prompts answer themselves: single presses, repeated presses, holds and stick rotations.",
-        &[("zh", "自动完成快速反应提示：单次按键、连按、长按及摇杆旋转。"), ("pt", "Os comandos de QTE se resolvem sozinhos: apertos simples, repetidos, segurados e giros do analógico."), ("es", "Las indicaciones de QTE se resuelven solas: pulsaciones simples, repetidas, mantenidas y giros de la palanca."), ("cs", "QTE výzvy se vyřeší samy: jednotlivé stisky, opakované stisky, podržení i otáčení páčkou."), ("ru", "QTE выполняются сами: одиночные, повторные и удерживаемые нажатия и вращения стика."), ("fr", "Les QTE se font tout seuls : appuis simples, répétés, maintenus et rotations du stick."), ("de", "QTE-Eingaben erledigen sich selbst: einzelnes, wiederholtes und gehaltenes Drücken sowie Stickdrehungen."), ("it", "I comandi QTE si risolvono da soli: pressioni singole, ripetute, prolungate e rotazioni della levetta."), ("pl", "Polecenia QTE wykonują się same: pojedyncze, powtarzane i przytrzymane wciśnięcia oraz obroty gałki."), ("tr", "QTE komutları kendiliğinden yapılır: tek basışlar, tekrarlı basışlar, basılı tutmalar ve çubuk çevirmeleri."), ("id", "Perintah QTE berjalan sendiri: tekan sekali, tekan berulang, tahan, dan putaran stik.")],
-    ),
-    (
-        "Rage of Sparta from each gold orb. The bar stays within its maximum.",
-        &[("zh", "每个金魂恢复的斯巴达之怒，最高不超过上限。"), ("pt", "Fúria de Esparta de cada orbe dourado. A barra fica dentro do máximo."), ("es", "Furia de Esparta de cada orbe dorado. La barra no pasa de su máximo."), ("cs", "Sparťanův hněv z každého zlatého orbu. Ukazatel zůstane v mezích maxima."), ("ru", "Ярость Спарты от каждой золотой сферы. Полоска не превышает максимум."), ("fr", "Rage de Sparte de chaque orbe doré. La barre ne dépasse pas son maximum."), ("de", "Zorn von Sparta pro goldenem Orb. Der Balken bleibt innerhalb seines Maximums."), ("it", "Furia di Sparta da ogni sfera d'oro. La barra resta entro il suo massimo."), ("pl", "Furia Sparty z każdej złotej kuli. Pasek nie przekracza maksimum."), ("tr", "Her altın küreden gelen Sparta Öfkesi. Çubuk en yüksek değerini aşmaz."), ("id", "Rage of Sparta dari setiap orb emas. Bar tidak melebihi batas maksimum.")],
-    ),
-    (
-        "Rage of Sparta stays full.",
-        &[("zh", "斯巴达之怒保持满值。"), ("pt", "A Fúria de Esparta fica cheia."), ("es", "La Furia de Esparta se mantiene llena."), ("cs", "Sparťanův hněv zůstává plný."), ("ru", "Ярость Спарты остаётся полной."), ("fr", "La Rage de Sparte reste pleine."), ("de", "Der Zorn von Sparta bleibt voll."), ("it", "La Furia di Sparta resta piena."), ("pl", "Furia Sparty pozostaje pełna."), ("tr", "Sparta Öfkesi dolu kalır."), ("id", "Rage of Sparta tetap penuh.")],
-    ),
-    (
-        "Red orbs",
-        &[("zh", "红魂"), ("pt", "Orbes vermelhos"), ("es", "Orbes rojos"), ("cs", "Rudé orby"), ("ru", "Красные сферы"), ("fr", "Orbes rouges"), ("de", "Rote Orbs"), ("it", "Sfere rosse"), ("pl", "Czerwone kule"), ("tr", "Kırmızı küreler"), ("id", "Orb merah")],
-    ),
-    (
-        "Red orbs gained. Orbs you have and prices stay the same.",
-        &[("zh", "获得的红魂数量倍率，不改变已有红魂和物品价格。"), ("pt", "Orbes vermelhos ganhos. Os que você tem e os preços não mudam."), ("es", "Orbes rojos obtenidos. Los que tienes y los precios no cambian."), ("cs", "Získané rudé orby. Orby, které máte, a ceny zůstávají stejné."), ("ru", "Получаемые красные сферы. Имеющиеся сферы и цены не меняются."), ("fr", "Orbes rouges gagnés. Ceux que vous avez et les prix ne changent pas."), ("de", "Erhaltene rote Orbs. Vorhandene Orbs und Preise bleiben gleich."), ("it", "Sfere rosse ottenute. Quelle che hai e i prezzi non cambiano."), ("pl", "Zdobywane czerwone kule. Posiadane kule i ceny się nie zmieniają."), ("tr", "Kazanılan kırmızı küreler. Sahip olduğunuz küreler ve fiyatlar değişmez."), ("id", "Orb merah yang didapat. Orb yang kamu punya dan harga tetap sama.")],
-    ),
-    (
-        "Red orbs stay at the maximum.",
-        &[("zh", "红魂保持最大值。"), ("pt", "Os orbes vermelhos ficam no máximo."), ("es", "Los orbes rojos se mantienen al máximo."), ("cs", "Rudé orby zůstávají na maximu."), ("ru", "Красных сфер всегда максимум."), ("fr", "Les orbes rouges restent au maximum."), ("de", "Rote Orbs bleiben auf dem Maximum."), ("it", "Le sfere rosse restano al massimo."), ("pl", "Czerwone kule pozostają na maksimum."), ("tr", "Kırmızı küreler en yüksek değerde kalır."), ("id", "Orb merah tetap di maksimum.")],
-    ),
-    (
-        "The item meter (bow, Helios' head, boots) stays full.",
-        &[("zh", "道具能量（弓、赫利俄斯之首、靴子）保持满值。"), ("pt", "A barra de item (arco, Cabeça de Hélios, botas) fica cheia."), ("es", "La barra de objeto (arco, Cabeza de Helios, botas) se mantiene llena."), ("cs", "Ukazatel předmětů (luk, Héliova hlava, boty) zůstává plný."), ("ru", "Шкала предмета (лук, голова Гелиоса, сандалии) остаётся полной."), ("fr", "La jauge d'objet (arc, tête d'Hélios, bottes) reste pleine."), ("de", "Die Gegenstandsleiste (Bogen, Helios' Kopf, Stiefel) bleibt voll."), ("it", "La barra degli oggetti (arco, Testa di Elio, sandali) resta piena."), ("pl", "Pasek przedmiotu (łuk, Głowa Heliosa, buty) pozostaje pełny."), ("tr", "Eşya çubuğu (yay, Helios'un kafası, çizmeler) dolu kalır."), ("id", "Meter item (busur, Head of Helios, sepatu) tetap penuh.")],
-    ),
-    (
         "Turn off all cheats",
         &[("zh", "关闭所有作弊"), ("pt", "Desligar todos os cheats"), ("es", "Desactivar todos los trucos"), ("cs", "Vypnout všechny cheaty"), ("ru", "Отключить все читы"), ("fr", "Désactiver toutes les astuces"), ("de", "Alle Cheats ausschalten"), ("it", "Disattiva tutti i trucchi"), ("pl", "Wyłącz wszystkie kody"), ("tr", "Tüm hileleri kapat"), ("id", "Matikan semua cheat")],
-    ),
-    (
-        "Turns off every cheat and sets every multiplier back to 1x: the game as it was made. In game, hold F10 and press 1 to 8 to switch the cheats above, in their order.",
-        &[("zh", "关闭所有作弊，并将所有倍率恢复为 1x：即游戏原本的样子。游戏中按住 F10 并按 1 到 8，可按顺序切换上方的作弊。"), ("pt", "Desliga todos os cheats e volta todos os multiplicadores para 1x: o jogo como foi feito. No jogo, segure F10 e aperte 1 a 8 para trocar os cheats acima, na ordem em que aparecem."), ("es", "Desactiva todos los trucos y devuelve todos los multiplicadores a 1x: el juego tal como se hizo. En el juego, mantén F10 y pulsa 1 a 8 para cambiar los trucos de arriba, en su orden."), ("cs", "Vypne všechny cheaty a vrátí všechny násobiče na 1x: hra tak, jak byla vytvořena. Ve hře podržte F10 a stiskněte 1 až 8 pro přepnutí cheatů výše, v jejich pořadí."), ("ru", "Отключает все читы и возвращает все множители к 1x: игра в исходном виде. В игре удерживайте F10 и нажмите 1–8, чтобы переключить читы выше по порядку."), ("fr", "Désactive toutes les astuces et remet tous les multiplicateurs à 1x : le jeu tel qu'il a été conçu. En jeu, maintenez F10 et appuyez sur 1 à 8 pour basculer les astuces ci-dessus, dans leur ordre."), ("de", "Schaltet alle Cheats aus und setzt alle Multiplikatoren auf 1x zurück: das Spiel, wie es gemacht wurde. Im Spiel F10 halten und 1 bis 8 drücken, um die Cheats oben in ihrer Reihenfolge umzuschalten."), ("it", "Disattiva tutti i trucchi e riporta tutti i moltiplicatori a 1x: il gioco com'è stato creato. In gioco, tieni premuto F10 e premi da 1 a 8 per attivare o disattivare i trucchi sopra, nel loro ordine."), ("pl", "Wyłącza wszystkie kody i przywraca wszystkie mnożniki do 1x: gra taka, jaka została stworzona. W grze przytrzymaj F10 i naciśnij 1–8, aby przełączyć kody powyżej, w ich kolejności."), ("tr", "Tüm hileleri kapatır ve tüm çarpanları 1x'e döndürür: oyunun orijinal hali. Oyunda F10'u basılı tutup 1-8 tuşlarına basarak yukarıdaki hileleri sırasıyla açıp kapatabilirsiniz."), ("id", "Mematikan semua cheat dan mengembalikan semua pengali ke 1x: game seperti aslinya. Di dalam game, tahan F10 dan tekan 1 sampai 8 untuk mengganti cheat di atas, sesuai urutannya.")],
-    ),
-    (
-        "Trophy notifications",
-        &[("zh", "奖杯通知"), ("pt", "Notificações de troféu"), ("es", "Notificaciones de trofeos"), ("cs", "Oznámení o trofejích"), ("ru", "Уведомления о трофеях"), ("fr", "Notifications de trophées"), ("de", "Trophäen-Benachrichtigungen"), ("it", "Notifiche dei trofei"), ("pl", "Powiadomienia o trofeach"), ("tr", "Kupa bildirimleri"), ("id", "Notifikasi trofi")],
-    ),
-    (
-        "Mute the trophy sound",
-        &[("zh", "静音奖杯提示音"), ("pt", "Silenciar o som do troféu"), ("es", "Silenciar el sonido de trofeo"), ("cs", "Ztlumit zvuk trofeje"), ("ru", "Отключить звук трофея"), ("fr", "Couper le son des trophées"), ("de", "Trophäenton stummschalten"), ("it", "Disattiva il suono dei trofei"), ("pl", "Wycisz dźwięk trofeum"), ("tr", "Kupa sesini kapat"), ("id", "Bisukan suara trofi")],
-    ),
-    (
-        "Trophy sound volume",
-        &[("zh", "奖杯提示音音量"), ("pt", "Volume do som do troféu"), ("es", "Volumen del sonido de trofeo"), ("cs", "Hlasitost zvuku trofeje"), ("ru", "Громкость звука трофея"), ("fr", "Volume du son des trophées"), ("de", "Lautstärke des Trophäentons"), ("it", "Volume del suono dei trofei"), ("pl", "Głośność dźwięku trofeum"), ("tr", "Kupa sesi seviyesi"), ("id", "Volume suara trofi")],
-    ),
-    (
-        "The chime of an unlocked trophy. Also in the in-game menu (Insert): Trophies > Notifications.",
-        &[("zh", "解锁奖杯时的提示音。也可在游戏内菜单（Insert）：奖杯 > 通知 中设置。"), ("pt", "O som de um troféu desbloqueado. Também no menu do jogo (Insert): Troféus > Notificações."), ("es", "El sonido de un trofeo desbloqueado. También en el menú del juego (Insert): Trofeos > Notificaciones."), ("cs", "Zvuk odemčené trofeje. Také v herním menu (Insert): Trofeje > Oznámení."), ("ru", "Звук открытого трофея. Также в игровом меню (Insert): Трофеи > Уведомления."), ("fr", "Le son d'un trophée débloqué. Aussi dans le menu en jeu (Insert) : Trophées > Notifications."), ("de", "Der Ton einer freigeschalteten Trophäe. Auch im Spielmenü (Insert): Trophäen > Benachrichtigungen."), ("it", "Il suono di un trofeo sbloccato. Anche nel menu di gioco (Insert): Trofei > Notifiche."), ("pl", "Dźwięk odblokowanego trofeum. Także w menu gry (Insert): Trofea > Powiadomienia."), ("tr", "Açılan bir kupanın sesi. Oyun içi menüde de var (Insert): Kupalar > Bildirimler."), ("id", "Suara trofi yang terbuka. Juga ada di menu dalam game (Insert): Trofi > Notifikasi.")],
     ),
 ];
 
@@ -1010,30 +855,6 @@ pub fn tr_fmt(lang: &str, en: &str, args: &[&str]) -> String {
     }
     out.push_str(rest);
     out
-}
-
-/// Name and description of trophy `id` (0-based); English when the language has no list.
-pub fn trophy_text(lang: &str, id: usize) -> (String, String) {
-    let texts = &table().trophies.texts;
-    let list = texts
-        .get(lang)
-        .filter(|list| !list.is_empty())
-        .or_else(|| texts.get("en"));
-    list.and_then(|list| list.get(id))
-        .cloned()
-        .unwrap_or_default()
-}
-
-/// Text of the Trophies page in `lang`; English when there is none.
-pub fn trophy_ui(lang: &str, en: &str) -> String {
-    table()
-        .trophies
-        .ui
-        .get(lang)
-        .and_then(|ui| ui.get(en))
-        .filter(|text| !text.is_empty())
-        .cloned()
-        .unwrap_or_else(|| en.to_string())
 }
 
 /// Launcher language for a Windows primary language id; `en` when unknown.
@@ -1226,15 +1047,6 @@ mod tests {
         assert_eq!(one, "A · game version {}");
     }
 
-    #[test]
-    fn trophies_fall_back_to_english() {
-        let (name, _) = trophy_text("en", 0);
-        assert_eq!(name, "King of the Hill");
-        assert_eq!(trophy_text("id", 0).0, name);
-        assert_eq!(trophy_text("en", 35), (String::new(), String::new()));
-        assert_eq!(trophy_ui("pt", "Trophies"), "Troféus");
-        assert_eq!(trophy_ui("en", "Trophies"), "Trophies");
-    }
 
     #[test]
     fn windows_language_0x16_is_pt() {

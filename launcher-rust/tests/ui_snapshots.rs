@@ -30,8 +30,7 @@ use std::sync::Once;
 use std::time::Duration;
 
 use common::{
-    add_trophies, browsed, dump_with_patches, gpu_rows, load_mods, load_trophies, make_mod, open,
-    two_displays, write_mod_patch, ARC_LAPTOP,
+    browsed, dump_with_patches, gpu_rows, open, two_displays, ARC_LAPTOP,
 };
 use iced::widget::image::Handle;
 use iced::Size;
@@ -74,8 +73,8 @@ const SHOWN_PORT: &str = if cfg!(windows) {
 };
 
 /// A third-party patch file for the fixture's game version.
-const EXTERNAL_PATCH: &str = "<Patch><TitleID><ID>CUSA01623</ID></TitleID>\
-     <Metadata Name=\"Sharper Shadows\" Author=\"Bo\" AppVer=\"01.02\" isEnabled=\"true\"><PatchList/></Metadata></Patch>";
+const EXTERNAL_PATCH: &str = "<Patch><TitleID><ID>CUSA00243</ID></TitleID>\
+     <Metadata Name=\"Sharper Shadows\" Author=\"Bo\" AppVer=\"01.47\" isEnabled=\"true\"><PatchList/></Metadata></Patch>";
 
 /// What a snapshot shows: the splash over Home, a page (Home is the page without the drawer), a
 /// step of the first-run setup, or the controller mapper (`mapper_joysticks`).
@@ -117,32 +116,19 @@ fn mapper_joysticks() -> FakeJoysticks {
     fake
 }
 
-/// The background reads the app starts (a new game folder, opening Trophies or Mods), delivered.
-fn finish_reads(state: &mut State) {
-    load_trophies(state);
-    load_mods(state);
-}
-
-/// The window over a fixture: a game folder with its `param.sfo` and a 35-trophy package (0 and 3
-/// unlocked), the port's patch file and one third-party patch, two mods (one adds 3840 × 1080), two
+/// The window over a fixture: a game folder with its `param.sfo`, the port's patch file and one third-party patch, two mods (one adds 3840 × 1080), two
 /// monitors, two graphics cards and two log lines. `lang` is picked in the language menu, `shot`'s
 /// page is open, and the clock stands at `CLOCK`; nothing has ticked, so the fire has no particle.
 fn fixture(dir: &Path, shot: Shot, size: Size, lang: &str) -> State {
     let dump = dump_with_patches(dir);
     std::fs::write(dir.join("patches").join("Community.xml"), EXTERNAL_PATCH).unwrap();
     let mut state = common::state(dir);
-    make_mod(&state, "HD Textures", "textures.bin");
-    let ultrawide = state.paths.mods_dir("").join("Ultrawide").join("patches");
-    std::fs::create_dir_all(&ultrawide).unwrap();
-    write_mod_patch(&ultrawide, "3840x1080");
-    add_trophies(&mut state, &dump);
     browsed(&mut state, "game_dir", &dump);
-    finish_reads(&mut state);
     let _ = app::update(&mut state, Message::MonitorsListed(two_displays()));
     state.gpus = gpu_rows(&ARC_LAPTOP);
     state
         .log
-        .push_text("Loading CUSA01623 v01.02\nVulkan device: NVIDIA GeForce RTX 4060 Laptop GPU\n");
+        .push_text("Loading CUSA00243 v01.02\nVulkan device: NVIDIA GeForce RTX 4060 Laptop GPU\n");
     let _ = app::update(&mut state, Message::Resized(size));
     let _ = app::update(
         &mut state,
@@ -153,19 +139,16 @@ fn fixture(dir: &Path, shot: Shot, size: Size, lang: &str) -> State {
         Shot::Splash => state.splash.done = false,
         Shot::Page(page) => {
             open(&mut state, page);
-            finish_reads(&mut state);
-        }
+                }
         Shot::Setup(_) => {}
         Shot::Mapper => {
             open(&mut state, Page::Controls);
-            finish_reads(&mut state);
-            state.open_mapper_with(Box::new(mapper_joysticks()));
+                    state.open_mapper_with(Box::new(mapper_joysticks()));
             let _ = app::update(&mut state, Message::Mapper(MapperMessage::Poll));
         }
         Shot::Live(model) => {
             open(&mut state, Page::Controls);
-            finish_reads(&mut state);
-            let _ = app::update(
+                    let _ = app::update(
                 &mut state,
                 Message::Controls(ControlsMessage::Device(Shown::Gamepad)),
             );
@@ -401,18 +384,8 @@ fn game() {
 }
 
 #[test]
-fn trophies() {
-    check(Shot::Page(Page::Trophies));
-}
-
-#[test]
 fn controls() {
     check(Shot::Page(Page::Controls));
-}
-
-#[test]
-fn mods() {
-    check(Shot::Page(Page::Mods));
 }
 
 #[test]

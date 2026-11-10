@@ -296,7 +296,7 @@ pub(crate) fn lock(user: &Path) -> io::Result<File> {
 pub fn ensure_game_closed() -> io::Result<()> {
     #[cfg(windows)]
     {
-        let output = process_output("powershell.exe", &["-NoProfile", "-NonInteractive", "-Command", "$ErrorActionPreference='Stop'; if (@(Get-Process | Where-Object {$_.ProcessName -in @('spartanport-probe','gow3-probe')}).Count) { Write-Output 'GAME_RUNNING' }"])?;
+        let output = process_output("powershell.exe", &["-NoProfile", "-NonInteractive", "-Command", "$ErrorActionPreference='Stop'; if (@(Get-Process | Where-Object {$_.ProcessName -in @('spartanport-probe','sanctuary-probe')}).Count) { Write-Output 'GAME_RUNNING' }"])?;
         if output.contains("GAME_RUNNING") {
             return Err(invalid("Close the game before restoring saves."));
         }
@@ -316,7 +316,7 @@ pub fn ensure_game_closed() -> io::Result<()> {
                 Ok(path)
                     if path
                         .file_name()
-                        .is_some_and(|n| n == "spartanport-probe" || n == "gow3-probe") =>
+                        .is_some_and(|n| n == "spartanport-probe" || n == "sanctuary-probe") =>
                 {
                     return Err(invalid("Close the game before restoring saves."))
                 }
@@ -333,7 +333,7 @@ pub fn ensure_game_closed() -> io::Result<()> {
         if output.lines().any(|line| {
             Path::new(line.trim())
                 .file_name()
-                .is_some_and(|n| n == "spartanport-probe" || n == "gow3-probe")
+                .is_some_and(|n| n == "spartanport-probe" || n == "sanctuary-probe")
         }) {
             return Err(invalid("Close the game before restoring saves."));
         }
@@ -490,7 +490,7 @@ mod tests {
             "auto",
         );
         put(
-            &temp.path().join("savedata_backups/older/1/CUSA01623/data"),
+            &temp.path().join("savedata_backups/older/1/CUSA00243/data"),
             "legacy",
         );
         put(
@@ -502,7 +502,7 @@ mod tests {
         assert!(entries.iter().any(|e| e.source == Source::Legacy
             && e.bytes == 6
             && e.files == 1
-            && e.titles.contains("CUSA01623")));
+            && e.titles.contains("CUSA00243")));
         let legacy = entries.iter().find(|e| e.source == Source::Legacy).unwrap();
         assert_eq!(legacy.path, temp.path().join("savedata_backups/older"));
         assert_eq!(list(&user, &user).len(), 2);
@@ -672,7 +672,7 @@ mod tests {
     fn listing_does_not_open_snapshot_contents() {
         use std::os::windows::fs::OpenOptionsExt;
         let temp = tempfile::tempdir().unwrap();
-        let source = temp.path().join("savedata_backups/old/1/CUSA01623/data");
+        let source = temp.path().join("savedata_backups/old/1/CUSA00243/data");
         put(&source, "save");
         let _held = OpenOptions::new()
             .read(true)
@@ -684,7 +684,7 @@ mod tests {
         assert_eq!(snapshots.len(), 1);
         assert_eq!(snapshots[0].files, 1);
         assert_eq!(snapshots[0].bytes, 4);
-        assert!(snapshots[0].titles.contains("CUSA01623"));
+        assert!(snapshots[0].titles.contains("CUSA00243"));
     }
 
     #[test]

@@ -160,13 +160,12 @@ PATCHES_DIR=Path(__file__).resolve().parent.parent/'patches'
 # Built-in patch file per game: its title IDs, the AppVer its metadata is tagged with and the
 # title that also recognizes a release under an ID not listed. The signatures find the sites in
 # any region or version whose code matches, so the eboot.bin build is not checked.
-GAMES=[({'CUSA01623','CUSA01715','CUSA01720'},PATCHES_DIR/'God_of_War_III_Remastered.xml','01.02',
-        'God of War III'),
-       ({'CUSA07671','CUSA05670'},PATCHES_DIR/'WipEout_Omega_Collection.xml','01.00',
+GAMES=[({'CUSA07671','CUSA05670'},PATCHES_DIR/'WipEout_Omega_Collection.xml','01.00',
         'WipEout Omega Collection'),
-       ({'CUSA00068','CUSA00006','CUSA00004'},PATCHES_DIR/'Knack.xml','01.10','Knack')]
-# The builds the built-in Address values and third-party patch files are written for: God of War III,
-# and Knack 1.00 (Niko's shadPS4 resolution patches, #12) and 1.10.
+       ({'CUSA00068','CUSA00006','CUSA00004'},PATCHES_DIR/'Knack.xml','01.10','Knack'),
+       ({'CUSA00243','CUSA00242'},PATCHES_DIR/'Diablo_III.xml','01.47','Diablo III')]
+# The builds the built-in Address values and third-party patch files are written for (Knack 1.00,
+# Niko's shadPS4 resolution patches, #12, and 1.10; the first is the base port's).
 REFERENCE_SHA256='d85c8135d330c3b601bf5dc3f1dd86bd6119fb8a9fce372bed2c9785f9a79299'
 REFERENCE_SHA256S={REFERENCE_SHA256,
                    '7c9574f72fbefa2012e13817afab94e4a785a709c2c1344195428276c398c157',
@@ -232,8 +231,8 @@ def available_patches(xml, app_version):
     return {m.get('Name') for m in ET.parse(xml).getroot().iter('Metadata') if m.get('AppVer')==app_version}
 
 
-# God of War III notes: the texture fix and the resolution patches both resize the video arena;
-# enable one, never both. A chosen resolution patch replaces the default texture fix.
+# A chosen resolution patch replaces a game's texture fix when it has one (both resize the video
+# arena: enable one, never both).
 EXCLUSIVE_PREFIX='Resolution Patch'
 REPLACED_BY_EXCLUSIVE={'Bug Fix - Texture Corruption Fix'}
 # Fixes with nothing to choose: not offered in the launcher and applied even with its saved list,
@@ -399,7 +398,7 @@ def main():
                    help='patch file of an enabled mod (repeat; in load order)')
     p.add_argument('--extra',default='',help='additional patch names, separated by ";"')
     p.add_argument('--out',type=Path,default=Path(__file__).resolve().parent.parent/'out')
-    p.add_argument('--game-dir',type=Path,default=Path(os.environ.get('GOW3_GAME_DIR','../CUSA01623')))
+    p.add_argument('--game-dir',type=Path,default=Path(os.environ.get('SANCTUARY_GAME_DIR','../CUSA00243')))
     a=p.parse_args()
     title=game_title_id(a.game_dir)
     profile=game_profile_for(a.game_dir)
@@ -412,7 +411,7 @@ def main():
         xml=merge_patch_files(xml,a.mod_patches,a.out/'patches-merged.xml')
     sha=eboot_sha256(a.game_dir)
     print(f'Patches: {title} {game_app_version(a.game_dir)}, eboot.bin sha256 {sha}')
-    names=selected_patches(xml,tag,a.extra,os.environ.get('GOW3_PATCHES_ONLY')=='1')
+    names=selected_patches(xml,tag,a.extra,os.environ.get('SANCTUARY_PATCHES_ONLY')=='1')
     elf=(a.out/'eboot.elf').read_bytes()
     segments=eboot_segments(elf)
     skipped={}

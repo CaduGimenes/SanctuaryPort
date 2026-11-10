@@ -70,9 +70,9 @@ fn fake_game(state: &mut State, args: &[&str]) {
 
 fn game_sfo() -> Vec<u8> {
     sfo(&[
-        ("TITLE_ID", "CUSA01623"),
-        ("TITLE", "God of War III"),
-        ("APP_VER", "01.02"),
+        ("TITLE_ID", "CUSA00243"),
+        ("TITLE", "Diablo III"),
+        ("APP_VER", "01.47"),
     ])
 }
 
@@ -176,7 +176,7 @@ fn play_refuses_without_eboot_and_opens_game_page() {
     send(&mut state, Message::Play);
     assert_eq!(
         error_text(&state),
-        "Choose the game folder with eboot.bin (CUSA01623)."
+        "Choose the game folder with eboot.bin (CUSA00243)."
     );
     assert_eq!(state.page, Page::Game);
     assert!(idle(&state));
@@ -538,9 +538,9 @@ fn an_exit_hint_opens_the_log_and_unhides_the_launcher() {
 /// The probe as PLAY looks for it, with the system's separator.
 fn probe_file() -> String {
     let file = if cfg!(windows) {
-        "spartanport-probe.exe"
+        "sanctuary-probe.exe"
     } else {
-        "spartanport-probe"
+        "sanctuary-probe"
     };
     Path::new("bin").join(file).display().to_string()
 }
@@ -554,7 +554,9 @@ fn play_refuses_an_incomplete_port() {
     full_dump(&dump);
     let mut state = state_in(dir.path());
     set(&mut state, "game_dir", json!(text_of(&dump)));
-    assert_eq!(play::missing_port_files(&state.paths), vec![probe_file()]);
+    // SanctuaryPort: run.sh first, then the probe it starts.
+    let missing = vec!["run.sh".to_string(), probe_file()];
+    assert_eq!(play::missing_port_files(&state.paths), missing);
     send(&mut state, Message::Play);
     assert!(idle(&state));
     let shown = state.modal.take().unwrap();
@@ -565,7 +567,7 @@ fn play_refuses_an_incomplete_port() {
              package again from the releases page and extract all of it; the launcher must stay \
              inside that folder.",
             dir.path().display(),
-            probe_file()
+            missing.join("\n")
         )
     );
     // A source checkout is told about its build script.
@@ -588,11 +590,12 @@ fn play_refuses_an_incomplete_port() {
         "{}",
         shown.text
     );
-    // With the files there is nothing missing; the other tests start the fake game instead
-    // of the runner, which needs none of them.
+    // With the files there is nothing missing; the other tests start the fake game instead,
+    // which needs none of them.
     let probe = dir.path().join(probe_file());
     std::fs::create_dir_all(probe.parent().unwrap()).unwrap();
     std::fs::write(&probe, b"").unwrap();
+    std::fs::write(dir.path().join("run.sh"), b"").unwrap();
     assert!(play::missing_port_files(&state.paths).is_empty());
 }
 
@@ -746,10 +749,6 @@ fn every_live_action_is_refused_while_the_game_runs() {
             "Close the game before restoring saves.",
         ),
         (
-            LiveAction::ResetTrophies,
-            "Close the game before resetting the trophies.",
-        ),
-        (
             LiveAction::ClearShaderCache,
             "Close the game before deleting the shader cache.",
         ),
@@ -806,7 +805,7 @@ fn the_game_gets_the_launchers_whole_environment() {
         assert!(env.contains_key(key.as_ref()), "{key} is missing");
     }
     // Plus what the settings ask for.
-    assert!(env.contains_key("SPARTAN_GAME_DIR"));
+    assert!(env.contains_key("SANCTUARY_GAME_DIR"));
 }
 
 #[test]
@@ -823,7 +822,7 @@ fn a_confirmed_update_waits_for_the_game() {
             build: None,
         },
         published: "2026-10-22T00:00:00Z".into(),
-        url: "https://example.invalid/SpartanPort.zip".into(),
+        url: "https://example.invalid/SanctuaryPort.zip".into(),
         page: "https://example.invalid/releases".into(),
     };
     send(
@@ -1000,75 +999,6 @@ fn a_tick_drains_at_most_500_events() {
     );
 }
 
-fn copy_tree(from: &Path, to: &Path) {
-    fs::create_dir_all(to).unwrap();
-    for entry in fs::read_dir(from).unwrap() {
-        let entry = entry.unwrap();
-        let target = to.join(entry.file_name());
-        if entry.file_type().unwrap().is_dir() {
-            copy_tree(&entry.path(), &target);
-        } else {
-            fs::copy(entry.path(), &target).unwrap();
-        }
-    }
-}
-
-fn copy_file(from: &Path, to: &Path) {
-    fs::create_dir_all(to.parent().unwrap()).unwrap();
-    fs::copy(from, to).unwrap();
-}
-
-#[test]
-fn play_starts_the_launcher_exe_with_run() {
-    // A package in miniature: the launcher exe itself, the fake probe, the icon, the
-    // built-in patches and a synthetic game. PLAY with no `launch_command` starts `EXE --run`,
-    // which prepares the game and starts the probe: no Python, no real game.
-    let dir = tempfile::tempdir().unwrap();
-    let port = dir.path();
-    let exe = port.join(if cfg!(windows) {
-        "spartanport-launcher.exe"
-    } else {
-        "spartanport-launcher"
-    });
-    copy_file(Path::new(env!("CARGO_BIN_EXE_sanctuaryport-launcher")), &exe);
-    copy_file(
-        Path::new(env!("CARGO_BIN_EXE_fake-probe")),
-        &port.join(probe_file()),
-    );
-    let repo = Path::new(env!("CARGO_MANIFEST_DIR")).join("..");
-    copy_file(
-        &repo.join("launcher/spartanport.png"),
-        &port.join("launcher/spartanport.png"),
-    );
-    copy_file(
-        &repo.join("patches/CUSA01623.xml"),
-        &port.join("patches/CUSA01623.xml"),
-    );
-    let fixtures = Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures/runner");
-    let game = port.join("game");
-    copy_tree(&fixtures.join("prepare/input"), &game);
-    copy_file(
-        &fixtures.join("link/input/sce_module/libSceFios2.prx"),
-        &game.join("sce_module/libSceFios2.prx"),
-    );
-
-    let mut state = state_in(port);
-    set(&mut state, "game_dir", json!(text_of(&game)));
-    set(&mut state, "discord_rpc", json!(false));
-    assert!(state.launch_command.is_none());
-    state.launcher_exe = Some(exe);
-    send(&mut state, Message::Play);
-    assert!(state.modal.is_none(), "{:?}", state.modal);
-    pump(&mut state, Duration::from_secs(60), idle);
-    let log: Vec<&str> = state.log.lines().collect();
-    assert!(log.contains(&"--app0"), "{log:?}");
-    assert!(
-        state.log.text().ends_with("\nThe game exited (code 0)."),
-        "{}",
-        state.log.text()
-    );
-}
-
 #[test]
 fn install_while_the_game_runs_says_close_it() {
     let dir = tempfile::tempdir().unwrap();
@@ -1087,7 +1017,7 @@ fn install_while_the_game_runs_says_close_it() {
             build: None,
         },
         published: "2026-10-22T00:00:00Z".into(),
-        url: "https://example.invalid/SpartanPort.zip".into(),
+        url: "https://example.invalid/SanctuaryPort.zip".into(),
         page: "https://example.invalid/releases".into(),
     };
     let task = app::update(&mut state, Message::Update(UpdateMessage::Install(newer)));
@@ -1211,4 +1141,20 @@ fn the_fire_clock_comes_back_after_the_game_exits() {
         send(&mut state, Message::Tick(at));
     }
     assert!(state.fire.particle_count() > 0);
+}
+
+#[test]
+fn play_runs_the_ports_run_sh() {
+    // SanctuaryPort: PLAY starts the port's run.sh (game profiles, runtime switches); a port
+    // folder without it falls back to the built-in runner.
+    let dir = tempfile::tempdir().unwrap();
+    let run_sh = dir.path().join("run.sh");
+    std::fs::write(&run_sh, b"#!/usr/bin/env bash\n").unwrap();
+    let state = state_in(dir.path());
+    assert_eq!(
+        state.launch_command,
+        Some(vec!["bash".to_string(), run_sh.to_string_lossy().into_owned()])
+    );
+    let bare = tempfile::tempdir().unwrap();
+    assert_eq!(state_in(bare.path()).launch_command, None);
 }

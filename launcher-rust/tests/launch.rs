@@ -2,10 +2,9 @@
 
 use indexmap::IndexMap;
 use sanctuaryport_launcher::core::launch::{
-    run_command, spawn_game, Exit, GameEvent, GameHandle, Group, Launch,
+    spawn_game, Exit, GameEvent, GameHandle, Group, Launch,
 };
 use sanctuaryport_launcher::core::log::{ExitHint, RunLog};
-use std::ffi::OsString;
 use std::path::Path;
 use std::sync::mpsc::RecvTimeoutError;
 use std::time::{Duration, Instant};
@@ -339,21 +338,3 @@ fn own_group_has_its_own() {
     collect(&handle);
 }
 
-#[test]
-fn the_game_command_is_the_exe_with_run() {
-    let exe = Path::new("port").join("spartanport-launcher");
-    assert_eq!(
-        run_command(&exe, &[]),
-        vec![exe.to_string_lossy().into_owned(), "--run".to_string()]
-    );
-    let args = [OsString::from("--fullscreen"), OsString::from("two words")];
-    assert_eq!(
-        run_command(&exe, &args),
-        vec![
-            exe.to_string_lossy().into_owned(),
-            "--run".to_string(),
-            "--fullscreen".to_string(),
-            "two words".to_string(),
-        ]
-    );
-}

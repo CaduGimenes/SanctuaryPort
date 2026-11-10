@@ -1,5 +1,5 @@
 """Draws the port's icon (a K, for Knack, on a dark blue field) as .ico and .png. Needs Pillow.
-usage: make_icon.py launcher/gow3.ico launcher/gow3.png"""
+usage: make_icon.py launcher/sanctuary.ico launcher/sanctuary.png"""
 import sys
 from PIL import Image, ImageDraw, ImageFilter
 

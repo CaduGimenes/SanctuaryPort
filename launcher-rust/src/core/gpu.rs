@@ -10,7 +10,7 @@ use super::env::Lookup;
 use super::paths::Paths;
 use super::platform::tool::{inherited_env_with, Stderr, ToolCall, Tools, Window};
 
-/// One line of `spartanport-gpu-capabilities --list`.
+/// One line of `sanctuary-gpu-capabilities --list`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct GpuRow {
     pub index: String,
@@ -18,7 +18,7 @@ pub struct GpuRow {
     pub kind: String,
     /// The game's multisampling default on that driver (`off` or `on`), from newer tools.
     pub msaa: Option<String>,
-    /// The GPU the game picks without `GOW3_GPU_ID`.
+    /// The GPU the game picks without `SANCTUARY_GPU_ID`.
     pub chosen: bool,
 }
 
@@ -29,7 +29,7 @@ pub enum MsaaDecision {
     Known { name: String, off: bool },
 }
 
-/// One monitor of `spartanport-probe --displays`.
+/// One monitor of `sanctuary-probe --displays`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Display {
     pub index: String,
@@ -55,7 +55,7 @@ fn number(column: &str) -> Option<i64> {
     }
 }
 
-/// One row per line of `spartanport-gpu-capabilities --list`: index, name, type and, from the
+/// One row per line of `sanctuary-gpu-capabilities --list`: index, name, type and, from the
 /// tools that print them, the game's multisampling default and `1` on the game's pick. Other
 /// lines are skipped.
 pub fn parse_gpu_list(text: &str) -> Vec<GpuRow> {
@@ -127,7 +127,7 @@ fn run(
 
 /// The Vulkan GPUs in the order the game numbers them, or empty when the tool cannot tell.
 pub fn list_gpus(tools: &dyn Tools, paths: &Paths) -> Vec<GpuRow> {
-    let Some(tool) = paths.find_tool("spartanport-gpu-capabilities") else {
+    let Some(tool) = paths.find_tool("sanctuary-gpu-capabilities") else {
         return Vec::new();
     };
     run(tools, tool, &["--list"], None, Duration::from_secs(5), true)
@@ -135,7 +135,7 @@ pub fn list_gpus(tools: &dyn Tools, paths: &Paths) -> Vec<GpuRow> {
         .unwrap_or_default()
 }
 
-/// One monitor per line of `spartanport-probe --displays`: index, name, primary, x, y, width,
+/// One monitor per line of `sanctuary-probe --displays`: index, name, primary, x, y, width,
 /// height. A line is kept only with exactly seven well-formed columns, so a monitor the tool could
 /// not describe leaves a gap in the indices instead of a wrong entry. Only LF (or CRLF) ends a
 /// row; other Unicode separators stay inside the name.
@@ -211,7 +211,7 @@ pub fn monitor_selection(displays: &[Display], saved: &str) -> String {
     }
 }
 
-/// The environment to run `spartanport-probe` with, or `None` when it cannot start safely. As
+/// The environment to run `sanctuary-probe` with, or `None` when it cannot start safely. As
 /// `run.py`: a development build loads the MSYS2 CLANG64 DLLs (SDL3, FFmpeg); without them Windows
 /// would show a missing-DLL dialog, so the probe is not run at all.
 pub fn probe_env(probe: &Path, env: Lookup) -> Option<Option<IndexMap<String, String>>> {
@@ -231,11 +231,11 @@ pub fn probe_env(probe: &Path, env: Lookup) -> Option<Option<IndexMap<String, St
     Some(Some(inherited_env_with(&[("PATH", path)])))
 }
 
-/// The monitors the game can open on, in the order `spartanport-probe --displays` numbers them, or
+/// The monitors the game can open on, in the order `sanctuary-probe --displays` numbers them, or
 /// empty when the tool cannot tell. On Linux the probe runs under the SDL video driver the game will
 /// use (`auto` lets SDL choose).
 pub fn list_displays(tools: &dyn Tools, paths: &Paths, backend: &str, env: Lookup) -> Vec<Display> {
-    let Some(tool) = paths.find_tool("spartanport-probe") else {
+    let Some(tool) = paths.find_tool("sanctuary-probe") else {
         return Vec::new();
     };
     let Some(probe_env) = probe_env(&tool, env) else {
@@ -260,9 +260,9 @@ pub fn list_displays(tools: &dyn Tools, paths: &Paths, backend: &str, env: Looku
     .unwrap_or_default()
 }
 
-/// Whether `spartanport-probe` sees a gamepad now; `None` when the probe is missing or fails.
+/// Whether `sanctuary-probe` sees a gamepad now; `None` when the probe is missing or fails.
 pub fn connected_gamepad(tools: &dyn Tools, paths: &Paths, env: Lookup) -> Option<bool> {
-    let probe = paths.find_tool("spartanport-probe")?;
+    let probe = paths.find_tool("sanctuary-probe")?;
     let probe_env = probe_env(&probe, env)?;
     let out = run(
         tools,
@@ -588,7 +588,7 @@ mod tests {
 
     #[test]
     fn gpus_come_from_the_tool_rows() {
-        let (_dir, paths) = port_with(&["spartanport-gpu-capabilities"]);
+        let (_dir, paths) = port_with(&["sanctuary-gpu-capabilities"]);
         let tools = FakeTools::printing(
             0,
             "0\tAMD\tintegrated\toff\t1\n1\tNVIDIA\tdiscrete\ton\t0\n",
@@ -609,7 +609,7 @@ mod tests {
 
     #[test]
     fn a_failing_gpu_tool_lists_nothing() {
-        let (_dir, paths) = port_with(&["spartanport-gpu-capabilities"]);
+        let (_dir, paths) = port_with(&["sanctuary-gpu-capabilities"]);
         let failed = FakeTools::printing(1, "0\tAMD\tintegrated\n");
         assert_eq!(list_gpus(&failed, &paths), vec![]);
         let hung = FakeTools::timing_out();
@@ -618,7 +618,7 @@ mod tests {
 
     #[test]
     fn displays_run_under_the_chosen_backend() {
-        let (dir, paths) = port_with(&["spartanport-probe"]);
+        let (dir, paths) = port_with(&["sanctuary-probe"]);
         // The probe finds its libraries next to it, so a development build's MSYS2 is not needed.
         std::fs::write(dir.path().join("bin").join("SDL3.dll"), b"").unwrap();
         let tools = FakeTools::printing(0, TWO_DISPLAYS);
@@ -652,7 +652,7 @@ mod tests {
 
     #[test]
     fn a_gamepad_line_means_connected() {
-        let (dir, paths) = port_with(&["spartanport-probe"]);
+        let (dir, paths) = port_with(&["sanctuary-probe"]);
         // The probe finds its libraries next to it, so a development build's MSYS2 is not needed.
         std::fs::write(dir.path().join("bin").join("SDL3.dll"), b"").unwrap();
         let yes = FakeTools::printing(
@@ -684,7 +684,7 @@ mod tests {
 
     #[test]
     fn displays_without_sdl3_runs_nothing_on_windows_dev_build() {
-        let (_dir, paths) = port_with(&["spartanport-probe"]);
+        let (_dir, paths) = port_with(&["sanctuary-probe"]);
         let tools = FakeTools::printing(0, TWO_DISPLAYS);
         let env = |key: &str| (key == "MSYS2_ROOT").then(|| r"C:\nonexistent_msys64".to_string());
         if cfg!(windows) {
