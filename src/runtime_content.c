@@ -85,18 +85,37 @@ _Static_assert(sizeof(AddcontInfo)==24,"OrbisAppContentAddcontInfo layout");
 #define ADDCONT_INSTALLED 4
 static char addon_labels[32][17];
 static uint32_t addon_count, addons_scanned;
+/* SANCTUARY_ADDCONT_ALL=1: the known add-on labels are always reported installed, without any
+ * addcont folders. Diablo III's add-ons are entitlement-only (license + config, no data), so the
+ * game only reads the ownership bit; PS4 sends the add-on list from the installed licenses. */
+static const char *const always_addons[] = {
+    "NECROMANCER00003", /* the Necromancer DLC */
+    /* The cosmetic packs are entitlement-only too; append their labels here when known. */
+};
+static void add_addon(const char *label) {
+    for (uint32_t i = 0; i < addon_count; ++i)
+        if (!memcmp(addon_labels[i], label, 17)) return; /* already listed */
+    if (addon_count >= 32) return;
+    memcpy(addon_labels[addon_count], label, 16);
+    addon_labels[addon_count][16] = 0;
+    printf("Runtime: AppContent add-on %s\n", addon_labels[addon_count]);
+    ++addon_count;
+}
 static void scan_addons(void) {
     if (addons_scanned) return;
     addons_scanned=1;
     const char *dir=getenv("SANCTUARY_ADDCONT_DIR");
-    DIR *d=dir && *dir ? opendir(dir) : NULL;
-    for (struct dirent *e; d && (e=readdir(d)) && addon_count<32;) {
-        if (strlen(e->d_name)!=16) continue;
-        memcpy(addon_labels[addon_count],e->d_name,16); addon_labels[addon_count][16]=0;
-        printf("Runtime: AppContent add-on %s\n",addon_labels[addon_count]);
-        ++addon_count;
+    if (dir && *dir) {
+        DIR *d=opendir(dir);
+        for (struct dirent *e; d && (e=readdir(d)) && addon_count<32;) {
+            if (strlen(e->d_name)!=16) continue;
+            add_addon(e->d_name);
+        }
+        if (d) closedir(d);
     }
-    if (d) closedir(d);
+    if (getenv("SANCTUARY_ADDCONT_ALL"))
+        for (uint32_t i = 0; i < sizeof(always_addons)/sizeof(*always_addons); ++i)
+            add_addon(always_addons[i]);
 }
 static ABI int32_t addon_list(uint32_t service,void *list,uint32_t capacity,uint32_t *hits) {
     require_initialized();

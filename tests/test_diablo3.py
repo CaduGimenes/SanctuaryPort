@@ -7,6 +7,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / 'scripts'))
 
 import gamepad  # noqa: E402
+import game_profiles  # noqa: E402
 import graphics_options  # noqa: E402
 import patches  # noqa: E402
 
@@ -32,6 +33,18 @@ class Diablo3PatchTests(unittest.TestCase):
         for title in ('CUSA00242', 'CUSA00243'):
             profile = patches.game_profile(title)
             self.assertEqual(profile[1].name, 'Diablo_III.xml')
+
+
+class Diablo3AddonTests(unittest.TestCase):
+    """The Diablo profile reports the known entitlement-only add-ons as installed."""
+
+    def test_diablo_profile_advertises_all_addons(self):
+        self.assertEqual(game_profiles.DIABLO3['env'].get('SANCTUARY_ADDCONT_ALL'), '1')
+
+    def test_known_addon_labels_are_16_characters(self):
+        self.assertTrue(game_profiles.DIABLO3_ADDONS)
+        for label in game_profiles.DIABLO3_ADDONS:
+            self.assertEqual(len(label), 16)
 
 
 class GamepadTests(unittest.TestCase):

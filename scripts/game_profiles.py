@@ -63,7 +63,11 @@ PROFILES = {
                           # the frame rate patch the game does not have; its render resolutions are
                           # those patches/Diablo_III.xml has.
                           'SANCTUARY_MENU_HIDE': 'vsync,engine_fps,readbacks',
-                          'SANCTUARY_ALLOWED_RESOLUTIONS': 'native;480p;720p;900p;1440p;1800p;4K'}},
+                          'SANCTUARY_ALLOWED_RESOLUTIONS': 'native;480p;720p;900p;1440p;1800p;4K',
+                          # Diablo III's add-ons are entitlement-only: always report the known
+                          # labels as installed, so a dump that ships the content unlocks it
+                          # without add-cont folders (src/runtime_content.c, SANCTUARY_ADDCONT_ALL).
+                          'SANCTUARY_ADDCONT_ALL': '1'}},
 }
 DIABLO3 = PROFILES.pop('CUSA00242')
 # Diablo III releases seen so far: US, Brazil, Poland/Russia, Europe. Only hints (the add-on folder
@@ -72,6 +76,10 @@ DIABLO3_TITLES = ('CUSA00242', 'CUSA00243', 'CUSA00434', 'CUSA00433')
 # The content ID's label is the same in every region (UP0002-CUSA00243_00-D3ULTIMATEEVIL00); it
 # still recognises a release whose title is localised in another script.
 DIABLO3_LABELS = ('D3ULTIMATEEVIL', 'DIABLO3')
+# Add-on labels the game unlocks by entitlement only (no data to mount): with SANCTUARY_ADDCONT_ALL
+# the runtime reports them as installed, so dumps that ship the content unlock it (see
+# src/runtime_content.c).
+DIABLO3_ADDONS = ('NECROMANCER00003',)
 DEFAULT = {'name': None, 'modules': ('libc.prx', 'libSceFios2.prx')}
 
 
