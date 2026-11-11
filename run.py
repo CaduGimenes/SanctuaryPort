@@ -117,7 +117,7 @@ def find_executable(name):
     return None
 
 
-D3_LANGUAGE_PACKS = {'17': 'ptBR', '1': 'enUS', '20': 'esMX', '2': 'frFR'}  # system language -> CPK prefix
+D3_LANGUAGE_PACKS = {'17': 'ptBR', '1': 'enUS', '20': 'esMX', '2': 'frFR', '16': 'plPL', '8': 'ruRU'}  # system language -> CPK prefix
 
 
 def d3_language(env, game):

@@ -192,7 +192,12 @@ Instance::Instance(const Frontend::WindowSystemInfo& window_info, s32 physical_d
                VK_VERSION_MAJOR(TargetVulkanApiVersion), VK_VERSION_MINOR(TargetVulkanApiVersion),
                VK_VERSION_MAJOR(properties.apiVersion), VK_VERSION_MINOR(properties.apiVersion));
 
-    CreateDevice();
+    // Without a device every later Vulkan call fails far from the cause (vkCreateSemaphore:
+    // invalid device): stop here and name the GPU.
+    ASSERT_MSG(CreateDevice(),
+               "Could not create a Vulkan device on {}: the GPU or its driver lacks a feature "
+               "this port needs (see the Render_Vulkan lines above); update the graphics driver.",
+               properties.deviceName.data());
     CollectPhysicalMemoryInfo();
     CollectImageFormatInfo();
     CollectToolingInfo();
@@ -484,6 +489,7 @@ bool Instance::CreateDevice() {
                 return family.queueCount && (family.queueFlags & vk::QueueFlagBits::eSparseBinding);
             });
         if (sparse_family == family_properties.end()) {
+            LOG_CRITICAL(Render_Vulkan, "The GPU has no queue with sparse binding (required).");
             return false;
         }
         sparse_queue_family_index = static_cast<u32>(sparse_family - family_properties.begin());

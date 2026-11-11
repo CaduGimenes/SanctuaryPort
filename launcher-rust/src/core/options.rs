@@ -177,12 +177,15 @@ pub static LIVE_RESOLUTION: &[Choice] = &[
 
 /// Diablo III (CUSA00242): the PS4 system language codes whose text the US dump ships
 /// (enUS, frFR, esMX CPKs). Portuguese (Brazil) needs the ptBR_*.cpk files of the Brazilian
-/// release in CPKs/; without them the game falls back to English.
+/// release in CPKs/; without them the game falls back to English. Polish and Russian: the
+/// plPL/ruRU packs of the CUSA00434 release.
 pub static LANGUAGES: &[Choice] = &[
     cr("1", "English", "Английский"),
     cr("2", "French", "Французский"),
     cr("20", "Spanish (Latin America)", "Испанский (Латинская Америка)"),
     cr("17", "Portuguese (Brazil)", "Португальский (Бразилия)"),
+    cr("16", "Polish", "Польский"),
+    cr("8", "Russian", "Русский"),
 ];
 
 pub static DRAW_PIPE: &[Choice] = &[

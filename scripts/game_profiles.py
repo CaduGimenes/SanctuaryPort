@@ -47,7 +47,9 @@ PROFILES = {
     # Diablo III: Reaper of Souls - Ultimate Evil Edition (US 1.00, the development target).
     # Deferred image readbacks hide the 3D scenes (hero creation renders black or blown out):
     # the engine reads render targets back on the CPU in the same frame.
-    'CUSA00242': {'name': 'Diablo III', 'modules': ('libc.prx', 'libSceFios2.prx'),
+    # Its updates (1.47) ship the game's own PSN toolkit (libSceNpToolkit2.prx, as WipEout), linked
+    # when present: without it the 1.47 eboot stops at its first toolkit call (GitHub issues #1, #3).
+    'CUSA00242': {'name': 'Diablo III', 'modules': ('libc.prx', 'libSceFios2.prx', 'libSceNpToolkit2.prx'),
                   # The draw-preparation workers (4096 | 8192) read resource descriptors before the
                   # game has written them, as in Knack: the world rendered as a flat grey screen.
                   'env': {'SANCTUARY_DEFERRED_READBACK': '0', 'SANCTUARY_STALE_READBACK': '0',
@@ -64,10 +66,10 @@ PROFILES = {
 }
 # Diablo III: Reaper of Souls - Ultimate Evil Edition, Brazilian release (Portuguese and Spanish
 # text; usually played with its 1.47 update in SANCTUARY_PATCH_DIR): the same engine and needs.
-# Its updates ship the game's own PSN toolkit (libSceNpToolkit2.prx, as WipEout): linked when present.
-PROFILES['CUSA00243'] = {**PROFILES['CUSA00242'],
-                         'modules': ('libc.prx', 'libSceFios2.prx', 'libSceNpToolkit2.prx')}
-DIABLO3_TITLES = ('CUSA00242', 'CUSA00243')
+# CUSA00434: the Polish/Russian release (plPL/ruRU text), same eboot with the 1.47 update.
+PROFILES['CUSA00243'] = PROFILES['CUSA00242']
+PROFILES['CUSA00434'] = PROFILES['CUSA00242']
+DIABLO3_TITLES = ('CUSA00242', 'CUSA00243', 'CUSA00434')
 DEFAULT = {'name': None, 'modules': ('libc.prx', 'libSceFios2.prx')}
 
 

@@ -202,7 +202,7 @@ pub struct GameProfile {
 }
 
 static GAMES: &[GameProfile] = &[GameProfile {
-    ids: &["CUSA00243", "CUSA00242"],
+    ids: &["CUSA00243", "CUSA00242", "CUSA00434"],
     xml: "Diablo_III.xml",
     app_version: "01.47",
     title: "Diablo III",
