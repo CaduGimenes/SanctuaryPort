@@ -45,9 +45,11 @@ PROFILES = {
     'CUSA00202': {'name': 'Knack', 'modules': ('libc.prx', 'libSceFios2.prx'), 'env': KNACK_ENV},
     'CUSA00004': {'name': 'Knack', 'modules': ('libc.prx', 'libSceFios2.prx'), 'env': KNACK_ENV},
     # Diablo III: Reaper of Souls - Ultimate Evil Edition (US 1.00, the development target).
+    # Updated US eboots (e.g. the 01.46 patch) import the PSN toolkit: libSceNpToolkit2.prx is
+    # linked when the dump ships it, as the Brazilian 1.47 update does (US 01.46 support).
     # Deferred image readbacks hide the 3D scenes (hero creation renders black or blown out):
     # the engine reads render targets back on the CPU in the same frame.
-    'CUSA00242': {'name': 'Diablo III', 'modules': ('libc.prx', 'libSceFios2.prx'),
+    'CUSA00242': {'name': 'Diablo III', 'modules': ('libc.prx', 'libSceFios2.prx', 'libSceNpToolkit2.prx'),
                   # The draw-preparation workers (4096 | 8192) read resource descriptors before the
                   # game has written them, as in Knack: the world rendered as a flat grey screen.
                   'env': {'SANCTUARY_DEFERRED_READBACK': '0', 'SANCTUARY_STALE_READBACK': '0',
