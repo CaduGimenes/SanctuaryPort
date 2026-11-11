@@ -1,0 +1,45 @@
+# Builds the Linux AppImage on Ubuntu 24.04 (glibc 2.39, the oldest one players can have) and
+# attaches it to the GitHub release of the tag. The Windows zip is built with
+# packaging/windows/package.sh (it cross-compiles from Linux) and attached by hand.
+# No game files are built or shipped: the package holds the port only.
+name: release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to attach the AppImage to'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  appimage:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Dependencies
+        run: bash packaging/linux/ci-deps.sh
+      - name: Build
+        run: |
+          source "$HOME/.cargo/env"
+          bash build.sh
+          bash packaging/linux/build.sh
+      - name: Smoke test
+        run: sudo bash packaging/linux/smoke-test.sh dist/SanctuaryPort-x86_64.AppImage
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SanctuaryPort-x86_64.AppImage
+          path: dist/SanctuaryPort-x86_64.AppImage
+      - name: Attach to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.inputs.tag || github.ref_name }}
+        run: |
+          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --draft --title "$TAG" --notes ""
+          gh release upload "$TAG" dist/SanctuaryPort-x86_64.AppImage --clobber
