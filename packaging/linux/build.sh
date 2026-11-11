@@ -52,6 +52,13 @@ bundle() {
 bundle out/gpu/libsanctuarygpu.so
 bundle out/sanctuary-probe
 bundle "$share/sanctuaryport-launcher"
+# The launcher loads the keyboard libraries at run time (dlopen), so ldd does not list them: bundle
+# them, as minimal desktops and containers can lack libxkbcommon-x11.
+for name in libxkbcommon.so.0 libxkbcommon-x11.so.0; do
+    lib=$(ldconfig -p | awk -v n="$name" '$1 == n && /x86-64/ && !found {print $NF; found = 1}')
+    [[ -n $lib ]] || { echo "Need $name (libxkbcommon-x11-dev)" >&2; exit 1; }
+    install -m755 "$lib" "$appdir/usr/lib/$name"
+done
 # libstdc++/libgcc/libz come from the build host: the same glibc generation as the one that runs
 # the AppImage is assumed, and a newer libstdc++ than Mesa's is the safe direction.
 for name in libstdc++.so.6 libgcc_s.so.1; do
