@@ -34,7 +34,7 @@ CPU emulator.
 
 Get the latest build from the [Releases](https://github.com/CaduGimenes/SanctuaryPort/releases):
 
-- **Linux:** `SanctuaryPort-x86_64.AppImage` — make it executable and run it. Needs a distro
+- **Linux:** `SanctuaryPort-linux-x86_64.AppImage` — make it executable and run it. Needs a distro
   with glibc 2.39 or newer (SteamOS, Ubuntu 24.04+, Debian 13, Fedora 40+...), `python3`, and
   a GPU with Vulkan 1.3. Saves and settings go to `~/.local/share/sanctuaryport`.
 - **Windows:** `SanctuaryPort-windows.zip` — extract it and open `SanctuaryPort.exe`

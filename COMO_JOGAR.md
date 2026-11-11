@@ -22,7 +22,7 @@ de CPU.
 
 Pegue a versão mais nova em [Releases](https://github.com/CaduGimenes/SanctuaryPort/releases):
 
-- **Linux:** `SanctuaryPort-x86_64.AppImage`. Dê permissão de execução e abra. Precisa de uma
+- **Linux:** `SanctuaryPort-linux-x86_64.AppImage`. Dê permissão de execução e abra. Precisa de uma
   distribuição com glibc 2.39 ou mais nova (SteamOS, Ubuntu 24.04+, Debian 13, Fedora 40+...),
   do `python3` e de uma placa de vídeo com Vulkan 1.3. Saves e configurações ficam em
   `~/.local/share/sanctuaryport`.

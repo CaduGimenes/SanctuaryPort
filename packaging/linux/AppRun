@@ -2,7 +2,7 @@
 # AppImage entry point: starts the SanctuaryPort launcher. PLAY runs run.sh from the image with the
 # prebuilt runtime; --play starts the game with the saved settings, without the window (Steam,
 # shortcuts). Saves, settings and the prepared game go to SANCTUARY_DATA_DIR.
-# Usage: SanctuaryPort-x86_64.AppImage [--play]
+# Usage: SanctuaryPort-linux-x86_64.AppImage [--play]
 set -euo pipefail
 here=$(dirname -- "$(readlink -f -- "$0")")
 share=$here/usr/share/sanctuary

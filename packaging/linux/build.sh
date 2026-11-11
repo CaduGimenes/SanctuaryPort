@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds dist/SanctuaryPort-x86_64.AppImage from the Linux build (run `bash build.sh` in the repo
+# Builds dist/SanctuaryPort-linux-x86_64.AppImage from the Linux build (run `bash build.sh` in the repo
 # root first; the launcher is built here). Libraries are bundled with their dependencies, except the
 # ones that must come from the host (glibc, Vulkan loader and drivers, X11/Wayland, GL). The game
 # starts from run.sh like a source checkout, with SANCTUARY_PREBUILT=1: players need python3 (every
@@ -100,6 +100,6 @@ if [[ -z $tool ]]; then
 fi
 mkdir -p dist
 # Written aside and moved over: replacing a running AppImage in place fails ("Text file busy").
-ARCH=x86_64 "$tool" --appimage-extract-and-run "$appdir" dist/SanctuaryPort-x86_64.AppImage.new
-mv -f dist/SanctuaryPort-x86_64.AppImage.new dist/SanctuaryPort-x86_64.AppImage
-ls -lh dist/SanctuaryPort-x86_64.AppImage
+ARCH=x86_64 "$tool" --appimage-extract-and-run "$appdir" dist/SanctuaryPort-linux-x86_64.AppImage.new
+mv -f dist/SanctuaryPort-linux-x86_64.AppImage.new dist/SanctuaryPort-linux-x86_64.AppImage
+ls -lh dist/SanctuaryPort-linux-x86_64.AppImage
