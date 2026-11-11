@@ -15,7 +15,7 @@
     }
   },
   "start": {
-    "program": ["SanctuaryPort.exe", "SanctuaryPort-x86_64.AppImage"],
+    "program": ["SanctuaryPort.exe", "SanctuaryPort-linux-x86_64.AppImage"],
     "args": ["--play", "--game", "{game}", "--update", "{install}/update"]
   },
   "config": [
@@ -28,6 +28,7 @@
       ]
     }
   ],
+  "saves": ["{install}/user/savedata", "{local}/sanctuaryport/user/savedata"],
   "folders": {
     "saves": [
       { "path": "{install}/user/savedata", "if": "{install}/SanctuaryPort.exe" },
