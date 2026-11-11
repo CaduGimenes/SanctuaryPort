@@ -7,6 +7,10 @@
   English · <a href="COMO_JOGAR.md">Português (Brasil)</a>
 </p>
 
+<p align="center">
+  <a href="https://recomplauncher.com/game/sanctuaryport"><picture><source media="(prefers-color-scheme: dark)" srcset="https://recomplauncher.com/assets/press/launcher/badge-light.svg"><img alt="Get it on RecompLauncher" src="https://recomplauncher.com/assets/press/launcher/badge-dark.svg" height="48"></picture></a>
+</p>
+
 ---
 
 SanctuaryPort runs the PlayStation 4 version of **Diablo III** natively on a PC: the Brazilian
@@ -30,7 +34,7 @@ CPU emulator.
 
 Get the latest build from the [Releases](https://github.com/CaduGimenes/SanctuaryPort/releases):
 
-- **Linux:** `SanctuaryPort-x86_64.AppImage` — make it executable and run it. Needs a distro
+- **Linux:** `SanctuaryPort-linux-x86_64.AppImage` — make it executable and run it. Needs a distro
   with glibc 2.39 or newer (SteamOS, Ubuntu 24.04+, Debian 13, Fedora 40+...), `python3`, and
   a GPU with Vulkan 1.3. Saves and settings go to `~/.local/share/sanctuaryport`.
 - **Windows:** `SanctuaryPort-windows.zip` — extract it and open `SanctuaryPort.exe`

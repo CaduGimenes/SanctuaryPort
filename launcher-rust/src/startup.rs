@@ -8,11 +8,12 @@ use std::process::{Command, Stdio};
 use std::time::Duration;
 
 use indexmap::IndexMap;
+use serde_json::Value;
 
 use crate::core::env::{environment_of, start_up_environment};
 use crate::core::i18n::tr;
 use crate::core::paths::{default_port_dir, Paths};
-use crate::core::settings::load_app_settings;
+use crate::core::settings::{load_app_settings, Settings};
 use crate::core::update::{self, is_packaged, update_dir};
 use crate::core::{desktop, platform};
 use crate::{APP_NAME, VERSION};
@@ -60,6 +61,31 @@ pub fn route_on<S: AsRef<OsStr>>(args: &[S], windows: bool) -> Route {
         return Route::Play;
     }
     Route::Launcher
+}
+
+/// The text after `flag` (`--game <folder>`), or `None` when the flag is missing or last.
+pub fn option_value<S: AsRef<OsStr>>(args: &[S], flag: &str) -> Option<String> {
+    let at = args
+        .iter()
+        .position(|arg| arg.as_ref() == OsStr::new(flag))?;
+    let value = args.get(at + 1)?;
+    value.as_ref().to_str().map(str::to_owned)
+}
+
+/// `--game <folder>` (and `--update <folder>`) name the dump for this start only, so another
+/// launcher can pass the player's copy. Nothing is saved. Without `--game` the saved folders stay
+/// as they are. An update folder that is not there is left out: it is optional (the US release
+/// has none).
+pub fn apply_game_options<S: AsRef<OsStr>>(settings: &mut Settings, args: &[S]) {
+    let Some(game) = option_value(args, "--game") else {
+        return;
+    };
+    settings.set("game_dir", Value::String(game));
+    let mut update = option_value(args, "--update").unwrap_or_default();
+    if !Path::new(&update).is_dir() {
+        update.clear();
+    }
+    settings.set("update_dir", Value::String(update));
 }
 
 /// Python `install_update`: waits for the old launcher (`pid`) to close, copies this version

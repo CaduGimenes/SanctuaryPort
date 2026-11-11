@@ -1,7 +1,7 @@
-# Builds the Linux AppImage on Ubuntu 24.04 (glibc 2.39, the oldest one players can have) and
-# attaches it to the GitHub release of the tag. The Windows zip is built with
-# packaging/windows/package.sh (it cross-compiles from Linux) and attached by hand.
-# No game files are built or shipped: the package holds the port only.
+# Builds the Linux AppImage and the Windows zip on Ubuntu 24.04 (the AppImage needs its glibc 2.39,
+# the oldest one players can have; the Windows zip is cross-compiled, see packaging/windows/README.md)
+# and attaches them to the GitHub release of the tag.
+# No game files are built or shipped: the packages hold the port only.
 name: release
 
 on:
@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Release tag to attach the AppImage to'
+        description: 'Release tag to attach the AppImage and the Windows zip to'
         required: true
 
 permissions:
@@ -31,15 +31,53 @@ jobs:
           bash build.sh
           bash packaging/linux/build.sh
       - name: Smoke test
-        run: sudo bash packaging/linux/smoke-test.sh dist/SanctuaryPort-x86_64.AppImage
+        run: sudo bash packaging/linux/smoke-test.sh dist/SanctuaryPort-linux-x86_64.AppImage
       - uses: actions/upload-artifact@v4
         with:
-          name: SanctuaryPort-x86_64.AppImage
-          path: dist/SanctuaryPort-x86_64.AppImage
+          name: SanctuaryPort-linux-x86_64.AppImage
+          path: dist/SanctuaryPort-linux-x86_64.AppImage
       - name: Attach to the release
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.event.inputs.tag || github.ref_name }}
         run: |
-          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --draft --title "$TAG" --notes ""
-          gh release upload "$TAG" dist/SanctuaryPort-x86_64.AppImage --clobber
+          # The Windows job can create the draft at the same time: the second create fails, the view then passes.
+          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --draft --title "$TAG" --notes "" || gh release view "$TAG" >/dev/null
+          gh release upload "$TAG" dist/SanctuaryPort-linux-x86_64.AppImage --clobber
+
+  windows:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends cmake ninja-build pkg-config glslang-tools zstd \
+              libarchive-tools gcc gcc-mingw-w64-x86-64 python3 curl git ca-certificates
+          # The MSYS2 libc++ the build links against needs Clang 21 or newer; Ubuntu 24.04 has 18.
+          # /usr/lib/llvm-21/bin holds clang, lld, llvm-windres, llvm-strip... under their plain names.
+          curl -fsSL https://apt.llvm.org/llvm-snapshot.gpg.key | sudo tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc >/dev/null
+          echo "deb http://apt.llvm.org/noble/ llvm-toolchain-noble-21 main" | sudo tee /etc/apt/sources.list.d/llvm.list
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends clang-21 lld-21 llvm-21
+          echo /usr/lib/llvm-21/bin >> "$GITHUB_PATH"
+          curl -fsSL https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain none
+          source "$HOME/.cargo/env"
+          (cd launcher-rust && rustup target add x86_64-pc-windows-gnu)
+      - name: Package
+        run: |
+          source "$HOME/.cargo/env"
+          bash packaging/windows/package.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SanctuaryPort-windows.zip
+          path: dist/SanctuaryPort-windows.zip
+      - name: Attach to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.inputs.tag || github.ref_name }}
+        run: |
+          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --draft --title "$TAG" --notes "" || gh release view "$TAG" >/dev/null
+          gh release upload "$TAG" dist/SanctuaryPort-windows.zip --clobber

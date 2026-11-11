@@ -8,6 +8,7 @@ use std::path::{Path, PathBuf};
 use sanctuaryport_launcher::core::env::{environment_of, game_environment};
 use sanctuaryport_launcher::core::i18n::{launcher_language, system_language};
 use sanctuaryport_launcher::core::installation::Installation;
+use sanctuaryport_launcher::core::launch::port_command;
 use sanctuaryport_launcher::core::paths::Paths;
 use sanctuaryport_launcher::core::platform;
 use sanctuaryport_launcher::core::release::ReleaseId;
@@ -38,7 +39,8 @@ fn main() {
             startup::apply_to_process(&context);
             let paths = &context.paths;
             startup::prepare(paths);
-            let settings = load_app_settings(paths);
+            let mut settings = load_app_settings(paths);
+            startup::apply_game_options(&mut settings, &args);
             // Without a usable game folder there is nothing to play yet: the window opens instead.
             if Installation::read(
                 &settings.get_str("game_dir"),
@@ -47,10 +49,10 @@ fn main() {
             .verdict()
             .passes()
             {
-                // SanctuaryPort: the port's run.sh (game profiles) when it is there, with the
-                // environment PLAY gives it (update folder, language, icons, key maps...).
-                let run_sh = paths.port_dir.join("run.sh");
-                if run_sh.is_file() {
+                // SanctuaryPort: the port's runner (game profiles) when it is there (run.sh, or
+                // run.py on Windows, as PLAY), with the environment PLAY gives it (update folder,
+                // language, icons, key maps...).
+                if let Some(command) = port_command(&paths.port_dir, cfg!(windows)) {
                     let lang = launcher_language(&settings.get_str("ui_language"), system_language);
                     let env = game_environment(
                         &settings,
@@ -59,15 +61,15 @@ fn main() {
                         &environment_of(std::env::vars_os()),
                         cfg!(windows),
                     );
-                    let status = std::process::Command::new("bash")
-                        .arg(&run_sh)
+                    let status = std::process::Command::new(&command[0])
+                        .args(&command[1..])
                         .current_dir(&paths.port_dir)
                         .env_clear()
                         .envs(&env)
                         .status();
                     std::process::exit(status.ok().and_then(|s| s.code()).unwrap_or(1));
                 }
-eprintln!("{} not found: the game starts from the port's run.sh.", run_sh.display());
+                eprintln!("No runner next to the launcher (run.sh, or run.py on Windows).");
                 std::process::exit(1);
             }
             open_window(context.paths);

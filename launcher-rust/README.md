@@ -73,3 +73,5 @@ CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER=x86_64-w64-mingw32-gcc cargo build --r
 
 PLAY runs `bash run.sh` on Linux and `python\python.exe -u run.py` on Windows
 (`src/core/launch.rs`, `port_command`); `--play` does the same without the window.
+`--play --game <folder> [--update <folder>]` names the dump for that start only, without saving it
+(another launcher can pass the player's copy this way).
