@@ -1,5 +1,7 @@
 # SanctuaryPort — Diablo III (PS4) no PC
 
+[English](README.md) · Português (Brasil)
+
 Port nativo da versão de PS4 de **Diablo III**: a versão brasileira (CUSA00243) com a
 atualização 1.47, que é a **Eternal Collection** (com o Necromante), e a americana *Reaper of
 Souls – Ultimate Evil Edition* 1.00 (CUSA00242). O código original do jogo roda direto no seu processador, um runtime substitui as
@@ -80,21 +82,23 @@ RT, Menu, Visão). Os arquivos do jogo nunca são alterados.
 
 ## Controles
 
-O controle (USB ou Bluetooth) funciona direto. No teclado (dá para mudar no launcher):
+O controle (USB ou Bluetooth) funciona direto. No teclado, as teclas padrão são estas (dá para
+mudar no launcher, em **Controles**):
 
 | Tecla | Botão do PS4 |
 |---|---|
 | W A S D | analógico esquerdo (andar) |
 | setas | analógico direito (esquiva) |
-| Espaço | ✕ (ataque / aceitar) |
-| Shift esquerdo | Círculo |
-| E | Quadrado |
-| Q | Triângulo |
-| 1 / 3 | L1 (poção) / R1 |
-| R / F | L2 / R2 |
-| Enter | Options |
-| Tab | touchpad (inventário/menu) |
-| Insert | menu do port (gráficos etc.) |
+| Espaço | ✕ |
+| Shift esquerdo | ○ |
+| botão esquerdo / direito do mouse | □ / △ |
+| Q / E | L1 (poção) / R1 |
+| R / botão "avançar" do mouse | L2 / R2 |
+| Z / X | L3 / R3 |
+| 1 2 3 4 | direcional para cima, direita, baixo, esquerda |
+| Tab | Options |
+| P / Esc | touchpad esquerdo / direito |
+| Insert | menu do port (gráficos etc.; não muda) |
 | F12 | captura de tela (`user/screenshots/`) |
 
 Nome do herói: ao criar, digite no teclado e aperte Enter (ou ✕ / A no controle).

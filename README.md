@@ -4,7 +4,7 @@
 
 <p align="center">
   <b>A native PC port of Diablo III: Reaper of Souls – Ultimate Evil Edition (PS4)</b><br>
-  <a href="COMO_JOGAR.md">🇧🇷 Leia em português</a>
+  English · <a href="COMO_JOGAR.md">Português (Brasil)</a>
 </p>
 
 ---
@@ -115,8 +115,24 @@ SANCTUARY_GAME_DIR=~/Games/PS4/CUSA00243 SANCTUARY_PATCH_DIR=~/Games/PS4/CUSA002
 ```
 
 - **Gamepads** (Xbox, DualSense, DualShock 4, anything SDL recognises) work out of the box.
-  Keyboard and mouse work too; the keys are in [COMO_JOGAR.md](COMO_JOGAR.md) and can be changed
-  in the launcher.
+  Keyboard and mouse work too, with these default keys (change them in the launcher's
+  *Controls*):
+
+  | Key | PS4 button |
+  |---|---|
+  | W A S D | left stick (move) |
+  | Arrow keys | right stick (evade) |
+  | Space | ✕ |
+  | Left Shift | ○ |
+  | Left mouse button / right mouse button | □ / △ |
+  | Q / E | L1 (potion) / R1 |
+  | R / mouse forward button | L2 / R2 |
+  | Z / X | L3 / R3 |
+  | 1 2 3 4 | d-pad up, right, down, left |
+  | Tab | Options |
+  | P / Esc | touchpad left / right |
+  | Insert | the port's menu (cannot be changed) |
+  | F12 | screenshot (`user/screenshots/`) |
 - **Local co-op:** connect more gamepads. The first one is player 1; the next ones become players
   2, 3 and 4 in the order they connect. In the game, press the bottom face button (A / ✕) on the
   new gamepad to join.
