@@ -302,6 +302,11 @@ def main():
             if 'SANCTUARY_ADDCONT_DIR' not in env and addcont.is_dir():
                 env['SANCTUARY_ADDCONT_DIR'] = str(addcont)
                 print(f'Add-ons: {addcont}', flush=True)
+        # Some dumps keep the add-ons inside the game folder instead: use it when no addcont/
+        # folder was found.
+        if diablo3 and 'SANCTUARY_ADDCONT_DIR' not in env and game_profiles.inline_addons(base_game):
+            env['SANCTUARY_ADDCONT_DIR'] = str(base_game)
+            print(f'Add-ons: {base_game}', flush=True)
 
         from patches import game_profile_for, patch_requirements, patch_status, selected_patches
         profile = game_profile_for(game)

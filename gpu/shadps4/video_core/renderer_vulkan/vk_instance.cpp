@@ -232,6 +232,17 @@ bool PipelineBinaryCacheRequested() {
     const char* setting = std::getenv("SANCTUARY_PIPELINE_BINARIES");
     return !setting || *setting != '0';
 }
+
+// On Windows the NVIDIA driver (RTX 5080) crashes the process right after vkGetPipelineKeyKHR
+// returns, in InitializePipelineBinaryCache. The pipelines are built normally there instead.
+bool PipelineBinariesUnsafe(vk::DriverId driver) {
+#ifdef _WIN32
+    return driver == vk::DriverId::eNvidiaProprietary;
+#else
+    (void)driver;
+    return false;
+#endif
+}
 }
 
 bool InitializePipelineBinaryCache(vk::Device device, bool supported,
@@ -335,7 +346,8 @@ bool Instance::CreateDevice() {
 
     // Optional
     maintenance_5 = add_extension(VK_KHR_MAINTENANCE_5_EXTENSION_NAME);
-    pipeline_binaries = PipelineBinaryCacheRequested() && maintenance_5 &&
+    pipeline_binaries = PipelineBinaryCacheRequested() && !PipelineBinariesUnsafe(driver_id) &&
+        maintenance_5 &&
         feature_chain.get<vk::PhysicalDeviceMaintenance5FeaturesKHR>().maintenance5 &&
         feature_chain.get<vk::PhysicalDevicePipelineBinaryFeaturesKHR>().pipelineBinaries &&
         add_extension(VK_KHR_PIPELINE_BINARY_EXTENSION_NAME);

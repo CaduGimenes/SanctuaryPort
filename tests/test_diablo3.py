@@ -1,4 +1,5 @@
 import sys
+import tempfile
 import unittest
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -6,6 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / 'scripts'))
 
+import game_profiles  # noqa: E402
 import gamepad  # noqa: E402
 import graphics_options  # noqa: E402
 import patches  # noqa: E402
@@ -43,6 +45,24 @@ class GamepadTests(unittest.TestCase):
         self.assertEqual(gamepad.resolve('auto', 'Gamepad: none\n')[0], 'keyboard')
         self.assertEqual(gamepad.resolve('xbox', '')[0], 'xbox')
         self.assertEqual(gamepad.resolve('off', '')[0], 'playstation')
+
+
+class InlineAddonTests(unittest.TestCase):
+    def test_a_dump_with_add_on_folders_inside_is_found(self):
+        with tempfile.TemporaryDirectory() as folder:
+            (Path(folder) / 'NECROMANCER00003' / 'sce_sys').mkdir(parents=True)
+            self.assertTrue(game_profiles.inline_addons(folder))
+
+    def test_the_games_own_folders_are_not_add_ons(self):
+        with tempfile.TemporaryDirectory() as folder:
+            (Path(folder) / 'sce_sys').mkdir()
+            (Path(folder) / 'sce_module').mkdir()
+            self.assertFalse(game_profiles.inline_addons(folder))
+
+    def test_a_16_character_folder_without_sce_sys_is_not_one(self):
+        with tempfile.TemporaryDirectory() as folder:
+            (Path(folder) / 'NECROMANCER00003').mkdir()
+            self.assertFalse(game_profiles.inline_addons(folder))
 
 
 if __name__ == '__main__':

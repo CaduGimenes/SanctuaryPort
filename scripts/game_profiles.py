@@ -102,6 +102,13 @@ def is_diablo3(game):
     return is_diablo3_sfo(sfo_values(game))
 
 
+def inline_addons(game):
+    """Whether a dump keeps its add-ons inside the game folder: one folder per entitlement label
+    (16 characters, as `runtime_content.c` lists them), each with its own sce_sys."""
+    folders = [p for p in Path(game).iterdir() if p.is_dir()]
+    return any(len(p.name) == 16 and (p / 'sce_sys').is_dir() for p in folders)
+
+
 def profile(game):
     """The profile of a game folder (DEFAULT for unknown games)."""
     values = sfo_values(game)
