@@ -32,4 +32,5 @@ pub mod sfo;
 pub mod steam;
 pub mod steam_art;
 pub mod store;
+pub mod trophies;
 pub mod update;

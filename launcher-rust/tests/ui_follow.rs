@@ -3,9 +3,12 @@
 
 mod common;
 
+use std::collections::BTreeSet;
 use std::path::Path;
 
-use common::{dump_with_patches, state};
+use common::{
+    dump_with_patches, load_trophies, state, state_with_trophies, trp_package, TROPHY_COUNT,
+};
 use iced::futures::executor::block_on;
 use iced::futures::StreamExt;
 use iced::Task;
@@ -61,12 +64,13 @@ fn change(state: &mut State, key: &str, value: Value) {
 }
 
 /// Every view, in the table's order.
-const VIEWS: [View; 5] = [
+const VIEWS: [View; 6] = [
     View::Installation,
     View::Home,
     View::Patches,
     View::Backups,
     View::Aspect,
+    View::Trophies,
 ];
 
 fn text(path: &Path) -> String {
@@ -81,10 +85,9 @@ fn folder(path: &Path) -> Value {
 fn look(state: &State, view: View) -> String {
     match view {
         View::Installation => format!(
-            "{:?} {:?} {:?}",
+            "{:?} {:?}",
             state.installation.title_id(),
-            state.installation.has_game(),
-            state.installation.info().map(|info| info.version.clone())
+            state.installation.has_game()
         ),
         View::Home => format!("{:?}", state.home),
         View::Patches => format!(
@@ -100,6 +103,11 @@ fn look(state: &State, view: View) -> String {
         // The choice too: listing the backups again chooses the newest.
         View::Backups => format!("{:?} chosen {:?}", state.backups, state.backup_choice),
         View::Aspect => state.aspect.clone(),
+        View::Trophies => format!(
+            "{} {:?}",
+            state.trophies.icons.len(),
+            state.trophies.unlocked
+        ),
     }
 }
 
@@ -188,6 +196,16 @@ fn case(view: View) -> Case {
             outside: ("user_dir", saves),
             inside: ("render_resolution", |_, _| json!("3440x1440")),
         },
+        View::Trophies => Case {
+            setup: nothing,
+            disk: |_, dir| {
+                let trophy = dir.join("dump").join("sce_sys").join("trophy");
+                std::fs::create_dir_all(&trophy).unwrap();
+                std::fs::write(trophy.join("trophy00.trp"), trp_package(TROPHY_COUNT)).unwrap();
+            },
+            outside: ("patches_dir", unrelated),
+            inside: ("update_dir", update),
+        },
     }
 }
 
@@ -227,7 +245,7 @@ fn each_view_follows_exactly_its_keys() {
 /// Everything the views show, as text to compare.
 fn views(state: &State) -> String {
     let shown: Vec<String> = VIEWS.iter().map(|view| look(state, *view)).collect();
-    format!("{shown:?}")
+    format!("{shown:?} {:?}", state.trophies.inputs)
 }
 
 #[test]
@@ -238,19 +256,16 @@ fn typing_and_browsing_a_folder_give_the_same_views() {
     let mut typed = state(dir.path());
     let mut browsed = state(dir.path());
     let game = dump_with_patches(dir.path());
+    std::fs::create_dir_all(game.join("sce_sys/trophy")).unwrap();
+    std::fs::write(
+        game.join("sce_sys/trophy/trophy00.trp"),
+        trp_package(TROPHY_COUNT),
+    )
+    .unwrap();
     let saves = dir.path().join("saves");
     std::fs::create_dir_all(saves.join("savedata")).unwrap();
     std::fs::write(saves.join("savedata").join("slot0"), b"x").unwrap();
     std::fs::create_dir_all(saves.join("savedata_backups").join(NEWER)).unwrap();
-    // An update with a version of its own, which the installation reads.
-    let update = dir.path().join("update");
-    std::fs::create_dir_all(update.join("sce_sys")).unwrap();
-    std::fs::write(update.join("eboot.bin"), b"elf").unwrap();
-    std::fs::write(
-        update.join("sce_sys/param.sfo"),
-        common::sfo(&[("TITLE_ID", "CUSA00243"), ("APP_VER", "01.48")]),
-    )
-    .unwrap();
     let folders = [
         ("game_dir", game.clone()),
         ("update_dir", dir.path().join("update")),
@@ -264,6 +279,7 @@ fn typing_and_browsing_a_folder_give_the_same_views() {
         assert_ne!(views(&typed), before, "nothing followed {key}");
     }
     assert_eq!(typed.installation.title_id(), Some("CUSA00243"));
+    assert_eq!(typed.trophies.icons.len(), TROPHY_COUNT);
 }
 
 /// A state whose game folder is `dump`, still empty, and holds a copy of the dump made afterwards,
@@ -355,6 +371,13 @@ fn paths(dir: &Path) -> Paths {
         _ => None,
     };
     Paths::from_env(dir, &env)
+}
+
+/// Puts a 35-trophy package in the game folder `game`.
+fn trophies_in(game: &Path) {
+    let trophy = game.join("sce_sys").join("trophy");
+    std::fs::create_dir_all(&trophy).unwrap();
+    std::fs::write(trophy.join("trophy00.trp"), trp_package(TROPHY_COUNT)).unwrap();
 }
 
 
@@ -482,11 +505,13 @@ fn the_focus_reads_the_game_folders_again_while_the_setup_is_open() {
     std::fs::create_dir_all(&game).unwrap();
     browse(&mut state, "game_dir", &game);
     dump_with_patches(dir.path());
+    trophies_in(&game);
     let task = app::update(&mut state, Message::WindowFocused(true));
     settle(&mut state, task);
     assert_eq!(state.installation.title_id(), Some("CUSA00243"));
     assert_eq!(patch_names(&state), ["Fix Alpha"]);
     assert_eq!(home::chips(&state)[1], "✓ CUSA00243 · v01.47");
+    assert_eq!(state.trophies.icons.len(), TROPHY_COUNT);
 
     // Without the setup, the focus reads nothing.
     let dir = tempfile::tempdir().unwrap();
@@ -499,12 +524,16 @@ fn the_focus_reads_the_game_folders_again_while_the_setup_is_open() {
 
 #[test]
 fn a_restore_reads_the_saves_folder_again() {
-    // Spec §4/06: after a restore every view of the saves folder follows.
+    // Spec §4/06: after a restore every view of the saves folder follows, the trophies the restored
+    // saves unlock included.
     let dir = tempfile::tempdir().unwrap();
-    let mut state = state(dir.path());
+    let mut state = state_with_trophies(dir.path());
+    load_trophies(&mut state);
+    assert_eq!(state.trophies.unlocked, BTreeSet::from([0, 3]));
     assert!(!state.home.saves);
     // What the restore put in place: other saves, and the backup of the replaced ones.
     let user = state.paths.user_dir("");
+    std::fs::write(user.join("trophies.txt"), b"1\n2\n").unwrap();
     std::fs::create_dir_all(user.join("savedata")).unwrap();
     std::fs::write(user.join("savedata").join("slot0"), b"x").unwrap();
     std::fs::create_dir_all(backups_folder(&state).join(NEWER)).unwrap();
@@ -516,5 +545,38 @@ fn a_restore_reads_the_saves_folder_again() {
     assert_eq!(state.backups, [NEWER]);
     assert_eq!(state.backup_choice, NEWER);
     assert!(state.home.saves);
+    assert_eq!(state.trophies.unlocked, BTreeSet::from([1, 2]));
+}
+
+#[test]
+fn the_start_reads_every_view_but_the_trophies() {
+    // The Start column: everything on the disk before the window opens shows at once; the Trophies
+    // list waits for its page.
+    let dir = tempfile::tempdir().unwrap();
+    let game = dump_with_patches(dir.path());
+    trophies_in(&game);
+    let paths = paths(dir.path());
+    std::fs::create_dir_all(&paths.data_dir).unwrap();
+    std::fs::create_dir_all(paths.ini_path().parent().unwrap()).unwrap();
+    std::fs::write(
+        paths.config_file(),
+        json!({"game_dir": text(&game)}).to_string(),
+    )
+    .unwrap();
+    std::fs::write(paths.ini_path(), "render_resolution=3440x1440\n").unwrap();
+    let user = paths.user_dir("");
+    std::fs::create_dir_all(user.join("savedata")).unwrap();
+    std::fs::write(user.join("savedata").join("slot0"), b"x").unwrap();
+    std::fs::create_dir_all(user.join("savedata_backups").join(NEWER)).unwrap();
+
+    let state = state(dir.path());
+    assert_eq!(state.installation.title_id(), Some("CUSA00243"));
+    assert!(state.home.saves);
+    assert_eq!(patch_names(&state), ["Fix Alpha"]);
+    assert_eq!(state.backups, [NEWER]);
+    assert_eq!(state.backup_choice, NEWER);
+    assert_eq!(state.aspect, "21:9");
+    assert!(state.trophies.icons.is_empty());
+    assert!(!state.trophies.loading, "a Trophies read started");
 }
 

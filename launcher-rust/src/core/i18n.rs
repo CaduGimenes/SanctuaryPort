@@ -27,6 +27,12 @@ pub enum Region {
 }
 
 #[derive(Deserialize, Default)]
+struct Trophies {
+    #[serde(default)]
+    ui: HashMap<String, HashMap<String, String>>,
+}
+
+#[derive(Deserialize, Default)]
 struct Table {
     #[serde(default)]
     keys: Vec<String>,
@@ -38,6 +44,8 @@ struct Table {
     ru: HashMap<String, String>,
     #[serde(default)]
     windows_languages: HashMap<String, String>,
+    #[serde(default)]
+    trophies: Trophies,
     #[serde(skip)]
     index: HashMap<String, usize>,
 }
@@ -815,8 +823,28 @@ static UI_EXTRA: &[(&str, &[(&str, &str)])] = &[
         ],
     ),
     (
+        "Tap R3",
+        &[("pt", "Toque no R3"), ("es", "Toque de R3"), ("zh", "轻按 R3"), ("id", "Ketuk R3")],
+    ),
+    (
         "Turn off all cheats",
         &[("zh", "关闭所有作弊"), ("pt", "Desligar todos os cheats"), ("es", "Desactivar todos los trucos"), ("cs", "Vypnout všechny cheaty"), ("ru", "Отключить все читы"), ("fr", "Désactiver toutes les astuces"), ("de", "Alle Cheats ausschalten"), ("it", "Disattiva tutti i trucchi"), ("pl", "Wyłącz wszystkie kody"), ("tr", "Tüm hileleri kapat"), ("id", "Matikan semua cheat")],
+    ),
+    (
+        "Trophy notifications",
+        &[("zh", "奖杯通知"), ("pt", "Notificações de troféu"), ("es", "Notificaciones de trofeos"), ("cs", "Oznámení o trofejích"), ("ru", "Уведомления о трофеях"), ("fr", "Notifications de trophées"), ("de", "Trophäen-Benachrichtigungen"), ("it", "Notifiche dei trofei"), ("pl", "Powiadomienia o trofeach"), ("tr", "Kupa bildirimleri"), ("id", "Notifikasi trofi")],
+    ),
+    (
+        "Mute the trophy sound",
+        &[("zh", "静音奖杯提示音"), ("pt", "Silenciar o som do troféu"), ("es", "Silenciar el sonido de trofeo"), ("cs", "Ztlumit zvuk trofeje"), ("ru", "Отключить звук трофея"), ("fr", "Couper le son des trophées"), ("de", "Trophäenton stummschalten"), ("it", "Disattiva il suono dei trofei"), ("pl", "Wycisz dźwięk trofeum"), ("tr", "Kupa sesini kapat"), ("id", "Bisukan suara trofi")],
+    ),
+    (
+        "Trophy sound volume",
+        &[("zh", "奖杯提示音音量"), ("pt", "Volume do som do troféu"), ("es", "Volumen del sonido de trofeo"), ("cs", "Hlasitost zvuku trofeje"), ("ru", "Громкость звука трофея"), ("fr", "Volume du son des trophées"), ("de", "Lautstärke des Trophäentons"), ("it", "Volume del suono dei trofei"), ("pl", "Głośność dźwięku trofeum"), ("tr", "Kupa sesi seviyesi"), ("id", "Volume suara trofi")],
+    ),
+    (
+        "The chime of an unlocked trophy. Also in the in-game menu (Insert): Trophies > Notifications.",
+        &[("zh", "解锁奖杯时的提示音。也可在游戏内菜单（Insert）：奖杯 > 通知 中设置。"), ("pt", "O som de um troféu desbloqueado. Também no menu do jogo (Insert): Troféus > Notificações."), ("es", "El sonido de un trofeo desbloqueado. También en el menú del juego (Insert): Trofeos > Notificaciones."), ("cs", "Zvuk odemčené trofeje. Také v herním menu (Insert): Trofeje > Oznámení."), ("ru", "Звук открытого трофея. Также в игровом меню (Insert): Трофеи > Уведомления."), ("fr", "Le son d'un trophée débloqué. Aussi dans le menu en jeu (Insert) : Trophées > Notifications."), ("de", "Der Ton einer freigeschalteten Trophäe. Auch im Spielmenü (Insert): Trophäen > Benachrichtigungen."), ("it", "Il suono di un trofeo sbloccato. Anche nel menu di gioco (Insert): Trofei > Notifiche."), ("pl", "Dźwięk odblokowanego trofeum. Także w menu gry (Insert): Trofea > Powiadomienia."), ("tr", "Açılan bir kupanın sesi. Oyun içi menüde de var (Insert): Kupalar > Bildirimler."), ("id", "Suara trofi yang terbuka. Juga ada di menu dalam game (Insert): Trofi > Notifikasi.")],
     ),
 ];
 
@@ -879,6 +907,18 @@ pub fn tr_fmt(lang: &str, en: &str, args: &[&str]) -> String {
     }
     out.push_str(rest);
     out
+}
+
+/// Text of the Trophies page in `lang`; English when there is none.
+pub fn trophy_ui(lang: &str, en: &str) -> String {
+    table()
+        .trophies
+        .ui
+        .get(lang)
+        .and_then(|ui| ui.get(en))
+        .filter(|text| !text.is_empty())
+        .cloned()
+        .unwrap_or_else(|| en.to_string())
 }
 
 /// Launcher language for a Windows primary language id; `en` when unknown.
@@ -1071,6 +1111,11 @@ mod tests {
         assert_eq!(one, "A · game version {}");
     }
 
+    #[test]
+    fn trophies_fall_back_to_english() {
+        assert_eq!(trophy_ui("pt", "Trophies"), "Troféus");
+        assert_eq!(trophy_ui("en", "Trophies"), "Trophies");
+    }
 
     #[test]
     fn windows_language_0x16_is_pt() {

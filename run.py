@@ -7,6 +7,7 @@ SANCTUARY_USER_DIR, ...). Extra arguments go to sanctuary-probe.
 The in-game "Apply and restart" runs this script again through SANCTUARY_RESTART_COMMAND;
 `--after PID` waits for the previous game process to end first (its GPU device and memory).
 """
+import json
 import os
 from pathlib import Path
 import shlex
@@ -134,6 +135,23 @@ def d3_language(env, game):
     env['SANCTUARY_LANGUAGE'] = chosen
     print(f'Language: {D3_LANGUAGE_PACKS.get(wanted, wanted)} is not in this dump; using {D3_LANGUAGE_PACKS[chosen]}',
           flush=True)
+
+
+def d3_trophies(env, out):
+    """The trophy names for the on-screen notices: assets/trophies/Diablo_III.json (the PS4 list, by
+    trophy id) as out/trophies.tsv, which the runtime reads (SANCTUARY_TROPHY_LIST). The game's own
+    texts are encrypted with Sony's trophy key."""
+    source = PORT / 'assets' / 'trophies' / 'Diablo_III.json'
+    try:
+        trophies = json.loads(source.read_text(encoding='utf-8'))['trophies']
+        lines = [f"{t['id']}\t{t['tier']}\t{t['group']}\t{' '.join(str(t['name']).split())}\n"
+                 for t in trophies]
+        target = Path(out) / 'trophies.tsv'
+        target.write_text(''.join(lines), encoding='utf-8')
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        print(f'Trophies: no names ({error})', flush=True)
+        return
+    env.setdefault('SANCTUARY_TROPHY_LIST', str(target))
 
 
 def d3_glyph_atlas(env, probe):
@@ -290,6 +308,7 @@ def main():
         engine_fps, frame_rates = 60, False
         if diablo3:
             d3_language(env, game)
+            d3_trophies(env, out)
         # The window shows the game's icon (BMP: the format SDL loads without extra libraries); on
         # Linux the launcher's own icon (the AppImage ships the one chosen when it was built) and
         # an application id the desktop entry matches, so the shell shows the same icon.

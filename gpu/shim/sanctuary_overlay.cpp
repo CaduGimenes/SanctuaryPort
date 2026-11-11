@@ -9,6 +9,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <deque>
 #include <mutex>
 #include <vector>
 
@@ -67,6 +68,8 @@ std::atomic<u32> background_done{0}, background_total{0};
 std::mutex notice_mutex;
 std::string notice_text;
 std::atomic<s64> notice_until{0}; // steady_clock milliseconds
+// Notices sent while one shows wait their turn (a trophy and the platinum it completes).
+std::deque<std::pair<std::string, int>> notice_queue;
 bool dirty = false; // settings changed while open: saved on close
 int requested_tab = -1; // switch on the next frame (L1/R1, Q/E, menu opened)
 // The game's text dialog (SetTextEntry), guarded by imgui_mutex.
@@ -734,7 +737,18 @@ s64 NowMs() {
 }
 
 bool NoticeActive() {
-    return notice_until.load(std::memory_order_relaxed) > NowMs();
+    const s64 now = NowMs();
+    if (notice_until.load(std::memory_order_relaxed) > now) {
+        return true;
+    }
+    std::scoped_lock lock{notice_mutex};
+    if (notice_queue.empty()) {
+        return false;
+    }
+    notice_text = std::move(notice_queue.front().first);
+    notice_until.store(now + notice_queue.front().second, std::memory_order_relaxed);
+    notice_queue.pop_front();
+    return true;
 }
 
 void Notice() {
@@ -760,10 +774,14 @@ void Notice() {
 } // namespace
 
 void ShowNotice(const std::string& text, int milliseconds) {
-    {
-        std::scoped_lock lock{notice_mutex};
-        notice_text = text;
+    std::scoped_lock lock{notice_mutex};
+    if (notice_until.load(std::memory_order_relaxed) > NowMs()) {
+        if (notice_queue.size() < 8) {
+            notice_queue.emplace_back(text, milliseconds);
+        }
+        return;
     }
+    notice_text = text;
     notice_until.store(NowMs() + milliseconds, std::memory_order_relaxed);
 }
 

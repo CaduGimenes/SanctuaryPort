@@ -147,6 +147,10 @@ impl Installation {
             .map(|folder| folder.join("sce_sys").join(rel))
             .find(|path| path.is_file())
     }
+
+    pub fn trophy_package(&self) -> Option<PathBuf> {
+        self.system_file("trophy/trophy00.trp")
+    }
 }
 
 #[cfg(test)]
@@ -266,18 +270,18 @@ mod tests {
             Some(game.path().join("sce_sys/pic1.png"))
         );
         assert_eq!(installation.system_file("none.png"), None);
-        assert_eq!(installation.system_file("trophy/trophy00.trp"), None);
+        assert_eq!(installation.trophy_package(), None);
         put(game.path(), "sce_sys/trophy/trophy00.trp", b"g");
         assert_eq!(
-            Installation::read(s(game.path()), s(update.path())).system_file("trophy/trophy00.trp"),
+            Installation::read(s(game.path()), s(update.path())).trophy_package(),
             Some(game.path().join("sce_sys/trophy/trophy00.trp"))
         );
         put(update.path(), "sce_sys/trophy/trophy00.trp", b"u");
         assert_eq!(
-            Installation::read(s(game.path()), s(update.path())).system_file("trophy/trophy00.trp"),
+            Installation::read(s(game.path()), s(update.path())).trophy_package(),
             Some(update.path().join("sce_sys/trophy/trophy00.trp"))
         );
-        assert_eq!(Installation::read("", "").system_file("trophy/trophy00.trp"), None);
+        assert_eq!(Installation::read("", "").trophy_package(), None);
     }
 
     #[test]
@@ -315,7 +319,7 @@ mod tests {
         assert_eq!(installation.title_id(), None);
         assert!(installation.profile().is_none() && !installation.patchable());
         assert_eq!(installation.system_file("param.sfo"), None);
-        assert_eq!(installation.system_file("trophy/trophy00.trp"), None);
+        assert_eq!(installation.trophy_package(), None);
         assert!(installation.info().is_some() && installation.has_game());
         assert!(installation.verdict().passes());
         let same = Installation::read_from("", s(here.path()), here.path());

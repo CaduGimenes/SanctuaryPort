@@ -9,6 +9,7 @@ pub mod graphics;
 pub mod log;
 pub mod mapper;
 pub mod performance;
+pub mod trophies;
 
 use iced::widget::text;
 use iced::Element;
@@ -23,6 +24,7 @@ pub enum Page {
     Graphics,
     Performance,
     Game,
+    Trophies,
     Controls,
     Advanced,
     Log,
@@ -32,11 +34,12 @@ pub enum Page {
 
 impl Page {
     /// Tab order, which is also the order of the arrow keys.
-    pub const ALL: [Page; 7] = [
+    pub const ALL: [Page; 8] = [
         Page::Home,
         Page::Graphics,
         Page::Performance,
         Page::Game,
+        Page::Trophies,
         Page::Controls,
         Page::Advanced,
         Page::Log,
@@ -49,6 +52,7 @@ impl Page {
             Page::Graphics => "Graphics",
             Page::Performance => "Performance",
             Page::Game => "Game",
+            Page::Trophies => "Trophies",
             Page::Controls => "Controls",
             Page::Advanced => "Advanced",
             Page::Log => "Log",
@@ -68,6 +72,7 @@ impl Page {
                 "Frame rate, shaders and GPU data paths. Applied when the game starts."
             }
             Page::Game => "Your game dump, saves and language.",
+            Page::Trophies => "The trophies this port recorded while you played.",
             Page::Controls => "Keyboard, mouse and gamepad mapping.",
             Page::Advanced => "Launcher options, diagnostics and system tools.",
             Page::Log => "Output of the last start. last_run.log holds the same text.",
@@ -80,6 +85,7 @@ impl Page {
         matches!(
             self,
             Page::Performance
+                | Page::Trophies
                 | Page::Controls
                 | Page::Log
                 | Page::Mapper
@@ -119,6 +125,7 @@ pub fn view(state: &State, page: Page) -> Element<'_, Message> {
         Page::Graphics => graphics::view(state),
         Page::Performance => performance::view(state),
         Page::Game => game::view(state),
+        Page::Trophies => trophies::view(state),
         Page::Controls => controls::view(state),
         Page::Advanced => advanced::view(state),
         Page::Log => log::view(state),

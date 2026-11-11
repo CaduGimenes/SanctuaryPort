@@ -9,7 +9,7 @@ use iced::Task;
 use crate::core::store::Store;
 use crate::ui::app::{refresh_installation, Message, State};
 use crate::ui::home;
-use crate::ui::pages::{game, performance};
+use crate::ui::pages::{game, performance, trophies};
 
 /// Something the window shows that is read from the disk, or from another setting.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -24,6 +24,8 @@ pub enum View {
     Backups,
     /// The Aspect ratio box, which follows the render resolution.
     Aspect,
+    /// The list of the Trophies page.
+    Trophies,
 }
 
 /// Why the views are read again.
@@ -56,7 +58,7 @@ const fn row(view: View, keys: &'static [&'static str], start: bool, rebuild: bo
 }
 
 /// The views in the order they are read: the installation first, since the views after it ask it.
-const TABLE: [Row; 5] = [
+const TABLE: [Row; 6] = [
     row(View::Installation, &["game_dir", "update_dir"], true, true),
     row(
         View::Home,
@@ -67,6 +69,12 @@ const TABLE: [Row; 5] = [
     row(View::Patches, &["game_dir", "update_dir"], true, true),
     row(View::Backups, &["user_dir"], true, false),
     row(View::Aspect, &["render_resolution"], true, false),
+    row(
+        View::Trophies,
+        &["game_dir", "update_dir", "user_dir"],
+        false,
+        false,
+    ),
 ];
 
 impl Row {
@@ -101,7 +109,7 @@ pub fn inputs(view: View, store: &Store) -> Vec<String> {
         .collect()
 }
 
-/// Reads `view` again, at once.
+/// Reads `view` again: at once, except the Trophies list, which is read on a thread.
 fn read(state: &mut State, view: View, _cause: Cause<'_>) -> Task<Message> {
     match view {
         View::Installation => refresh_installation(state),
@@ -109,6 +117,7 @@ fn read(state: &mut State, view: View, _cause: Cause<'_>) -> Task<Message> {
         View::Patches => game::refresh_game_patches(state),
         View::Backups => game::refresh_backups(state),
         View::Aspect => performance::resolution_chosen(state),
+        View::Trophies => return trophies::refresh(state),
     }
     Task::none()
 }

@@ -115,6 +115,7 @@ impl GameState {
 #[derive(Debug, Clone, Copy)]
 pub enum LiveAction {
     RestoreSaves,
+    ResetTrophies,
     ClearShaderCache,
     Update,
     SetUpController,
@@ -128,6 +129,7 @@ pub fn refuse_while_live(state: &mut State, action: LiveAction) -> bool {
     }
     let english = match action {
         LiveAction::RestoreSaves => "Close the game before restoring saves.",
+        LiveAction::ResetTrophies => "Close the game before resetting the trophies.",
         LiveAction::ClearShaderCache => "Close the game before deleting the shader cache.",
         LiveAction::Update => "Close the game before updating.",
         LiveAction::SetUpController => "Stop the game before setting up a controller.",

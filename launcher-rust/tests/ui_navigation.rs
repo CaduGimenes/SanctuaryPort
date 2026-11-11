@@ -31,19 +31,21 @@ use sanctuaryport_launcher::ui::widgets;
 use sanctuaryport_launcher::ui::widgets::modal::{Modal, ModalKind, ModalMessage};
 
 /// The page order of the Global Constraints.
-const ORDER: [Page; 7] = [
+const ORDER: [Page; 8] = [
     Page::Home,
     Page::Graphics,
     Page::Performance,
     Page::Game,
+    Page::Trophies,
     Page::Controls,
     Page::Advanced,
     Page::Log,
 ];
 
 /// The pages whose drawer takes 72 % of the window (R95 adds Performance).
-const WIDE: [Page; 3] = [
+const WIDE: [Page; 4] = [
     Page::Performance,
+    Page::Trophies,
     Page::Controls,
     Page::Log,
 ];
@@ -246,8 +248,8 @@ fn arrows_cycle_pages_in_order() {
 fn home_tab_closes_the_drawer() {
     let dir = tempfile::tempdir().unwrap();
     let mut state = state_in(dir.path());
-    click(&mut state, "Controls");
-    assert_eq!(state.drawer, DrawerState::Open(Page::Controls));
+    click(&mut state, "Trophies");
+    assert_eq!(state.drawer, DrawerState::Open(Page::Trophies));
     click(&mut state, "Home");
     assert_eq!(state.drawer, DrawerState::Closed);
     assert_eq!(state.page, Page::Home);
@@ -400,7 +402,7 @@ fn a_red_hairline_tops_the_bar_and_edges_the_drawer() {
 }
 
 /// The drawer subtitles of the mockup (`launcher-mockup-v13.html`), without its sample counts.
-const SUBTITLES: [(Page, &str); 6] = [
+const SUBTITLES: [(Page, &str); 7] = [
     (
         Page::Graphics,
         "Stored in sanctuary.ini; the in-game menu (Insert or R3+L2) changes the same values.",
@@ -410,6 +412,10 @@ const SUBTITLES: [(Page, &str); 6] = [
         "Frame rate, shaders and GPU data paths. Applied when the game starts.",
     ),
     (Page::Game, "Your game dump, saves and language."),
+    (
+        Page::Trophies,
+        "The trophies this port recorded while you played.",
+    ),
     (Page::Controls, "Keyboard, mouse and gamepad mapping."),
     (
         Page::Advanced,

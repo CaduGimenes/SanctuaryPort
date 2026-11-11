@@ -12,7 +12,8 @@ int64_t runtime_file_open(const char *path, int flags, int mode) { (void)flags; 
 int64_t runtime_file_read(int fd, void *buffer, uint64_t size) { if (fd!=7) return -1; size=size<sizeof(trp) ? size : sizeof(trp); memcpy(buffer,trp,size); return (int64_t)size; }
 const char *runtime_file_user_dir(void) { return "out"; }
 static int notices;
-void sanctuarygpu_notice(const char *text) { (void)text; ++notices; }
+static char last_notice[256];
+void sanctuarygpu_notice(const char *text) { snprintf(last_notice,sizeof last_notice,"%s",text); ++notices; }
 int64_t runtime_file_close(int fd) { (void)fd; return 0; }
 static int choice_next=-1;
 int sanctuarygpu_choice_begin(const char *title, const char *const *items, const char *const *images, int count, int focus) { (void)title; (void)items; (void)images; (void)focus; return count>0; }
@@ -102,6 +103,30 @@ int main(void) {
     trophies_loaded=0; trophy_count=0; memset(trophy_flags,0,sizeof(trophy_flags)); /* a new start */
     assert(trophy_unlock_state(1,1,flags,&count)==0 && flags[1]==2u && !flags[0] && count==2);
     assert(trophy_unlock_state(1,1,NULL,&count)==TROPHY_INVALID && trophy_release(0)==TROPHY_INVALID);
+    assert(!strcmp(last_notice,"Trophy unlocked (33)")); /* no list: the number */
+
+    /* With the port's list: the name in the notice, and the platinum once its group is complete
+     * (trophy 3 is an add-on's, another group, and does not count). */
+    remove("out/trophies.txt");
+    FILE *tsv=fopen("out/trophies.tsv","w");
+    fputs("0\tplatinum\t0\tThe Platinum\n1\tbronze\t0\tDeep Pockets\n2\tsilver\t0\tBatting 500\n"
+          "3\tbronze\t1\tBone Skewer\nbad line\n",tsv);
+    fclose(tsv);
+    setenv("SANCTUARY_TROPHY_LIST","out/trophies.tsv",1);
+    trophies_loaded=0; trophy_count=0; memset(trophy_flags,0,sizeof(trophy_flags)); memset(trophy_list,0,sizeof(trophy_list));
+    notices=0;
+    assert(trophy_unlock(1,1,1,&platinum)==0 && platinum==-1 && notices==1);
+    assert(!strcmp(last_notice,"Trophy unlocked · Bronze\nDeep Pockets"));
+    assert(trophy_unlock(1,1,3,&platinum)==0 && platinum==-1 && notices==2);
+    assert(trophy_unlock(1,1,2,&platinum)==0 && platinum==0 && notices==4);
+    assert(!strcmp(last_notice,"Trophy unlocked · Platinum\nThe Platinum"));
+    assert(trophy_unlock(1,1,0,&platinum)==TROPHY_ALREADY_UNLOCKED);
+    setenv("SANCTUARY_LANGUAGE","17",1);
+    trophies_loaded=0; memset(trophy_flags,0,sizeof(trophy_flags)); remove("out/trophies.txt");
+    assert(trophy_unlock(1,1,2,&platinum)==0 && platinum==-1);
+    assert(!strcmp(last_notice,"Troféu desbloqueado · Prata\nBatting 500"));
+    unsetenv("SANCTUARY_LANGUAGE"); unsetenv("SANCTUARY_TROPHY_LIST");
+    trophies_loaded=0; memset(trophy_flags,0,sizeof(trophy_flags)); remove("out/trophies.txt"); remove("out/trophies.tsv");
 
     /* Users: 1 logs in at start; 2..4 log in and out with their own gamepads (local co-op). */
     int32_t event[2], ids[4];

@@ -50,10 +50,11 @@ Then follow [Getting your game ready](#getting-your-game-ready) with your own du
 | ✅ **Xbox button icons** in the game's prompts and HUD | optional, drawn over the game's own icons |
 | ✅ DLC entitlements | from your own add-on packages |
 | ✅ Install straight from your PKG files | in the launcher, no external tools |
-| ✅ Languages | whatever your dump ships: Portuguese (Brazil) and Spanish in the Brazilian release; English, French and Spanish in the US one |
+| ✅ Languages | whatever your dump ships, in any region's release (English, French, Spanish, Portuguese, German, Italian, Polish, Russian...) |
+| ✅ **Trophies** | an on-screen notice with the trophy's name as you earn it, the platinum by itself, and a Trophies page in the launcher |
 | ✅ Render resolution 480p–4K | resolution patches; FSR 1 upscaling and RCAS sharpening |
 | ✅ Updates | the 1.47 update (Eternal Collection) from its own folder; the base game is never changed |
-| ⚠️ Windows | packaged and checked under Wine up to the game window; not yet played on a real Windows PC |
+| ⚠️ Windows | packaged and played under Wine (new hero, Act I, combat, saves); not yet played on a real Windows PC |
 | ❌ Online play / PSN | offline only |
 
 ## The launcher
@@ -64,6 +65,8 @@ Then follow [Getting your game ready](#getting-your-game-ready) with your own du
 - **Home** with your game's own key art (`sce_sys/pic1.png`, read from your dump; nothing is shipped);
 - **Graphics / Performance**: render resolution, window mode, FSR 1 upscaling, frame limit;
 - **Game**: game folder, language, saves, and **installation from PKG** (base game and add-ons);
+- **Trophies**: every trophy with its icon (from your dump), name and description, and which ones you
+  have earned with the port;
 - **Controls** (keyboard, mouse and gamepad mapping, button icon style), **Advanced**, **Log**.
 
 Its interface follows your system language (English, Portuguese and many more).

@@ -1,6 +1,8 @@
 //! State and fixture builders the UI tests share. Each test crate uses only some of them.
 #![allow(dead_code)]
 
+/// How many trophies the test package holds.
+pub const TROPHY_COUNT: usize = 35;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -12,6 +14,7 @@ use sanctuaryport_launcher::core::joysticks::JoyError;
 use sanctuaryport_launcher::core::paths::Paths;
 use sanctuaryport_launcher::core::update::ReleaseHost;
 use sanctuaryport_launcher::ui::app::{self, Message, State};
+use sanctuaryport_launcher::ui::pages::trophies::{self, TrophiesMessage};
 use sanctuaryport_launcher::ui::pages::Page;
 
 pub mod releases;
@@ -246,4 +249,71 @@ pub fn make_mod(state: &State, name: &str, file: &str) {
     let folder = state.paths.mods_dir("").join(name).join("EXEC");
     std::fs::create_dir_all(&folder).unwrap();
     std::fs::write(folder.join(file), b"data").unwrap();
+}
+
+
+// --- Trophies ---
+
+/// A 4x4 solid PNG.
+pub fn tiny_png(shade: u8) -> Vec<u8> {
+    let image = image::RgbaImage::from_pixel(4, 4, image::Rgba([200, shade, 30, 255]));
+    let mut out = std::io::Cursor::new(Vec::new());
+    image.write_to(&mut out, image::ImageFormat::Png).unwrap();
+    out.into_inner()
+}
+
+/// A `trophy00.trp` with `TROP000.PNG`... as the core reader expects it.
+pub fn trp_package(count: usize) -> Vec<u8> {
+    let element = 0x30;
+    let table_end = 0x60 + element * count;
+    let mut file = vec![0u8; table_end];
+    file[..4].copy_from_slice(&[0xdc, 0xa2, 0x4d, 0x00]);
+    file[0x10..0x14].copy_from_slice(&(count as u32).to_be_bytes());
+    file[0x14..0x18].copy_from_slice(&(element as u32).to_be_bytes());
+    for index in 0..count {
+        let png = tiny_png(index as u8 * 5);
+        let at = 0x60 + index * element;
+        let name = format!("TROP{index:03}.PNG");
+        file[at..at + name.len()].copy_from_slice(name.as_bytes());
+        let offset = file.len() as u64;
+        file[at + 0x20..at + 0x28].copy_from_slice(&offset.to_be_bytes());
+        file[at + 0x28..at + 0x30].copy_from_slice(&(png.len() as u64).to_be_bytes());
+        file.extend(png);
+    }
+    file
+}
+
+/// Puts a 35-trophy package in `game` and makes it the game folder; the saves unlock trophies
+/// 0 and 3.
+pub fn add_trophies(state: &mut State, game: &Path) {
+    std::fs::create_dir_all(game.join("sce_sys/trophy")).unwrap();
+    std::fs::write(
+        game.join("sce_sys/trophy/trophy00.trp"),
+        trp_package(TROPHY_COUNT),
+    )
+    .unwrap();
+    let _ = app::update(
+        state,
+        Message::Set("game_dir".into(), game.display().to_string().into()),
+    );
+    let user = state.paths.user_dir("");
+    std::fs::create_dir_all(&user).unwrap();
+    std::fs::write(user.join("trophies.txt"), b"0\n3\n").unwrap();
+}
+
+/// A state whose game folder holds a 35-trophy package and whose saves unlock trophies 0 and 3.
+pub fn state_with_trophies(dir: &Path) -> State {
+    let mut state = state(dir);
+    state.lang = "en".into();
+    add_trophies(&mut state, &dir.join("game"));
+    state
+}
+
+/// What the background read of the Trophies page delivers.
+pub fn load_trophies(state: &mut State) {
+    let view = trophies::load(&state.paths, &state.store, &state.installation);
+    let _ = app::update(
+        state,
+        Message::Trophies(TrophiesMessage::Loaded(Box::new(view))),
+    );
 }

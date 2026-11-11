@@ -508,10 +508,14 @@ static ABI int32_t ime_result(uint32_t *result) {
 static ABI int32_t ime_term(void) { memset(&ime,0,sizeof(ime)); return 0; }
 
 /* ---- Trophies: unlocks are kept in <user>/trophies.txt (one id per line) and shown on screen.
- * ponytail: no names (TROPCONF.ESFM needs Sony's trophy key) and no automatic platinum. ---- */
+ * The names come from the port's list (SANCTUARY_TROPHY_LIST: run.py writes out/trophies.tsv from
+ * assets/trophies/<game>.json, "id<TAB>tier<TAB>group<TAB>name" per line): the game's own texts
+ * (TROPCONF.ESFM) need Sony's trophy key. As on a PS4, the platinum comes by itself once every
+ * other trophy of its group is unlocked. ---- */
 static uint32_t trophy_flags[4]; /* SceNpTrophyFlagArray: trophy n is bit n%32 of word n/32 */
 static int trophies_loaded, trophy_count;
 static char trophy_path[1024];
+static struct { char name[96]; char tier; int group; } trophy_list[128]; /* tier 0: not listed */
 /* Reads the unlocks and counts the trophies (one TROPnnn.PNG icon each in trophy00.trp); lock held. */
 static void trophies_load(void) {
     if (trophies_loaded) return;
@@ -520,6 +524,17 @@ static void trophies_load(void) {
     FILE *file=fopen(trophy_path,"r");
     for (int id; file && fscanf(file,"%d",&id)==1;) if (id>=0 && id<128) trophy_flags[id/32]|=1u<<id%32;
     if (file) fclose(file);
+    const char *list=getenv("SANCTUARY_TROPHY_LIST");
+    FILE *names=list && *list ? fopen(list,"r") : NULL;
+    char line[512];
+    while (names && fgets(line,sizeof(line),names)) {
+        int id, group; char tier[16], name[sizeof(trophy_list[0].name)];
+        line[strcspn(line,"\r\n")]=0;
+        if (sscanf(line,"%d\t%15[^\t]\t%d\t%95[^\t]",&id,tier,&group,name)!=4 || id<0 || id>=128) continue;
+        snprintf(trophy_list[id].name,sizeof(trophy_list[id].name),"%s",name);
+        trophy_list[id].tier=tier[0]; trophy_list[id].group=group; /* p g s b */
+    }
+    if (names) fclose(names);
     static unsigned char trp[0x60+256*64];
     const int fd=(int)runtime_file_open("/app0/sce_sys/trophy/trophy00.trp",0,0);
     if (fd<0) return;
@@ -532,29 +547,101 @@ static void trophies_load(void) {
     }
 }
 
+static ABI int32_t trophy_unlock(int32_t ctx,int32_t handle,int32_t id,int32_t *platinum);
+/* Development aid: SANCTUARY_TROPHY_TEST="id,id..." unlocks those trophies 20 s after the game opens
+ * its trophies, to see the notices without playing up to them (they are recorded like real ones). */
+static void *trophy_test(void *arg) {
+    (void)arg;
+    struct timespec wait={20,0}; nanosleep(&wait,NULL);
+    const char *list=getenv("SANCTUARY_TROPHY_TEST");
+    for (char *end; list && *list; list=*end ? end+1 : end) {
+        const long id=strtol(list,&end,10);
+        if (end==list) break;
+        int32_t platinum;
+        trophy_unlock(0,0,(int32_t)id,&platinum);
+    }
+    return NULL;
+}
 static ABI int32_t trophy_context(int32_t *ctx,int32_t user,uint32_t label,uint64_t options) {
     (void)user; (void)label; (void)options;
     if (!ctx) return TROPHY_INVALID;
-    *ctx=new_id(); return 0;
+    *ctx=new_id();
+    printf("Runtime: trophy context %d created\n",*ctx);
+    static int testing;
+    pthread_t thread;
+    if (!testing++ && getenv("SANCTUARY_TROPHY_TEST") && !pthread_create(&thread,NULL,trophy_test,NULL)) pthread_detach(thread);
+    return 0;
 }
 static ABI int32_t trophy_handle(int32_t *handle) { if (!handle) return TROPHY_INVALID; *handle=new_id(); return 0; }
 static ABI int32_t trophy_register(int32_t ctx,int32_t handle,uint64_t options) { (void)ctx; (void)handle; (void)options; return 0; }
+static int trophy_has(int id) { return (trophy_flags[id/32]>>id%32)&1; }
+/* Records an unlock; lock held. */
+static void trophy_record(int id) {
+    trophy_flags[id/32]|=1u<<id%32;
+    FILE *file=fopen(trophy_path,"a");
+    if (file) { fprintf(file,"%d\n",id); fclose(file); }
+}
+/* The platinum of id's group when id completed it (every other listed trophy of the group is
+ * unlocked and the platinum is not yet), else -1; lock held. */
+static int trophy_platinum_earned(int id) {
+    if (!trophy_list[id].tier) return -1;
+    int platinum=-1;
+    for (int i=0; i<128; ++i) {
+        if (!trophy_list[i].tier || trophy_list[i].group!=trophy_list[id].group) continue;
+        if (trophy_list[i].tier=='p') platinum=i;
+        else if (!trophy_has(i)) return -1;
+    }
+    return platinum>=0 && !trophy_has(platinum) ? platinum : -1;
+}
+/* "Trophy unlocked · Bronze" and the name on the next line, in the game's language (English names:
+ * the list has the PS4's English texts). */
+static void trophy_notice(int id) {
+    static const struct { int lang; const char *head, *tiers[4]; } words[]={
+        {17,"Troféu desbloqueado",{"Platina","Ouro","Prata","Bronze"}},
+        {7,"Troféu desbloqueado",{"Platina","Ouro","Prata","Bronze"}},
+        {3,"Trofeo desbloqueado",{"Platino","Oro","Plata","Bronce"}},
+        {20,"Trofeo desbloqueado",{"Platino","Oro","Plata","Bronce"}},
+        {2,"Trophée débloqué",{"Platine","Or","Argent","Bronze"}},
+        {4,"Trophäe freigeschaltet",{"Platin","Gold","Silber","Bronze"}},
+        {5,"Trofeo sbloccato",{"Platino","Oro","Argento","Bronzo"}},
+        {16,"Trofeum odblokowane",{"Platyna","Złoto","Srebro","Brąz"}},
+        {8,"Трофей получен",{"Платина","Золото","Серебро","Бронза"}},
+    };
+    const char *head="Trophy unlocked", *tiers[4]={"Platinum","Gold","Silver","Bronze"};
+    for (size_t i=0; i<sizeof(words)/sizeof(words[0]); ++i)
+        if (words[i].lang==language()) { head=words[i].head; memcpy(tiers,words[i].tiers,sizeof(tiers)); }
+    const char *tier=NULL;
+    switch (trophy_list[id].tier) {
+    case 'p': tier=tiers[0]; break; case 'g': tier=tiers[1]; break;
+    case 's': tier=tiers[2]; break; case 'b': tier=tiers[3]; break;
+    }
+    char text[256];
+    if (trophy_list[id].name[0]) snprintf(text,sizeof(text),"%s · %s\n%s",head,tier ? tier : "?",trophy_list[id].name);
+    else snprintf(text,sizeof(text),"%s (%d)",head,id);
+    sanctuarygpu_notice(text);
+}
 static ABI int32_t trophy_unlock(int32_t ctx,int32_t handle,int32_t id,int32_t *platinum) {
     (void)ctx; (void)handle;
     if (platinum) *platinum=-1;
     if (id<0 || id>=128) return TROPHY_INVALID_ID;
     pthread_mutex_lock(&lock);
     trophies_load();
-    const int unlocked=(trophy_flags[id/32]>>id%32)&1;
-    trophy_flags[id/32]|=1u<<id%32;
-    FILE *file=unlocked ? NULL : fopen(trophy_path,"a");
-    if (file) { fprintf(file,"%d\n",id); fclose(file); }
+    const int unlocked=trophy_has(id);
+    int earned=-1;
+    if (!unlocked) {
+        trophy_record(id);
+        earned=trophy_platinum_earned(id);
+        if (earned>=0) trophy_record(earned);
+    }
     pthread_mutex_unlock(&lock);
     if (unlocked) return TROPHY_ALREADY_UNLOCKED;
-    printf("Runtime: trophy %d unlocked\n",id);
-    char text[64];
-    snprintf(text,sizeof(text),"Trophy unlocked (%d)",id);
-    sanctuarygpu_notice(text);
+    printf("Runtime: trophy %d unlocked%s%s\n",id,trophy_list[id].name[0] ? ": " : "",trophy_list[id].name);
+    trophy_notice(id);
+    if (earned>=0) {
+        printf("Runtime: trophy %d unlocked (platinum)\n",earned);
+        trophy_notice(earned);
+        if (platinum) *platinum=earned;
+    }
     return 0;
 }
 static ABI int32_t trophy_game_info(int32_t ctx,int32_t handle,void *details,void *data) {
@@ -573,7 +660,11 @@ static ABI int32_t trophy_unlock_state(int32_t ctx,int32_t handle,uint32_t *flag
     pthread_mutex_lock(&lock);
     trophies_load();
     memcpy(flags,trophy_flags,16); *count=(uint32_t)trophy_count;
+    static int told;
+    int listed=0, unlocked=0;
+    for (int i=0; i<128; ++i) { listed+=trophy_list[i].tier!=0; unlocked+=trophy_has(i); }
     pthread_mutex_unlock(&lock);
+    if (!told++) printf("Runtime: trophies: %d in the game, %d named, %d unlocked\n",trophy_count,listed,unlocked);
     return 0;
 }
 static ABI int32_t trophy_release(int32_t id) { return id>0 ? 0 : TROPHY_INVALID; }

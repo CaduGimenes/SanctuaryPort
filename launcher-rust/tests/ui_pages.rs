@@ -4,8 +4,8 @@
 mod common;
 
 use common::{
-    browsed, click, dump_with_patches, gpu_rows, messages,
-    open, state, two_displays, ARC_LAPTOP,
+    browsed, click, dump_with_patches, gpu_rows, load_trophies, messages,
+    open, state, state_with_trophies, two_displays, ARC_LAPTOP,
 };
 use sanctuaryport_launcher::core::env::game_environment;
 use sanctuaryport_launcher::core::gpu::{display_label, parse_display_list};
@@ -718,7 +718,11 @@ fn brazilian_portuguese_label_is_translated_in_portuguese_and_spanish() {
     assert_eq!(tr("id", "Portuguese (Brazil)"), "Portugis (Brasil)");
 }
 
-/// Whether `label` is on the page of a tall window.
+// --- Trophies page (Task 27) ---
+
+use common::TROPHY_COUNT;
+use sanctuaryport_launcher::ui::pages::trophies::{Filter, TrophiesMessage};
+
 fn tall_has(state: &app::State, label: &str) -> bool {
     let mut ui = iced_test::simulator::Simulator::with_size(
         iced::Settings::default(),
@@ -726,6 +730,149 @@ fn tall_has(state: &app::State, label: &str) -> bool {
         app::view(state),
     );
     ui.find(label).is_ok()
+}
+
+#[test]
+fn trophies_page_lists_35_cards_from_a_test_package() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut state = state_with_trophies(dir.path());
+    open(&mut state, Page::Trophies);
+    load_trophies(&mut state);
+    assert_eq!(state.trophies.icons.len(), TROPHY_COUNT);
+    assert_eq!(state.trophies.locked_icons.len(), TROPHY_COUNT);
+    assert_eq!(state.trophies.tiers.len(), TROPHY_COUNT);
+    assert_eq!(
+        state.trophies.unlocked.iter().copied().collect::<Vec<_>>(),
+        [0, 3]
+    );
+    assert!(!state.trophies.loading);
+    assert!(tall_has(&state, "2 of 35 unlocked"));
+    // Names and descriptions from the built-in Diablo III list (ids 0 and 34 of 0..35).
+    assert!(tall_has(&state, "Diablo III: Reaper of Souls Platinum Trophy"));
+    assert!(tall_has(&state, "Demolition Derby"));
+    assert!(tall_has(&state, "Get a destruction callout for breaking 50 objects."));
+    assert!(tall_has(&state, "Diablo III: Reaper of Souls"));
+    assert!(tall_has(
+        &state,
+        "Only trophies unlocked with this port are listed; the ones earned on a PlayStation are not known to it."
+    ));
+}
+
+#[test]
+fn trophies_page_without_a_package_says_so() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut state = state(dir.path());
+    state.lang = "en".into();
+    open(&mut state, Page::Trophies);
+    load_trophies(&mut state);
+    assert!(state.trophies.icons.is_empty());
+    assert!(tall_has(
+        &state,
+        "No trophy list: choose the game folder on the Game page (its sce_sys/trophy/trophy00.trp is read)."
+    ));
+}
+
+#[test]
+fn filter_unlocked_hides_locked() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut state = state_with_trophies(dir.path());
+    open(&mut state, Page::Trophies);
+    load_trophies(&mut state);
+    let (first, second, other) = (
+        "Diablo III: Reaper of Souls Platinum Trophy".to_string(),
+        "Up All Night To Get Lucky".to_string(),
+        "Deep Pockets".to_string(),
+    );
+    let _ = app::update(
+        &mut state,
+        Message::Trophies(TrophiesMessage::Filter(Filter::Unlocked)),
+    );
+    assert!(tall_has(&state, &first) && tall_has(&state, &second));
+    assert!(!tall_has(&state, &other));
+    let _ = app::update(
+        &mut state,
+        Message::Trophies(TrophiesMessage::Filter(Filter::Locked)),
+    );
+    assert!(!tall_has(&state, &first) && !tall_has(&state, &second));
+    assert!(tall_has(&state, &other));
+    // A reload keeps the chosen filter.
+    load_trophies(&mut state);
+    assert_eq!(state.trophies.filter, Filter::Locked);
+}
+
+#[test]
+fn reset_asks_and_relocks() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut state = state_with_trophies(dir.path());
+    open(&mut state, Page::Trophies);
+    // Nothing unlocked is known before the first load.
+    let _ = app::update(&mut state, Message::Trophies(TrophiesMessage::Reset));
+    let none = state.modal.clone().unwrap();
+    assert!(matches!(none.kind, ModalKind::Info));
+    assert_eq!(none.text, "No trophy is unlocked.");
+
+    load_trophies(&mut state);
+    let _ = app::update(&mut state, Message::Trophies(TrophiesMessage::Reset));
+    let asked = state.modal.clone().unwrap();
+    assert!(matches!(
+        &asked.kind,
+        ModalKind::YesNo {
+            yes: Message::Trophies(TrophiesMessage::ResetConfirmed),
+            no: Message::Modal(ModalMessage::Dismiss)
+        }
+    ));
+    assert_eq!(
+        asked.text,
+        "Lock all 2 unlocked trophies again? A copy is kept as trophies.txt.bak."
+    );
+    let dat = state.paths.user_dir("").join("trophies.txt");
+    assert!(dat.is_file());
+
+    let _ = app::update(
+        &mut state,
+        Message::Trophies(TrophiesMessage::ResetConfirmed),
+    );
+    assert!(state.modal.is_none());
+    // The reset runs on its own thread: wait for the file to move.
+    for _ in 0..200 {
+        if !dat.exists() {
+            break;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(25));
+    }
+    assert!(!dat.exists());
+    assert!(dat.with_file_name("trophies.txt.bak").is_file());
+    let _ = app::update(
+        &mut state,
+        Message::Trophies(TrophiesMessage::ResetDone(Ok(2))),
+    );
+    load_trophies(&mut state);
+    assert!(state.trophies.unlocked.is_empty());
+    assert!(tall_has(&state, "0 of 35 unlocked"));
+
+    let _ = app::update(
+        &mut state,
+        Message::Trophies(TrophiesMessage::ResetDone(Err("disk full".into()))),
+    );
+    let failed = state.modal.clone().unwrap();
+    assert!(matches!(failed.kind, ModalKind::Error));
+    assert_eq!(failed.text, "Could not reset the trophies: disk full");
+}
+
+#[test]
+fn opening_the_page_and_the_buttons_start_a_load() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut state = state(dir.path());
+    state.lang = "en".into();
+    open(&mut state, Page::Trophies);
+    assert!(state.trophies.loading);
+    load_trophies(&mut state);
+    assert!(!state.trophies.loading);
+    click(&mut state, "Refresh");
+    assert!(state.trophies.loading);
+    assert!(messages(&state, "Reset trophies")
+        .iter()
+        .any(|m| matches!(m, Message::Trophies(TrophiesMessage::Reset))));
 }
 
 // --- Controls page (Task 28) ---

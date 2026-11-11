@@ -1,0 +1,399 @@
+{
+ "_comment": "Diablo III (PS4) trophy names and descriptions, by trophy id, for the on-screen notices and the launcher's Trophies page. Source: the PS4 trophy list (Exophase, CUSA00242), each entry matched to the TROPnnn.PNG icon of the same id in the 1.47 update's trophy00.trp. The game's own texts (TROPCONF.ESFM) are encrypted with Sony's trophy key.",
+ "title": "Diablo III",
+ "icons": 54,
+ "groups": [
+  {
+   "id": 0,
+   "name": "Diablo III: Reaper of Souls",
+   "first": 0,
+   "last": 43
+  },
+  {
+   "id": 1,
+   "name": "Diablo III: Rise of the Necromancer",
+   "first": 44,
+   "last": 53
+  }
+ ],
+ "trophies": [
+  {
+   "id": 0,
+   "tier": "platinum",
+   "group": 0,
+   "name": "Diablo III: Reaper of Souls Platinum Trophy",
+   "description": "Collected all other Diablo III: Reaper of Souls trophies."
+  },
+  {
+   "id": 1,
+   "tier": "bronze",
+   "group": 0,
+   "name": "Deep Pockets",
+   "description": "Pick up 500,000 gold."
+  },
+  {
+   "id": 2,
+   "tier": "bronze",
+   "group": 0,
+   "name": "The Comfort of Strangers",
+   "description": "Recruit the Templar, Scoundrel, and Enchantress."
+  },
+  {
+   "id": 3,
+   "tier": "silver",
+   "group": 0,
+   "name": "Up All Night To Get Lucky",
+   "description": "Equip all Inventory slots with Legendary items that have a minimum required level of 70 or higher."
+  },
+  {
+   "id": 4,
+   "tier": "bronze",
+   "group": 0,
+   "name": "Breaking Not So Bad",
+   "description": "Use a merchant to repair an item."
+  },
+  {
+   "id": 5,
+   "tier": "bronze",
+   "group": 0,
+   "name": "Socket to Me",
+   "description": "Socket a gem in an item."
+  },
+  {
+   "id": 6,
+   "tier": "bronze",
+   "group": 0,
+   "name": "A New Start",
+   "description": "Complete 5 Bounties."
+  },
+  {
+   "id": 7,
+   "tier": "silver",
+   "group": 0,
+   "name": "Batting 500",
+   "description": "Complete 500 Bounties."
+  },
+  {
+   "id": 8,
+   "tier": "silver",
+   "group": 0,
+   "name": "Just Riffing",
+   "description": "Kill 500 monsters while in Nephalem Rifts."
+  },
+  {
+   "id": 9,
+   "tier": "silver",
+   "group": 0,
+   "name": "Dashing through the Rift",
+   "description": "Finish a Nephalem Rift within 15 Minutes."
+  },
+  {
+   "id": 10,
+   "tier": "bronze",
+   "group": 0,
+   "name": "The Mad King's End",
+   "description": "Kill the Skeleton King."
+  },
+  {
+   "id": 11,
+   "tier": "silver",
+   "group": 0,
+   "name": "Butchered!",
+   "description": "Kill the Butcher."
+  },
+  {
+   "id": 12,
+   "tier": "bronze",
+   "group": 0,
+   "name": "The Last of the Horadrim",
+   "description": "Complete all quests in Act I."
+  },
+  {
+   "id": 13,
+   "tier": "bronze",
+   "group": 0,
+   "name": "The Coven Overthrown",
+   "description": "Kill Maghda."
+  },
+  {
+   "id": 14,
+   "tier": "bronze",
+   "group": 0,
+   "name": "Murderer. Torturer. Monster.",
+   "description": "Kill Zoltun Kulle."
+  },
+  {
+   "id": 15,
+   "tier": "silver",
+   "group": 0,
+   "name": "The Lord of Lies",
+   "description": "Kill Belial."
+  },
+  {
+   "id": 16,
+   "tier": "bronze",
+   "group": 0,
+   "name": "The Black Soulstone",
+   "description": "Complete all quests in Act II."
+  },
+  {
+   "id": 17,
+   "tier": "bronze",
+   "group": 0,
+   "name": "The Ravening Beast",
+   "description": "Kill Ghom."
+  },
+  {
+   "id": 18,
+   "tier": "bronze",
+   "group": 0,
+   "name": "Making a Breakthrough",
+   "description": "Kill the Siegebreaker Assault Beast."
+  },
+  {
+   "id": 19,
+   "tier": "silver",
+   "group": 0,
+   "name": "The Lord of Sin",
+   "description": "Kill Azmodan."
+  },
+  {
+   "id": 20,
+   "tier": "bronze",
+   "group": 0,
+   "name": "The Wages of Sin",
+   "description": "Complete all quests in Act III."
+  },
+  {
+   "id": 21,
+   "tier": "silver",
+   "group": 0,
+   "name": "The Prime Evil",
+   "description": "Kill Diablo."
+  },
+  {
+   "id": 22,
+   "tier": "bronze",
+   "group": 0,
+   "name": "Victory and Sacrifice",
+   "description": "Complete all quests in Act IV."
+  },
+  {
+   "id": 23,
+   "tier": "silver",
+   "group": 0,
+   "name": "Fire in Your New Boots",
+   "description": "Kill Urzael."
+  },
+  {
+   "id": 24,
+   "tier": "silver",
+   "group": 0,
+   "name": "Her?",
+   "description": "Kill Adria."
+  },
+  {
+   "id": 25,
+   "tier": "silver",
+   "group": 0,
+   "name": "Death Do Us Part",
+   "description": "Kill Malthael."
+  },
+  {
+   "id": 26,
+   "tier": "bronze",
+   "group": 0,
+   "name": "Don't Fear the Reaper",
+   "description": "Complete all quests in Act V."
+  },
+  {
+   "id": 27,
+   "tier": "gold",
+   "group": 0,
+   "name": "Above & Beyond (Hardcore)",
+   "description": "Reach level 70 in Hardcore mode."
+  },
+  {
+   "id": 28,
+   "tier": "silver",
+   "group": 0,
+   "name": "Reign of Terror",
+   "description": "Kill Diablo in Hardcore mode."
+  },
+  {
+   "id": 29,
+   "tier": "silver",
+   "group": 0,
+   "name": "May His Death Satisfy You",
+   "description": "Kill Malthael in Hardcore mode."
+  },
+  {
+   "id": 30,
+   "tier": "silver",
+   "group": 0,
+   "name": "Above & Beyond",
+   "description": "Reach level 70."
+  },
+  {
+   "id": 31,
+   "tier": "gold",
+   "group": 0,
+   "name": "Dream Team",
+   "description": "Reach level 70 with 6 different classes."
+  },
+  {
+   "id": 32,
+   "tier": "silver",
+   "group": 0,
+   "name": "The Elitist",
+   "description": "Kill 500 elite (champion, rare, or unique) enemies."
+  },
+  {
+   "id": 33,
+   "tier": "silver",
+   "group": 0,
+   "name": "Greed over Need",
+   "description": "Kill 100 Treasure Goblins."
+  },
+  {
+   "id": 34,
+   "tier": "bronze",
+   "group": 0,
+   "name": "Demolition Derby",
+   "description": "Get a destruction callout for breaking 50 objects."
+  },
+  {
+   "id": 35,
+   "tier": "bronze",
+   "group": 0,
+   "name": "Made to Order",
+   "description": "Craft 5 items."
+  },
+  {
+   "id": 36,
+   "tier": "silver",
+   "group": 0,
+   "name": "Custom-Fit",
+   "description": "Craft 100 items."
+  },
+  {
+   "id": 37,
+   "tier": "bronze",
+   "group": 0,
+   "name": "Forged Credentials",
+   "description": "Raise the Blacksmith to level 12."
+  },
+  {
+   "id": 38,
+   "tier": "bronze",
+   "group": 0,
+   "name": "Gemkata",
+   "description": "Raise the Jeweler to level 12."
+  },
+  {
+   "id": 39,
+   "tier": "bronze",
+   "group": 0,
+   "name": "Maximum Myriam",
+   "description": "Raise the Mystic to level 12."
+  },
+  {
+   "id": 40,
+   "tier": "bronze",
+   "group": 0,
+   "name": "I Feel So Enchanting",
+   "description": "Enchant all your equipment slots."
+  },
+  {
+   "id": 41,
+   "tier": "bronze",
+   "group": 0,
+   "name": "Trade-in",
+   "description": "Replace a property with Enchanting."
+  },
+  {
+   "id": 42,
+   "tier": "bronze",
+   "group": 0,
+   "name": "A Mystical Meeting",
+   "description": "Acquire the Mystic."
+  },
+  {
+   "id": 43,
+   "tier": "bronze",
+   "group": 0,
+   "name": "Bejeweled",
+   "description": "Combine gems."
+  },
+  {
+   "id": 44,
+   "tier": "bronze",
+   "group": 1,
+   "name": "The Silence When You Speak to Me",
+   "description": "Listen to all of Master Ordan's conversations in the Pandemonium Fortress."
+  },
+  {
+   "id": 45,
+   "tier": "bronze",
+   "group": 1,
+   "name": "Serve the Balance",
+   "description": "Reach level 70 with a Necromancer."
+  },
+  {
+   "id": 46,
+   "tier": "bronze",
+   "group": 1,
+   "name": "Bringer of Order",
+   "description": "Complete Act V with a Necromancer."
+  },
+  {
+   "id": 47,
+   "tier": "bronze",
+   "group": 1,
+   "name": "Bone Skewer",
+   "description": "Damage 40 enemies with Bone Spear in 3 seconds."
+  },
+  {
+   "id": 48,
+   "tier": "bronze",
+   "group": 1,
+   "name": "What Is Dead Can Sometimes Die",
+   "description": "Kill 1,000 Undead enemies with corpses."
+  },
+  {
+   "id": 49,
+   "tier": "bronze",
+   "group": 1,
+   "name": "Curse Your Enthusiasm",
+   "description": "Kill 5,000 cursed enemies."
+  },
+  {
+   "id": 50,
+   "tier": "bronze",
+   "group": 1,
+   "name": "Terror in the Blood",
+   "description": "Defeat Diablo after using an ability that costs health while below 10% of your life."
+  },
+  {
+   "id": 51,
+   "tier": "bronze",
+   "group": 1,
+   "name": "Game of Bones",
+   "description": "Use Bone Armor to rip the bones from the Skeleton King."
+  },
+  {
+   "id": 52,
+   "tier": "silver",
+   "group": 1,
+   "name": "Skeleton Crew",
+   "description": "Kill 500 elite (champion, rare, or unique) enemies with Command Skeleton minions."
+  },
+  {
+   "id": 53,
+   "tier": "silver",
+   "group": 1,
+   "name": "Self Controlled",
+   "description": "Kill your own Shadow Clone with Simulacrum during the Diablo encounter."
+  }
+ ]
+}

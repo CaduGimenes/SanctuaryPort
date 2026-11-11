@@ -749,6 +749,10 @@ fn every_live_action_is_refused_while_the_game_runs() {
             "Close the game before restoring saves.",
         ),
         (
+            LiveAction::ResetTrophies,
+            "Close the game before resetting the trophies.",
+        ),
+        (
             LiveAction::ClearShaderCache,
             "Close the game before deleting the shader cache.",
         ),

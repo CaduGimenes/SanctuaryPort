@@ -66,7 +66,7 @@ python3 -I packaging/windows/fetch_python.py out/win/cache "$dest/python"
 mkdir -p "$dest/launcher" "$dest/assets"
 cp launcher/sanctuaryport.png launcher/sanctuary.png launcher/sanctuary.ico launcher/Cinzel-Black.ttf \
     launcher/OFL-Cinzel.txt "$dest/launcher/"
-cp -r assets/glyphs "$dest/assets/"
+cp -r assets/glyphs assets/trophies "$dest/assets/"
 cp -r scripts patches "$dest/"
 cp run.py LICENSE README.md COMO_JOGAR.md packaging/windows/README-Windows.txt "$dest/"
 find "$dest" -name __pycache__ -prune -exec rm -r {} +

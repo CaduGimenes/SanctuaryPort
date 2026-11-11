@@ -536,7 +536,7 @@ fn play_gets_the_click_under_the_narrow_drawer() {
 fn play_is_disabled_behind_the_wide_drawer() {
     let dir = tempfile::tempdir().unwrap();
     let mut state = state_in(dir.path());
-    let _ = app::update(&mut state, Message::ShowPage(Page::Controls));
+    let _ = app::update(&mut state, Message::ShowPage(Page::Trophies));
     tick(&mut state, Instant::now() + Duration::from_secs(1));
     let mut ui = simulator(app::view(&state));
     let _ = ui.click("PLAY");

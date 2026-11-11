@@ -30,7 +30,8 @@ use std::sync::Once;
 use std::time::Duration;
 
 use common::{
-    browsed, dump_with_patches, gpu_rows, open, two_displays, ARC_LAPTOP,
+    add_trophies, browsed, dump_with_patches, gpu_rows, load_trophies, open,
+    two_displays, ARC_LAPTOP,
 };
 use iced::widget::image::Handle;
 use iced::Size;
@@ -116,14 +117,22 @@ fn mapper_joysticks() -> FakeJoysticks {
     fake
 }
 
-/// The window over a fixture: a game folder with its `param.sfo`, the port's patch file and one third-party patch, two mods (one adds 3840 × 1080), two
+/// The background reads the app starts (a new game folder, opening Trophies), delivered.
+fn finish_reads(state: &mut State) {
+    load_trophies(state);
+}
+
+/// The window over a fixture: a game folder with its `param.sfo` and a 35-trophy package (0 and 3
+/// unlocked), the port's patch file and one third-party patch, two mods (one adds 3840 × 1080), two
 /// monitors, two graphics cards and two log lines. `lang` is picked in the language menu, `shot`'s
 /// page is open, and the clock stands at `CLOCK`; nothing has ticked, so the fire has no particle.
 fn fixture(dir: &Path, shot: Shot, size: Size, lang: &str) -> State {
     let dump = dump_with_patches(dir);
     std::fs::write(dir.join("patches").join("Community.xml"), EXTERNAL_PATCH).unwrap();
     let mut state = common::state(dir);
+    add_trophies(&mut state, &dump);
     browsed(&mut state, "game_dir", &dump);
+    finish_reads(&mut state);
     let _ = app::update(&mut state, Message::MonitorsListed(two_displays()));
     state.gpus = gpu_rows(&ARC_LAPTOP);
     state
@@ -139,16 +148,19 @@ fn fixture(dir: &Path, shot: Shot, size: Size, lang: &str) -> State {
         Shot::Splash => state.splash.done = false,
         Shot::Page(page) => {
             open(&mut state, page);
-                }
+            finish_reads(&mut state);
+        }
         Shot::Setup(_) => {}
         Shot::Mapper => {
             open(&mut state, Page::Controls);
-                    state.open_mapper_with(Box::new(mapper_joysticks()));
+            finish_reads(&mut state);
+            state.open_mapper_with(Box::new(mapper_joysticks()));
             let _ = app::update(&mut state, Message::Mapper(MapperMessage::Poll));
         }
         Shot::Live(model) => {
             open(&mut state, Page::Controls);
-                    let _ = app::update(
+            finish_reads(&mut state);
+            let _ = app::update(
                 &mut state,
                 Message::Controls(ControlsMessage::Device(Shown::Gamepad)),
             );
@@ -381,6 +393,11 @@ fn performance() {
 #[test]
 fn game() {
     check(Shot::Page(Page::Game));
+}
+
+#[test]
+fn trophies() {
+    check(Shot::Page(Page::Trophies));
 }
 
 #[test]

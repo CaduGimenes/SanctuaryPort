@@ -41,6 +41,7 @@ use crate::ui::pages::game::{self, BackupMessage, PatchesView};
 use crate::ui::pages::log::{self, LogMessage};
 use crate::ui::pages::mapper::{self, MapperMessage, MapperState};
 use crate::ui::pages::performance;
+use crate::ui::pages::trophies::{self, TrophiesMessage, TrophiesView};
 use crate::ui::pages::Page;
 use crate::ui::persist::{self, Persisted};
 use crate::ui::play::{self, GameMessage, GameState};
@@ -105,6 +106,7 @@ pub struct State {
     /// again when the pending one differs.
     pub displays_backend: String,
     pub monitor_pairs: Vec<(String, String)>,
+    pub trophies: TrophiesView,
     pub controls: ControlsView,
     /// The "Set up a controller" page while it is open, with the joysticks it reads.
     pub mapper: Option<MapperState>,
@@ -231,6 +233,7 @@ impl State {
             displays: Vec::new(),
             displays_backend,
             monitor_pairs: Vec::new(),
+            trophies: Default::default(),
             controls,
             mapper: None,
             live_pad: None,
@@ -330,6 +333,7 @@ pub enum Message {
     Setup(SetupMessage),
     Update(UpdateMessage),
     Modal(ModalMessage),
+    Trophies(TrophiesMessage),
     Log(LogMessage),
     Controls(ControlsMessage),
     Mapper(MapperMessage),
@@ -596,6 +600,7 @@ pub fn update(state: &mut State, message: Message) -> Task<Message> {
         Message::Game(message) => return play::update(state, message),
         Message::Setup(message) => return setup::update(state, message),
         Message::Update(message) => return update::update(state, message),
+        Message::Trophies(message) => return trophies::update(state, message),
         Message::Log(message) => return log::update(state, message),
         Message::Controls(message) => return controls::update(state, message),
         Message::Mapper(message) => return mapper::update(state, message),
@@ -710,8 +715,9 @@ pub fn scene_size(state: &State) -> Size {
     )
 }
 
-/// Home closes the drawer; any other page opens it, sliding in when it was closed. The first open
-/// of Controls looks for a gamepad. Leaving the controller mapper closes it.
+/// Home closes the drawer; any other page opens it, sliding in when it was closed. The Trophies
+/// page reloads its list each time it opens; the first open of Controls looks for a gamepad.
+/// Leaving the controller mapper closes it.
 pub fn show_page(state: &mut State, page: Page) -> Task<Message> {
     if state.page == Page::Mapper && page != Page::Mapper {
         mapper::close(state);
@@ -737,6 +743,7 @@ pub fn show_page(state: &mut State, page: Page) -> Task<Message> {
     };
     state.drawer_progress.go_mut(open, now);
     match page {
+        Page::Trophies => trophies::refresh(state),
         Page::Controls => controls::opened(state),
         _ => Task::none(),
     }
