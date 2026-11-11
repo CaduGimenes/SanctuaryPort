@@ -2634,7 +2634,9 @@
    "With a Render resolution (Performance page) below the window, AMD FSR 1 upscales the game's picture instead of a plain stretch: render at 720p or 900p for more FPS and keep a sharp 1080p window. Works on any graphics card; borderless and fullscreen upscale to the whole screen.": "Com a resolução de renderização (página Desempenho) abaixo da janela, o AMD FSR 1 amplia a imagem do jogo em vez de só esticá-la: renderize em 720p ou 900p para ganhar FPS e mantenha uma janela 1080p nítida. Funciona em qualquer placa de vídeo; sem bordas e tela cheia ampliam para a tela inteira.",
    "Sharpens the game's picture on its way to the window. Also in the in-game menu.": "Deixa a imagem do jogo mais nítida a caminho da janela. Também no menu do jogo.",
    "How far a stick must move before the game sees it. Raise it if the camera or your hero moves by itself. 0% is the game's own stick. Applied when the game starts.": "Quanto o analógico precisa mover para o jogo perceber. Aumente se a câmera ou seu herói se mexer sozinho. 0% é o analógico original. Aplicado ao iniciar o jogo.",
-   "Click a box, then press a key, click a mouse button or turn the wheel (it gives up after {} seconds). An input already used by another button swaps with it; the arrow puts one button back on its default. Touchpad right opens the game's pause menu. Insert always opens the port's menu and cannot be bound. Applied when the game starts.": "Clique numa caixa e depois aperte uma tecla, clique com um botão do mouse ou gire a roda (desiste depois de {} segundos). Uma entrada já usada por outro botão troca de lugar com ele; a seta devolve um botão ao padrão. Touchpad direito abre o menu de pausa do jogo. Insert sempre abre o menu do port e não pode ser trocado. Vale quando o jogo começa."
+   "Click a box, then press a key, click a mouse button or turn the wheel (it gives up after {} seconds). An input already used by another button swaps with it; the arrow puts one button back on its default. Touchpad right opens the game's pause menu. Insert always opens the port's menu and cannot be bound. Applied when the game starts.": "Clique numa caixa e depois aperte uma tecla, clique com um botão do mouse ou gire a roda (desiste depois de {} segundos). Uma entrada já usada por outro botão troca de lugar com ele; a seta devolve um botão ao padrão. Touchpad direito abre o menu de pausa do jogo. Insert sempre abre o menu do port e não pode ser trocado. Vale quando o jogo começa.",
+   "Spanish (Spain)": "Espanhol (Espanha)",
+   "English (UK)": "Inglês (Reino Unido)"
   },
   "es": {
    "The launcher cannot write to {}, so it cannot replace itself there. Open the releases page to download the new version by hand?": "El launcher no puede escribir en {}, así que no puede reemplazarse ahí. ¿Abrir la página de releases para descargar la versión nueva a mano?",
@@ -3016,7 +3018,9 @@
    "With a Render resolution (Performance page) below the window, AMD FSR 1 upscales the game's picture instead of a plain stretch: render at 720p or 900p for more FPS and keep a sharp 1080p window. Works on any graphics card; borderless and fullscreen upscale to the whole screen.": "Con la resolución de renderizado (página Rendimiento) por debajo de la ventana, AMD FSR 1 escala la imagen del juego en lugar de solo estirarla: renderiza a 720p o 900p para ganar FPS y conserva una ventana 1080p nítida. Funciona con cualquier tarjeta gráfica; sin bordes y pantalla completa escalan a toda la pantalla.",
    "Sharpens the game's picture on its way to the window. Also in the in-game menu.": "Hace más nítida la imagen del juego camino a la ventana. También en el menú del juego.",
    "How far a stick must move before the game sees it. Raise it if the camera or your hero moves by itself. 0% is the game's own stick. Applied when the game starts.": "Cuánto debe moverse el stick para que el juego lo note. Súbelo si la cámara tu héroe se mueven solos. 0% es el stick original. Se aplica al iniciar el juego.",
-   "Click a box, then press a key, click a mouse button or turn the wheel (it gives up after {} seconds). An input already used by another button swaps with it; the arrow puts one button back on its default. Touchpad right opens the game's pause menu. Insert always opens the port's menu and cannot be bound. Applied when the game starts.": "Haz clic en una casilla y luego pulsa una tecla, haz clic con un botón del ratón o gira la rueda (se rinde tras {} segundos). Una entrada ya usada por otro botón se intercambia con él; la flecha devuelve un botón a su valor por defecto. Touchpad derecho abre el menú de pausa del juego. Insert siempre abre el menú del port y no se puede asignar. Se aplica al iniciar el juego."
+   "Click a box, then press a key, click a mouse button or turn the wheel (it gives up after {} seconds). An input already used by another button swaps with it; the arrow puts one button back on its default. Touchpad right opens the game's pause menu. Insert always opens the port's menu and cannot be bound. Applied when the game starts.": "Haz clic en una casilla y luego pulsa una tecla, haz clic con un botón del ratón o gira la rueda (se rinde tras {} segundos). Una entrada ya usada por otro botón se intercambia con él; la flecha devuelve un botón a su valor por defecto. Touchpad derecho abre el menú de pausa del juego. Insert siempre abre el menú del port y no se puede asignar. Se aplica al iniciar el juego.",
+   "Spanish (Spain)": "Español (España)",
+   "English (UK)": "Inglés (Reino Unido)"
   },
   "pl": {
    "Polish": "Polski",
@@ -3052,7 +3056,9 @@
    "The game's own blur of distant objects, strongest in cutscenes. Off keeps the whole picture sharp.": "Własne rozmycie gry na odległych obiektach, najsilniejsze w przerywnikach. Wyłączone zachowuje ostrość całego obrazu.",
    "Automatic": "Automatycznie",
    "restart": "restart",
-   "High Frame Rate Physics Fix": "Poprawka fizyki przy wysokim FPS"
+   "High Frame Rate Physics Fix": "Poprawka fizyki przy wysokim FPS",
+   "Spanish (Spain)": "Hiszpański (Hiszpania)",
+   "English (UK)": "Angielski (Wielka Brytania)"
   },
   "fr": {
    "Polish": "Polonais",
@@ -3099,7 +3105,9 @@
    "Sharpening (RCAS)": "Netteté (RCAS)",
    "Sharpening strength": "Intensité de la netteté",
    "With a Render resolution (Performance page) below the window, AMD FSR 1 upscales the game's picture instead of a plain stretch: render at 720p or 900p for more FPS and keep a sharp 1080p window. Works on any graphics card; borderless and fullscreen upscale to the whole screen.": "Avec une résolution de rendu (page Performances) inférieure à la fenêtre, AMD FSR 1 agrandit l'image du jeu au lieu de simplement l'étirer : rendez en 720p ou 900p pour gagner des FPS et gardez une fenêtre 1080p nette. Fonctionne avec toute carte graphique ; sans bordure et plein écran agrandissent à tout l'écran.",
-   "Sharpens the game's picture on its way to the window. Also in the in-game menu.": "Rend l'image du jeu plus nette en route vers la fenêtre. Aussi dans le menu du jeu."
+   "Sharpens the game's picture on its way to the window. Also in the in-game menu.": "Rend l'image du jeu plus nette en route vers la fenêtre. Aussi dans le menu du jeu.",
+   "Spanish (Spain)": "Espagnol (Espagne)",
+   "English (UK)": "Anglais (Royaume-Uni)"
   },
   "de": {
    "Polish": "Polnisch",
@@ -3136,7 +3144,9 @@
    "Automatic": "Automatisch",
    "restart": "Neustart",
    "High Frame Rate Physics Fix": "Physik-Fix bei hoher Bildrate",
-   "Spanish (Latin America)": "Spanisch (Lateinamerika)"
+   "Spanish (Latin America)": "Spanisch (Lateinamerika)",
+   "Spanish (Spain)": "Spanisch (Spanien)",
+   "English (UK)": "Englisch (Vereinigtes Königreich)"
   },
   "it": {
    "Polish": "Polacco",
@@ -3173,7 +3183,9 @@
    "Automatic": "Automatico",
    "restart": "riavvio",
    "High Frame Rate Physics Fix": "Correzione fisica ad alto framerate",
-   "Spanish (Latin America)": "Spagnolo (America Latina)"
+   "Spanish (Latin America)": "Spagnolo (America Latina)",
+   "Spanish (Spain)": "Spagnolo (Spagna)",
+   "English (UK)": "Inglese (Regno Unito)"
   },
   "tr": {
    "Polish": "Lehçe",
@@ -3209,7 +3221,9 @@
    "The game's own blur of distant objects, strongest in cutscenes. Off keeps the whole picture sharp.": "Oyunun uzaktaki nesnelerdeki kendi bulanıklığı, en güçlüsü ara sahnelerde. Kapalı olduğunda tüm görüntü net kalır.",
    "Automatic": "Otomatik",
    "restart": "yeniden başlatma",
-   "High Frame Rate Physics Fix": "Yüksek FPS fizik düzeltmesi"
+   "High Frame Rate Physics Fix": "Yüksek FPS fizik düzeltmesi",
+   "Spanish (Spain)": "İspanyolca (İspanya)",
+   "English (UK)": "İngilizce (Birleşik Krallık)"
   },
   "ar": {
    "Polish": "البولندية",
@@ -3244,7 +3258,9 @@
    "The game's own blur of distant objects, strongest in cutscenes. Off keeps the whole picture sharp.": "ضبابية اللعبة الخاصة على الأجسام البعيدة، وهي الأقوى في المشاهد السينمائية. الإيقاف يُبقي الصورة كلها واضحة.",
    "Automatic": "تلقائي",
    "restart": "إعادة التشغيل",
-   "High Frame Rate Physics Fix": "إصلاح الفيزياء عند معدل إطارات مرتفع"
+   "High Frame Rate Physics Fix": "إصلاح الفيزياء عند معدل إطارات مرتفع",
+   "Spanish (Spain)": "الإسبانية (إسبانيا)",
+   "English (UK)": "الإنجليزية (المملكة المتحدة)"
   },
   "zh": {
    "Polish": "波兰语",
@@ -3670,7 +3686,9 @@
    "High FPS Wall Seam Fix": "高帧率墙面接缝修复",
    "Skip Intro": "跳过开场标志",
    "Skip Any Video With X Button": "使用叉键跳过过场动画",
-   "Bug Fix - Startup Black Screen": "启动黑屏修复"
+   "Bug Fix - Startup Black Screen": "启动黑屏修复",
+   "Spanish (Spain)": "西班牙语（西班牙）",
+   "English (UK)": "英语（英国）"
   },
   "ja": {
    "Polish": "ポーランド語",
@@ -3706,7 +3724,9 @@
    "The game's own blur of distant objects, strongest in cutscenes. Off keeps the whole picture sharp.": "遠くの物体にかかるゲーム本来のぼかし。カットシーンで最も強くなります。オフにすると画面全体がくっきりします。",
    "Automatic": "自動",
    "restart": "再起動",
-   "High Frame Rate Physics Fix": "高フレームレート物理修正"
+   "High Frame Rate Physics Fix": "高フレームレート物理修正",
+   "Spanish (Spain)": "スペイン語（スペイン）",
+   "English (UK)": "英語（イギリス）"
   },
   "ko": {
    "Polish": "폴란드어",
@@ -3742,7 +3762,9 @@
    "The game's own blur of distant objects, strongest in cutscenes. Off keeps the whole picture sharp.": "먼 물체에 적용되는 게임 자체의 흐림 효과로, 컷신에서 가장 강합니다. 끄면 화면 전체가 선명하게 유지됩니다.",
    "Automatic": "자동",
    "restart": "재시작",
-   "High Frame Rate Physics Fix": "고프레임 물리 수정"
+   "High Frame Rate Physics Fix": "고프레임 물리 수정",
+   "Spanish (Spain)": "스페인어(스페인)",
+   "English (UK)": "영어(영국)"
   },
   "id": {
    "Polish": "Polandia",
@@ -4080,7 +4102,9 @@
    "Generated frames": "Frame yang dibuat",
    "AMD FSR (every GPU)": "AMD FSR (semua GPU)",
    "A generated frame between game frames: up to twice the frames on screen. Needs an upscaler. AMD FSR: any graphics card.": "Frame buatan di antara frame game: hingga dua kali frame di layar. Memerlukan upscaler. AMD FSR: semua kartu grafis.",
-   "Off (default): no temporal upscaling. On: the selected upscaler and preset. Animated characters can still show some ghosting.": "Mati (bawaan): tanpa upscaling temporal. Nyala: memakai upscaler dan preset pilihan. Karakter yang bergerak masih dapat berbayang."
+   "Off (default): no temporal upscaling. On: the selected upscaler and preset. Animated characters can still show some ghosting.": "Mati (bawaan): tanpa upscaling temporal. Nyala: memakai upscaler dan preset pilihan. Karakter yang bergerak masih dapat berbayang.",
+   "Spanish (Spain)": "Spanyol (Spanyol)",
+   "English (UK)": "Inggris (Britania Raya)"
   },
   "cs": {
    "Trophies": "Trofeje",
@@ -4477,7 +4501,9 @@
    "Generated frames": "Generované snímky",
    "AMD FSR (every GPU)": "AMD FSR (každá GPU)",
    "A generated frame between game frames: up to twice the frames on screen. Needs an upscaler. AMD FSR: any graphics card.": "Generovaný snímek mezi snímky hry: až dvojnásobek snímků na obrazovce. Vyžaduje upscaler. AMD FSR: libovolná grafická karta.",
-   "Off (default): no temporal upscaling. On: the selected upscaler and preset. Animated characters can still show some ghosting.": "Vypnuto (výchozí): bez časového upscalingu. Zapnuto: vybraný upscaler a předvolba. Animované postavy mohou stále vykazovat určité duchy."
+   "Off (default): no temporal upscaling. On: the selected upscaler and preset. Animated characters can still show some ghosting.": "Vypnuto (výchozí): bez časového upscalingu. Zapnuto: vybraný upscaler a předvolba. Animované postavy mohou stále vykazovat určité duchy.",
+   "Spanish (Spain)": "Španělština (Španělsko)",
+   "English (UK)": "Angličtina (Spojené království)"
   }
  },
  "ru": {

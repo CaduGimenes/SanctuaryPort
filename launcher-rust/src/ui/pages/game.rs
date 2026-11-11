@@ -428,13 +428,17 @@ pub fn backup_is_for_another_game(current: &str, titles: &BTreeSet<String>) -> b
 
 /// The system language codes and the language pack (CPK prefix) each one needs, in the order
 /// run.py falls back when the chosen pack is missing (scripts: `D3_LANGUAGE_PACKS`).
-const LANGUAGE_PACKS: [(&str, &str); 6] = [
+const LANGUAGE_PACKS: [(&str, &str); 10] = [
     ("17", "ptBR"),
     ("1", "enUS"),
     ("20", "esMX"),
     ("2", "frFR"),
     ("16", "plPL"),
     ("8", "ruRU"),
+    ("3", "esES"),
+    ("4", "deDE"),
+    ("5", "itIT"),
+    ("18", "enGB"),
 ];
 
 /// The Game language list: only the languages whose pack the game (or its update) folder has,

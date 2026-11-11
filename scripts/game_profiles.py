@@ -66,10 +66,12 @@ PROFILES = {
 }
 # Diablo III: Reaper of Souls - Ultimate Evil Edition, Brazilian release (Portuguese and Spanish
 # text; usually played with its 1.47 update in SANCTUARY_PATCH_DIR): the same engine and needs.
-# CUSA00434: the Polish/Russian release (plPL/ruRU text), same eboot with the 1.47 update.
+# CUSA00434: the Polish/Russian release (plPL/ruRU text); CUSA00433: the European release (esES,
+# deDE, itIT... text). Same eboot as the others with the 1.47 update.
 PROFILES['CUSA00243'] = PROFILES['CUSA00242']
 PROFILES['CUSA00434'] = PROFILES['CUSA00242']
-DIABLO3_TITLES = ('CUSA00242', 'CUSA00243', 'CUSA00434')
+PROFILES['CUSA00433'] = PROFILES['CUSA00242']
+DIABLO3_TITLES = ('CUSA00242', 'CUSA00243', 'CUSA00434', 'CUSA00433')
 DEFAULT = {'name': None, 'modules': ('libc.prx', 'libSceFios2.prx')}
 
 
