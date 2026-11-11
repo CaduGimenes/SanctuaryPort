@@ -1,0 +1,107 @@
+{
+  "$schema": "https://recomplauncher.com/schema/recomplauncher.json",
+  "format": 1,
+  "name": "SanctuaryPort",
+  "repo": "CaduGimenes/SanctuaryPort",
+  "game": {
+    "kind": "folder",
+    "label": "Your Diablo III dump from a PS4 you own: the folder with eboot.bin (CUSA00243, CUSA00242, CUSA00433 or CUSA00434).",
+    "check": { "file": "eboot.bin" },
+    "update": {
+      "into": "update",
+      "label": "Your 1.47 update dump (CUSA00243-UPDATE), if your game has one.",
+      "accepts": "folder",
+      "optional": true
+    }
+  },
+  "start": {
+    "program": ["SanctuaryPort.exe", "SanctuaryPort-x86_64.AppImage"],
+    "args": ["--play", "--game", "{game}", "--update", "{install}/update"]
+  },
+  "config": [
+    {
+      "id": "main",
+      "format": "ini",
+      "file": [
+        { "path": "{install}/sanctuary.ini", "if": "{install}/SanctuaryPort.exe" },
+        { "path": "{local}/sanctuaryport/sanctuary.ini" }
+      ]
+    }
+  ],
+  "folders": {
+    "saves": [
+      { "path": "{install}/user/savedata", "if": "{install}/SanctuaryPort.exe" },
+      { "path": "{local}/sanctuaryport/user/savedata" }
+    ],
+    "logs": [
+      { "path": "{install}/user", "if": "{install}/SanctuaryPort.exe" },
+      { "path": "{local}/sanctuaryport/user" }
+    ]
+  },
+  "settings": [
+    {
+      "id": "display_mode",
+      "label": "Window mode",
+      "choices": [
+        { "label": "Windowed", "set": { "display_mode": "windowed" } },
+        { "label": "Borderless", "set": { "display_mode": "borderless" } },
+        { "label": "Fullscreen", "set": { "display_mode": "fullscreen" } }
+      ],
+      "defaults": { "display_mode": "windowed" }
+    },
+    {
+      "id": "render_resolution",
+      "label": "Render resolution",
+      "help": "What the game draws at. Native is the PS4's own 1080p.",
+      "choices": [
+        { "label": "720p", "set": { "render_resolution": "720p" } },
+        { "label": "Native (1080p)", "set": { "render_resolution": "native" } },
+        { "label": "1440p", "set": { "render_resolution": "1440p" } },
+        { "label": "4K", "set": { "render_resolution": "4K" } }
+      ],
+      "defaults": { "render_resolution": "native" }
+    },
+    {
+      "id": "upscaler",
+      "label": "Upscaling",
+      "help": "FSR 3.1 works on any GPU. TAA smooths edges at the render resolution.",
+      "choices": [
+        { "label": "Off", "set": { "upscaler": "off" } },
+        { "label": "FSR 3.1", "set": { "upscaler": "fsr3" } },
+        { "label": "TAA", "set": { "upscaler": "taa" } }
+      ],
+      "defaults": { "upscaler": "off" }
+    },
+    {
+      "id": "anti_aliasing",
+      "label": "Anti-aliasing",
+      "choices": [
+        { "label": "Off", "set": { "anti_aliasing": "off" } },
+        { "label": "FXAA", "set": { "anti_aliasing": "fxaa" } },
+        { "label": "SMAA", "set": { "anti_aliasing": "smaa" } }
+      ],
+      "defaults": { "anti_aliasing": "off" }
+    },
+    {
+      "id": "vsync",
+      "label": "V-Sync",
+      "choices": [
+        { "label": "On", "set": { "vsync": "1" } },
+        { "label": "Off", "set": { "vsync": "0" } }
+      ],
+      "defaults": { "vsync": "1" }
+    },
+    {
+      "id": "fps_limit",
+      "label": "Frame rate limit",
+      "choices": [
+        { "label": "30", "set": { "fps_limit": "30" } },
+        { "label": "60", "set": { "fps_limit": "60" } },
+        { "label": "120", "set": { "fps_limit": "120" } },
+        { "label": "144", "set": { "fps_limit": "144" } },
+        { "label": "Unlimited", "set": { "fps_limit": "0" } }
+      ],
+      "defaults": { "fps_limit": "0" }
+    }
+  ]
+}

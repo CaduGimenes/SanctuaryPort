@@ -31,6 +31,8 @@ icon=launcher/sanctuary.png
 find "$share" -name __pycache__ -prune -exec rm -r {} +
 install -m755 packaging/linux/AppRun "$appdir/AppRun"
 install -m644 packaging/linux/sanctuary.desktop "$appdir/sanctuary.desktop"
+# RecompLauncher reads this at the root of the AppImage.
+install -m644 recomplauncher.json "$appdir/recomplauncher.json"
 install -m644 "$icon" "$appdir/sanctuary.png"
 
 # Host-provided libraries: bundling any of these breaks drivers or the display connection.
