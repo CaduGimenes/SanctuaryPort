@@ -8,15 +8,17 @@ use iced::{window, Point, Size};
 use sanctuaryport_launcher::core::i18n::{launcher_language, tr};
 use sanctuaryport_launcher::core::paths::Paths;
 use sanctuaryport_launcher::core::release::ReleaseId;
-use sanctuaryport_launcher::core::settings::app_defaults;
+use sanctuaryport_launcher::core::settings::{app_defaults, Settings};
 use sanctuaryport_launcher::startup::{
-    confirm_window, log_failure, prepare_window, route, route_on, start, Route, WINDOW_STATE,
+    apply_game_options, confirm_window, log_failure, prepare_window, route, route_on, start, Route,
+    WINDOW_STATE,
 };
 use sanctuaryport_launcher::ui::app::{
     self, centred_position, fitted_window, window_message, Message, State, WINDOW_SIZE,
 };
 use sanctuaryport_launcher::ui::theme::window_zoom;
 use sanctuaryport_launcher::VERSION;
+use serde_json::json;
 
 #[test]
 fn arguments_route_to_their_roles() {
@@ -553,4 +555,53 @@ fn an_old_gow3_ini_becomes_sanctuary_ini() {
     std::fs::write(dir.path().join("gow3.ini"), "vsync=1\n").unwrap();
     sanctuaryport_launcher::startup::migrate_settings_file(&paths);
     assert_eq!(std::fs::read_to_string(paths.ini_path()).unwrap(), "vsync=0\n");
+}
+
+fn settings_with_saved_folders() -> Settings {
+    let mut settings = Settings(app_defaults(&|_| None));
+    settings.set("game_dir", json!("/saved/game"));
+    settings.set("update_dir", json!("/saved/update"));
+    settings
+}
+
+#[test]
+fn without_game_the_saved_folders_stay() {
+    let mut settings = settings_with_saved_folders();
+    apply_game_options(&mut settings, &["--play"]);
+    assert_eq!(settings.get_str("game_dir"), "/saved/game");
+    assert_eq!(settings.get_str("update_dir"), "/saved/update");
+}
+
+#[test]
+fn game_replaces_both_folders_for_this_start() {
+    let update = tempfile::tempdir().unwrap();
+    let update = update.path().to_str().unwrap();
+    let mut settings = settings_with_saved_folders();
+    apply_game_options(
+        &mut settings,
+        &["--play", "--game", "/dump/CUSA00243", "--update", update],
+    );
+    assert_eq!(settings.get_str("game_dir"), "/dump/CUSA00243");
+    assert_eq!(settings.get_str("update_dir"), update);
+}
+
+#[test]
+fn game_without_an_update_clears_the_saved_one() {
+    let mut settings = settings_with_saved_folders();
+    apply_game_options(&mut settings, &["--play", "--game", "/dump/CUSA00242"]);
+    assert_eq!(settings.get_str("update_dir"), "");
+}
+
+#[test]
+fn an_update_folder_that_is_not_there_is_left_out() {
+    let mut settings = settings_with_saved_folders();
+    let args = [
+        "--play",
+        "--game",
+        "/dump/CUSA00242",
+        "--update",
+        "/no/such/update",
+    ];
+    apply_game_options(&mut settings, &args);
+    assert_eq!(settings.get_str("update_dir"), "");
 }

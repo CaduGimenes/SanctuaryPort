@@ -38,7 +38,8 @@ fn main() {
             startup::apply_to_process(&context);
             let paths = &context.paths;
             startup::prepare(paths);
-            let settings = load_app_settings(paths);
+            let mut settings = load_app_settings(paths);
+            startup::apply_game_options(&mut settings, &args);
             // Without a usable game folder there is nothing to play yet: the window opens instead.
             if Installation::read(
                 &settings.get_str("game_dir"),
