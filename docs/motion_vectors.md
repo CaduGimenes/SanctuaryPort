@@ -1,131 +1,72 @@
-# Векторы движения: доработка после видео 2026-09-26
+# Object motion vectors (research notes)
 
-Исходный материал: `video_2026-09-26_04-19-53.mp4`, FSR 3.1 Performance,
-рендер 960×540 → вывод 1920×1080, и `out/dev/t71.log`.
-Это описание текущих изменений рабочего дерева, а не подтверждение качества в игре.
+> Historical notes from the code base's first game, written while the temporal upscalers were
+> being developed (September 2026). The temporal upscalers are off for Diablo III, so none of
+> this runs in the current port; the numbers are not Diablo III's. See also
+> [upscaler.md](upscaler.md).
 
-Общий проход для всех G-buffer draws оказался слишком дорогим: Performance работал примерно
-при 49 FPS с ним и 77–78 FPS без него. Теперь векторы объектов включены по умолчанию только
-для шейдеров с буфером позы/костей (размер 640–16384 байт, кроме общего буфера сцены
-864 байта; шаг 16 байт). В пробном запуске с более узким порогом 1024 байта
-это сократило число обработанных draws примерно до 140 за кадр, устранило переполнение
-истории и дало около 81–87 FPS. Остальные draws сохраняют дешёвые векторы камеры.
-`SANCTUARY_OBJECT_MOTION=0` выключает всю функцию, `SANCTUARY_OBJECT_MOTION_ALL=1` возвращает общий
-проход для A/B. Альфа-канал вспомогательной цели хранит глубину: если поздний обычный
-draw перекрыл объект, его вектор не используется. Качество персонажа и оружия в движении
-после выборки ещё нужно проверить визуально.
+Camera motion vectors come from depth and the current and previous camera. Characters, weapons
+and other animated meshes also need **object** motion: the port keeps each G-buffer draw's
+clip-space positions from the previous frame and writes the difference into an extra target
+(`vk_object_motion.h`, `motion_history.h`).
 
-## Что обнаружено
+## Which draws get object motion
 
-- В конце исходного лога за 600 кадров: 257400 G-buffer draws, 256200 объявлены
-  движущимися, только 30000 получили предыдущие позиции (~11,7% всех draws).
-  Это покрытие отрисовок, не процент пикселей. Причина каждого пропуска старым
-  счётчиком не различалась.
-- Под историю резервировался размер целого vertex buffer, умноженный на число
-  экземпляров **вместе с firstInstance**. Для подмешей общих буферов это лишние
-  позиции; бюджет составлял 2097152 позиции на кадр.
-- История не имела отдельного барьера между записями/чтениями vertex shaders;
-  переиспользование кольца host-параметров не ожидало GPU.
-- Выключенные записи всех вершин направлялись в один scratch-элемент.
-- `CameraMotion::OnDisplayPass` сбрасывал Depth() перед расчётом jitter phases:
-  Performance получал 8 фаз вместо 32. В восстановлении позиции из глубины
-  также не учитывался сдвиг viewport.
+A pass over every G-buffer draw was too expensive (FSR 3.1 Performance at about 49 FPS with it,
+77–78 without). Object motion is therefore kept for draws whose vertex shader reads a pose or
+bone buffer, classified by size (`Motion::ClassifyBuffer`):
 
-## Изменения
+- 864 bytes: the shared scene constants (camera), never a skeleton;
+- 640 bytes or more: a character skeleton;
+- 96–639 bytes in steps of 48 (3×4 matrices): a small skeleton, such as a weapon or a prop.
 
-- Диапазон истории определяется min/max фактических индексов с учётом baseVertex
-  и primitive restart. FirstInstance вычитается в шейдере, а не расходует память.
-- Сохраняются все подходящие прямые G-buffer draws, начиная с первого появления.
-  Эвристика изменения констант удалена: она считала движущимися почти все draws
-  и пропускала начало движения. Чтение возможно только при совпадении с прошлым кадром.
-- Ключ включает все описания vertex streams, шейдер, адрес и хеш содержимого
-  индексов, диапазон вершин, экземпляры и номер среди одинаковых draws.
-  Смена топологии или пропуск кадра сбрасывает соответствующую историю.
-- Бюджет — 4194304 позиции/кадр; два массива вместе занимают 128 МиБ вместо 64 МиБ.
-  При нехватке памяти остаются векторы камеры. Лог отдельно показывает сохранения,
-  совпадения, отсутствие истории, нехватку памяти и недопустимые диапазоны.
-- Добавлены vertex-to-vertex barriers, ожидание GPU перед повторным использованием
-  host-параметров, coherent host memory и независимый учёт layout изображения движения.
-  Повторное чтение изображения не стирает признак наличия векторов.
-- Выключенные обращения обходятся ветвлением. Для повторных invocation одной
-  индексированной вершины используются атомарные записи компонентов позиции.
-  Позиции за камерой и нечисловые/бесконечные векторы не используются.
-- Performance получает 32 фазы jitter после создания FSR context. Векторы камеры
-  восстанавливаются из unjittered координат; векторы объектов уже получались
-  из clip positions до сдвига viewport.
+Small skeletons are about a thousand per frame and most of them are static scenery, so they are
+gated: a hash of the bone palette is compared with the previous frame's (`History::Moving`)
+before any index scan. Unchanged, the camera vector is exact and nothing is written; changed,
+the positions are kept and the next frame gets an object vector. (The 416-byte model constants
+cannot be used for this: they change with the camera for almost every draw.)
 
-## Проверки
+The other draws keep the cheap camera vectors. The helper target's alpha holds depth, so a
+later draw that covers an object discards its vector.
 
-Сборка и CPU-тесты:
+## How the history works
 
-```bash
-cd native_probe
-nix-shell shell.nix --run 'bash build.sh && ninja -C out/gpu motion-history-test motion-shader-test && out/gpu/motion-history-test && out/gpu/motion-shader-test out/motion-shaders'
-```
+- The saved range is the min/max of the indices actually used (with baseVertex and primitive
+  restart); firstInstance is subtracted in the shader instead of reserving memory for it.
+- A draw is matched to the previous frame by a key of its vertex streams, shader, index buffer
+  address and content hash, vertex range, instances and its order among identical draws. A
+  topology change or a skipped frame drops that history.
+- Budget: 4 194 304 positions per frame (two arrays, 128 MiB). When it runs out, draws fall
+  back to camera vectors; the log counts saves, matches, misses, capacity skips and invalid
+  ranges (`Object motion:` lines with `SANCTUARY_FRAME_STATS=1`).
+- Vertex-to-vertex barriers, a GPU wait before reusing host parameters, coherent host memory and
+  separate layout tracking of the motion image keep reads and writes ordered.
+- Repeated invocations of one indexed vertex write the position with atomics; positions behind
+  the camera and non-finite vectors are discarded.
+- FSR Performance gets 32 jitter phases (they were reset to 8 before); camera vectors are
+  rebuilt from unjittered coordinates.
 
-`test_motion_history.cpp` проверяет диапазоны u16/u32, restart, отрицательный baseVertex,
-firstInstance, повторные draws, смену топологии, пропущенный кадр, исчерпание бюджета,
-переполнение и число фаз. Также пройден запуск с AddressSanitizer/UBSan.
+## Switches
 
-`test_motion_shaders.cpp` использует настоящий SPIR-V backend и создаёт VS/PS с
-векторами и без них. Все четыре результата прошли `spirv-val --target-env vulkan1.3`.
-Для повторения нужен `spirv-val` из SPIRV-Tools:
+| Variable | Effect |
+|---|---|
+| `SANCTUARY_OBJECT_MOTION=0` | camera vectors only |
+| `SANCTUARY_OBJECT_MOTION_ALL=1` | object motion for every G-buffer draw (A/B comparison) |
+| `SANCTUARY_MOTION_SELECT_LOG=1` | log the G-buffer shaders, their buffer sizes and the decision |
 
-```bash
-for shader in out/motion-shaders/*.spv; do
-    spirv-val --target-env vulkan1.3 "$shader" || exit
-done
-```
+The in-game menu's "Show motion vectors (debug)" draws |x| in red, |y| in green and pixels with
+an object vector in blue.
 
-Логи сборки/тестов: `out/dev/motion-validation.log`. Доступа к `/dev/dri` в среде
-проверки нет: качество на RX 7800 XT, FPS и процент покрытия после изменений
-ещё не проверены. Успешная валидация SPIR-V не доказывает правильность картинки.
+## Tests
 
-## Следующий запуск в игре
+`tests/test_motion_history.cpp` covers u16/u32 ranges, restart, negative baseVertex,
+firstInstance, repeated draws, topology changes, skipped frames, budget exhaustion and the
+jitter phase count (also run under AddressSanitizer/UBSan). `tests/test_motion_shaders.cpp`
+builds vertex and pixel shaders with and without vectors through the real SPIR-V backend; the
+results pass `spirv-val --target-env vulkan1.3`.
 
-Из `game_files`:
+## Limits
 
-```bash
-SANCTUARY_FRAME_STATS=1 SANCTUARY_TOGGLE_FILE=out/dev/motion-toggles bash native_probe/run.sh 2>&1 | tee native_probe/out/dev/motion-run.log
-```
-
-Бит 29 во временном toggle-файле выключает только запись истории. Для корректного
-сравнения производительности надо запускать игру с `SANCTUARY_OBJECT_MOTION=0` и без него:
-выбор пайплайна и дополнительная цель задаются при старте процесса.
-После переключения дать FSR несколько кадров на обновление истории.
-Сравнивать одну сцену: персонаж/оружие при беге, поворот камеры, бой, неподвижная камера.
-Через ~600 кадров проверить `Object motion:`: `with history`, `capacity skips`, `unmatched`.
-
-Оставшиеся ограничения: одинаковые меши сопоставляются по порядку draws, который
-может меняться при отсечении объектов; смена адресов динамических vertex buffers
-теряет совпадение. Indirect draws, tessellation/geometry shaders, MSAA и проходы
-вне G-buffer остаются на векторах камеры. Прозрачность/частицы, мыльный UI и перенос
-масштабирования на уровень рендерера этим изменением не решены. Стоимость сканирования
-индексов и атомарных записей нужно измерить на реальном запуске.
-
-## 29 сентября: оружие и маленькие скелеты (гостинг пилы-вертушки)
-
-Видео `video_2026-09-29_23-08-26.mp4`: персонаж стоит, диск пилы вращается и оставляет
-шлейф. Лог `SANCTUARY_MOTION_SELECT_LOG=1` показал причину: второй буфер вершинного шейдера —
-палитра костей по 48 байт (3x4), и у оружия/реквизита она 96–384 байта (2–8 костей).
-Правило «от 640 байт» такие отрисовки не включало, диск получал только векторы камеры,
-то есть для FSR был неподвижным.
-
-Изменения:
-
-- `Motion::ClassifyBuffer` (`motion_history.h`): 864 — сцена, ≥640 — скелет персонажа,
-  96..639 кратно 48 — маленький скелет. Пайплайны с любым скелетом получают вариант
-  с векторами.
-- Маленьких скелетов около тысячи на кадр, большинство — статичные части карты.
-  Поэтому они «гейтятся»: хеш палитры сравнивается с прошлым кадром по дешёвому
-  ключу (`History::Moving`) до сканирования индексов. Совпала — вектор камеры точен,
-  ничего не пишется. Изменилась — позиции сохраняются, со следующего кадра вектор
-  объекта. Хеш с буфером 416 байт не подходит: он меняется вместе с камерой почти у всех
-  (проверено: переполнение истории и падение FPS до ~40).
-- Меню: «Показать векторы движения (отладка)». Красный/зелёный — |x|/|y|, синий —
-  пиксель получил вектор объекта. `SANCTUARY_MOTION_SELECT_LOG=1` печатает шейдеры G-buffer
-  с размерами буферов и решением.
-
-Замер `out/motion-gated.log`: ~225 сохранённых отрисовок и ~600 «неподвижных» на кадр,
-без переполнения, 58–80 FPS в игровых сценах. Визуально исчезновение шлейфа
-на пиле ещё нужно подтвердить.
+Identical meshes are matched by draw order, which culling can change; dynamic vertex buffers
+that move lose their match. Indirect draws, tessellation and geometry shaders, MSAA and passes
+outside the G-buffer stay on camera vectors. Transparency and particles are not covered.

@@ -35,7 +35,7 @@ On macOS you can build and run the launcher, but not the game: `main` doesn't bu
    cd launcher-rust
    cargo build --release
    cd ..
-   ./launcher-rust/target/release/spartanport-launcher
+   ./launcher-rust/target/release/sanctuaryport-launcher
    ```
 
    `cargo run --release` in `launcher-rust/` builds and runs in one step. `cargo clean` there removes the build output (`launcher-rust/target/`).
@@ -44,20 +44,32 @@ On macOS you can build and run the launcher, but not the game: `main` doesn't bu
 
 ```
 cd launcher-rust
-cargo test
+cargo test --release --tests
 ```
 
-The tests in `tests/dump.rs` need a real game folder (the patches of the real `eboot.bin`, the pause menu and the glyph WADs against the Python's) and return at once without one. Point `SPARTAN_GAME_DIR` at the dump to run them; the dump is only read:
+`.cargo/config.toml` pins an English locale for them. `SP_PREVIEW_DIR=<folder> cargo test --release
+--test sp_preview -- --ignored` saves pictures of every page without opening a window.
+
+## Building for Windows from Linux
 
 ```
+rustup target add x86_64-pc-windows-gnu
 cd launcher-rust
-SPARTAN_GAME_DIR=<game folder> cargo test --test dump
+CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER=x86_64-w64-mingw32-gcc cargo build --release --target x86_64-pc-windows-gnu
 ```
 
-On Windows PowerShell: `$env:SPARTAN_GAME_DIR = "<game folder>"; cargo test --test dump`. Drop `--test dump` to run the whole suite with the dump. These tests also run the Python scripts (the interpreter is set under Environment below) to compare their files with the Rust ones.
+`packaging/windows/package.sh` does this as part of the Windows package.
 
 ## Environment
 
-- `SPARTAN_RELEASE_TAG`: read at build time, not at run time. The release tag the binary is (`windows-v2.8.0-issue1-test2`); without it the binary is the stable of `Cargo.toml`. The release workflows set it from their tag. Name test tags `<system>-v<version>-<issue>-test<N>`: the launcher offers the next build of the same series. A local test build: `$env:SPARTAN_RELEASE_TAG = 'windows-v2.8.0-issue1-test2'; cargo build --release --locked` (PowerShell) or `SPARTAN_RELEASE_TAG=windows-v2.8.0-issue1-test2 cargo build --release --locked`.
-- `SPARTAN_PORT_DIR`: the port folder (with `bin/`) and, unless `SPARTAN_DATA_DIR` is set, the data folder. Defaults to the executable's folder; point it at the repository root to run a `cargo` build.
-- `SPARTANPORT_PYTHON`: the Python the dump tests compare against (the frozen Python launcher and runner). Defaults to `py -3` on Windows and `python3` elsewhere. The exe itself never runs Python.
+- `SANCTUARY_PORT_DIR`: the port folder (with `run.sh`, or `run.py` on Windows, and `bin/` or
+  `out/`). Defaults to the executable's folder, or the nearest folder above it holding
+  `launcher/sanctuaryport.png` (a cargo build inside the repository finds the repository root).
+- `SANCTUARY_DATA_DIR`: where saves (`user/`), `sanctuary.ini` and the prepared game (`out/`) go;
+  defaults to the port folder. The AppImage sets it to `~/.local/share/sanctuaryport`.
+- `SANCTUARY_CONFIG`: another `sanctuary.ini`.
+- `SANCTUARY_RELEASE_TAG`: read at build time, not at run time: the release tag the binary is
+  (for example `v0.1.0`). Without it the binary is the version of `Cargo.toml`.
+
+PLAY runs `bash run.sh` on Linux and `python\python.exe -u run.py` on Windows
+(`src/core/launch.rs`, `port_command`); `--play` does the same without the window.

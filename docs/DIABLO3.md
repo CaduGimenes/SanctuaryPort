@@ -9,7 +9,7 @@ the port adds on top of the shared runtime (`src/`), GPU core (`gpu/`) and launc
 
 - **CUSA00243 + 1.47** (the main target): the update is a separate folder (`SANCTUARY_PATCH_DIR`) laid
   over the base game by `scripts/game_update.py`. Its eboot needs the game's own PSN toolkit
-  (`libSceNpToolkit2.prx`, linked from the update's `sce_module`, as WipEout does), POSIX
+  (`libSceNpToolkit2.prx`, linked from the update's `sce_module`), POSIX
   semaphores (`src/runtime_sema.c`), `pthread_mutex_timedlock` and a few more offline answers.
 - **CUSA00242 1.00**: the first target; everything above works on it too.
 
