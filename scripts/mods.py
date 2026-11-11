@@ -13,6 +13,11 @@ import sys
 import tempfile
 import zipfile
 
+# A module flag, not os.name at call time: tests simulate Windows by patching this alone (patching
+# os.name itself makes pathlib build Windows paths on Python 3.13+).
+WINDOWS = os.name == 'nt'
+
+
 def child(folder, name):
     """`name` inside `folder`, matching an existing entry case-insensitively (mods made on
     Windows often differ from the game's lower-case names)."""
@@ -321,7 +326,7 @@ def make_link(link, target):
         link.symlink_to(target, target_is_directory=target.is_dir())
         return
     except OSError:
-        if os.name != 'nt':
+        if not WINDOWS:
             raise
     if target.is_dir():
         try:
@@ -410,7 +415,7 @@ def build_overlay(game, out, mods):
         return game
     out = Path(out).resolve()
     out.mkdir(parents=True, exist_ok=True)
-    if os.name == 'nt' and not symlinks_work(out) and out.drive.casefold() != game.drive.casefold():
+    if WINDOWS and not symlinks_work(out) and out.drive.casefold() != game.drive.casefold():
         # Hard links only reach files on the same volume: the overlay goes beside the game.
         out = game.parent
     overlay = Path(tempfile.mkdtemp(prefix='mod-game-', dir=out))

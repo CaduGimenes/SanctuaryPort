@@ -163,7 +163,8 @@ PATCHES_DIR=Path(__file__).resolve().parent.parent/'patches'
 GAMES=[({'CUSA07671','CUSA05670'},PATCHES_DIR/'WipEout_Omega_Collection.xml','01.00',
         'WipEout Omega Collection'),
        ({'CUSA00068','CUSA00006','CUSA00004'},PATCHES_DIR/'Knack.xml','01.10','Knack'),
-       ({'CUSA00243','CUSA00242'},PATCHES_DIR/'Diablo_III.xml','01.47','Diablo III')]
+       ({'CUSA00243','CUSA00242','CUSA00434','CUSA00433'},PATCHES_DIR/'Diablo_III.xml','01.47',
+        'Diablo III')]
 # The builds the built-in Address values and third-party patch files are written for (Knack 1.00,
 # Niko's shadPS4 resolution patches, #12, and 1.10; the first is the base port's).
 REFERENCE_SHA256='d85c8135d330c3b601bf5dc3f1dd86bd6119fb8a9fce372bed2c9785f9a79299'
@@ -197,7 +198,13 @@ def game_profile(title_id, title=None):
 def game_profile_for(game):
     """The profile of a game folder, by title ID or by the title in its param.sfo."""
     values=game_sfo(game) if game else {}
-    return game_profile(values.get('TITLE_ID'),values.get('TITLE'))
+    found=game_profile(values.get('TITLE_ID'),values.get('TITLE'))
+    if found is None and values:
+        # Diablo III under a title ID not listed and a title in another script: its content ID.
+        from game_profiles import is_diablo3_sfo
+        if is_diablo3_sfo(values):
+            found=next(g for g in GAMES if g[3]=='Diablo III')
+    return found
 _SHA_CACHE={}
 
 

@@ -269,12 +269,18 @@ def main():
                 isa_args = ['--isa-rewrite', str(out / 'isa-rewrite.bin')]
         run_script('content_profile.py', game, '--out', out, '--sku', env.get('SANCTUARY_CONTENT_SKU', 'full'))
         # Add-ons installed beside the game, as <game folder>/../addcont/<TITLE_ID>/<label>.
-        # Diablo III's regions share add-ons: the Brazilian release's PKGs carry US content ids.
+        # Diablo III's regions share add-ons (the Brazilian release's PKGs carry US content ids):
+        # its own title first, then the known releases, then any other folder there.
         title = game_profiles.title_id(game)
-        titles = [title] + [t for t in game_profiles.DIABLO3_TITLES if t != title] \
-            if title in game_profiles.DIABLO3_TITLES else [title]
-        for candidate in titles if title else []:
-            addcont = Path(base_game).resolve().parent / 'addcont' / candidate
+        diablo3 = game_profiles.is_diablo3(game)
+        addcont_root = Path(base_game).resolve().parent / 'addcont'
+        titles = [title] if title else []
+        if diablo3:
+            titles += [t for t in game_profiles.DIABLO3_TITLES if t != title]
+            if addcont_root.is_dir():
+                titles += sorted(p.name for p in addcont_root.iterdir() if p.is_dir() and p.name not in titles)
+        for candidate in titles:
+            addcont = addcont_root / candidate
             if 'SANCTUARY_ADDCONT_DIR' not in env and addcont.is_dir():
                 env['SANCTUARY_ADDCONT_DIR'] = str(addcont)
                 print(f'Add-ons: {addcont}', flush=True)
@@ -282,7 +288,7 @@ def main():
         from patches import game_profile_for, patch_requirements, patch_status, selected_patches
         profile = game_profile_for(game)
         engine_fps, frame_rates = 60, False
-        if game_profiles.title_id(game) in game_profiles.DIABLO3_TITLES:
+        if diablo3:
             d3_language(env, game)
         # The window shows the game's icon (BMP: the format SDL loads without extra libraries); on
         # Linux the launcher's own icon (the AppImage ships the one chosen when it was built) and
@@ -291,7 +297,7 @@ def main():
         if not WINDOWS:
             # Games with their own profile (Diablo III...) keep their icon0.png and an app id of
             # their own; the launcher icon belongs to the port's original game.
-            own = game_profiles.title_id(game) in game_profiles.DIABLO3_TITLES
+            own = diablo3
             env.setdefault('SDL_APP_ID', 'diablo3' if own else 'sanctuary')
             if not own and (PORT / 'launcher' / 'sanctuary.png').is_file():
                 icon_file = PORT / 'launcher' / 'sanctuary.png'

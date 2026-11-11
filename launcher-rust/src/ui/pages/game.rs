@@ -10,6 +10,7 @@ use iced::widget::{button, column, pick_list, row as layout, text};
 use iced::{Center, Element, Left, Right, Task};
 use serde_json::{Map, Value};
 
+use crate::core::game::game_profile;
 use crate::core::i18n::{tr, tr_fmt};
 use crate::core::options::LANGUAGES;
 use crate::core::patches::{builtin_xml, game_patch_metas, selectable, PatchMeta};
@@ -26,7 +27,7 @@ use crate::ui::widgets::{
 };
 
 /// The note under the Game language row; the translation tables key on this text.
-pub const LANGUAGE_NOTE: &str = "The language of the game's text and speech, on every start. Only the languages your dump ships are listed: the Brazilian release has Portuguese and Spanish, the US release English, French and Spanish.";
+pub const LANGUAGE_NOTE: &str = "The language of the game's text and speech, on every start. Only the languages your dump ships are listed: each release has its own.";
 
 /// Game patches of the current dump.
 #[derive(Debug, Clone, Default)]
@@ -411,17 +412,13 @@ pub fn view(state: &State) -> Element<'_, Message> {
     .into()
 }
 
-/// Title ids whose saves are one and the same: Diablo III's US and Brazilian releases both keep
-/// them under CUSA00242.
-const SHARED_SAVES: [&[&str]; 1] = [&["CUSA00242", "CUSA00243"]];
-
-/// Whether a backup holding the saves of `titles` belongs to another game than `current`.
+/// Whether a backup holding the saves of `titles` belongs to another game than `current`. The
+/// releases of one game (Diablo III's US, Brazilian, European... title IDs) share their saves.
 pub fn backup_is_for_another_game(current: &str, titles: &BTreeSet<String>) -> bool {
+    let current_game = game_profile(Some(current), None);
     let same = |title: &str| {
         title == current
-            || SHARED_SAVES
-                .iter()
-                .any(|group| group.contains(&title) && group.contains(&current))
+            || current_game.is_some_and(|game| game_profile(Some(title), None) == Some(game))
     };
     !titles.is_empty() && !titles.iter().any(|t| same(t))
 }

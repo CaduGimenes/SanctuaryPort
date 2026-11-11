@@ -838,7 +838,31 @@ pub fn tr(lang: &str, en: &str) -> String {
     lookup(lang, en)
         .filter(|text| !text.is_empty())
         .or_else(|| ui_extra(lang, en).map(str::to_string))
-        .unwrap_or_else(|| en.to_string())
+        .unwrap_or_else(|| {
+            note_missing(lang, en);
+            en.to_string()
+        })
+}
+
+/// Translator aid: with `SANCTUARY_I18N_MISSING` set to a file, every text shown in English for
+/// want of a translation is appended to it as `lang<TAB>text` (escaped as JSON).
+fn note_missing(lang: &str, en: &str) {
+    use std::io::Write;
+    static FILE: OnceLock<Option<std::sync::Mutex<std::fs::File>>> = OnceLock::new();
+    if lang == "en" {
+        return;
+    }
+    let file = FILE.get_or_init(|| {
+        let path = std::env::var_os("SANCTUARY_I18N_MISSING")?;
+        let file = std::fs::OpenOptions::new().create(true).append(true).open(path).ok()?;
+        Some(std::sync::Mutex::new(file))
+    });
+    if let Some(file) = file {
+        if let Ok(mut file) = file.lock() {
+            let quoted = serde_json::to_string(en).unwrap_or_default();
+            let _ = writeln!(file, "{lang}\t{quoted}");
+        }
+    }
 }
 
 /// Translates `en`, then replaces each `{}` in order with `args`; extra `{}` stay.

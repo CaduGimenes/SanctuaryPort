@@ -49,6 +49,7 @@ PROFILES = {
     # the engine reads render targets back on the CPU in the same frame.
     # Its updates (1.47) ship the game's own PSN toolkit (libSceNpToolkit2.prx, as WipEout), linked
     # when present: without it the 1.47 eboot stops at its first toolkit call (GitHub issues #1, #3).
+    # Every release (any region or title ID) gets this profile: see is_diablo3.
     'CUSA00242': {'name': 'Diablo III', 'modules': ('libc.prx', 'libSceFios2.prx', 'libSceNpToolkit2.prx'),
                   # The draw-preparation workers (4096 | 8192) read resource descriptors before the
                   # game has written them, as in Knack: the world rendered as a flat grey screen.
@@ -64,29 +65,47 @@ PROFILES = {
                           'SANCTUARY_MENU_HIDE': 'vsync,engine_fps,readbacks',
                           'SANCTUARY_ALLOWED_RESOLUTIONS': 'native;480p;720p;900p;1440p;1800p;4K'}},
 }
-# Diablo III: Reaper of Souls - Ultimate Evil Edition, Brazilian release (Portuguese and Spanish
-# text; usually played with its 1.47 update in SANCTUARY_PATCH_DIR): the same engine and needs.
-# CUSA00434: the Polish/Russian release (plPL/ruRU text); CUSA00433: the European release (esES,
-# deDE, itIT... text). Same eboot as the others with the 1.47 update.
-PROFILES['CUSA00243'] = PROFILES['CUSA00242']
-PROFILES['CUSA00434'] = PROFILES['CUSA00242']
-PROFILES['CUSA00433'] = PROFILES['CUSA00242']
+DIABLO3 = PROFILES.pop('CUSA00242')
+# Diablo III releases seen so far: US, Brazil, Poland/Russia, Europe. Only hints (the add-on folder
+# search tries them): any release is recognised by its param.sfo (is_diablo3), whatever its ID.
 DIABLO3_TITLES = ('CUSA00242', 'CUSA00243', 'CUSA00434', 'CUSA00433')
+# The content ID's label is the same in every region (UP0002-CUSA00243_00-D3ULTIMATEEVIL00); it
+# still recognises a release whose title is localised in another script.
+DIABLO3_LABELS = ('D3ULTIMATEEVIL', 'DIABLO3')
 DEFAULT = {'name': None, 'modules': ('libc.prx', 'libSceFios2.prx')}
+
+
+def sfo_values(game):
+    """The values of a game folder's param.sfo ({} when it cannot be read)."""
+    try:
+        from prepare import sfo
+        return sfo((Path(game) / 'sce_sys' / 'param.sfo').read_bytes())
+    except (OSError, ValueError, ImportError, TypeError):
+        return {}
 
 
 def title_id(game):
     """TITLE_ID of a game folder, or None."""
-    try:
-        from prepare import sfo
-        return sfo((Path(game) / 'sce_sys' / 'param.sfo').read_bytes()).get('TITLE_ID')
-    except (OSError, ValueError, ImportError):
-        return None
+    return sfo_values(game).get('TITLE_ID')
+
+
+def is_diablo3_sfo(values):
+    """Whether param.sfo values are Diablo III's, in any region: by title or content ID label."""
+    title = str(values.get('TITLE') or '').replace('®', '').replace('™', '')
+    content = str(values.get('CONTENT_ID') or '').upper()
+    return (values.get('TITLE_ID') in DIABLO3_TITLES or 'diablo iii' in title.casefold()
+            or any(label in content for label in DIABLO3_LABELS))
+
+
+def is_diablo3(game):
+    """Whether a game folder holds Diablo III (any region or title ID)."""
+    return is_diablo3_sfo(sfo_values(game))
 
 
 def profile(game):
     """The profile of a game folder (DEFAULT for unknown games)."""
-    found = PROFILES.get(title_id(game) or '', DEFAULT)
+    values = sfo_values(game)
+    found = DIABLO3 if is_diablo3_sfo(values) else PROFILES.get(values.get('TITLE_ID') or '', DEFAULT)
     # Only modules the dump actually ships are linked.
     modules = tuple(m for m in found['modules'] if (Path(game) / 'sce_module' / m).is_file())
     return {**found, 'modules': modules}

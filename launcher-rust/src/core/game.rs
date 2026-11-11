@@ -188,7 +188,14 @@ fn profile_for(values: &IndexMap<String, SfoValue>) -> Option<&'static GameProfi
         Some(SfoValue::Text(text)) => Some(text.as_str()),
         _ => None,
     };
-    game_profile(text("TITLE_ID"), text("TITLE"))
+    game_profile(text("TITLE_ID"), text("TITLE")).or_else(|| {
+        // A release under a title ID not listed whose title is in another script: the content ID
+        // label is the same in every region (UP0002-CUSA00243_00-D3ULTIMATEEVIL00).
+        let content = text("CONTENT_ID")?.to_uppercase();
+        GAMES
+            .iter()
+            .find(|game| game.labels.iter().any(|label| content.contains(label)))
+    })
 }
 
 /// A game the built-in patches know: its title IDs, patch file, metadata app version, and the
@@ -199,6 +206,8 @@ pub struct GameProfile {
     pub xml: &'static str,
     pub app_version: &'static str,
     pub title: &'static str,
+    /// Content ID labels of the game in every region.
+    pub labels: &'static [&'static str],
 }
 
 static GAMES: &[GameProfile] = &[GameProfile {
@@ -206,9 +215,11 @@ static GAMES: &[GameProfile] = &[GameProfile {
     xml: "Diablo_III.xml",
     app_version: "01.47",
     title: "Diablo III",
+    labels: &["D3ULTIMATEEVIL", "DIABLO3"],
 }];
 
-/// The profile of a known game, by title ID or by its title appearing in the SFO title.
+/// The profile of a known game, by title ID or by its title appearing in the SFO title. The IDs are
+/// the releases seen so far; any other region is recognised by its title (or content ID).
 pub fn game_profile(title_id: Option<&str>, title: Option<&str>) -> Option<&'static GameProfile> {
     let title = strip_marks(title.unwrap_or(""));
     GAMES.iter().find(|game| {
