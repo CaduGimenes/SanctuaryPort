@@ -9,7 +9,7 @@ use iced::Element;
 
 use crate::core::i18n::tr;
 use crate::core::options::{
-    ANISOTROPY, DISPLAY_MODES,
+    ANISOTROPY, DISPLAY_MODES, TEMPORAL_AA,
 };
 use crate::ui::app::{Message, State};
 use crate::ui::theme;
@@ -18,6 +18,9 @@ use crate::ui::widgets::{checkbox, row, section, select, slider};
 
 /// The hint of the FSR 1 switch (SanctuaryPort).
 pub const FSR1_HINT: &str = "With a Render resolution (Performance page) below the window, AMD FSR 1 upscales the game's picture instead of a plain stretch: render at 720p or 900p for more FPS and keep a sharp 1080p window. Works on any graphics card; borderless and fullscreen upscale to the whole screen.";
+
+/// The hint of the temporal anti-aliasing choice (SanctuaryPort).
+pub const TEMPORAL_AA_HINT: &str = "AMD FSR 3 uses the previous frames: at the window size it smooths jagged edges; with a Render resolution below the window (Performance page) it upscales the game to the window instead of FSR 1, with the HUD drawn at full size. Any graphics card; costs some GPU time (about 3-6 ms on integrated graphics). Experimental: tell us if something smears or flickers. Also in the in-game menu.";
 
 /// The hint of the Anti-aliasing row: FXAA / SMAA here, and the port's own TAA under Upscaler.
 pub const AA_HINT: &str = "Smooths jagged edges. FXAA is cheap and a little soft; SMAA keeps the picture sharper and costs a bit more. Both also touch the HUD slightly. For temporal anti-aliasing at native resolution choose TAA under Upscaler (Native AA preset): the port's own, tuned for this game. Its default values are the optimized ones, and every setting can be adjusted to your taste in the in-game menu (Insert / R3+L2) > Image. Use TAA with this set to Off.";
@@ -38,6 +41,7 @@ pub fn view(state: &State) -> Element<'_, Message> {
         tr(lang, "restart")
     );
 
+    // SanctuaryPort: no HDR switch: Diablo III draws in SDR.
     let shots = button(text(tr(lang, "Open the screenshots folder")))
         .style(theme::button_flat)
         .on_press(Message::OpenFolder(
@@ -57,14 +61,13 @@ pub fn view(state: &State) -> Element<'_, Message> {
                 "Borderless covers the screen without changing the display mode."
             )),
         ),
-        checkbox(
-            state.rtl,
-            "hdr",
-            &tr(lang, "Allow HDR output"),
-            state.store.flag("hdr"),
-            Some(&hint("When HDR is on in Windows and the display supports it.")),
-        ),
         section(state.rtl, &tr(lang, "Upscaling")),
+        row(
+            state.rtl,
+            &tr(lang, "Temporal anti-aliasing"),
+            select("temporal_aa", TEMPORAL_AA, &ini("temporal_aa"), lang),
+            Some(&hint(TEMPORAL_AA_HINT)),
+        ),
         checkbox(
             state.rtl,
             "fsr1",

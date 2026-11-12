@@ -336,6 +336,16 @@ void ImageTab() {
                  "upscales the picture instead of a plain stretch. Any graphics card.");
         ImGui::EndTable();
     }
+    ImGui::SeparatorText("Anti-aliasing (experimental)");
+    if (BeginRows("##temporal")) {
+        static const char* const aa_labels[] = {"Off", "FSR 3"};
+        static const int aa_values[] = {SanctuarySettings::UpscalerOff, SanctuarySettings::UpscalerFsr3};
+        ChoiceRow("Temporal anti-aliasing", s.upscaler, aa_labels, aa_values, 2,
+                  "AMD FSR 3 uses the previous frames: at the window size it smooths jagged edges; "
+                  "with a Render resolution below the window it upscales the game to the window "
+                  "(HUD at full size). Experimental: tell us if something smears or flickers.");
+        ImGui::EndTable();
+    }
     const int iw = s.image_width, ih = s.image_height, ww = s.window_width, wh = s.window_height;
     const bool downscaling = iw > ww || ih > wh;
     const bool rcas_blocked = s.rcas && !s.rcas_applied;

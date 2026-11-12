@@ -8,7 +8,11 @@ layout(local_size_x = 8, local_size_y = 8) in;
 
 layout(binding = 0) uniform texture2D depth_tex; // D32, depth 0..1 (D3D projection)
 #ifdef DEBUG_OVERLAY
+#ifdef COLOR_RGB10A2
+layout(binding = 1, rgb10_a2) uniform image2D color_img; // Diablo III's frame
+#else
 layout(binding = 1, rgba8) uniform image2D color_img;
+#endif
 layout(binding = 2, std430) readonly buffer PrevFrame { uint prev_frame[]; };
 layout(binding = 3, std430) writeonly buffer NextFrame { uint next_frame[]; };
 #else

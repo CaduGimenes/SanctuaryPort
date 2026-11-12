@@ -1,0 +1,89 @@
+From: sanctuary
+Subject: [PATCH] Never allocate protected memory
+
+Newer RADV (Mesa 26) exposes memory types with VK_MEMORY_PROPERTY_PROTECTED_BIT.
+The memory type searches took the first match, so FSR 3 images and buffers were
+bound to protected memory: the upscaler ran but wrote garbage (and the portable
+API smoke test failed with VUID-vkBindImageMemory-None-01902).
+---
+diff --git a/src/ffx_vk_fsr3_3_1_5_bridge.cpp b/src/ffx_vk_fsr3_3_1_5_bridge.cpp
+index 2ac0e2e..2f1278a 100644
+--- a/src/ffx_vk_fsr3_3_1_5_bridge.cpp
++++ b/src/ffx_vk_fsr3_3_1_5_bridge.cpp
+@@ -182,8 +182,9 @@ static uint32_t find_memory_type(VkPhysicalDevice physicalDevice, uint32_t typeB
+     vkGetPhysicalDeviceMemoryProperties(physicalDevice, &properties);
+     for (uint32_t index = 0; index < properties.memoryTypeCount; ++index) {
+         if ((typeBits & (1u << index)) &&
++            !(properties.memoryTypes[index].propertyFlags & VK_MEMORY_PROPERTY_PROTECTED_BIT) &&
+             (properties.memoryTypes[index].propertyFlags & required) == required)
+-            return index;
++            return index; // sanctuary: never protected memory (newer RADV exposes it; FSR's images bound to it were garbage)
+     }
+     return UINT32_MAX;
+ }
+diff --git a/src/ffx_vk_fsr3_3_1_6_framegen.cpp b/src/ffx_vk_fsr3_3_1_6_framegen.cpp
+index 9636cec..9dfaae5 100644
+--- a/src/ffx_vk_fsr3_3_1_6_framegen.cpp
++++ b/src/ffx_vk_fsr3_3_1_6_framegen.cpp
+@@ -100,8 +100,9 @@ static uint32_t find_memory_type(VkPhysicalDevice physicalDevice, uint32_t bits,
+     vkGetPhysicalDeviceMemoryProperties(physicalDevice, &properties);
+     for (uint32_t index = 0u; index < properties.memoryTypeCount; ++index) {
+         if ((bits & (1u << index)) != 0u &&
++            !(properties.memoryTypes[index].propertyFlags & VK_MEMORY_PROPERTY_PROTECTED_BIT) &&
+             (properties.memoryTypes[index].propertyFlags & required) == required)
+-            return index;
++            return index; // sanctuary: never protected memory (newer RADV exposes it; FSR's images bound to it were garbage)
+     }
+     return UINT32_MAX;
+ }
+diff --git a/src/ffx_vk_fsr3_portable.cpp b/src/ffx_vk_fsr3_portable.cpp
+index 578f9a3..03d36d3 100644
+--- a/src/ffx_vk_fsr3_portable.cpp
++++ b/src/ffx_vk_fsr3_portable.cpp
+@@ -187,6 +187,8 @@ static uint32_t findMemoryType(
+         if (!(allowedTypes & (1u << index)))
+             continue;
+         const VkMemoryPropertyFlags flags = properties.memoryTypes[index].propertyFlags;
++        if (flags & VK_MEMORY_PROPERTY_PROTECTED_BIT)
++            continue; // sanctuary: never protected memory (newer RADV exposes it; FSR's images bound to it were garbage)
+         if (deviceCoherentMemoryEnabled != VK_TRUE &&
+             (flags & VK_MEMORY_PROPERTY_DEVICE_COHERENT_BIT_AMD))
+             continue;
+diff --git a/src/ffx_vk_fsr4_v07.c b/src/ffx_vk_fsr4_v07.c
+index 8d4f410..d38ec5f 100644
+--- a/src/ffx_vk_fsr4_v07.c
++++ b/src/ffx_vk_fsr4_v07.c
+@@ -406,8 +406,9 @@ static uint32_t findMemType(VkPhysicalDevice phys, uint32_t bits, VkMemoryProper
+     VkPhysicalDeviceMemoryProperties p;
+     vkGetPhysicalDeviceMemoryProperties(phys, &p);
+     for (uint32_t i = 0; i < p.memoryTypeCount; i++)
+-        if ((bits & (1u<<i)) && (p.memoryTypes[i].propertyFlags & f) == f)
+-            return i;
++        if ((bits & (1u<<i)) && !(p.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_PROTECTED_BIT) &&
++            (p.memoryTypes[i].propertyFlags & f) == f)
++            return i; // sanctuary: never protected memory (newer RADV exposes it; FSR's images bound to it were garbage)
+     return UINT32_MAX;
+ }
+ 
+diff --git a/upstream/ffx-1.1.4/sdk/src/backends/vk/ffx_vk.cpp b/upstream/ffx-1.1.4/sdk/src/backends/vk/ffx_vk.cpp
+index 7eda9f8..0e7091e 100644
+--- a/upstream/ffx-1.1.4/sdk/src/backends/vk/ffx_vk.cpp
++++ b/upstream/ffx-1.1.4/sdk/src/backends/vk/ffx_vk.cpp
+@@ -432,6 +432,8 @@ uint32_t findMemoryTypeIndex(
+ 
+     for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
+         const VkMemoryPropertyFlags memoryProperties = memProperties.memoryTypes[i].propertyFlags;
++        if (memoryProperties & VK_MEMORY_PROPERTY_PROTECTED_BIT)
++            continue; // sanctuary: never protected memory (newer RADV exposes it; FSR's images bound to it were garbage)
+ 
+         // VK_AMD_device_coherent_memory exposes the physical memory types even
+         // when its logical-device feature was not enabled. Vulkan explicitly
+@@ -1795,6 +1797,8 @@ FfxErrorCode CreateBackendContextVK(FfxInterface* backendInterface, FfxEffect ef
+                 if (memoryTypeBits & memoryBit)
+                 {
+                     const VkMemoryPropertyFlags memFlags = memoryProps.memoryTypes[i].propertyFlags;
++                    if (memFlags & VK_MEMORY_PROPERTY_PROTECTED_BIT)
++                        continue; // sanctuary: never protected memory (newer RADV exposes it; FSR's images bound to it were garbage)
+                     if (!backendContext->deviceCoherentMemoryEnabled &&
+                         (memFlags & VK_MEMORY_PROPERTY_DEVICE_COHERENT_BIT_AMD))
+                         continue;

@@ -1,5 +1,5 @@
-//! The nine pages of the tab bar, the controller mapper's page (opened from Controls, with no tab)
-//! and the drawer body of each.
+//! The pages of the tab bar, the controller mapper's page (opened from Controls, with no tab), the
+//! log (opened from Advanced and after a failed start, with no tab) and the drawer body of each.
 
 pub mod advanced;
 pub mod control_center;
@@ -27,6 +27,7 @@ pub enum Page {
     Trophies,
     Controls,
     Advanced,
+    /// The output of the last start: opened from Advanced and when a start fails; no tab.
     Log,
     /// "Set up a controller", opened from the Controls page; it has no tab of its own.
     Mapper,
@@ -34,7 +35,7 @@ pub enum Page {
 
 impl Page {
     /// Tab order, which is also the order of the arrow keys.
-    pub const ALL: [Page; 8] = [
+    pub const ALL: [Page; 7] = [
         Page::Home,
         Page::Graphics,
         Page::Performance,
@@ -42,7 +43,6 @@ impl Page {
         Page::Trophies,
         Page::Controls,
         Page::Advanced,
-        Page::Log,
     ];
 
     /// The English tab label, which is also the translation key.
@@ -69,12 +69,12 @@ impl Page {
                 "Stored in sanctuary.ini; the in-game menu (Insert or R3+L2) changes the same values."
             }
             Page::Performance => {
-                "Frame rate, shaders and GPU data paths. Applied when the game starts."
+                "Frame rate, render resolution and graphics card. Applied when the game starts."
             }
             Page::Game => "Your game dump, saves and language.",
             Page::Trophies => "The trophies this port recorded while you played.",
             Page::Controls => "Keyboard, mouse and gamepad mapping.",
-            Page::Advanced => "Launcher options, diagnostics and system tools.",
+            Page::Advanced => "Launcher options, system tools and the log of the last start.",
             Page::Log => "Output of the last start. last_run.log holds the same text.",
             Page::Mapper => "Choose Configure next to a control. Each change is saved immediately.",
         }
@@ -92,20 +92,22 @@ impl Page {
         )
     }
 
-    /// The tab to the right, wrapping from Log to Home.
+    /// The tab to the right, wrapping from Advanced to Home.
     pub fn next(self) -> Page {
         Page::ALL[(self.index() + 1) % Page::ALL.len()]
     }
 
-    /// The tab to the left, wrapping from Home to Log.
+    /// The tab to the left, wrapping from Home to Advanced.
     pub fn previous(self) -> Page {
         Page::ALL[(self.index() + Page::ALL.len() - 1) % Page::ALL.len()]
     }
 
-    /// The tab that is active on this page: the controller mapper belongs to Controls.
+    /// The tab that is active on this page: the controller mapper belongs to Controls, the log
+    /// to Advanced.
     pub fn tab(self) -> Page {
         match self {
             Page::Mapper => Page::Controls,
+            Page::Log => Page::Advanced,
             page => page,
         }
     }

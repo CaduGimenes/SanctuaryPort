@@ -5,7 +5,7 @@ use crate::core::options::{
     Choice, AIM_STYLES, ANISOTROPY, ANTI_ALIASING, AUDIO_CHANNELS, DISPLAY_MODES, DRAW_PIPE,
     ENGINE_FPS_CHOICES, FPS_LIMITS, FRAMES_QUEUED, FRAME_GENERATION, GLYPH_STYLES,
     LANGUAGES, LIVE_RESOLUTION, MENU_CONFIRM_STYLES, NO_MSAA,
-    OUTPUTS, PRESETS, READBACKS, STREAM_MEMORY, UI_LANGUAGES, UI_SCALES, UPSCALERS,
+    OUTPUTS, PRESETS, READBACKS, STREAM_MEMORY, TEMPORAL_AA, UI_LANGUAGES, UI_SCALES, UPSCALERS,
     VIDEO_BACKENDS,
 };
 
@@ -298,12 +298,8 @@ pub static SETTINGS: &[Setting] = &[
     app("controls", Json, Object, None),
     app("pad_style", Kind::Text, Text("playstation"), None),
     app("controls_layout", Kind::Int, Int(5), None),
-    app(
-        "glyph_style",
-        Pick(GLYPH_STYLES),
-        Text("off"),
-        env("SANCTUARY_GLYPH_STYLE", "off"),
-    ),
+    // SanctuaryPort: a legacy value only; the choice is sanctuary.ini's (run.py reads it).
+    app("glyph_style", Pick(GLYPH_STYLES), Text("off"), None),
     app_unwritten("launcher_effects", Flag, Bool(true)),
     app_unwritten("controls_device", Kind::Text, Text("")),
     // The page follows the connected controller's family until the player picks one.
@@ -396,6 +392,8 @@ pub static SETTINGS: &[Setting] = &[
     ini("fsr1", Flag, Bool(false), true, 48),
     ini("rcas", Flag, Bool(true), true, 49),
     ini("rcas_strength", Kind::Int, Int(75), true, 50),
+    // SanctuaryPort: FSR 3 temporal anti-aliasing at the render size (experimental).
+    ini("temporal_aa", Pick(TEMPORAL_AA), Text("off"), true, 51),
     ini("object_motion", Flag, Bool(true), false, 2),
     ini("output_res", Pick(OUTPUTS), Text("1920x1080"), false, 4),
     ini(
@@ -538,14 +536,14 @@ mod tests {
                 "cheat_very_hard"
             ]
         );
-        assert_eq!(keys.last(), Some(&"rcas_strength"));
+        assert_eq!(keys.last(), Some(&"temporal_aa"));
         let shown: Vec<_> = rows.iter().filter(|s| s.written).map(|s| s.key).collect();
         assert_eq!(shown, SHOWN_INI_KEYS.iter().copied().collect::<Vec<_>>());
     }
 
     #[test]
     fn shown_ini_keys_are_the_47_controls_of_the_window() {
-        assert_eq!(SHOWN_INI_KEYS.len(), 47); // SanctuaryPort: + fsr1, rcas, rcas_strength
+        assert_eq!(SHOWN_INI_KEYS.len(), 48); // SanctuaryPort: + fsr1, rcas, rcas_strength, temporal_aa
         for seeded in ["monitor", "hdr", "glyph_style"] {
             assert!(SHOWN_INI_KEYS.contains(&seeded), "{seeded}");
         }
@@ -579,7 +577,8 @@ mod tests {
     fn the_runner_defaults_come_from_the_table() {
         assert_eq!(run_default("SANCTUARY_MODS_ENABLED"), Some("1"));
         assert_eq!(run_default("SANCTUARY_STREAM_MEMORY"), Some("cached"));
-        assert_eq!(run_default("SANCTUARY_GLYPH_STYLE"), Some("off"));
+        // SanctuaryPort: the icon style is sanctuary.ini's (run.py), not a variable.
+        assert_eq!(run_default("SANCTUARY_GLYPH_STYLE"), None);
         assert_eq!(run_default("SANCTUARY_NOT_A_SETTING"), None);
     }
 

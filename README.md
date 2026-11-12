@@ -56,7 +56,8 @@ Then follow [Getting your game ready](#getting-your-game-ready) with your own du
 | ✅ Install straight from your PKG files | in the launcher, no external tools |
 | ✅ Languages | whatever your dump ships, in any region's release (English, French, Spanish, Portuguese, German, Italian, Polish, Russian...) |
 | ✅ **Trophies** | an on-screen notice with the trophy's name as you earn it, the platinum by itself, and a Trophies page in the launcher |
-| ✅ Render resolution 480p–4K | resolution patches; FSR 1 upscaling and RCAS sharpening |
+| ✅ Render resolution 480p–4K, ultrawide 21:9 / 32:9 | resolution patches (the camera widens to the screen); FSR 1 upscaling and RCAS sharpening |
+| 🧪 FSR 3 (experimental) | temporal anti-aliasing, or upscaling to the window with the HUD at full size (Graphics > Temporal anti-aliasing) |
 | ✅ Updates | the 1.47 update (Eternal Collection) from its own folder; the base game is never changed |
 | ✅ Windows 10 / 11 | played by the community on real Windows PCs (NVIDIA, AMD and Intel graphics); every release is also tested under Wine |
 | ❌ Online play / PSN | offline only |
@@ -67,11 +68,12 @@ Then follow [Getting your game ready](#getting-your-game-ready) with your own du
 [SpartanPort](https://github.com/FelipePrado0/SpartanPort)'s launcher:
 
 - **Home** with your game's own key art (`sce_sys/pic1.png`, read from your dump; nothing is shipped);
-- **Graphics / Performance**: render resolution, window mode, FSR 1 upscaling, frame limit;
+- **Graphics / Performance**: render resolution, window mode, FSR 1 upscaling, FSR 3 (experimental), frame limit;
 - **Game**: game folder, language, saves, and **installation from PKG** (base game and add-ons);
 - **Trophies**: every trophy with its icon (from your dump), name and description, and which ones you
   have earned with the port;
-- **Controls** (keyboard, mouse and gamepad mapping, button icon style), **Advanced**, **Log**.
+- **Controls** (keyboard, mouse and gamepad mapping, button icon style) and **Advanced** (launcher
+  options, shortcuts and the log of the last start).
 
 Its interface follows your system language (English, Portuguese and many more).
 
@@ -151,7 +153,9 @@ SANCTUARY_GAME_DIR=~/Games/PS4/CUSA00243 SANCTUARY_PATCH_DIR=~/Games/PS4/CUSA002
 
 - The analog stick icons still read L3/R3 with Xbox icons on; Nintendo letters are not drawn yet.
 - At 720p and below some HUD key labels can disappear.
-- Ultrawide (21:9) is not supported yet.
+- Ultrawide: 21:9 (2560x1080, 3440x1440, 3840x1600) and 32:9 (5120x1440) render resolutions, with
+  the camera widened to them (Performance > Aspect ratio); 2560x1080 checked in game, the others
+  use the same patch.
 
 ## How it works
 

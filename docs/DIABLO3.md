@@ -51,10 +51,61 @@ Resolution Patch per 16:9 size (480p to 4K) that replaces the base PS4's 1920 an
 launcher's and the in-game menu's Render resolution pick it (`SANCTUARY_ALLOWED_RESOLUTIONS`). On a
 Radeon 760M: 1080p and 1440p hold 60 FPS, 4K about 44. `SANCTUARY_NEO=1` (a PS4 Pro) gives the same 4K.
 
+Ultrawide: right after the size, the renderer setup stores the camera's aspect ratio, 16/9 as a
+float in `[obj+0x54]` (`movl $0x3fe38e39`, imm32 at 0x4bb218). The 2560x1080, 3440x1440,
+3840x1600 (21:9) and 5120x1440 (32:9) patches write width/height there too: the game widens its
+view (more of the scene at the sides), keeps the hero and the HUD in proportion (globe round,
+minimap at the right corner) and centres its menus. Checked at 2560x1080 (world, pause menu,
+inventory).
+
 Below the window, FSR 1 (`fsr1=1`, launcher Graphics > Upscaling, in-game Image) upscales the
-picture and RCAS sharpens it; a render resolution under 1080p then opens a 1080p window. The
-temporal upscalers and frame generation need the game's motion vectors and stay off
-(`SANCTUARY_UPSCALER=none` in run.py).
+picture and RCAS sharpens it; a render resolution under 1080p then opens a 1080p window.
+
+FSR 3 (experimental, `temporal_aa=fsr3` in sanctuary.ini; launcher Graphics > Temporal
+anti-aliasing, in-game Image) runs on the finished frame at its copy to the display buffer:
+
+- Camera: each scene draw's vertex constant block (2384 bytes) holds its object-to-clip matrix at
+  floats 56..71 (the vertex shader unpacks the position with [448..454] and multiplies). Draws whose
+  matrix is a symmetric perspective (row 3 unit, rows 0/1 orthogonal to it) are keyed by object
+  (shader and position decoding; not floats 40..55, which for most draws follow the hero's light,
+  so a running hero used to lose the camera on ~40% of the frames); the
+  camera displacement most objects agree on between two frames (static scenery) moves the tracked
+  camera (`CameraMotion::OnObjectBlock`, `ResolveObjectCamera`). Near about 1, far about 6000.
+- Depth: the single-sample copy of the 2-sample scene depth the game draws after its opaque pass;
+  the camera is resolved there. Geometry drawn with the scene depth is jittered (Halton).
+- Window = render size: FSR 3 as anti-aliasing, written back into the frame (alpha kept).
+- Render size below the window: FSR 3 upscales to the window; the display copy samples the result,
+  the display buffer and the HUD's own depth are redirected to window-size host images (the HUD is
+  drawn at full size) and the presenter shows that buffer (`RunDisplayUpscale`).
+- FSR takes no 10-bit input: a 16-bit float copy of the 10-bit frame goes in.
+- Object motion: skinned draws (heroes, monsters, NPCs: the 2160-byte bone palette, see
+  `Motion::ClassifyBuffer`) of the lit scene keep their clip positions across frames and write
+  their own vectors into a 2-sample target resolved before FSR (`ObjectMotion`); the rest keeps
+  camera vectors. About 45 draws a frame in town, no FPS cost. `object_motion=0` turns it off.
+- Reactive mask (opt-in, `reactive=1`): the 2-sample scene is kept at the first additive draw
+  after the depth copy (the darkness and fog layers are drawn by then) and compared with the
+  scene when the next target starts (`reactive_msaa.comp`); about 5% of the pixels in town (torch
+  glow, lamps, objects fading out in front of the hero). At the display copy the 2-sample scene
+  already reads black (its memory is used again), so the mask cannot be taken there.
+- Dynamic resolution: the game draws its scene in the top-left part of its targets and the
+  display copy stretches it. The camera vectors and frame generation use the scene's viewport
+  (`CameraMotion::SceneRect`). With the GPU timestamp counter in nanoseconds (PS4: 100 MHz) the
+  game measured its GPU time ten times too long and stayed at its minimum, 70% (1344x756 for
+  1080p), all the time; fixed in `pm4_cmds.h` (`GetGpuClock64`): full 1080p at 60 FPS on a 760M.
+- Frame generation (experimental, `frame_generation=1`, read at start): `vk_frame_generation.cpp`.
+  Per display buffer (the guest flips on another thread, sometimes after the next frame started):
+  depth (R32F copy, `depth_copy.comp`), motion vectors, and the display buffer before the HUD's
+  first draw. At the flip the HUD-less copy goes through the presenter's passes, FSR 3 frame
+  interpolation makes the in-between frame, and the presenter shows it half a real frame before
+  the real one (needs a display of twice the frame rate). On a Radeon 760M it costs about 6 ms
+  a frame, more than the 60 FPS budget has left: real frames drop to 45-53. Stats:
+  `SANCTUARY_FRAME_STATS=1`; `SANCTUARY_FG_SHOT_GENERATED=1` screenshots the generated frames.
+- Not done: DLSS (the path exists, untested: no NVIDIA card here).
+- Debug: `SANCTUARY_DEBUG_MOTION=1` (motion overlay; toggles 1<<20..23 depth / view z / reprojected
+  frame / error map), `SANCTUARY_CAMERA_TRACE=1`, `SANCTUARY_CAMERA_FREEZE=1`,
+  `SANCTUARY_DUMP_TRIGGER/_DIR/_FRAMES` (FSR inputs and output as raw files).
+- FSR itself needed `gpu/patches/fsr-vulkan/0004` (never protected memory): on Mesa 26 RADV it
+  wrote garbage without it.
 
 The profile's `SANCTUARY_MENU_HIDE=vsync,engine_fps,readbacks` leaves out of the in-game menu what the
 profile fixes or the game lacks. Development: `SANCTUARY_OPEN_MENU_AFTER=<seconds>[:<tab>]` opens the

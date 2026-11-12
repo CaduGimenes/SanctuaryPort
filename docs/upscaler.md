@@ -1,9 +1,9 @@
 # Temporal upscaling and frame generation: historical research
 
 > **Status:** historical research from the code base's first game. In SanctuaryPort, FSR 1 with
-> RCAS sharpening is available (launcher Graphics > Upscaling, in-game Image); the temporal
-> upscalers (FSR 3.1, FSR 4, TAA, DLSS) and frame generation are off (`SANCTUARY_UPSCALER=none` in
-> run.py) because Diablo III's scene color, depth and camera constants have not been mapped yet.
+> RCAS sharpening is available, and FSR 3 (experimental, `temporal_aa=fsr3`) as anti-aliasing or
+> upscaling to the window: how Diablo III's camera, depth and frame were mapped is in
+> [DIABLO3.md](DIABLO3.md). FSR 4, TAA, DLSS and frame generation are not offered for it.
 > Descriptions below of selectors, switches and measurements are not instructions for the current
 > release. Player instructions: the [README](../README.md).
 

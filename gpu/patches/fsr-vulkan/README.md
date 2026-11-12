@@ -10,3 +10,8 @@ patches here to its working tree when they are not applied yet:
 - `0003-...`: the rest of the standard includes the FFX 1.1.4 SDK relies on being pulled in
   transitively by libstdc++ but not by libc++ / MinGW: `<cstdlib>` for `_countof`, `<wchar.h>`
   for `swprintf_s`, `<cmath>` for `log2` and `<new>` for placement new.
+- `0004-...`: never allocate protected memory. Newer RADV (Mesa 26) exposes memory types with
+  `VK_MEMORY_PROPERTY_PROTECTED_BIT`; the memory type searches took the first match, so FSR's
+  images were bound to protected memory and the upscaler wrote garbage (its portable API smoke
+  test failed with `VUID-vkBindImageMemory-None-01902`). Found with Diablo III's FSR 3 on a
+  Radeon 760M, 2026-11-12.

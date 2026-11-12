@@ -30,8 +30,8 @@ use sanctuaryport_launcher::ui::update::UpdateMessage;
 use sanctuaryport_launcher::ui::widgets;
 use sanctuaryport_launcher::ui::widgets::modal::{Modal, ModalKind, ModalMessage};
 
-/// The page order of the Global Constraints.
-const ORDER: [Page; 8] = [
+/// The page order of the Global Constraints (SanctuaryPort: the log has no tab).
+const ORDER: [Page; 7] = [
     Page::Home,
     Page::Graphics,
     Page::Performance,
@@ -39,7 +39,6 @@ const ORDER: [Page; 8] = [
     Page::Trophies,
     Page::Controls,
     Page::Advanced,
-    Page::Log,
 ];
 
 /// The pages whose drawer takes 72 % of the window (R95 adds Performance).
@@ -409,7 +408,7 @@ const SUBTITLES: [(Page, &str); 7] = [
     ),
     (
         Page::Performance,
-        "Frame rate, shaders and GPU data paths. Applied when the game starts.",
+        "Frame rate, render resolution and graphics card. Applied when the game starts.",
     ),
     (Page::Game, "Your game dump, saves and language."),
     (
@@ -419,7 +418,7 @@ const SUBTITLES: [(Page, &str); 7] = [
     (Page::Controls, "Keyboard, mouse and gamepad mapping."),
     (
         Page::Advanced,
-        "Launcher options, diagnostics and system tools.",
+        "Launcher options, system tools and the log of the last start.",
     ),
     (
         Page::Log,

@@ -898,10 +898,18 @@ bool PipelineCache::RefreshGraphicsKey(PipelineSelection& sel) {
         for (s32 cb = 0; cb < AmdGpu::NUM_COLOR_BUFFERS && !skip_cb_binding; ++cb) {
             bound += (regs.color_buffers[cb] && regs.color_target_mask.GetMask(cb)) ? 1 : 0;
         }
-        motion_possible = Shader::MotionVectors::positions_address != 0 && bound >= 5 &&
+        // The old game's G-buffer (5+ targets, single-sample depth), or Diablo III's lit
+        // scene: one 10-bit target with its 2-sample scene depth (Motion::Diablo3Skinned
+        // then keeps the skinned draws).
+        const auto& cb0 = regs.color_buffers[0];
+        const bool d3_scene = bound == 1 && cb0 && regs.color_target_mask.GetMask(0) &&
+                              cb0.GetDataFmt() == AmdGpu::DataFormat::Format2_10_10_10 &&
+                              regs.depth_buffer.NumSamples() == 2;
+        motion_possible = Shader::MotionVectors::positions_address != 0 &&
+                          (bound >= 5 && regs.depth_buffer.NumSamples() == 1 || d3_scene) &&
                           !regs.color_buffers[Shader::MotionVectors::Output] &&
-                          regs.depth_buffer.DepthValid() &&
-                          regs.depth_buffer.NumSamples() == 1 && !regs.IsClipDisabled() &&
+                          regs.depth_buffer.DepthValid() && !regs.IsClipDisabled() &&
+                          regs.num_interp < Shader::MotionVectors::FirstFreeLocation &&
                           regs.stage_enable.raw == AmdGpu::ShaderStageEnable::VgtStages::Vs;
     }
     sel.motion = false;
@@ -1021,7 +1029,8 @@ bool PipelineCache::RefreshGraphicsKey(PipelineSelection& sel) {
         color_buffer.swizzle = AmdGpu::IdentityMapping;
         key.write_masks[mv] = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
                               vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
-        key.color_samples[mv] = 1;
+        // Same sample count as the scene (Diablo III: 2); ObjectMotion resolves it.
+        key.color_samples[mv] = std::max(key.num_samples, key.depth_samples);
     }
 
     // Force all color samples to match depth samples to avoid unsupported MSAA configuration

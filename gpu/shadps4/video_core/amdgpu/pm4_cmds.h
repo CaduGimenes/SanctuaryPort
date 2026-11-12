@@ -337,11 +337,14 @@ enum class InterruptSelect : u32 {
     IrqUndocumented = 3,
 };
 
+// sanctuary: the PS4's 64-bit GPU timestamp counts at 100 MHz. In nanoseconds, Diablo III's
+// dynamic resolution measured its GPU time ten times too long and kept the scene at its
+// minimum (70%: 1344x756 for 1080p) all the time.
 static u64 GetGpuClock64() {
     auto now = std::chrono::high_resolution_clock::now();
     auto duration = now.time_since_epoch();
     auto ticks = std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count();
-    return static_cast<u64>(ticks);
+    return static_cast<u64>(ticks) / 10;
 }
 
 static u64 GetGpuPerfCounter() {

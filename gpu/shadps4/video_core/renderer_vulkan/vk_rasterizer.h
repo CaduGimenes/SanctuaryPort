@@ -12,6 +12,7 @@
 #include "video_core/renderer_vulkan/vk_constant_ring.h"
 #include "video_core/renderer_vulkan/vk_scene_resolution.h"
 #include "video_core/renderer_vulkan/vk_object_motion.h"
+#include "video_core/renderer_vulkan/vk_frame_generation.h"
 #include "video_core/renderer_vulkan/vk_draw_pipe.h"
 #include "video_core/renderer_vulkan/vk_draw_prep.h"
 #include "video_core/renderer_vulkan/vk_temporal_upscaler.h"
@@ -50,6 +51,10 @@ public:
 
     [[nodiscard]] TemporalUpscaler& GetUpscaler() noexcept {
         return *upscaler;
+    }
+
+    [[nodiscard]] FrameGeneration& GetFrameGeneration() noexcept {
+        return *frame_generation;
     }
 
     [[nodiscard]] VideoCore::TextureCache& GetTextureCache() noexcept {
@@ -301,6 +306,8 @@ private:
     void NoteFrameStart();
     /// Without an upscaler: the display buffer of the last NoteFrameStart (HUD draws go there too).
     VAddr last_display_buffer = 0;
+    /// sanctuary: frame generation: the display buffer before the HUD's first draw.
+    void NoteDisplayDraw();
     /// SANCTUARY_GPU_PROFILE: a timestamp where a render pass starts (vk_gpu_profiler.h).
     void MarkPass(const GraphicsPipeline* pipeline, const RenderState& state);
     void BindVertexBuffers(const GraphicsPipeline* pipeline,
@@ -338,11 +345,15 @@ private:
     std::unique_ptr<CameraMotion> camera_motion; // sanctuary: motion vectors (docs/upscaler.md)
     std::unique_ptr<SceneTargets> scene_targets;
     bool scene_started = false;
+    VideoCore::ImageId last_frame_color{}; ///< the last colour target drawn before this draw
     std::unique_ptr<ObjectMotion> object_motion;
     bool motion_draw = false;
     u64 motion_geometry{};    ///< vertex-stream identity of the current direct draw
     bool gbuffer_draw = false;
     std::unique_ptr<TemporalUpscaler> upscaler; // sanctuary: FSR (docs/upscaler.md)
+    std::unique_ptr<FrameGeneration> frame_generation; // sanctuary: FSR 3 frame generation
+    u32 display_draws = 0;                 ///< draws into this frame's display buffer
+    VideoCore::ImageId display_image{};    ///< its image at the display copy
     std::array<float, 2> draw_jitter{};         ///< viewport offset of the current draw, pixels
     std::array<float, 2> target_scale{1.0f, 1.0f}; ///< pass drawn into the upscaler's output-size images
     const bool host_markers_enabled;

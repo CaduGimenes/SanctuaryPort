@@ -87,6 +87,10 @@ int main() {
     assert(ClassifyBuffer(96) == BufferRole::SmallSkeleton &&
            ClassifyBuffer(384) == BufferRole::SmallSkeleton);
     assert(ClassifyBuffer(656) == BufferRole::Skeleton && ClassifyBuffer(64) == BufferRole::Other);
+    // Diablo III: the bone palette of skinned models; object constants and the 6192-byte block
+    // are in static draws too.
+    assert(ClassifyBuffer(2160) == BufferRole::Skeleton);
+    assert(ClassifyBuffer(2384) == BufferRole::Other && ClassifyBuffer(6192) == BufferRole::Other);
 
     // Index ranges: reused between full scans, rescanned every Revalidate frames, trimmed.
     IndexRangeCache ranges;

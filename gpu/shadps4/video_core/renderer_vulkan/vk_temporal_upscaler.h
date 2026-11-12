@@ -61,6 +61,27 @@ public:
     /// before it (the fog composite rewrites every pixel).
     void OnSceneComposite();
 
+    /// Diablo III: a draw into the 10-bit scene color with the scene depth.
+    void OnGeometryColor(VideoCore::ImageId color);
+    /// Diablo III copies its scene depth after the surfaces (blended ground details included);
+    /// after it come the darkness and fog layers, then the effects.
+    void OnD3SceneDepthCopy() {
+        d3_after_depth_copy = true;
+    }
+    /// Diablo III: an additive draw into the scene color (fire, glows, spells). The first one
+    /// after the depth copy keeps the scene for the reactive mask (the darkness and fog layers,
+    /// which change every pixel, are drawn by then).
+    void OnD3AdditiveDraw();
+    /// Diablo III: every draw's first color target (null without one). After the snapshot,
+    /// the first one that is not the scene color takes the reactive mask.
+    void OnD3Target(VideoCore::ImageId color);
+    /// Diablo III, at the copy of the finished frame to the display buffer: FSR 3 on that
+    /// frame (after the game's post and outline). With a window larger than the render size it
+    /// upscales to the window and the display copy and HUD are drawn at that size
+    /// (RedirectColor/RedirectDepth/RedirectSampled, DisplayOverride); else it runs 1:1 as
+    /// anti-aliasing and writes the frame back.
+    void RunDisplayUpscale(VideoCore::ImageId frame);
+
     /// Before a compute dispatch: the post-processing combine shader triggers the upscale.
     void OnDispatch(u64 cs_hash);
 
@@ -122,6 +143,25 @@ public:
         u32 width, height;
     };
     bool DisplayOverride(VAddr address, Display& display);
+    /// Diablo III: the host display buffer drawn this frame at `address` (render size below the
+    /// window), in layout General; false when the guest buffer is used.
+    bool DisplayHostImage(VAddr address, Display& display);
+
+    /// sanctuary: what frame generation needs from this frame's FSR 3 dispatch (Diablo III's
+    /// display path), valid until the next frame starts. Depth and motion are in General.
+    struct FrameGenInputs {
+        bool valid = false;
+        VideoCore::ImageId depth{};
+        vk::Image motion{};
+        u32 width = 0, height = 0;               ///< the scene's viewport (dynamic resolution)
+        u32 target_width = 0, target_height = 0; ///< its targets (the largest viewport)
+        std::array<float, 2> jitter{};
+        float near_plane = 0, far_plane = 0, fov = 0, frame_ms = 16.6f;
+        bool reset = false;
+    };
+    FrameGenInputs TakeFrameGenInputs() {
+        return std::exchange(frame_gen_inputs, {});
+    }
 
 private:
     /// sanctuary: views of guest images the upscaler reads, kept across frames: FSR 4 registers
@@ -164,6 +204,9 @@ private:
     void CreatePipelines();
     /// Records the reactive mask pass; false when there is no snapshot this frame.
     bool RecordReactive(vk::ImageView color_view);
+    /// Diablo III: the 2-sample scene into opaque_image (mode 0) or, compared with it, into the
+    /// reactive mask (mode 1). Outside a render pass; false when the sizes do not match.
+    bool RecordD3Reactive(VideoCore::ImageId color, u32 mode);
     /// FSR 4 is selected, possible in this session (not SANCTUARY_RENDER_RES) and has not failed.
     [[nodiscard]] bool UseFsr4() const;
     /// sanctuary: DLSS selected and the bridge is ready (NVIDIA RTX, sanctuary_dlss.dll).
@@ -196,10 +239,21 @@ private:
     bool failed = false;
     u64 trigger_hash = 0x9a9cf8a9;
     VideoCore::ImageId scene_color{};
+    VideoCore::ImageId geometry_color{}; ///< Diablo III: this frame's scene color (MSAA)
+    /// Diablo III: the display buffer of this frame is drawn at the window size (its HUD depth
+    /// of `display_size` is redirected too).
+    bool d3_display = false;
+    vk::Image display_frame_image{};          ///< ui_image, for display_frame_view
+    vk::UniqueImageView display_frame_view;   ///< ui_image as a storage image (its own format)
+    std::array<u32, 2> display_size{};
+    std::array<u32, 2> d3_jitter_sizes{}; ///< render and output width of the last upscale
+    /// The window size when it is larger than `w` x `h` (Diablo III's upscale target).
+    bool DisplayUpscaleSize(u32 w, u32 h, u32& ow, u32& oh) const;
     bool done_this_frame = false;
     u32 preset_file_frames = 0; ///< SANCTUARY_PRESET_FILE polling
     int applied_output = -1;
     bool snapshot_taken = false;
+    bool d3_after_depth_copy = false;
     bool opaque_valid = false;
     bool mask_ready = false;
     std::array<float, 2> jitter{};
@@ -243,8 +297,12 @@ private:
         vk::Format format{};
         u32 width = 0, height = 0;
         bool valid = false;
+        u64 drawn_frame = ~0ull; ///< frame_count of its first pass (its old contents dropped)
     };
     std::mutex display_mutex;
+    u64 frame_count = 0; ///< OnFrameStart calls
+    FrameGenInputs frame_gen_inputs;
+    void NoteFrameGenInputs(u32 w, u32 h, float frame_ms, bool was_reset);
     std::unordered_map<VAddr, DisplayImage> displays;
     FfxVkPortableUpscaleContext* context = nullptr;
     bool resources_ready = false; ///< images below match width/height/out size
@@ -264,9 +322,17 @@ private:
     vk::UniqueDescriptorSetLayout reactive_desc_layout;
     vk::UniquePipelineLayout reactive_pipeline_layout;
     vk::UniquePipeline reactive_pipeline;
+    vk::UniqueDescriptorSetLayout reactive_msaa_desc_layout;
+    vk::UniquePipelineLayout reactive_msaa_pipeline_layout;
+    vk::UniquePipeline reactive_msaa_pipeline; ///< Diablo III (reactive_msaa.comp)
     vk::UniqueDescriptorSetLayout merge_desc_layout;
     vk::UniquePipelineLayout merge_pipeline_layout;
     vk::UniquePipeline merge_pipeline;
+    vk::UniquePipeline merge_rgb10a2_pipeline; ///< Diablo III: 10-bit scene color
+    /// Diablo III: the 10-bit scene converted to 16-bit float for FSR (it takes no 10-bit input).
+    VideoCore::UniqueImage input_image;
+    vk::UniqueImageView input_view;
+
     std::array<VideoCore::UniqueImage, 2> taa_history;
     std::array<vk::UniqueImageView, 2> taa_history_views;
     u32 taa_next = 0;

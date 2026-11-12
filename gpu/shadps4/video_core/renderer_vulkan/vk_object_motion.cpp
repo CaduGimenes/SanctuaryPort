@@ -162,27 +162,21 @@ u32 ObjectMotion::PrepareDraw(const DrawInfo& draw) {
     return index;
 }
 
-void ObjectMotion::EnsureImage(u32 width, u32 height) {
-    if (image && width == image_width && height == image_height) {
-        return;
-    }
+namespace {
+
+VideoCore::UniqueImage MakeImage(const Instance& instance, u32 width, u32 height, u32 samples,
+                                 vk::ImageUsageFlags usage, vk::UniqueImageView& view) {
     const auto device = instance.GetDevice();
-    if (image) {
-        scheduler.Finish();
-    }
-    view.reset();
-    image_layout = vk::ImageLayout::eUndefined;
-    image = VideoCore::UniqueImage(device, instance.GetAllocator());
+    VideoCore::UniqueImage image(device, instance.GetAllocator());
     image.Create(vk::ImageCreateInfo{
         .imageType = vk::ImageType::e2D,
         .format = vk::Format::eR32G32B32A32Sfloat,
         .extent = {width, height, 1},
         .mipLevels = 1,
         .arrayLayers = 1,
-        .samples = vk::SampleCountFlagBits::e1,
+        .samples = vk::SampleCountFlagBits(samples),
         .tiling = vk::ImageTiling::eOptimal,
-        .usage = vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled |
-                 vk::ImageUsageFlagBits::eTransferSrc,
+        .usage = usage,
         .initialLayout = vk::ImageLayout::eUndefined,
     });
     view = Check(device.createImageViewUnique({
@@ -191,18 +185,89 @@ void ObjectMotion::EnsureImage(u32 width, u32 height) {
         .format = vk::Format::eR32G32B32A32Sfloat,
         .subresourceRange = {vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1},
     }));
+    return image;
+}
+
+constexpr vk::ImageUsageFlags AttachmentUsage = vk::ImageUsageFlagBits::eColorAttachment |
+                                                vk::ImageUsageFlagBits::eSampled |
+                                                vk::ImageUsageFlagBits::eTransferSrc;
+
+} // namespace
+
+void ObjectMotion::Create(Target& target, u32 width, u32 height, u32 samples) {
+    if (target.image) {
+        scheduler.Finish();
+    }
+    target.view.reset();
+    target.image = MakeImage(instance, width, height, samples, AttachmentUsage, target.view);
+    target.width = width;
+    target.height = height;
+    target.samples = samples;
+    target.layout = vk::ImageLayout::eUndefined;
+}
+
+void ObjectMotion::EnsureImage(u32 width, u32 height, u32 samples) {
+    if (image && width == image_width && height == image_height && samples == image_samples) {
+        return;
+    }
+    if (image) {
+        scheduler.Finish();
+    }
+    view.reset();
+    resolved_view.reset();
+    resolved = VideoCore::UniqueImage();
+    image_layout = vk::ImageLayout::eUndefined;
+    resolved_layout = vk::ImageLayout::eUndefined;
+    image = MakeImage(instance, width, height, samples, AttachmentUsage, view);
+    if (samples > 1) {
+        resolved = MakeImage(instance, width, height, 1,
+                             vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferDst |
+                                 vk::ImageUsageFlagBits::eTransferSrc,
+                             resolved_view);
+    }
     image_width = width;
     image_height = height;
+    image_samples = samples;
     written = false;
 }
 
-void ObjectMotion::Attach(RenderState& state, u32 width, u32 height) {
+void ObjectMotion::Attach(RenderState& state, u32 width, u32 height, u32 samples, bool scene) {
     constexpr u32 slot = Shader::MotionVectors::Output;
-    EnsureImage(width, height);
+    samples = std::max(samples, 1u);
     auto& attachment = state.color_attachments[slot];
     attachment = {};
-    attachment.image_view = *view;
     attachment.image_layout = vk::ImageLayout::eColorAttachmentOptimal;
+    state.num_color_attachments = std::max<u16>(state.num_color_attachments, slot + 1);
+    // Another size than the frame's motion image (Diablo III draws skinned models into
+    // smaller targets too): a scratch target, so the frame's image is not recreated.
+    if (!scene || image && written && (width != image_width || height != image_height ||
+                                       samples != image_samples)) {
+        if (!scratch.image || scratch.width != width || scratch.height != height ||
+            scratch.samples != samples) {
+            Create(scratch, width, height, samples);
+        }
+        attachment.image_view = *scratch.view;
+        if (scratch.layout != vk::ImageLayout::eColorAttachmentOptimal) {
+            scheduler.EndRendering();
+            const vk::ImageMemoryBarrier2 barrier{
+                .srcStageMask = vk::PipelineStageFlagBits2::eAllCommands,
+                .srcAccessMask = vk::AccessFlagBits2::eMemoryWrite,
+                .dstStageMask = vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+                .dstAccessMask = vk::AccessFlagBits2::eColorAttachmentWrite,
+                .oldLayout = vk::ImageLayout::eUndefined,
+                .newLayout = vk::ImageLayout::eColorAttachmentOptimal,
+                .image = vk::Image(scratch.image),
+                .subresourceRange = {vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1},
+            };
+            scheduler.Record([barrier](vk::CommandBuffer cmd) {
+                cmd.pipelineBarrier2({.imageMemoryBarrierCount = 1, .pImageMemoryBarriers = &barrier});
+            });
+            scratch.layout = vk::ImageLayout::eColorAttachmentOptimal;
+        }
+        return;
+    }
+    EnsureImage(width, height, samples);
+    attachment.image_view = *view;
     if (!written || image_layout != vk::ImageLayout::eColorAttachmentOptimal) {
         // Clear once per frame; later reads must not erase the validity of this history.
         scheduler.EndRendering();
@@ -226,26 +291,51 @@ void ObjectMotion::Attach(RenderState& state, u32 width, u32 height) {
         attachment.is_clear = !written;
         written = true;
     }
-    state.num_color_attachments = std::max<u16>(state.num_color_attachments, slot + 1);
 }
 
 vk::ImageView ObjectMotion::PrepareRead(vk::CommandBuffer cmdbuf, u32 width, u32 height,
                                         bool& valid) {
-    EnsureImage(std::max(image_width, 1u), std::max(image_height, 1u));
+    EnsureImage(std::max(image_width, 1u), std::max(image_height, 1u), image_samples);
     valid = written && width == image_width && height == image_height;
-    const vk::ImageMemoryBarrier2 barrier{
-        .srcStageMask = vk::PipelineStageFlagBits2::eAllCommands,
-        .srcAccessMask = vk::AccessFlagBits2::eMemoryRead | vk::AccessFlagBits2::eMemoryWrite,
-        .dstStageMask = vk::PipelineStageFlagBits2::eComputeShader,
-        .dstAccessMask = vk::AccessFlagBits2::eShaderRead,
-        .oldLayout = image_layout,
-        .newLayout = vk::ImageLayout::eGeneral,
-        .image = vk::Image(image),
-        .subresourceRange = {vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1},
+    const auto barrier = [&](vk::Image target, vk::ImageLayout& layout, vk::ImageLayout new_layout,
+                             vk::PipelineStageFlags2 stage, vk::AccessFlags2 access) {
+        const vk::ImageMemoryBarrier2 b{
+            .srcStageMask = vk::PipelineStageFlagBits2::eAllCommands,
+            .srcAccessMask = vk::AccessFlagBits2::eMemoryRead | vk::AccessFlagBits2::eMemoryWrite,
+            .dstStageMask = stage,
+            .dstAccessMask = access,
+            .oldLayout = layout,
+            .newLayout = new_layout,
+            .image = target,
+            .subresourceRange = {vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1},
+        };
+        cmdbuf.pipelineBarrier2({.imageMemoryBarrierCount = 1, .pImageMemoryBarriers = &b});
+        layout = new_layout;
     };
-    cmdbuf.pipelineBarrier2({.imageMemoryBarrierCount = 1, .pImageMemoryBarriers = &barrier});
-    image_layout = vk::ImageLayout::eGeneral;
-    return *view;
+    if (!Resolved()) {
+        barrier(vk::Image(image), image_layout, vk::ImageLayout::eGeneral,
+                vk::PipelineStageFlagBits2::eComputeShader, vk::AccessFlagBits2::eShaderRead);
+        return *view;
+    }
+    // Samples averaged: a pixel only partly covered by a moving object gets b < 1 and keeps
+    // the camera vector in the compose pass.
+    const auto transfer = vk::PipelineStageFlagBits2::eTransfer;
+    barrier(vk::Image(image), image_layout, vk::ImageLayout::eTransferSrcOptimal, transfer,
+            vk::AccessFlagBits2::eTransferRead);
+    barrier(vk::Image(resolved), resolved_layout, vk::ImageLayout::eTransferDstOptimal, transfer,
+            vk::AccessFlagBits2::eTransferWrite);
+    if (valid) {
+        cmdbuf.resolveImage(vk::Image(image), vk::ImageLayout::eTransferSrcOptimal,
+                            vk::Image(resolved), vk::ImageLayout::eTransferDstOptimal,
+                            vk::ImageResolve{
+                                .srcSubresource = {vk::ImageAspectFlagBits::eColor, 0, 0, 1},
+                                .dstSubresource = {vk::ImageAspectFlagBits::eColor, 0, 0, 1},
+                                .extent = {image_width, image_height, 1},
+                            });
+    }
+    barrier(vk::Image(resolved), resolved_layout, vk::ImageLayout::eGeneral,
+            vk::PipelineStageFlagBits2::eComputeShader, vk::AccessFlagBits2::eShaderRead);
+    return *resolved_view;
 }
 
 } // namespace Vulkan

@@ -1,5 +1,6 @@
 import sys
 import tempfile
+import struct
 import unittest
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -14,21 +15,28 @@ import patches  # noqa: E402
 
 
 class Diablo3PatchTests(unittest.TestCase):
-    """patches/Diablo_III.xml: one resolution patch per 16:9 size, two writes each (width, height)."""
+    """patches/Diablo_III.xml: one resolution patch per size: width and height, and for the wider
+    sizes the camera's aspect ratio (float width / height)."""
 
-    def test_a_patch_per_built_in_16_9_size(self):
+    def test_a_patch_per_built_in_size(self):
         xml = ROOT / 'patches' / 'Diablo_III.xml'
         names = patches.available_patches(xml, '01.47')
         expected = {f'{graphics_options.RESOLUTION_PREFIX} - {n}'
-                    for n in ('480p', '720p', '900p', '1440p', '1800p', '4K')}
+                    for n in ('480p', '720p', '900p', '1440p', '1800p', '4K',
+                              '2560x1080', '3440x1440', '3840x1600', '5120x1440')}
         self.assertEqual(names, expected)
         for meta in ET.parse(xml).getroot().iter('Metadata'):
             size = meta.get('Name').split(' - ')[1]
             width, height = graphics_options.resolution_size(size)
             lines = list(meta.iter('Line'))
-            self.assertEqual(len(lines), 2)
-            values = [int.from_bytes(bytes.fromhex(line.get('Value')), 'little') for line in lines]
+            values = [int.from_bytes(bytes.fromhex(line.get('Value')), 'little') for line in lines[:2]]
             self.assertEqual(values, [width, height], size)
+            if graphics_options.aspect_of(size) == '16:9':
+                self.assertEqual(len(lines), 2, size)
+            else:
+                self.assertEqual(len(lines), 3, size)
+                aspect = struct.unpack('<f', bytes.fromhex(lines[2].get('Value')))[0]
+                self.assertAlmostEqual(aspect, width / height, places=5, msg=size)
 
     def test_both_releases_use_it(self):
         for title in ('CUSA00242', 'CUSA00243'):

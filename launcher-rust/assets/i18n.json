@@ -2660,7 +2660,15 @@
    "Menu confirmation": "Confirmação nos menus",
    "Which button confirms choices in save/load dialogs and menu lists. Default: Cross confirms, Circle cancels. Swapped: Circle confirms, Cross cancels. Does not change gameplay or combat controls.": "Qual botão confirma nas janelas de salvar/carregar e nas listas de menu. Padrão: X confirma, Círculo cancela. Invertido: Círculo confirma, X cancela. Não muda os controles do jogo nem do combate.",
    "Yes": "Sim",
-   "✗ No eboot.bin in the game folder": "✗ Sem eboot.bin na pasta do jogo"
+   "✗ No eboot.bin in the game folder": "✗ Sem eboot.bin na pasta do jogo",
+   "Temporal anti-aliasing": "Antisserrilhado temporal",
+   "FSR 3 (experimental)": "FSR 3 (experimental)",
+   "AMD FSR 3 uses the previous frames: at the window size it smooths jagged edges; with a Render resolution below the window (Performance page) it upscales the game to the window instead of FSR 1, with the HUD drawn at full size. Any graphics card; costs some GPU time (about 3-6 ms on integrated graphics). Experimental: tell us if something smears or flickers. Also in the in-game menu.": "O AMD FSR 3 usa os quadros anteriores: no tamanho da janela, suaviza as bordas serrilhadas; com uma Resolução de renderização menor que a janela (página Desempenho), amplia o jogo até a janela no lugar do FSR 1, com o HUD desenhado em tamanho cheio. Qualquer placa de vídeo; custa um pouco de GPU (cerca de 3-6 ms em vídeo integrado). Experimental: avise se algo borrar ou piscar. Também no menu do jogo.",
+   "Last start log": "Registro da última partida",
+   "When you report a problem, attach last_run.log from the port folder: it is the log of the last start.": "Ao relatar um problema, anexe o last_run.log da pasta do port: é o registro da última partida.",
+   "Launcher options, system tools and the log of the last start.": "Opções do launcher, ferramentas do sistema e o registro da última partida.",
+   "Frame rate, render resolution and graphics card. Applied when the game starts.": "Taxa de quadros, resolução de renderização e placa de vídeo. Aplicado ao iniciar o jogo.",
+   "Your screen's shape: 21:9 and 32:9 are ultrawide monitors. Lists the render resolutions of that shape; the game widens its view to it.": "O formato da sua tela: 21:9 e 32:9 são monitores ultrawide. Mostra as resoluções de renderização desse formato; o jogo amplia a visão para ele."
   },
   "es": {
    "The launcher cannot write to {}, so it cannot replace itself there. Open the releases page to download the new version by hand?": "El launcher no puede escribir en {}, así que no puede reemplazarse ahí. ¿Abrir la página de releases para descargar la versión nueva a mano?",
@@ -3120,7 +3128,15 @@
    "Launcher options, diagnostics and system tools.": "Opciones del launcher, diagnóstico y herramientas del sistema.",
    "Options": "Opciones",
    "Output of the last start. last_run.log holds the same text.": "Salida del último inicio. last_run.log tiene el mismo texto.",
-   "Share / Create": "Compartir / Crear"
+   "Share / Create": "Compartir / Crear",
+   "Temporal anti-aliasing": "Antialiasing temporal",
+   "FSR 3 (experimental)": "FSR 3 (experimental)",
+   "AMD FSR 3 uses the previous frames: at the window size it smooths jagged edges; with a Render resolution below the window (Performance page) it upscales the game to the window instead of FSR 1, with the HUD drawn at full size. Any graphics card; costs some GPU time (about 3-6 ms on integrated graphics). Experimental: tell us if something smears or flickers. Also in the in-game menu.": "AMD FSR 3 usa los fotogramas anteriores: al tamaño de la ventana suaviza los bordes dentados; con una Resolución de renderizado menor que la ventana (página Rendimiento) escala el juego hasta la ventana en lugar de FSR 1, con el HUD dibujado a tamaño completo. Cualquier tarjeta gráfica; cuesta algo de GPU (unos 3-6 ms en gráficos integrados). Experimental: avísanos si algo se emborrona o parpadea. También en el menú del juego.",
+   "Last start log": "Registro del último inicio",
+   "When you report a problem, attach last_run.log from the port folder: it is the log of the last start.": "Al informar de un problema, adjunta last_run.log de la carpeta del port: es el registro del último inicio.",
+   "Launcher options, system tools and the log of the last start.": "Opciones del launcher, herramientas del sistema y el registro del último inicio.",
+   "Frame rate, render resolution and graphics card. Applied when the game starts.": "Frecuencia de fotogramas, resolución de renderizado y tarjeta gráfica. Se aplica al iniciar el juego.",
+   "Your screen's shape: 21:9 and 32:9 are ultrawide monitors. Lists the render resolutions of that shape; the game widens its view to it.": "La forma de tu pantalla: 21:9 y 32:9 son monitores ultrapanorámicos. Muestra las resoluciones de renderizado de esa forma; el juego amplía su vista a ella."
   },
   "pl": {
    "Polish": "Polski",
@@ -3433,7 +3449,15 @@
    "Touchpad right": "Prawa strona touchpada",
    "Triangle": "Trójkąt",
    "Window system": "System okien",
-   "Your game dump, saves and language.": "Twój zrzut gry, zapisy i język."
+   "Your game dump, saves and language.": "Twój zrzut gry, zapisy i język.",
+   "Temporal anti-aliasing": "Wygładzanie czasowe",
+   "FSR 3 (experimental)": "FSR 3 (eksperymentalne)",
+   "AMD FSR 3 uses the previous frames: at the window size it smooths jagged edges; with a Render resolution below the window (Performance page) it upscales the game to the window instead of FSR 1, with the HUD drawn at full size. Any graphics card; costs some GPU time (about 3-6 ms on integrated graphics). Experimental: tell us if something smears or flickers. Also in the in-game menu.": "AMD FSR 3 korzysta z poprzednich klatek: przy rozmiarze okna wygładza poszarpane krawędzie; przy Rozdzielczości renderowania niższej niż okno (strona Wydajność) skaluje grę do rozmiaru okna zamiast FSR 1, a HUD jest rysowany w pełnym rozmiarze. Każda karta graficzna; kosztuje trochę GPU (ok. 3-6 ms na zintegrowanej grafice). Eksperymentalne: daj znać, jeśli coś się rozmazuje lub migocze. Także w menu w grze.",
+   "Last start log": "Dziennik ostatniego uruchomienia",
+   "When you report a problem, attach last_run.log from the port folder: it is the log of the last start.": "Zgłaszając problem, dołącz plik last_run.log z folderu portu: to dziennik ostatniego uruchomienia.",
+   "Launcher options, system tools and the log of the last start.": "Opcje launchera, narzędzia systemowe i dziennik ostatniego uruchomienia.",
+   "Frame rate, render resolution and graphics card. Applied when the game starts.": "Liczba klatek, rozdzielczość renderowania i karta graficzna. Stosowane przy uruchomieniu gry.",
+   "Your screen's shape: 21:9 and 32:9 are ultrawide monitors. Lists the render resolutions of that shape; the game widens its view to it.": "Proporcje Twojego ekranu: 21:9 i 32:9 to monitory ultraszerokie. Pokazuje rozdzielczości renderowania o tych proporcjach; gra poszerza do nich widok."
   },
   "fr": {
    "Polish": "Polonais",
@@ -5467,7 +5491,15 @@
   "Touchpad right": "Правая часть тачпада",
   "Triangle": "Треугольник",
   "Window system": "Оконная система",
-  "Your game dump, saves and language.": "Ваш дамп игры, сохранения и язык."
+  "Your game dump, saves and language.": "Ваш дамп игры, сохранения и язык.",
+  "Temporal anti-aliasing": "Временное сглаживание",
+  "FSR 3 (experimental)": "FSR 3 (экспериментально)",
+  "AMD FSR 3 uses the previous frames: at the window size it smooths jagged edges; with a Render resolution below the window (Performance page) it upscales the game to the window instead of FSR 1, with the HUD drawn at full size. Any graphics card; costs some GPU time (about 3-6 ms on integrated graphics). Experimental: tell us if something smears or flickers. Also in the in-game menu.": "AMD FSR 3 использует предыдущие кадры: при размере окна сглаживает зубчатые края; при Разрешении рендеринга ниже окна (страница «Производительность») масштабирует игру до размера окна вместо FSR 1, а HUD рисуется в полном размере. Любая видеокарта; немного нагружает GPU (около 3-6 мс на встроенной графике). Экспериментально: сообщите, если что-то размывается или мерцает. Есть и в меню в игре.",
+  "Last start log": "Журнал последнего запуска",
+  "When you report a problem, attach last_run.log from the port folder: it is the log of the last start.": "Сообщая о проблеме, приложите last_run.log из папки порта: это журнал последнего запуска.",
+  "Launcher options, system tools and the log of the last start.": "Настройки лаунчера, системные инструменты и журнал последнего запуска.",
+  "Frame rate, render resolution and graphics card. Applied when the game starts.": "Частота кадров, разрешение рендеринга и видеокарта. Применяется при запуске игры.",
+  "Your screen's shape: 21:9 and 32:9 are ultrawide monitors. Lists the render resolutions of that shape; the game widens its view to it.": "Форма вашего экрана: 21:9 и 32:9 — сверхширокие мониторы. Показывает разрешения рендеринга этой формы; игра расширяет обзор под неё."
  },
  "windows_languages": {
   "25": "ru",

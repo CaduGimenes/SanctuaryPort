@@ -580,10 +580,12 @@ pub fn status_line(state: &State) -> String {
 /// counts from 1.
 pub fn quick_segments(state: &State) -> Vec<(String, bool)> {
     let lang = state.lang.as_str();
-    let fps = match state.store.text("fps_limit").as_str() {
-        "0" => choice_label(FPS_LIMITS, "0", lang),
-        limit => format!("{limit} FPS"),
+    // SanctuaryPort: Diablo III runs at 60; only a lower limit changes what you get.
+    let fps = match state.store.text("fps_limit").parse::<u32>() {
+        Ok(limit) if limit > 0 && limit < 60 => format!("{limit} FPS"),
+        _ => "60 FPS".to_string(),
     };
+    let _ = FPS_LIMITS;
     // The size the game renders at (Performance > Render resolution), which is what a player
     // chose: the output resolution stays at the game's own 1920 x 1080.
     let render = state.store.text("render_resolution");

@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <chrono>
 #include <deque>
 
 #include <condition_variable>
@@ -38,6 +39,8 @@ struct Frame {
     bool is_hdr{false};
     u8 id{};
     vk::Format format{}; ///< sanctuary: of `image` (screenshots)
+    /// sanctuary: frame generation: the interpolated frame shown before this one, or null.
+    Frame* generated = nullptr;
 };
 
 enum SchedulerType {
@@ -134,6 +137,10 @@ private:
     std::vector<Frame> present_frames;
     std::queue<Frame*> free_queue;
     Frame* last_submit_frame;
+    // sanctuary: frame generation pacing (present thread): the real frames' interval.
+    std::chrono::steady_clock::time_point last_real_present{};
+    double real_interval_ms = 16.7;
+    bool presenting_generated = false;
     std::mutex free_mutex;
     std::condition_variable free_cv;
     std::condition_variable_any frame_cv;

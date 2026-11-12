@@ -24,6 +24,7 @@
 #include <miniz.h>
 
 #include <algorithm>
+#include <thread>
 #include <array>
 #include <atomic>
 #include <cctype>
@@ -656,6 +657,42 @@ Frame* Presenter::PrepareFrame(const Libraries::VideoOut::BufferAttributeGroup& 
         fsr_settings.use_rcas &&
         SanctuaryGraphics::FsrPassRuns(fsr_settings.enable, true, int(image_size.width), int(image_size.height),
                                   int(frame->width), int(frame->height));
+    // sanctuary: frame generation: the HUD-less copy of this frame through the same passes.
+    auto& frame_gen = rasterizer->GetFrameGeneration();
+    frame->generated = nullptr;
+    Frame* hudless_frame = nullptr;
+    if (frame_gen.Enabled() && !frame->is_hdr) {
+        vk::ImageView hudless_view{};
+        vk::Extent2D hudless_size{};
+        if (frame_gen.HudlessSource(cpu_address, view_info.format, hudless_view, hudless_size) &&
+            hudless_size == image_size) {
+            hudless_frame = frame_gen.HudlessFrame(frame->width, frame->height, frame->format);
+        }
+        if (hudless_frame) {
+            const vk::ImageMemoryBarrier2 to_attachment{
+                .srcStageMask = vk::PipelineStageFlagBits2::eAllCommands,
+                .srcAccessMask = vk::AccessFlagBits2::eMemoryRead,
+                .dstStageMask = vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+                .dstAccessMask = vk::AccessFlagBits2::eColorAttachmentWrite,
+                .oldLayout = vk::ImageLayout::eUndefined,
+                .newLayout = vk::ImageLayout::eColorAttachmentOptimal,
+                .image = hudless_frame->image,
+                .subresourceRange{frame_subresources},
+            };
+            cmdbuf.pipelineBarrier2({.imageMemoryBarrierCount = 1,
+                                     .pImageMemoryBarriers = &to_attachment});
+            const auto view = fsr_pass.Render(cmdbuf, hudless_view, image_size,
+                                              {frame->width, frame->height}, fsr_settings, false);
+            auto hudless_pp = pp_settings;
+            hudless_pp.srgb_input =
+                attribute.attrib.pixel_format == Libraries::VideoOut::PixelFormat::A2R10G10B10Srgb;
+            hudless_pp.picture = MovieBars::Cutscenes().Bars(image_size.width, image_size.height,
+                                                             MovieBars::NowMs());
+            pp_pass.Render(cmdbuf, view, image_size, *hudless_frame, hudless_pp);
+        } else {
+            frame_gen.Skip(cpu_address);
+        }
+    }
     image_view = fsr_pass.Render(cmdbuf, image_view, image_size, {frame->width, frame->height},
                                  fsr_settings, frame->is_hdr);
 
@@ -679,9 +716,18 @@ Frame* Presenter::PrepareFrame(const Libraries::VideoOut::BufferAttributeGroup& 
         ++frame_dump_index;
     }
 
+    // sanctuary: the frame between the previous real frame and this one.
+    if (hudless_frame) {
+        frame->generated = frame_gen.Generate(cmdbuf, *frame, cpu_address);
+    }
+
     // Flush frame creation commands.
     frame->ready_semaphore = draw_scheduler.GetWorkSemaphore()->Handle();
     frame->ready_tick = draw_scheduler.CurrentTick();
+    if (frame->generated) {
+        frame->generated->ready_semaphore = frame->ready_semaphore;
+        frame->generated->ready_tick = frame->ready_tick;
+    }
     SubmitInfo info{};
     draw_scheduler.Flush(info);
 
@@ -837,6 +883,31 @@ void Presenter::PresentLoadingFrame() {
 }
 
 void Presenter::Present(Frame* frame, bool is_reusing_frame, bool is_game_frame) {
+    // sanctuary: frame generation: the interpolated frame first, the real one half a real
+    // frame interval later (the display needs twice the game's frame rate for this to help).
+    using Clock = std::chrono::steady_clock;
+    if (!is_reusing_frame && is_game_frame && !presenting_generated) {
+        const auto now = Clock::now();
+        if (last_real_present.time_since_epoch().count()) {
+            const double ms =
+                std::chrono::duration<double, std::milli>(now - last_real_present).count();
+            if (ms > 4.0 && ms < 100.0) {
+                real_interval_ms += (ms - real_interval_ms) * 0.1;
+            }
+        }
+        last_real_present = now;
+    }
+    if (Frame* generated = std::exchange(frame->generated, nullptr); generated) {
+        presenting_generated = true;
+        Present(generated, true, false);
+        presenting_generated = false;
+        rasterizer->GetFrameGeneration().OnPresented(generated);
+        const auto shown = Clock::now();
+        const auto half = std::chrono::duration<double, std::milli>(
+            std::clamp(real_interval_ms * 0.5, 2.0, 25.0));
+        static const bool nosleep = std::getenv("FG_NOSLEEP") != nullptr; // TEMP
+        if (!nosleep) std::this_thread::sleep_until(shown + std::chrono::duration_cast<Clock::duration>(half));
+    }
     // Free the frame for reuse
     const auto free_frame = [&] {
         if (!is_reusing_frame) {
@@ -935,7 +1006,10 @@ void Presenter::Present(Frame* frame, bool is_reusing_frame, bool is_game_frame)
                          vk::ImageLayout::eTransferDstOptimal,
                          MakeImageBlitFit(frame->width, frame->height, extent.width, extent.height),
                          vk::Filter::eLinear);
-        if (VideoCore::ConsumeGameOnlyScreenshotRequests() != 0) {
+        // SANCTUARY_FG_SHOT_GENERATED=1 (debugging): screenshots show the generated frames.
+        static const bool shot_generated = std::getenv("SANCTUARY_FG_SHOT_GENERATED") != nullptr;
+        if (presenting_generated == shot_generated &&
+            VideoCore::ConsumeGameOnlyScreenshotRequests() != 0) {
             CaptureScreenshot(instance, scheduler, cmdbuf, *frame);
         }
         // sanctuary: the settings menu / FPS counter over the frame, at display resolution.

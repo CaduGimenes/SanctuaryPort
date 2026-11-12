@@ -576,9 +576,12 @@ fn every_setting_lights_save_persists_and_comes_back() {
     for (key, default) in &defaults {
         // The controller type is the Controls page's own (below); objects and numbers have no box.
         // A key the ini also holds is the ini's control (above): its App value only seeds it.
+        // SanctuaryPort: the development switches are turned off at every start (not shown).
         if key == "pad_style"
             || !(default.is_boolean() || default.is_string())
             || catalog::ini_setting(key).is_some()
+            || ["frame_stats", "gpu_profile", "perf_diag", "frame_capture_key", "vk_validation"]
+                .contains(&key.as_str())
         {
             continue;
         }

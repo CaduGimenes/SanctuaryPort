@@ -140,7 +140,6 @@ fn runner_defaults_are_run_pys() {
     let expected = [
         ("SANCTUARY_MODS_ENABLED", "1"), // run.py: env.get('SANCTUARY_MODS_ENABLED', '1')
         ("SANCTUARY_STREAM_MEMORY", "cached"), // run.py: env.get('SANCTUARY_STREAM_MEMORY', 'cached')
-        ("SANCTUARY_GLYPH_STYLE", "off"), // run.py: env.get('SANCTUARY_GLYPH_STYLE', 'off')
         ("SANCTUARY_LANGUAGE", "1"),     // the English text and voice, as the game assumes
     ];
     for (name, literal) in expected {

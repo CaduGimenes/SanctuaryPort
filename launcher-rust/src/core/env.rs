@@ -247,7 +247,10 @@ pub fn environment(
             env.insert(name.into(), value);
         }
     };
-    put_choice(&mut env, "glyph_style");
+    // SanctuaryPort: the button icon style lives in sanctuary.ini (glyph_style, Controls page),
+    // which run.py reads; the old launcher setting would override a newer choice.
+    let _ = &put_choice;
+    env.shift_remove("SANCTUARY_GLYPH_STYLE");
     env.shift_remove("SANCTUARY_MENU_CONFIRM_SWAP");
     env.shift_remove("SANCTUARY_MENU_CONFIRM");
     if let Some(val) = settings.get("menu_confirm_swap") {

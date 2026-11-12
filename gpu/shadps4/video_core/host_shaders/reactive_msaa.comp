@@ -1,0 +1,48 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+// sanctuary: Diablo III's reactive mask. Its lit scene is a 2-sample 10-bit target: mode 0 keeps
+// the scene before the first additive draw after the game's depth copy (fire, glows, spells),
+// mode 1 compares the finished scene with it and marks the pixels the effects changed, so FSR
+// relies less on history there and moving effects do not smear (see upscale_reactive.comp).
+#version 450
+#extension GL_EXT_samplerless_texture_functions : require
+
+layout(local_size_x = 8, local_size_y = 8) in;
+
+layout(binding = 0, rgba16f) uniform image2D opaque;
+layout(binding = 1) uniform texture2DMS scene;
+layout(binding = 2, r8) uniform writeonly image2D reactive;
+
+layout(push_constant) uniform Params {
+    float scale;
+    float max_value;
+    float threshold;
+    uint mode; // 0 = snapshot, 1 = mask
+};
+
+vec3 SceneColor(ivec2 pixel) {
+    const int samples = textureSamples(scene);
+    vec3 color = vec3(0.0);
+    for (int i = 0; i < samples; ++i) {
+        color += texelFetch(scene, pixel, i).rgb;
+    }
+    return color / float(samples);
+}
+
+void main() {
+    const ivec2 pixel = ivec2(gl_GlobalInvocationID.xy);
+    if (any(greaterThanEqual(pixel, imageSize(opaque)))) {
+        return;
+    }
+    const vec3 after = SceneColor(pixel);
+    if (mode == 0u) {
+        imageStore(opaque, pixel, vec4(after, 1.0));
+        return;
+    }
+    const vec3 before = imageLoad(opaque, pixel).rgb;
+    // Relative change, so dim and bright effects count alike; faint changes keep the history,
+    // as with AMD's reactive mask generator.
+    const vec3 diff = abs(after - before);
+    const float peak = max(max(max(after.r, after.g), after.b), max(max(before.r, before.g), before.b));
+    const float value = max(max(diff.r, diff.g), diff.b) / max(peak, 1e-3) * scale;
+    imageStore(reactive, pixel, vec4(value < threshold ? 0.0 : min(value, max_value)));
+}

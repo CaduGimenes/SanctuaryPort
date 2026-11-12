@@ -20,6 +20,7 @@ use crate::core::platform::tool::SystemTools;
 use crate::core::settings::Settings;
 use crate::core::steam::{self, Added, Shortcut, SteamError};
 use crate::core::steam_art;
+use crate::ui::pages::Page;
 use crate::ui::app::{Message, State};
 use crate::ui::pages::performance::SelectRow;
 use crate::ui::persist;
@@ -174,7 +175,13 @@ pub fn linux_checks(state: &State, lang: &str) -> Vec<CheckRow> {
     ]
 }
 
-/// The check boxes of the Diagnostics section.
+/// The development switches (frame statistics, GPU profile, captures, validation): no longer shown
+/// (SanctuaryPort keeps the launcher to what players use); Store::load turns them off.
+pub const DIAGNOSTIC_KEYS: [&str; 5] =
+    ["frame_stats", "gpu_profile", "perf_diag", "frame_capture_key", "vk_validation"];
+
+#[allow(dead_code)]
+/// The check boxes of the former Diagnostics section.
 pub fn diagnostic_checks(state: &State, lang: &str) -> Vec<CheckRow> {
     vec![
         check_row(
@@ -229,7 +236,6 @@ pub fn check_keys(state: &State) -> Vec<&'static str> {
     let lang = state.lang.as_str();
     let mut all = launcher_checks(state, lang);
     all.extend(linux_checks(state, lang));
-    all.extend(diagnostic_checks(state, lang));
     all.into_iter().map(|check| check.key).collect()
 }
 
@@ -268,13 +274,8 @@ pub fn view(state: &State) -> Element<'_, Message> {
         None => select_pairs(key, &[], ""),
     };
     let mut page = column![
+        // The launcher language is the corner menu's (not repeated here).
         section(state.rtl, &tr(lang, "Launcher")),
-        row(
-            state.rtl,
-            &tr(lang, "Launcher language"),
-            pick("ui_language"),
-            Some(&hint("Applies when the launcher opens again.")),
-        ),
         row(
             state.rtl,
             &tr(lang, "GUI Scale"),
@@ -327,20 +328,15 @@ pub fn view(state: &State) -> Element<'_, Message> {
         }
     }
 
-    let clear = button(text(tr(lang, "Clear shader cache"))).style(theme::button_flat);
-    let clear = if state.game.is_live() {
-        clear
-    } else {
-        clear.on_press(Message::ClearShaderCache)
-    };
-    // One row (R93): the three buttons where every row's control ends, the note under them.
+    // One row (R93): the buttons where every row's control ends, the note under them. Clearing
+    // the shader cache is on the Performance page; the log has no tab of its own (SanctuaryPort).
     let files = layout![
         flat(
             tr(lang, "Port folder"),
             Message::OpenFolder(state.paths.data_dir.clone())
         ),
         flat("sanctuary.ini".to_string(), Message::OpenIni),
-        clear,
+        flat(tr(lang, "Last start log"), Message::ShowPage(Page::Log)),
     ]
     .spacing(6)
     .align_y(Center);
@@ -351,18 +347,9 @@ pub fn view(state: &State) -> Element<'_, Message> {
             FILES_ROW,
             files.into(),
             Some(&hint(
-                "If the game only shows a black screen, this usually helps.",
+                "When you report a problem, attach last_run.log from the port folder: it is the log of the last start.",
             )),
         ));
-
-    // A plain section, last on the page (R93; the Python folded it away).
-    page = page.push(section(
-        state.rtl,
-        &tr(lang, "Diagnostics (for development)"),
-    ));
-    for check in diagnostic_checks(state, lang) {
-        page = page.push(check_view(state.rtl, &check));
-    }
     page.into()
 }
 

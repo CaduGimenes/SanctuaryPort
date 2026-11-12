@@ -42,7 +42,12 @@ VertexRange IndexedRange(std::span<const Index, Extent> indices, int32_t base_ve
 // (48 bytes per bone). Characters have 656+ bytes; weapons and props 2-8 bones (96-384).
 enum class BufferRole { Other, Skeleton, SmallSkeleton };
 inline BufferRole ClassifyBuffer(uint32_t size) {
-    if (size == 864 || size > 16384) {
+    // Diablo III: 2160 bytes is the bone palette of skinned models (heroes, monsters, NPCs);
+    // 2384 (object constants with the object-to-clip matrix) and 6192 are in static draws too.
+    if (size == 2160) {
+        return BufferRole::Skeleton;
+    }
+    if (size == 864 || size == 2384 || size == 6192 || size > 16384) {
         return BufferRole::Other;
     }
     if (size >= 640) {

@@ -17,7 +17,7 @@ use crate::core::options::{
 use crate::ui::app::{Message, State};
 use crate::ui::theme;
 use crate::ui::widgets::{
-    checkbox, choice_pairs, min_width, row, section, select_pairs, SELECT_MIN, SELECT_TEXT,
+    choice_pairs, min_width, row, section, select_pairs, SELECT_MIN, SELECT_TEXT,
 };
 
 /// Suffix of the labels of the sizes a mod adds.
@@ -39,7 +39,10 @@ fn shown_label(lang: &str, name: &str, aspect: bool) -> String {
 
 /// The render resolutions to choose from: the built-in ones and those of the enabled mods.
 /// The render resolutions Diablo III has a patch for (patches/Diablo_III.xml), and native.
-pub const DIABLO_III_RESOLUTIONS: [&str; 7] = ["native", "480p", "720p", "900p", "1440p", "1800p", "4K"];
+pub const DIABLO_III_RESOLUTIONS: [&str; 11] = [
+    "native", "480p", "720p", "900p", "1440p", "1800p", "4K", "2560x1080", "3440x1440", "3840x1600",
+    "5120x1440",
+];
 
 pub fn resolution_options(state: &State) -> Vec<(String, String)> {
     // SanctuaryPort: the sizes patches/Diablo_III.xml has a Resolution Patch for (16:9).
@@ -235,6 +238,13 @@ pub fn view(state: &State) -> Element<'_, Message> {
     // A row that needs a new start of the game carries a small `restart` note.
     let restart = |english: &str| format!("{}  ·  {}", tr(lang, english), tr(lang, "restart"));
 
+    // The rows are built once for the whole page.
+    let selects = rows(state, lang);
+    let pick = |key: &str| select_from(&selects, key);
+
+    // SanctuaryPort: what players change. The pipeline paths, shader cache loading, readbacks,
+    // stream memory and frames queued keep their defaults (the in-game menu still has the live
+    // ones). The screen shape picks the render resolutions (16:9, ultrawide 21:9 and 32:9).
     let aspect = min_width(
         SELECT_MIN,
         pick_list(
@@ -245,10 +255,6 @@ pub fn view(state: &State) -> Element<'_, Message> {
         .text_size(SELECT_TEXT)
         .style(theme::pick_list_dark),
     );
-    // The rows are built once for the whole page.
-    let selects = rows(state, lang);
-    let pick = |key: &str| select_from(&selects, key);
-
     column![
         section(state.rtl, &tr(lang, "Frame rate")),
         row(
@@ -259,18 +265,9 @@ pub fn view(state: &State) -> Element<'_, Message> {
         ),
         row(
             state.rtl,
-            &tr(lang, "Frames queued"),
-            pick("frames_queued"),
-            Some(&hint(
-                "1 is the lowest input latency; more can raise FPS when the graphics card is the limit."
-            )),
-        ),
-        // No engine frame rate or physics patches: Diablo III has none.
-        row(
-            state.rtl,
             &tr(lang, "Aspect ratio"),
             aspect.into(),
-            Some(&hint("Shows the render resolutions of this shape only.")),
+            Some(&hint("Your screen's shape: 21:9 and 32:9 are ultrawide monitors. Lists the render resolutions of that shape; the game widens its view to it.")),
         ),
         row(
             state.rtl,
@@ -280,52 +277,7 @@ pub fn view(state: &State) -> Element<'_, Message> {
                 "The size the game draws at; higher is sharper and slower."
             )),
         ),
-        section(state.rtl, &tr(lang, "Shaders")),
-        checkbox(
-            state.rtl,
-            "pipeline_binary_cache",
-            &tr(lang, "Use pipeline binary cache (A/B test)"),
-            state.store.flag("pipeline_binary_cache"),
-            Some(&hint(
-                "Reuse saved Vulkan pipelines. Disable to compare FPS with normal compilation. Takes effect on the next launch; saved caches are preserved."
-            )),
-        ),
-        checkbox(
-            state.rtl,
-            "background_warmup",
-            &tr(lang, "Load shader cache in the background"),
-            state.store.flag("background_warmup"),
-            Some(&hint(
-                "The game opens at once and the saved shaders load while you play; a small note in the corner shows the progress. Switch it off to wait on the loading screen instead."
-            )),
-        ),
-        checkbox(
-            state.rtl,
-            "async_shaders",
-            &tr(lang, "Compile new shaders in the background"),
-            state.store.flag("async_shaders"),
-            Some(&hint(
-                "Fewer stutters in new areas: the game keeps running while new shaders compile. An object or effect may appear a moment later. Switch it off if something stays missing."
-            )),
-        ),
-        row(
-            state.rtl,
-            &tr(lang, "Shader cache"),
-            delete_cache_button(state, lang),
-            Some(&hint(
-                "Deletes the saved shaders and pipelines of this saves folder. Use it if graphics look wrong after an update or the cache grew too big; the next start compiles everything again."
-            )),
-        ),
-        checkbox(
-            state.rtl,
-            "parallel_warmup",
-            &tr(lang, "Fast shader cache loading (parallel)"),
-            state.store.flag("parallel_warmup"),
-            Some(&hint(
-                "Loading screen only: builds the cached pipelines on several CPU threads."
-            )),
-        ),
-        section(state.rtl, &tr(lang, "GPU data")),
+        section(state.rtl, &tr(lang, "Graphics card")),
         row(
             state.rtl,
             &restart("Graphics card"),
@@ -336,31 +288,17 @@ pub fn view(state: &State) -> Element<'_, Message> {
         ),
         row(
             state.rtl,
-            &restart("Stream buffer memory"),
-            pick("stream_memory"),
-            Some(&hint(
-                "System RAM can improve FPS on NVIDIA laptops. Choose GPU memory to restore the previous behavior. Applies on the next game launch."
-            )),
-        ),
-        row(
-            state.rtl,
-            &tr(lang, "Two-stage GPU pipeline"),
-            pick("draw_pipe"),
-            Some(&hint("20–30% faster; switch it off if the game is unstable.")),
-        ),
-        row(
-            state.rtl,
-            &tr(lang, "GPU readbacks"),
-            pick("readbacks"),
-            Some(&hint(
-                "How exactly data the GPU writes is copied back for the game."
-            )),
-        ),
-        row(
-            state.rtl,
             &restart("Game multisampling"),
             pick("no_msaa"),
             Some(&hint(NO_MSAA_HINT)),
+        ),
+        row(
+            state.rtl,
+            &tr(lang, "Shader cache"),
+            delete_cache_button(state, lang),
+            Some(&hint(
+                "Deletes the saved shaders and pipelines of this saves folder. Use it if graphics look wrong after an update or the cache grew too big; the next start compiles everything again."
+            )),
         ),
     ]
     .spacing(2)

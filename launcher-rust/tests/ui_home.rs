@@ -63,7 +63,7 @@ fn home_shows_play_and_the_three_chips() {
     );
     assert_eq!(
         home::quick_line(&state),
-        "1920 × 1080 · Unlimited · Windowed"
+        "1920 × 1080 · 60 FPS · Windowed"
     );
 
     let mut ui = simulator(app::view(&state));
@@ -113,7 +113,7 @@ fn the_settings_line_reads_like_the_mockup() {
     // not offer (rulings R35 and R78).
     assert_eq!(
         home::quick_line(&state),
-        "2560 × 1440 · 120 FPS · Fullscreen"
+        "2560 × 1440 · 60 FPS · Fullscreen"
     );
     // `<b>` of the mockup: the resolution and the FPS stand out.
     let segments = home::quick_segments(&state);
@@ -122,7 +122,7 @@ fn the_settings_line_reads_like_the_mockup() {
         .filter(|(_, bright)| *bright)
         .map(|(text, _)| text.as_str())
         .collect();
-    assert_eq!(bright, ["2560 × 1440", "120 FPS"]);
+    assert_eq!(bright, ["2560 × 1440", "60 FPS"]);
     let muted: String = segments
         .iter()
         .filter(|(_, bright)| !*bright)
@@ -132,7 +132,7 @@ fn the_settings_line_reads_like_the_mockup() {
     state.lang = "pt".into();
     assert_eq!(
         home::quick_line(&state),
-        "2560 × 1440 · 120 FPS · Tela cheia"
+        "2560 × 1440 · 60 FPS · Tela cheia"
     );
 }
 

@@ -82,8 +82,12 @@ struct SwVertexRuntimeInfo {
 /// clip-space positions per referenced vertex and read the previous frame's; the
 /// fragment shader writes the screen-space difference to an extra color attachment.
 struct MotionVectors {
-    static constexpr u32 CurrentLocation = 30;  ///< varying: current clip position
-    static constexpr u32 PreviousLocation = 31; ///< varying: previous clip position, z = valid
+    // 29/30: with the fragment shader's built-ins, location 31 would pass the 128 input
+    // components Vulkan guarantees (VUID-RuntimeSpirv-Location-06272). Draws whose pixel shader
+    // reads FirstFreeLocation or more interpolants get no motion vectors.
+    static constexpr u32 CurrentLocation = 29;  ///< varying: current clip position
+    static constexpr u32 PreviousLocation = 30; ///< varying: previous clip position, z = valid
+    static constexpr u32 FirstFreeLocation = 29;
     static constexpr u32 Output = 7;            ///< color attachment index
     /// Per-draw parameters (u32x4: store base, load base, vertices per instance, flags) and
     /// the position array (vec4 per vertex; element 0 is scratch), fixed for the session.

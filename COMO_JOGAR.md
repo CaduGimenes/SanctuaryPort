@@ -113,6 +113,8 @@ Nome do herói: ao criar, digite no teclado e aperte Enter (ou ✕ / A no contro
 - Somente offline (sem PSN e sem co-op online).
 - Testado no Linux. A versão para Windows foi conferida no Wine até abrir a janela do jogo, mas
   ainda não foi jogada num PC com Windows.
-- Ainda não tem: tela ultrawide (21:9). Em 720p ou menos, alguns nomes de teclas no HUD somem.
+- Tela ultrawide: em Desempenho, escolha a proporção 21:9 ou 32:9 e a resolução (2560x1080, 3440x1440,
+  3840x1600 ou 5120x1440); o jogo amplia a visão para os lados.
+- Em 720p ou menos, alguns nomes de teclas no HUD somem.
 
 Detalhes técnicos: [docs/DIABLO3.md](docs/DIABLO3.md).

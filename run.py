@@ -154,12 +154,19 @@ def d3_trophies(env, out):
     env.setdefault('SANCTUARY_TROPHY_LIST', str(target))
 
 
+def graphics_ini(env):
+    """sanctuary.ini's values (the launcher's and the in-game menu's choices)."""
+    import graphics_options
+    return graphics_options.read_ini(env.get('SANCTUARY_CONFIG', ''))
+
+
 def d3_glyph_atlas(env, probe):
     """Diablo III's button icons are in its own archives (CPKs), not WADs: with an Xbox style the
     GPU core draws Xbox cells over its PlayStation button atlas (assets/glyphs/d3_xbox.spg,
     SANCTUARY_GLYPH_ATLAS). The style follows SANCTUARY_GLYPH_STYLE (off, auto, xbox); only xbox is drawn
     so far (auto picks it for an Xbox-style gamepad). Returns the style."""
-    choice = env.get('SANCTUARY_GLYPH_STYLE', 'off')
+    # The launcher keeps its choice in sanctuary.ini (glyph_style); a style set by the caller wins.
+    choice = env.get('SANCTUARY_GLYPH_STYLE') or graphics_ini(env).get('glyph_style') or 'off'
     if choice not in ('auto', 'xbox'):
         return None
     atlas = PORT / 'assets' / 'glyphs' / 'd3_xbox.spg'
@@ -332,11 +339,10 @@ def main():
             env.setdefault('SANCTUARY_WINDOW_ICON', str(out / 'window_icon.bmp'))
         except (ImportError, OSError):
             pass
-        # The temporal upscalers and motion vectors are not calibrated for this game yet: they stay
-        # off unless the launcher's experimental switch is on (then sanctuary.ini decides); linear
-        # image readbacks fix its corrupted textures.
-        if env.get('SANCTUARY_EXPERIMENTAL_UPSCALER') != '1':
-            env.setdefault('SANCTUARY_UPSCALER', 'none')
+        # FSR 3 (experimental, sanctuary.ini upscaler=fsr3) runs at the render size as temporal
+        # anti-aliasing: Diablo III's post passes have fixed sizes, so no reduced-size preset.
+        # Linear image readbacks fix its corrupted textures.
+        env.setdefault('SANCTUARY_UPSCALE_PRESET', '0')
         env.setdefault('SANCTUARY_READBACK_LINEAR', '1')
         patch_xml = profile[1] if profile else None
         if profile and mod_patch_files:

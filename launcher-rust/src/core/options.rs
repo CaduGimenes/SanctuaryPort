@@ -63,14 +63,10 @@ pub static ANISOTROPY: &[Choice] = &[
     c("16", "16x"),
 ];
 
+/// SanctuaryPort: Diablo III runs at 60 frames per second; a limit above it changes nothing.
 pub static FPS_LIMITS: &[Choice] = &[
     c("30", "30"),
     c("60", "60"),
-    c("100", "100"),
-    c("120", "120"),
-    c("144", "144"),
-    c("180", "180"),
-    c("240", "240"),
     c("0", "Unlimited"),
 ];
 
@@ -121,6 +117,12 @@ pub static D3_GLYPH_STYLES: &[Choice] = &[
     c("off", "Original (default)"),
     c("auto", "Match my controller"),
     c("xbox", "Xbox"),
+];
+
+/// SanctuaryPort: Diablo III's temporal anti-aliasing (sanctuary.ini `temporal_aa`).
+pub static TEMPORAL_AA: &[Choice] = &[
+    c("off", "Off"),
+    c("fsr3", "FSR 3 (experimental)"),
 ];
 
 pub static UPSCALERS: &[Choice] = &[

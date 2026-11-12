@@ -42,8 +42,10 @@ public:
         return index_ranges.Get(key, frame, scan);
     }
 
-    /// Rendering of a motion pipeline: the motion attachment (render-target size).
-    void Attach(RenderState& state, u32 width, u32 height);
+    /// Rendering of a motion pipeline: the motion attachment (render-target size and sample
+    /// count). Other passes (`scene` false, or another size) get a scratch target, so the
+    /// frame's image is kept.
+    void Attach(RenderState& state, u32 width, u32 height, u32 samples, bool scene);
 
     /// Start of a frame (display pass).
     void OnFrameStart();
@@ -54,15 +56,25 @@ public:
     vk::ImageView PrepareRead(vk::CommandBuffer cmdbuf, u32 width, u32 height, bool& valid);
     /// The image of the last PrepareRead (layout General), or null.
     [[nodiscard]] vk::ImageView View() const noexcept {
-        return view ? *view : vk::ImageView{};
+        return Resolved() ? *resolved_view : view ? *view : vk::ImageView{};
     }
     [[nodiscard]] vk::Image Image(u32 width, u32 height) const noexcept {
         return written && width == image_width && height == image_height
-            ? vk::Image(image) : vk::Image{};
+            ? (Resolved() ? vk::Image(resolved) : vk::Image(image)) : vk::Image{};
     }
 
 private:
-    void EnsureImage(u32 width, u32 height);
+    struct Target {
+        VideoCore::UniqueImage image;
+        vk::UniqueImageView view;
+        u32 width = 0, height = 0, samples = 0;
+        vk::ImageLayout layout = vk::ImageLayout::eUndefined;
+    };
+    [[nodiscard]] bool Resolved() const noexcept {
+        return image_samples > 1 && resolved_view;
+    }
+    void EnsureImage(u32 width, u32 height, u32 samples);
+    void Create(Target& target, u32 width, u32 height, u32 samples);
 
     const Instance& instance;
     Scheduler& scheduler;
@@ -87,9 +99,14 @@ private:
     u32 params_used = 0;
     VideoCore::UniqueImage image;
     vk::UniqueImageView view;
-    u32 image_width = 0, image_height = 0;
+    u32 image_width = 0, image_height = 0, image_samples = 1;
     bool written = false; ///< this frame's vectors are in the image
     vk::ImageLayout image_layout = vk::ImageLayout::eUndefined;
+    // Multisampled scenes (Diablo III): the single-sample resolve the compose pass reads.
+    VideoCore::UniqueImage resolved;
+    vk::UniqueImageView resolved_view;
+    vk::ImageLayout resolved_layout = vk::ImageLayout::eUndefined;
+    Target scratch; ///< passes of another size (never read)
 };
 
 } // namespace Vulkan

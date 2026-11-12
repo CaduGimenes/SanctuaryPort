@@ -20,9 +20,9 @@ fn graphics_rows_change_the_right_keys() {
     let dir = tempfile::tempdir().unwrap();
     let mut state = state(dir.path());
     open(&mut state, Page::Graphics);
-    assert!(!state.store.flag("hdr"));
-    click(&mut state, "Allow HDR output");
-    assert!(state.store.flag("hdr"));
+    assert!(!state.store.flag("fsr1"));
+    click(&mut state, "Upscale with FSR 1");
+    assert!(state.store.flag("fsr1"));
     // iced_test cannot open a pick_list: the pure mapping stands in for the click.
     let pick = select_message("display_mode", DISPLAY_MODES, "en", "Borderless").unwrap();
     assert!(
@@ -39,14 +39,8 @@ fn a_stored_string_zero_shows_checked_like_the_game_gets_it() {
     // shows what the game gets.
     let dir = tempfile::tempdir().unwrap();
     std::fs::write(dir.path().join("settings.json"), r#"{"hdr": "0"}"#).unwrap();
-    let mut state = state(dir.path());
-    open(&mut state, Page::Graphics);
-    // A checked box unchecks.
-    let sent = messages(&state, "Allow HDR output");
-    assert!(
-        matches!(&sent[..], [Message::Set(key, value)] if key == "hdr" && *value == serde_json::json!(false)),
-        "{sent:?}"
-    );
+    let state = state(dir.path());
+    // SanctuaryPort: no HDR switch on the Graphics page any more; the value still reaches the game.
     let env = game_environment(
         state.store.app(),
         &state.paths,
@@ -73,11 +67,6 @@ fn ini_migrates_legacy_display_preferences_and_then_takes_precedence() {
     );
     // The Graphics page shows the ini's value: a checked box unchecks.
     open(&mut state, Page::Graphics);
-    let sent = messages(&state, "Allow HDR output");
-    assert!(
-        matches!(&sent[..], [Message::Set(key, value)] if key == "hdr" && *value == serde_json::json!(false)),
-        "{sent:?}"
-    );
     std::fs::write(&ini, "monitor=0\nhdr=0\n").unwrap();
     let mut state = common::state(dir.path());
     assert_eq!(
@@ -85,11 +74,6 @@ fn ini_migrates_legacy_display_preferences_and_then_takes_precedence() {
         ("0".to_string(), "0".to_string())
     );
     open(&mut state, Page::Graphics);
-    let sent = messages(&state, "Allow HDR output");
-    assert!(
-        matches!(&sent[..], [Message::Set(key, value)] if key == "hdr" && *value == serde_json::json!(true)),
-        "{sent:?}"
-    );
 }
 
 #[test]
@@ -145,7 +129,7 @@ fn every_row_control_ends_on_the_same_right_edge() {
         let tr = |english: &str| sanctuaryport_launcher::core::i18n::tr(lang, english);
         let labels = [
             tr("Display mode"),
-            tr("Allow HDR output"),
+            tr("Upscale with FSR 1"),
             format!("{}  ·  {}", tr("Anisotropic filtering"), tr("restart")),
             tr("Show performance overlay"),
             tr("F12 in the game"),
@@ -187,12 +171,7 @@ fn a_drop_down_keeps_the_width_of_its_longest_option() {
     // Mockup `.sel { font-size: 12.5px }` (R98).
     let size = 12.5;
     for (key, name, hint) in [
-        (
-            "stream_memory",
-            restart("Stream buffer memory"),
-            tr("System RAM can improve FPS on NVIDIA laptops. Choose GPU memory to restore the previous behavior. Applies on the next game launch."),
-        ),
-        // The longest option of the page.
+        // The longest option of the page (the stream memory row of the screenshot is gone).
         (
             "no_msaa",
             restart("Game multisampling"),
@@ -334,18 +313,25 @@ fn values(pairs: &[(String, String)]) -> Vec<&str> {
 
 #[test]
 fn aspect_follows_and_filters_the_render_resolution() {
-    // SanctuaryPort: Diablo III's resolution patches are 16:9 only.
+    // SanctuaryPort: Diablo III's resolution patches: 16:9, and ultrawide 21:9 / 32:9 with the
+    // camera's aspect ratio.
     let dir = tempfile::tempdir().unwrap();
     let mut state = state(dir.path());
     assert_eq!(state.store.text("render_resolution"), "native");
     assert_eq!(state.aspect, "16:9");
-    assert_eq!(performance::aspect_options(&state), ["16:9"]);
+    assert_eq!(performance::aspect_options(&state), ["16:9", "21:9", "32:9"]);
     assert_eq!(
         values(&performance::aspect_resolution_options(&state)),
         ["native", "480p", "720p", "900p", "1440p", "1800p", "4K"]
     );
     set(&mut state, "render_resolution", "1440p");
     assert_eq!(state.aspect, "16:9");
+    set(&mut state, "render_resolution", "2560x1080");
+    assert_eq!(state.aspect, "21:9");
+    assert_eq!(
+        values(&performance::aspect_resolution_options(&state)),
+        ["2560x1080", "3440x1440", "3840x1600"]
+    );
 }
 
 #[test]
@@ -1974,7 +1960,7 @@ fn the_files_buttons_share_one_row_at_its_end() {
         let labels = [
             tr(lang, "Port folder"),
             "sanctuary.ini".to_string(),
-            tr(lang, "Clear shader cache"),
+            tr(lang, "Last start log"),
         ];
         let mut ui = settled(&mut state, Page::Advanced, 1280.0, 4000.0);
         let scale = control(&mut ui, &tr(lang, "GUI Scale"));
@@ -2016,43 +2002,24 @@ fn the_files_buttons_share_one_row_at_its_end() {
 }
 
 #[test]
-fn diagnostics_is_a_plain_section_after_the_others() {
-    // R93: no fold; the Diagnostics heading and its rows are always shown, last on the page.
+fn diagnostics_are_not_shown_and_are_turned_off() {
+    // SanctuaryPort: the development switches left the Advanced page; one left on is turned off.
     let dir = tempfile::tempdir().unwrap();
+    std::fs::write(dir.path().join("settings.json"), r#"{"frame_stats": true}"#).unwrap();
     let mut state = state(dir.path());
     state.lang = "en".into();
-    for key in [
-        "frame_stats",
-        "gpu_profile",
-        "perf_diag",
-        "frame_capture_key",
-        "vk_validation",
-    ] {
-        assert!(advanced::check_keys(&state).contains(&key), "{key}");
+    assert!(!state.store.flag("frame_stats"));
+    for key in ["frame_stats", "gpu_profile", "perf_diag", "frame_capture_key", "vk_validation"] {
+        assert!(!advanced::check_keys(&state).contains(&key), "{key}");
     }
     open(&mut state, Page::Advanced);
-    let _ = app::update(
-        &mut state,
-        Message::Tick(iced::time::Instant::now() + std::time::Duration::from_secs(1)),
-    );
     let mut ui = iced_test::simulator::Simulator::with_size(
         iced::Settings::default(),
         iced::Size::new(1280.0, 4000.0),
         app::view(&state),
     );
-    let heading = ui.find("Diagnostics (for development)").unwrap().bounds();
-    let files = ui.find("Files").unwrap().bounds();
-    assert!(heading.y > files.y, "{heading:?} before {files:?}");
-    for label in [
-        "Frame statistics in the log (every 5 s)",
-        "Vulkan validation layers (needs the Vulkan SDK; much slower)",
-    ] {
-        let shown = ui.find(label).unwrap().bounds();
-        assert!(shown.y > heading.y, "{label}: {shown:?}");
-    }
-    drop(ui);
-    click_tall(&mut state, "Frame statistics in the log (every 5 s)");
-    assert!(state.store.flag("frame_stats"));
+    assert!(ui.find("Diagnostics (for development)").is_err());
+    assert!(ui.find("Last start log").is_ok());
 }
 
 #[test]

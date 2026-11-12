@@ -76,6 +76,24 @@ impl Store {
                 ini.values.insert(key.to_string(), "off".to_string());
             }
         }
+        // SanctuaryPort: frame limits above 60 are gone from the list (the game runs at 60).
+        if let Some(limit) = ini.values.get("fps_limit") {
+            if matches!(limit.as_str(), "100" | "120" | "144" | "180" | "240") {
+                ini.values.insert("fps_limit".into(), "0".into());
+            }
+        }
+        // SanctuaryPort: the development switches are no longer shown; one left on would keep
+        // slowing the game with no way to turn it off here.
+        let mut diagnostics_off = false;
+        for key in ["frame_stats", "gpu_profile", "perf_diag", "frame_capture_key", "vk_validation"] {
+            if app.0.get(key) == Some(&Value::Bool(true)) {
+                app.0.insert(key.to_string(), Value::Bool(false));
+                diagnostics_off = true;
+            }
+        }
+        if diagnostics_off {
+            let _ = crate::core::settings::save_settings(&paths.config_file(), &app);
+        }
         // The old "Enable the upscaler" switch kept the upscaler off whatever the ini named (the
         // game always saves one); the Upscaler choice's Off does that now, in the game's menus too.
         if let Some(on) = app.0.remove("experimental_upscaler") {
@@ -319,7 +337,7 @@ mod tests {
         // A parked key is not written; the upscaler and its preset are shown, so they are.
         assert!(!out.contains_key("object_motion"));
         assert!(out.contains_key("upscaler") && out.contains_key("preset"));
-        assert_eq!(out.len(), 48);
+        assert_eq!(out.len(), 49); // + temporal_aa
         assert_eq!(out.keys().next().unwrap(), "display_mode");
     }
 

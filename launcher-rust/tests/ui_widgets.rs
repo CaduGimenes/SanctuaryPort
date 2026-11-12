@@ -50,10 +50,10 @@ fn a_check_box_sends_a_bool() {
     let dir = tempfile::tempdir().unwrap();
     let mut state = common::state(dir.path());
     common::open(&mut state, Page::Graphics);
-    let sent = common::messages(&state, "Allow HDR output");
+    let sent = common::messages(&state, "Upscale with FSR 1");
     assert!(
         sent.iter().any(
-            |message| matches!(message, Message::Set(key, value) if key == "hdr" && *value == json!(true))
+            |message| matches!(message, Message::Set(key, value) if key == "fsr1" && *value == json!(true))
         ),
         "{sent:?}"
     );

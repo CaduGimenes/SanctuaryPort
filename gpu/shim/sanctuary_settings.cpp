@@ -55,12 +55,13 @@ void Set(Values& v, const std::string& key, const std::string& value) {
         v.menu_tab = i >= 0 && i <= 3 ? i : 0;
         return;
     }
-    if (key == "upscaler") {
-        for (int u = 0; u < UpscalerCount; ++u) {
-            if (value == UpscalerName(u)) {
-                v.upscaler = u;
-            }
-        }
+    // SanctuaryPort: Diablo III's temporal anti-aliasing (off / fsr3). The older `upscaler` key
+    // was saved by every build with FSR 3 as the default while run.py kept it off, so it is not
+    // read: only a choice made with this key turns FSR 3 on.
+    if (key == "temporal_aa") {
+        v.upscaler = value == "fsr3" ? UpscalerFsr3 : UpscalerOff;
+    } else if (key == "upscaler") {
+        // ignored (see temporal_aa)
     } else if (key == "preset") {
         v.preset = std::clamp(i, 0, PresetCount - 1);
     } else if (key == "sharpen") {
@@ -73,6 +74,8 @@ void Set(Values& v, const std::string& key, const std::string& value) {
         v.reactive = i != 0;
     } else if (key == "object_motion") {
         v.object_motion = i != 0;
+    } else if (key == "frame_generation") {
+        v.frame_generation = i != 0;
     } else if (key == "reactive_scale") {
         v.reactive_scale = Clamp(f, 0.0f, 16.0f);
     } else if (key == "reactive_threshold") {
@@ -173,6 +176,7 @@ void Load() {
         {"SANCTUARY_REACTIVE", "reactive"},              {"SANCTUARY_REACTIVE_SCALE", "reactive_scale"},
         {"SANCTUARY_REACTIVE_THRESHOLD", "reactive_threshold"}, {"SANCTUARY_REACTIVE_MAX", "reactive_max"},
         {"SANCTUARY_UPSCALE_PRESET", "preset"},            {"SANCTUARY_OBJECT_MOTION", "object_motion"},
+        {"SANCTUARY_FRAME_GENERATION", "frame_generation"},
         {"SANCTUARY_ASYNC_SHADERS", "async_shaders"},      {"SANCTUARY_DEFERRED_READBACK", "deferred_readback"},
         {"SANCTUARY_STALE_READBACK", "stale_readback"},     {"SANCTUARY_FSR1", "fsr1"},
         {"SANCTUARY_RCAS", "rcas"},                        {"SANCTUARY_FRAMES_AHEAD", "frames_queued"},
@@ -265,12 +269,12 @@ void Save() {
     }
     std::fprintf(file,
                  "# sanctuary settings (in-game menu: Insert / R3+L2)\n"
-                 "upscaler=%s\npreset=%d\nsharpen=%d\nsharpness=%.2f\njitter=%d\n"
-                 "reactive=%d\nobject_motion=%d\nreactive_scale=%.2f\nreactive_threshold=%.2f\nreactive_max=%.2f\n"
+                 "temporal_aa=%s\npreset=%d\nsharpen=%d\nsharpness=%.2f\njitter=%d\n"
+                 "reactive=%d\nobject_motion=%d\nframe_generation=%d\nreactive_scale=%.2f\nreactive_threshold=%.2f\nreactive_max=%.2f\n"
                  "debug_view=%d\nshow_fps=%d\nfsr4_auto_exposure=%d\nfsr4_invert_jitter=%d\n",
-                 UpscalerName(v.upscaler), v.preset.load(), int(v.sharpen.load()),
+                 v.upscaler == UpscalerFsr3 ? "fsr3" : "off", v.preset.load(), int(v.sharpen.load()),
                  v.sharpness.load(), int(v.jitter.load()), int(v.reactive.load()),
-                 int(v.object_motion.load()),
+                 int(v.object_motion.load()), int(v.frame_generation.load()),
                  v.reactive_scale.load(), v.reactive_threshold.load(), v.reactive_max.load(),
                  v.debug_view.load(), int(v.show_fps.load()),
                  int(v.fsr4_auto_exposure.load()), int(v.fsr4_invert_jitter.load()));

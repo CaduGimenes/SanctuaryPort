@@ -61,6 +61,8 @@ Rasterizer::Rasterizer(const Instance& instance_, Scheduler& scheduler_, Runtime
     camera_motion->SetObjectMotion(object_motion.get());
     upscaler = std::make_unique<TemporalUpscaler>(instance, scheduler, texture_cache, runtime,
                                                   *camera_motion, *scene_targets);
+    frame_generation =
+        std::make_unique<FrameGeneration>(instance, scheduler, texture_cache, runtime);
     if (!EmulatorSettings.IsNullGPU()) {
         liverpool->BindRasterizer(this);
     }
@@ -225,6 +227,36 @@ VideoCore::ImageId Rasterizer::FindTargetMemoized(VideoCore::TextureCache::Image
     return image_id;
 }
 
+void Rasterizer::NoteDisplayDraw() {
+    const auto& regs = Regs();
+    if (!regs.color_buffers[0] || regs.color_buffers[0].Address() != last_display_buffer) {
+        return;
+    }
+    // Diablo III: the display copy, then the HUD (its first draw only clears the HUD depth).
+    if (++display_draws == 1) {
+        display_image = cb_descs[0].first;
+        return;
+    }
+    if (display_draws != 2) {
+        return;
+    }
+    TemporalUpscaler::Display host{};
+    if (upscaler->DisplayHostImage(last_display_buffer, host)) {
+        frame_generation->CaptureHudless(last_display_buffer, host.image, vk::ImageLayout::eGeneral,
+                                         host.format, host.width, host.height);
+    } else if (display_image) {
+        auto& image = texture_cache.GetImage(display_image);
+        scheduler.EndRendering();
+        runtime.Transit(&image, vk::ImageLayout::eTransferSrcOptimal,
+                        vk::PipelineStageFlagBits2::eTransfer, vk::AccessFlagBits2::eTransferRead);
+        runtime.FlushBarriers();
+        frame_generation->CaptureHudless(last_display_buffer, image.GetImage(),
+                                         vk::ImageLayout::eTransferSrcOptimal,
+                                         image.info.pixel_format, image.info.size.width,
+                                         image.info.size.height);
+    }
+}
+
 void Rasterizer::PrepareRenderState(const GraphicsPipeline* pipeline) {
     // Prefetch render targets to handle overlaps with bound textures (e.g. mipgen)
     const auto& key = pipeline->GetGraphicsKey();
@@ -252,6 +284,10 @@ void Rasterizer::PrepareRenderState(const GraphicsPipeline* pipeline) {
         image.binding.is_target = 1u;
     }
 
+    if (frame_generation->Enabled()) {
+        NoteDisplayDraw();
+    }
+
     if (GetEffectiveDepthStencilState(regs).needs_attachment) {
         const auto htile_address = regs.depth_htile_data_base.GetAddress();
         const auto& hint = DbExtent();
@@ -275,8 +311,45 @@ void Rasterizer::PrepareRenderState(const GraphicsPipeline* pipeline) {
     if (gbuffer_draw) {
         camera_motion->OnGBufferPass(db_desc.first);
     }
+    // sanctuary: Diablo III copies its 2-sample scene depth to a single-sample target of the
+    // render size (a depth-only full-screen draw writing depth) after the opaque pass.
+    if (camera_motion->Enabled() && db_desc.first && key.mrt_mask == 0 &&
+        Regs().depth_control.depth_write_enable && Regs().num_indices <= 6) {
+        const auto& depth = texture_cache.GetImage(db_desc.first);
+        if (depth.info.guest_samples == 1) {
+            camera_motion->OnSceneDepthCopy(db_desc.first, depth.info.size.width,
+                                            depth.info.size.height);
+            upscaler->OnD3SceneDepthCopy();
+        }
+    }
     if (upscaler->Enabled() && cb_descs[0].first) {
         upscaler->OnColorTarget(cb_descs[0].first);
+    }
+    if (upscaler->Enabled()) {
+        upscaler->OnD3Target(cb_descs[0].first);
+    }
+    // sanctuary: Diablo III draws its lit scene into a 10-bit target with the scene depth: a
+    // frame with a 3D scene (the upscaler then runs at its display copy).
+    if (upscaler->Enabled() && cb_descs[0].first && db_desc.first &&
+        db_desc.first == camera_motion->GeometryDepth() && std::popcount(key.mrt_mask) == 1 &&
+        texture_cache.GetImage(cb_descs[0].first).info.pixel_format ==
+            vk::Format::eA2B10G10R10UnormPack32) {
+        upscaler->OnGeometryColor(cb_descs[0].first);
+        // Diablo III's dynamic resolution draws the scene in the top-left part of its targets.
+        if (const auto& vp = regs.viewports[0];
+            std::abs(vp.xoffset - std::abs(vp.xscale)) < 0.5f &&
+            std::abs(vp.yoffset - std::abs(vp.yscale)) < 0.5f) {
+            camera_motion->SetSceneViewport(u32(std::abs(vp.xscale) * 2.0f + 0.5f),
+                                            u32(std::abs(vp.yscale) * 2.0f + 0.5f));
+        }
+        // Additive blending (one as destination factor): fire, glows, spells. The first one
+        // after the depth copy keeps the scene for the reactive mask.
+        const auto& blend = regs.blend_control[0];
+        if (blend.enable && !regs.color_buffers[0].info.blend_bypass &&
+            blend.color_dst_factor == AmdGpu::BlendControl::BlendFactor::One &&
+            !regs.depth_control.depth_write_enable) {
+            upscaler->OnD3AdditiveDraw();
+        }
     }
     // sanctuary: scene color: a full-size RGBA16F target drawn with the scene depth.
     if (upscaler->Enabled() && db_desc.first && db_desc.first == camera_motion->Depth() &&
@@ -1058,10 +1131,22 @@ void Rasterizer::DrawRecord(const GraphicsPipeline* pipeline, const PreparedDraw
     const auto& regs = Regs();
     // sanctuary: the pass copying a finished frame to a display buffer; the previous draw's
     // target is that frame.
+    // Once per frame: the game's HUD draws into the display buffer as well (Diablo III).
     if (camera_motion->Enabled() && regs.color_buffers[0] &&
-        FrameCapture::IsDisplayBuffer(regs.color_buffers[0].Address())) {
+        FrameCapture::IsDisplayBuffer(regs.color_buffers[0].Address()) &&
+        regs.color_buffers[0].Address() != last_display_buffer) {
+        last_display_buffer = regs.color_buffers[0].Address();
+        display_draws = 0;
         scene_started = false;
-        camera_motion->OnDisplayPass(cb_descs[0].first);
+        // The finished frame: the last colour target drawn (Diablo III has a draw without
+        // targets just before its display copy).
+        const auto finished = cb_descs[0].first ? cb_descs[0].first : last_frame_color;
+        // Diablo III below the window size: FSR 3 to the window before this display copy.
+        upscaler->RunDisplayUpscale(finished);
+        if (frame_generation->Enabled()) {
+            frame_generation->BeginFrame(last_display_buffer, upscaler->TakeFrameGenInputs());
+        }
+        camera_motion->OnDisplayPass(finished);
         if (upscaler->OnFrameStart()) {
             object_motion->InvalidateHistory();
             camera_motion->InvalidateHistory();
@@ -1079,7 +1164,11 @@ void Rasterizer::DrawRecord(const GraphicsPipeline* pipeline, const PreparedDraw
         // once per display buffer since the HUD draws into it as well.
         // ponytail: assumes flips rotate display buffers; a single-buffer game counts one frame.
         last_display_buffer = regs.color_buffers[0].Address();
+        display_draws = 0;
         NoteFrameStart();
+    }
+    if (cb_descs[0].first) {
+        last_frame_color = cb_descs[0].first; // the previous draw's target
     }
     bind_prepared = used_prepared;
     motion_draw = pipeline->GetGraphicsKey().motion_vectors;
@@ -1238,7 +1327,9 @@ void Rasterizer::DrawRecord(const GraphicsPipeline* pipeline, const PreparedDraw
     // sanctuary: jitter geometry drawn with the scene depth, not full-screen passes (a shifted
     // full-screen quad leaves an edge column unwritten).
     draw_jitter = {};
-    if (upscaler->Enabled() && db_desc.first && db_desc.first == camera_motion->Depth() &&
+    if (upscaler->Enabled() && db_desc.first &&
+        (db_desc.first == camera_motion->Depth() ||
+         db_desc.first == camera_motion->GeometryDepth()) &&
         (regs.num_indices > 6 || regs.num_instances.NumInstances() > 1)) {
         draw_jitter = upscaler->Jitter();
     }
@@ -1412,7 +1503,9 @@ void Rasterizer::DrawIndirectRecord(const GraphicsPipeline* pipeline, bool is_in
     push_data.yoffset *= target_scale[1];
     pipeline->BindResources(set_writes, push_data);
     draw_jitter = {};
-    if (upscaler->Enabled() && db_desc.first && db_desc.first == camera_motion->Depth()) {
+    if (upscaler->Enabled() && db_desc.first &&
+        (db_desc.first == camera_motion->Depth() ||
+         db_desc.first == camera_motion->GeometryDepth())) {
         draw_jitter = upscaler->Jitter();
     }
     UpdateDynamicState(pipeline, is_indexed);
@@ -2335,6 +2428,16 @@ void Rasterizer::BindBuffers(const Shader::Info& stage, const PreparedStage* pre
                                      constant_ring->Data(ring->offset), ring->size);
             }
             if (!desc.IsSpecial()) {
+                // Diablo III: the per-draw block with the object-to-clip matrix.
+                if (ring->size == CameraMotion::ObjectBlockSize &&
+                    stage.sw_stage == Shader::SwStage::Vertex && camera_motion->Enabled()) {
+                    if (camera_motion->OnObjectBlock(
+                            reinterpret_cast<const float*>(constant_ring->Data(ring->offset)),
+                            stage.pgm_hash) &&
+                        db_desc.first) {
+                        camera_motion->NoteGeometryDepth(db_desc.first);
+                    }
+                }
                 if (ring->size == 864 && gbuffer_draw &&
                     memory->IsValidGpuMapping(ring->address, 0)) {
                     camera_motion->OnConstants(reinterpret_cast<const float*>(ring->address));
@@ -2396,6 +2499,15 @@ void Rasterizer::BindBuffers(const Shader::Info& stage, const PreparedStage* pre
         } else {
             const auto vsharp =
                 prepared ? prepared->buffer_sharps[buffer_index] : desc.GetSharp(stage);
+            if (vsharp.GetSize() == CameraMotion::ObjectBlockSize &&
+                stage.sw_stage == Shader::SwStage::Vertex && camera_motion->Enabled() &&
+                memory->IsValidGpuMapping(vsharp.base_address, CameraMotion::ObjectBlockSize)) {
+                if (camera_motion->OnObjectBlock(
+                        reinterpret_cast<const float*>(vsharp.base_address), stage.pgm_hash) &&
+                    db_desc.first) {
+                    camera_motion->NoteGeometryDepth(db_desc.first);
+                }
+            }
             if (vsharp.GetSize() == 864 && gbuffer_draw &&
                 memory->IsValidGpuMapping(vsharp.base_address, 0)) {
                 camera_motion->OnConstants(reinterpret_cast<const float*>(vsharp.base_address));
@@ -3350,7 +3462,11 @@ RenderState Rasterizer::BeginRenderingFull(const GraphicsPipeline* pipeline) {
     }
     // sanctuary: object motion vector attachment of G-buffer pipelines.
     if (key.motion_vectors) {
-        object_motion->Attach(state, state.width, state.height);
+        // Diablo III: skinned models are also drawn outside the scene (outline passes).
+        const u32 samples = std::max<u32>(key.color_samples[Shader::MotionVectors::Output], 1u);
+        const bool scene = samples == 1 || !camera_motion->GeometryDepth() ||
+                           db_desc.first == camera_motion->GeometryDepth();
+        object_motion->Attach(state, state.width, state.height, samples, scene);
     }
     return state;
 }

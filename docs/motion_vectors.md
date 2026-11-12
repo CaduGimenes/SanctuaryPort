@@ -1,9 +1,10 @@
 # Object motion vectors (research notes)
 
-> Historical notes from the code base's first game, written while the temporal upscalers were
-> being developed (September 2026). The temporal upscalers are off for Diablo III, so none of
-> this runs in the current port; the numbers are not Diablo III's. See also
-> [upscaler.md](upscaler.md).
+> Notes from the code base's first game (September 2026); the numbers are that game's. Diablo
+> III uses the same path since November 2026 with its own selection: one 10-bit target with the
+> 2-sample scene depth, skinned draws only (2160-byte bone palette), and a 2-sample motion target
+> resolved before the compose pass; see [DIABLO3.md](DIABLO3.md). The motion varyings moved to
+> locations 29/30 (31 passed the 128 fragment input components with the built-ins).
 
 Camera motion vectors come from depth and the current and previous camera. Characters, weapons
 and other animated meshes also need **object** motion: the port keeps each G-buffer draw's

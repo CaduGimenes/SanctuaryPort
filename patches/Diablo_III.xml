@@ -4,7 +4,9 @@
      sceKernelIsNeoMode() ? 3840x2160 : 1920x1080, and every screen-sized target (the display buffers,
      the scene, the post-process chain at a quarter) follows it; the 1536x1536 shadow map does not.
      Each patch replaces the base PS4's 1920 and 1080 (mov ecx, imm32), so the game renders at that size
-     on the base PS4 path. Found by SanctuaryPort; each site by its signature (Pattern/At). -->
+     on the base PS4 path. Right after, [obj+0x54] = 16/9 (movl imm32 at 0x4bb218): the camera's
+     aspect ratio, patched to width/height by the wider sizes. Found by SanctuaryPort; each site by its
+     signature (Pattern/At). -->
 <Patch>
     <TitleID>
         <ID>CUSA00243</ID>
@@ -44,6 +46,34 @@
         <PatchList>
             <Line Type="bytes" Address="0x004bb1ea" Value="000f0000" Pattern="b8 00 0f 00 00 b9 80 07 00 00 0f 45 c8 41 89 4f 4c" At="6"/>
             <Line Type="bytes" Address="0x004bb202" Value="70080000" Pattern="b8 70 08 00 00 b9 38 04 00 00 49 8d bf 10 0d 00 00 0f 45 c8 41 89 4f 50" At="6"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="Resolution Patch - 2560x1080" Note="Renders at 2560x1080 (21:9), with the camera's aspect ratio." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x004bb1ea" Value="000a0000" Pattern="b8 00 0f 00 00 b9 80 07 00 00 0f 45 c8 41 89 4f 4c" At="6"/>
+            <Line Type="bytes" Address="0x004bb202" Value="38040000" Pattern="b8 70 08 00 00 b9 38 04 00 00 49 8d bf 10 0d 00 00 0f 45 c8 41 89 4f 50" At="6"/>
+            <Line Type="bytes" Address="0x004bb218" Value="26b41740" Pattern="41 c7 47 54 39 8e e3 3f 49 c7 47 6c" At="4"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="Resolution Patch - 3440x1440" Note="Renders at 3440x1440 (21:9), with the camera's aspect ratio." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x004bb1ea" Value="700d0000" Pattern="b8 00 0f 00 00 b9 80 07 00 00 0f 45 c8 41 89 4f 4c" At="6"/>
+            <Line Type="bytes" Address="0x004bb202" Value="a0050000" Pattern="b8 70 08 00 00 b9 38 04 00 00 49 8d bf 10 0d 00 00 0f 45 c8 41 89 4f 50" At="6"/>
+            <Line Type="bytes" Address="0x004bb218" Value="8ee31840" Pattern="41 c7 47 54 39 8e e3 3f 49 c7 47 6c" At="4"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="Resolution Patch - 3840x1600" Note="Renders at 3840x1600 (21:9), with the camera's aspect ratio." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x004bb1ea" Value="000f0000" Pattern="b8 00 0f 00 00 b9 80 07 00 00 0f 45 c8 41 89 4f 4c" At="6"/>
+            <Line Type="bytes" Address="0x004bb202" Value="40060000" Pattern="b8 70 08 00 00 b9 38 04 00 00 49 8d bf 10 0d 00 00 0f 45 c8 41 89 4f 50" At="6"/>
+            <Line Type="bytes" Address="0x004bb218" Value="9a991940" Pattern="41 c7 47 54 39 8e e3 3f 49 c7 47 6c" At="4"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="Resolution Patch - 5120x1440" Note="Renders at 5120x1440 (32:9), with the camera's aspect ratio." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x004bb1ea" Value="00140000" Pattern="b8 00 0f 00 00 b9 80 07 00 00 0f 45 c8 41 89 4f 4c" At="6"/>
+            <Line Type="bytes" Address="0x004bb202" Value="a0050000" Pattern="b8 70 08 00 00 b9 38 04 00 00 49 8d bf 10 0d 00 00 0f 45 c8 41 89 4f 50" At="6"/>
+            <Line Type="bytes" Address="0x004bb218" Value="398e6340" Pattern="41 c7 47 54 39 8e e3 3f 49 c7 47 6c" At="4"/>
         </PatchList>
     </Metadata>
 </Patch>
