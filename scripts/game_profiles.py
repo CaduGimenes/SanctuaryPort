@@ -61,9 +61,9 @@ PROFILES = {
                           'SANCTUARY_VSYNC': '0',
                           # The in-game menu leaves out what the profile fixes (VSync, readbacks) and
                           # the frame rate patch the game does not have; its render resolutions are
-                          # those patches/Diablo_III.xml has.
+                          # those patches/Diablo_III.xml has (the 16:9 ladder plus the 21:9 ones).
                           'SANCTUARY_MENU_HIDE': 'vsync,engine_fps,readbacks',
-                          'SANCTUARY_ALLOWED_RESOLUTIONS': 'native;480p;720p;900p;1440p;1800p;4K'}},
+                          'SANCTUARY_ALLOWED_RESOLUTIONS': 'native;480p;720p;900p;1440p;1800p;4K;2560x1080;3440x1440;3840x1600'}},
 }
 DIABLO3 = PROFILES.pop('CUSA00242')
 # Diablo III releases seen so far: US, Brazil, Poland/Russia, Europe. Only hints (the add-on folder

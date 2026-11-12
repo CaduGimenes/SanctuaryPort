@@ -39,10 +39,11 @@ fn shown_label(lang: &str, name: &str, aspect: bool) -> String {
 
 /// The render resolutions to choose from: the built-in ones and those of the enabled mods.
 /// The render resolutions Diablo III has a patch for (patches/Diablo_III.xml), and native.
-pub const DIABLO_III_RESOLUTIONS: [&str; 7] = ["native", "480p", "720p", "900p", "1440p", "1800p", "4K"];
+pub const DIABLO_III_RESOLUTIONS: [&str; 10] =
+    ["native", "480p", "720p", "900p", "1440p", "1800p", "4K", "2560x1080", "3440x1440", "3840x1600"];
 
 pub fn resolution_options(state: &State) -> Vec<(String, String)> {
-    // SanctuaryPort: the sizes patches/Diablo_III.xml has a Resolution Patch for (16:9).
+    // SanctuaryPort: the sizes patches/Diablo_III.xml has a Resolution Patch for (16:9 and 21:9).
     let builtin = RESOLUTIONS
         .iter()
         .filter(|name| DIABLO_III_RESOLUTIONS.contains(name))
