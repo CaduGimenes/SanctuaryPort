@@ -95,7 +95,7 @@ fn mockup_settings(state: &mut State) {
     for (key, value) in [
         ("upscaler", "fsr3"),
         ("preset", "1"),
-        ("output_res", "2560x1440"),
+        ("render_resolution", "1440p"),
         ("fps_limit", "120"),
         ("display_mode", "fullscreen"),
     ] {

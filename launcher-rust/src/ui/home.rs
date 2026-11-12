@@ -18,7 +18,7 @@ use iced::{
 
 use crate::core::gpu::chosen_gpu;
 use crate::core::i18n::{tr, tr_fmt};
-use crate::core::options::{short_label, Choice, DISPLAY_MODES, FPS_LIMITS, OUTPUTS};
+use crate::core::options::{Choice, DISPLAY_MODES, FPS_LIMITS};
 use crate::core::patches::patch_status;
 use crate::ui::app::{
     home_interactive_enabled, home_interactive_opacity, scene_size, Message, State,
@@ -580,15 +580,16 @@ pub fn status_line(state: &State) -> String {
 /// counts from 1.
 pub fn quick_segments(state: &State) -> Vec<(String, bool)> {
     let lang = state.lang.as_str();
-    let short = |table: &[Choice], key: &str| {
-        short_label(&choice_label(table, &state.store.text(key), lang)).to_string()
-    };
     let fps = match state.store.text("fps_limit").as_str() {
         "0" => choice_label(FPS_LIMITS, "0", lang),
         limit => format!("{limit} FPS"),
     };
+    // The size the game renders at (Performance > Render resolution), which is what a player
+    // chose: the output resolution stays at the game's own 1920 x 1080.
+    let render = state.store.text("render_resolution");
+    let (width, height) = crate::core::options::resolution_size(&render).unwrap_or((1920, 1080));
     let items = [
-        (short(OUTPUTS, "output_res"), true),
+        (format!("{width} × {height}"), true),
         (fps, true),
         (
             choice_label(DISPLAY_MODES, &state.store.text("display_mode"), lang),

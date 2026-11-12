@@ -1,6 +1,6 @@
 [package]
 name = "sanctuaryport-launcher"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2021"
 rust-version = "1.87"
 # `cargo run` starts the launcher; `fake-game` is a test helper.

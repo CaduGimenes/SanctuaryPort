@@ -333,7 +333,12 @@ void FrameCapture::Buffer(u64 stage_hash, u32 slot, VAddr address, const void* d
     if (whole) {
         full_frame = flips.load(std::memory_order_relaxed);
     }
-    const u64 bytes = std::min<u64>(size, whole ? 1_MB : 1024) & ~u64(3);
+    // SANCTUARY_CAPTURE_BYTES: how much of each bound buffer is kept (default 1 KiB).
+    static const u64 kept = [] {
+        const char* v = std::getenv("SANCTUARY_CAPTURE_BYTES");
+        return v && *v ? std::max<u64>(64, std::strtoull(v, nullptr, 0)) : 1024;
+    }();
+    const u64 bytes = std::min<u64>(size, whole ? 1_MB : kept) & ~u64(3);
     std::string out = std::format("  buffer stage {:016x} slot {} at {:#x} size {}:", stage_hash,
                                   slot, address, size);
     const auto* words = static_cast<const float*>(data);

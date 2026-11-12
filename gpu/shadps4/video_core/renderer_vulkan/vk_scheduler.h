@@ -711,6 +711,15 @@ public:
         this->on_submit = std::move(on_submit);
     }
 
+    /// sanctuary: called with the command buffer about to be submitted (after its recording and
+    /// render pass ended) and with the next one just begun: queries that must not span command
+    /// buffers end in the first and continue in the second (vk_occlusion_query).
+    using CmdbufHook = Common::UniqueFunction<void, vk::CommandBuffer>;
+    void SetCmdbufHooks(CmdbufHook&& before_end, CmdbufHook&& after_begin) {
+        this->before_end = std::move(before_end);
+        this->after_begin = std::move(after_begin);
+    }
+
     /// Returns the current render state.
     const RenderState& GetRenderState() const {
         return render_state;
@@ -898,6 +907,8 @@ private:
     CommandPool command_pool;
     DynamicState dynamic_state;
     SubmitFunc on_submit{};
+    CmdbufHook before_end{};
+    CmdbufHook after_begin{};
     vk::CommandBuffer current_cmdbuf;
     std::condition_variable_any event_cv;
     struct PendingOp {

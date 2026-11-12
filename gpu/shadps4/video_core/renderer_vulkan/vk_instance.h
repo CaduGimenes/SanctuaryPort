@@ -116,6 +116,11 @@ public:
         return features.depthBounds;
     }
 
+    /// sanctuary: occlusion queries count samples instead of only "any passed".
+    bool IsOcclusionQueryPreciseSupported() const {
+        return features.occlusionQueryPrecise;
+    }
+
     /// Returns true if 16-bit floats are supported in shaders
     bool IsShaderFloat16Supported() const {
         return vk12_features.shaderFloat16;

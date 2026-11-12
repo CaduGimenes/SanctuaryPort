@@ -32,6 +32,8 @@ namespace Vulkan {
 class GraphicsPipeline;
 class Runtime;
 
+class OcclusionQueries;
+
 class Rasterizer {
 public:
     explicit Rasterizer(const Instance& instance, Scheduler& scheduler, Runtime& runtime,
@@ -100,6 +102,9 @@ public:
     /// Runs `task(rasterizer, copy of data)` in order with the draws: on the draw recording
     /// thread while the draw pipeline is in use (PipelinedTasks), else here after a drain.
     using OrderedTask = void (*)(Rasterizer& rasterizer, const u8* data);
+    /// sanctuary: an occlusion counter dump, in order with the draws (vk_occlusion_query.h).
+    /// False when no real counter is available: the caller writes a fixed value.
+    bool OcclusionDump(u64* results, s32 pairs);
     /// Returns true when the task was handed to the recording thread (not run yet).
     bool RunInOrder(OrderedTask task, const void* data, u32 size,
                     u64 toggle = SanctuaryToggle::PipelinedTasks);
@@ -319,6 +324,7 @@ private:
 
     const Instance& instance;
     Scheduler& scheduler;
+    std::unique_ptr<OcclusionQueries> occlusion_queries;
     Runtime& runtime;
     VideoCore::PageManager page_manager;
     VideoCore::BufferCache buffer_cache;

@@ -20,6 +20,7 @@
 #include "video_core/renderer_vulkan/vk_depth_stencil_state.h"
 #include "video_core/renderer_vulkan/vk_instance.h"
 #include "video_core/renderer_vulkan/vk_pipeline_cache.h"
+#include "video_core/renderer_vulkan/vk_occlusion_query.h"
 #include "video_core/renderer_vulkan/vk_rasterizer.h"
 #include "video_core/renderer_vulkan/vk_gpu_profiler.h"
 #include "sanctuary_threads.h"
@@ -72,6 +73,10 @@ Rasterizer::Rasterizer(const Instance& instance_, Scheduler& scheduler_, Runtime
     }
     // sanctuary: this thread joins the texture binding helper before it changes image state.
     runtime.SetImageAccessHook(&JoinBindHelper, this);
+    // sanctuary: SANCTUARY_OCCLUSION=0 keeps the fixed "always visible" counters.
+    if (const char* env = std::getenv("SANCTUARY_OCCLUSION"); !env || env[0] != '0') {
+        occlusion_queries = std::make_unique<OcclusionQueries>(instance, scheduler);
+    }
     scheduler.SetSubmitCallback([this](Vulkan::SubmitInfo& info) {
         runtime.FlushBarriers();
         buffer_cache.SubmitPendingArenaBinds(info);
@@ -686,6 +691,10 @@ void Rasterizer::RetireSubmission() {
     }
 }
 
+bool Rasterizer::OcclusionDump(u64* results, s32 pairs) {
+    return occlusion_queries && occlusion_queries->Dump(results, pairs);
+}
+
 bool Rasterizer::RunInOrder(OrderedTask task, const void* data, u32 size, u64 toggle) {
     if (!UseDrawPipe() || SanctuaryToggle::Disabled(toggle)) {
         DrainDrawPipe(DrawPipe::ReasonRasterizer);
@@ -1265,10 +1274,32 @@ void Rasterizer::DrawRecord(const GraphicsPipeline* pipeline, const PreparedDraw
     });
     if (FrameCapture::Active()) {
         const auto* ps = pipeline->GetStages()[u32(Shader::SwStage::Fragment)];
-        FrameCapture::Text(fmt::format("  draw state: prim {} gs {} vtx_point_size {} indexed {}",
+        FrameCapture::Text(fmt::format("  draw state: prim {} gs {} vtx_point_size {} indexed {} | vs {:08x} ps {:08x} indices {} x{}",
                                        u32(regs.primitive_type),
                                        pipeline->GetStages()[u32(Shader::SwStage::Geometry)] != nullptr,
-                                       u32(regs.vs_output_control.use_vtx_point_size), is_indexed));
+                                       u32(regs.vs_output_control.use_vtx_point_size), is_indexed,
+                                       vs_info.pgm_hash, ps ? ps->pgm_hash : 0, num_indices, num_instances));
+        // sanctuary: the depth/stencil registers of the draw (which test decides what it writes).
+        {
+            const auto& dc = regs.depth_control;
+            const auto& sc = regs.stencil_control;
+            const auto& sr = regs.stencil_ref_front;
+            FrameCapture::Text(fmt::format(
+                "  ds regs: z en {} wr {} func {} bounds {} | st en {} func {} ref {} mask {:#x} "
+                "wmask {:#x} opval {} ops fail/zpass/zfail {}/{}/{} | clear z {} s {} | db_render {:#x} "
+                "| cmask {:#x} | db_shader {:#x} | db_depth_control {:#010x} | db_z_info {:#x} st_info {:#x}",
+                u32(dc.depth_enable), u32(dc.depth_write_enable), u32(dc.depth_func),
+                u32(dc.depth_bounds_enable), u32(dc.stencil_enable), u32(dc.stencil_ref_func),
+                sr.stencil_test_val, sr.stencil_mask, sr.stencil_write_mask, sr.stencil_op_val,
+                u32(sc.stencil_fail_front), u32(sc.stencil_zpass_front), u32(sc.stencil_zfail_front),
+                regs.depth_clear, regs.stencil_clear,
+                *reinterpret_cast<const u32*>(&regs.depth_render_control),
+                *reinterpret_cast<const u32*>(&regs.color_target_mask),
+                *reinterpret_cast<const u32*>(&regs.depth_shader_control),
+                *reinterpret_cast<const u32*>(&regs.depth_control),
+                *reinterpret_cast<const u32*>(&regs.depth_buffer.z_info),
+                *reinterpret_cast<const u32*>(&regs.depth_buffer.stencil_info)));
+        }
         FrameCapture::Draw(vs_info.pgm_hash, ps ? ps->pgm_hash : 0, num_indices, num_instances);
         if (const auto& bc = regs.blend_control[0]; bc.enable && regs.color_buffers[0]) {
             const auto& key = pipeline->GetGraphicsKey();

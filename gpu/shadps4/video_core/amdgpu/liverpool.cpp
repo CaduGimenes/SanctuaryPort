@@ -283,6 +283,28 @@ void RunEventWriteEop(Vulkan::Rasterizer& rasterizer, const u8* data) {
     }
 }
 
+/// sanctuary: an occlusion counter dump (ZPASS_DONE + PIXEL_PIPE_STAT_DUMP), written in command
+/// order. Diablo III zero-fills its query block with DMA_DATA just before the dumps; DMA_DATA runs
+/// in order on the recording thread, so a dump written at parse time was wiped by the later fill,
+/// the game polled a query that never completed, and the hero's x-ray silhouette (the grey
+/// outline) stayed on with whatever state it had (Reddit report).
+struct ZpassDump {
+    u64* results;
+    s32 pairs;
+    u64 value;
+};
+void RunZpassDump(Vulkan::Rasterizer& rasterizer, const u8* data) {
+    const auto& dump = *reinterpret_cast<const ZpassDump*>(data);
+    // Real counters: the hero's x-ray silhouette shows when it is really behind something.
+    if (rasterizer.OcclusionDump(dump.results, dump.pairs)) {
+        return;
+    }
+    u64* results = dump.results;
+    for (s32 i = 0; i < dump.pairs; ++i, results += 2) {
+        *results = dump.value;
+    }
+}
+
 void RunDmaData(Vulkan::Rasterizer& rasterizer, const u8* data) {
     const auto* dma_data = reinterpret_cast<const PM4DmaData*>(data);
     ASSERT(dma_data->command.das == 0);
@@ -1125,11 +1147,20 @@ Liverpool::Task Liverpool::ProcessGraphics(std::span<const u32> dcb, std::span<c
                     if (event->event_type.Value() == EventType::PixelPipeStatDump) {
                         static constexpr u64 OcclusionCounterValidMask = 0x8000000000000000ULL;
                         static constexpr u64 OcclusionCounterStep = 0x2FFFFFFULL;
-                        u64* results = event->Address<u64*>();
-                        for (s32 i = 0; i < num_counter_pairs; ++i, results += 2) {
-                            *results = pixel_counter | OcclusionCounterValidMask;
-                        }
+                        const ZpassDump dump{event->Address<u64*>(), static_cast<s32>(num_counter_pairs),
+                                             pixel_counter | OcclusionCounterValidMask};
                         pixel_counter += OcclusionCounterStep;
+                        // After the DMA_DATA fills before it (RunDmaData runs in order too).
+                        if (!rasterizer ||
+                            !rasterizer->RunInOrder(&RunZpassDump, &dump, sizeof(dump),
+                                                    SanctuaryToggle::PipelinedMemoryWrites)) {
+                            if (!rasterizer) {
+                                u64* results = dump.results;
+                                for (s32 i = 0; i < dump.pairs; ++i, results += 2) {
+                                    *results = dump.value;
+                                }
+                            }
+                        }
                     }
                 }
                 break;

@@ -280,6 +280,19 @@ std::string OverlayText() {
     sample.fps = frame_ms_avg > 0.0f ? 1000.0f / frame_ms_avg : 0.0f;
     sample.frame_ms = frame_ms_avg;
     sample.upscaler = UpscalerLabel(s.upscaler);
+    if (sample.upscaler.empty()) {
+        // No temporal upscaler: the size the game renders at this session (the render resolution
+        // applied at start), and FSR 1 when it upscales the picture. "Native" read as if a 4K
+        // choice had not been applied.
+        namespace G = SanctuaryGraphics;
+        const std::vector<std::string> names = G::ResolutionNames();
+        const std::string& name =
+            names[std::clamp(s.startup_render_resolution, 0, int(names.size()) - 1)];
+        const auto [width, height] = G::ResolutionSize(name);
+        char label[64];
+        std::snprintf(label, sizeof(label), "%d × %d%s", width, height, s.fsr1.load() ? " · FSR 1" : "");
+        sample.upscaler = label;
+    }
     return P::Format(sample, items, s.overlay_layout == 0);
 }
 

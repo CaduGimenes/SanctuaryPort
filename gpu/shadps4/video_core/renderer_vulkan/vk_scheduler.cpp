@@ -469,6 +469,9 @@ void Scheduler::SubmitExecution(SubmitInfo& info) {
     SyncRecording();
     // Guest memory copies into staging read by this submission (copy threads).
     WaitHostCopies();
+    if (before_end) {
+        before_end(vk::CommandBuffer{current_cmdbuf});
+    }
     Check(current_cmdbuf.end());
 
     const vk::Semaphore timeline = work_semaphore.Handle();
@@ -503,6 +506,9 @@ void Scheduler::SubmitExecution(SubmitInfo& info) {
 
     work_semaphore.Refresh();
     AllocateWorkerCommandBuffers();
+    if (after_begin) {
+        after_begin(vk::CommandBuffer{current_cmdbuf});
+    }
 
     // Apply pending operations
     PopPendingOperations();
