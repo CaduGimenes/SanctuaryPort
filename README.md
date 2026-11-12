@@ -58,7 +58,7 @@ Then follow [Getting your game ready](#getting-your-game-ready) with your own du
 | ✅ **Trophies** | an on-screen notice with the trophy's name as you earn it, the platinum by itself, and a Trophies page in the launcher |
 | ✅ Render resolution 480p–4K | resolution patches; FSR 1 upscaling and RCAS sharpening |
 | ✅ Updates | the 1.47 update (Eternal Collection) from its own folder; the base game is never changed |
-| ⚠️ Windows | packaged and played under Wine (new hero, Act I, combat, saves); not yet played on a real Windows PC |
+| ✅ Windows 10 / 11 | played by the community on real Windows PCs (NVIDIA, AMD and Intel graphics); every release is also tested under Wine |
 | ❌ Online play / PSN | offline only |
 
 ## The launcher
