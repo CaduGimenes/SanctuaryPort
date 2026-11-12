@@ -334,18 +334,25 @@ fn values(pairs: &[(String, String)]) -> Vec<&str> {
 
 #[test]
 fn aspect_follows_and_filters_the_render_resolution() {
-    // SanctuaryPort: Diablo III's resolution patches are 16:9 only.
+    // SanctuaryPort: Diablo III's resolution patches are 16:9 and the 21:9 ultrawide ones.
     let dir = tempfile::tempdir().unwrap();
     let mut state = state(dir.path());
     assert_eq!(state.store.text("render_resolution"), "native");
     assert_eq!(state.aspect, "16:9");
-    assert_eq!(performance::aspect_options(&state), ["16:9"]);
+    assert_eq!(performance::aspect_options(&state), ["16:9", "21:9"]);
     assert_eq!(
         values(&performance::aspect_resolution_options(&state)),
         ["native", "480p", "720p", "900p", "1440p", "1800p", "4K"]
     );
     set(&mut state, "render_resolution", "1440p");
     assert_eq!(state.aspect, "16:9");
+    // Choosing a 21:9 size moves the aspect box and lists the 21:9 sizes.
+    set(&mut state, "render_resolution", "3440x1440");
+    assert_eq!(state.aspect, "21:9");
+    assert_eq!(
+        values(&performance::aspect_resolution_options(&state)),
+        ["2560x1080", "3440x1440", "3840x1600"]
+    );
 }
 
 #[test]
