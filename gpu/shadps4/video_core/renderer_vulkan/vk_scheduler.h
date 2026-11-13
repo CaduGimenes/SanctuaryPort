@@ -735,6 +735,9 @@ public:
     /// records directly (Record() included, so callers may mix both) until the next
     /// KickRecording() or submission.
     [[gnu::noinline]] vk::CommandBuffer CommandBuffer() {
+        if (check_threads) {
+            CheckProducerThread("CommandBuffer");
+        }
         if (recording_threaded && !direct_mode) {
             SyncRecording();
             direct_mode = true;
@@ -747,10 +750,28 @@ public:
     /// SANCTUARY_RECORDER_TRACE=1: prints the most frequent CommandBuffer() callers every 2000 calls.
     static void TraceDirectRecording(void* caller);
 
+    /// SANCTUARY_RECORD_THREADS=1: the producer side (Record, KickRecording, CommandBuffer) is
+    /// single-threaded at any time (vk_draw_pipe.h: stage B while draws are in flight, stage A
+    /// once they ran); prints a backtrace for each caller the guard rejects.
+    static inline const bool check_threads = [] {
+        const char* env = std::getenv("SANCTUARY_RECORD_THREADS");
+        return env && env[0] == '1';
+    }();
+    void CheckProducerThread(const char* what);
+    /// The guard: whether the calling thread may use the producer side now.
+    using RecordGuard = bool (*)(void* context);
+    void SetRecordGuard(RecordGuard guard, void* context) {
+        record_guard = guard;
+        record_guard_context = context;
+    }
+
     /// Records `func(vk::CommandBuffer)` in order with other commands. The closure must own
     /// everything it uses (capture by value): it may run later on the recording thread.
     template <typename Func>
     void Record(Func&& func) {
+        if (check_threads) {
+            CheckProducerThread("Record");
+        }
         if (!recording_threaded || direct_mode) {
             func(current_cmdbuf);
             return;
@@ -945,6 +966,8 @@ private:
     // sanctuary: whether recorder_thread runs, read on every Record(). std::jthread::joinable()
     // compares thread ids, which on Windows (libc++ over winpthreads) costs two system calls.
     bool recording_threaded{false};
+    RecordGuard record_guard{};
+    void* record_guard_context{};
     std::jthread recorder_thread;
     tracy::VkCtxScope* profiler_scope{};
 };

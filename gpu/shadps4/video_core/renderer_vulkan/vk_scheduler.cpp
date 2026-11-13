@@ -8,6 +8,8 @@
 #include <unordered_map>
 #ifndef _WIN32
 #include <dlfcn.h>
+#include <execinfo.h>
+#include <pthread.h>
 #endif
 #include <functional>
 
@@ -263,9 +265,48 @@ void Scheduler::WaitHostCopies() {
     SanctuaryCopy::WaitAsync();
 }
 
+void Scheduler::CheckProducerThread(const char* what) {
+    if (!recording_threaded || !record_guard || record_guard(record_guard_context)) {
+        return;
+    }
+    void* frames[24];
+    int n = 0;
+#ifndef _WIN32
+    n = backtrace(frames, 24);
+#endif
+    static std::mutex mutex;
+    static std::unordered_map<void*, u64> callers; // by the caller of the scheduler method
+    std::scoped_lock lk{mutex};
+    void* const key = n > 2 ? frames[2] : nullptr;
+    if (callers[key]++ || callers.size() > 64) {
+        return;
+    }
+    char name[32] = "?";
+#ifndef _WIN32
+    pthread_getname_np(pthread_self(), name, sizeof(name));
+#endif
+    std::fprintf(stderr, "Record threads: %s from thread '%s' while another thread records\n",
+                 what, name);
+#ifndef _WIN32
+    for (int i = 1; i < n; ++i) {
+        Dl_info info{};
+        if (dladdr(frames[i], &info) && info.dli_fname) {
+            std::fprintf(stderr, "  #%d %s+0x%lx (%s)\n", i, info.dli_fname,
+                         static_cast<unsigned long>(reinterpret_cast<uintptr_t>(frames[i]) -
+                                                    reinterpret_cast<uintptr_t>(info.dli_fbase)),
+                         info.dli_sname ? info.dli_sname : "?");
+        }
+    }
+#endif
+    std::fflush(stderr);
+}
+
 void Scheduler::KickRecording(bool force) {
     if (!recording_threaded) {
         return;
+    }
+    if (check_threads) {
+        CheckProducerThread("KickRecording");
     }
     // Callers kick where nobody holds the raw command buffer: deferral resumes.
     direct_mode = false;

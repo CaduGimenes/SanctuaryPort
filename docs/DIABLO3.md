@@ -56,7 +56,16 @@ float in `[obj+0x54]` (`movl $0x3fe38e39`, imm32 at 0x4bb218). The 2560x1080, 34
 3840x1600 (21:9) and 5120x1440 (32:9) patches write width/height there too: the game widens its
 view (more of the scene at the sides), keeps the hero and the HUD in proportion (globe round,
 minimap at the right corner) and centres its menus. Checked at 2560x1080 (world, pause menu,
-inventory).
+inventory). The 16:10 sizes (1280x800 for the Steam Deck, 1920x1200, 2560x1600) write it the same
+way.
+
+Text below 1080 lines: the game picks a font set by screen height (1.47: eboot 0x2015c1 and three
+more sites, `>2159 -> 0x10, >1079 -> 8, >899 -> 0x20, >719 -> 2`, else 1 or 4 at 576; 1.00 has the
+8/2/1/4 part only, 0x17b47c and three more), but the PS4 build only ships the 1080p and 2160p sets:
+at 720p, 800 or 900 lines the HUD bars and icons stayed and every text (menus, tooltips, item
+names) was gone, without any error (PR #15). The resolution patches under 1080 lines turn the `ja`
+after `cmp $1079` into `jmp`, so the game uses its 1080p fonts and scales them like the rest of the
+UI. Found by comparing frame captures: the font shaders (vs/ps f405edba/0ed7c8fb) were never drawn.
 
 Below the window, FSR 1 (`fsr1=1`, launcher Graphics > Upscaling, in-game Image) upscales the
 picture and RCAS sharpens it; a render resolution under 1080p then opens a 1080p window.

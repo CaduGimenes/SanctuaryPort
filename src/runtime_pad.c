@@ -112,6 +112,23 @@ static void play_click(PadData *d) {
 static SDL_Gamepad *current_gamepad(void) {
     if (!sdl_ready) sdl_ready = SDL_WasInit(SDL_INIT_GAMEPAD) ? 1 : SDL_InitSubSystem(SDL_INIT_GAMEPAD) ? 1 : -1;
     if (sdl_ready<0) return NULL;
+    /* SANCTUARY_VIRTUAL_PAD=1 (development): an SDL virtual gamepad, so scripted runs take the
+     * game's path for a connected controller (GitHub #14 was on a Steam Deck's own controller). */
+    static int virtual_pad;
+    if (!virtual_pad) {
+        const char *v=getenv("SANCTUARY_VIRTUAL_PAD");
+        virtual_pad=-1;
+        if (v && v[0]=='1') {
+            SDL_VirtualJoystickDesc desc;
+            SDL_INIT_INTERFACE(&desc);
+            desc.type=SDL_JOYSTICK_TYPE_GAMEPAD;
+            desc.naxes=SDL_GAMEPAD_AXIS_COUNT;
+            desc.nbuttons=SDL_GAMEPAD_BUTTON_COUNT;
+            desc.name="SanctuaryPort virtual gamepad";
+            virtual_pad=SDL_AttachVirtualJoystick(&desc) ? 1 : -1;
+            printf("Runtime: virtual gamepad %s\n", virtual_pad>0 ? "attached" : SDL_GetError());
+        }
+    }
     if (gamepad && !SDL_GamepadConnected(gamepad)) { SDL_CloseGamepad(gamepad); gamepad=NULL; }
     if (!gamepad) {
         int count=0;

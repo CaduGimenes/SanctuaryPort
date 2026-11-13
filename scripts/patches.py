@@ -128,26 +128,35 @@ def compile_patches(xml, names, app_version, segments, image=None, skipped=None)
     (any build); without it, at the reference build's Address. A Line with a Target writes at that
     Target instead: data the code points to, such as a .bss variable (no bytes of its own to find).
     A patch whose sites are not all found is left out whole, with the reason in skipped[name].
-    app_version None: any version."""
+    A patch may have several Metadata of the same Name, one per build of the game (Diablo III
+    1.00 and 1.47): the first whose sites are all found is used. app_version None: any version."""
     found={}
     for meta in ET.parse(xml).getroot().iter('Metadata'):
         if meta.get('Name') in names and app_version in (None,meta.get('AppVer')) and meta.get('AppElf','eboot.bin')=='eboot.bin':
-            found[meta.get('Name')]=meta
+            found.setdefault(meta.get('Name'),[]).append(meta)
     missing=[n for n in names if n not in found]
     if missing: raise ValueError(f'patches not found for app version {app_version}: {missing}')
     writes=[]
     for name in names:
-        lines=list(found[name].iter('Line'))
-        try:
-            sites=[locate(image,line) if image is not None else int(line.get('Address'),0)-EBOOT_BASE
-                   for line in lines]
-            targets=(resolve_targets(image,found[name],sites) if image is not None else
-                     {t.get('Name'):int(t.get('Address'),0)-EBOOT_BASE for t in found[name].iter('Target')})
-            sites=[targets[line.get('Target')] if line.get('Target') else site for line,site in zip(lines,sites)]
-        except LookupError as error:
-            if skipped is None: raise ValueError(f'{name}: {error}')
-            skipped[name]=str(error)
+        chosen=None
+        for meta in found[name] if image is not None else found[name][:1]:
+            lines=list(meta.iter('Line'))
+            try:
+                sites=[locate(image,line) if image is not None else int(line.get('Address'),0)-EBOOT_BASE
+                       for line in lines]
+                targets=(resolve_targets(image,meta,sites) if image is not None else
+                         {t.get('Name'):int(t.get('Address'),0)-EBOOT_BASE for t in meta.iter('Target')})
+                sites=[targets[line.get('Target')] if line.get('Target') else site for line,site in zip(lines,sites)]
+            except LookupError as error:
+                last_error=error
+                continue
+            chosen=(lines,sites,targets)
+            break
+        if chosen is None:
+            if skipped is None: raise ValueError(f'{name}: {last_error}')
+            skipped[name]=str(last_error)
             continue
+        lines,sites,targets=chosen
         for line,offset in zip(lines,sites):
             data=fill(line.get('Value'),offset,targets) if '{' in line.get('Value','') else encode(line)
             if not any(start<=offset and offset+len(data)<=end for start,end in segments):

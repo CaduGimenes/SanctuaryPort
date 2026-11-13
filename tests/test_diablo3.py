@@ -23,12 +23,24 @@ class Diablo3PatchTests(unittest.TestCase):
         names = patches.available_patches(xml, '01.47')
         expected = {f'{graphics_options.RESOLUTION_PREFIX} - {n}'
                     for n in ('480p', '720p', '900p', '1440p', '1800p', '4K',
-                              '2560x1080', '3440x1440', '3840x1600', '5120x1440')}
+                              '2560x1080', '3440x1440', '3840x1600', '5120x1440',
+                              '1280x800', '1920x1200', '2560x1600')}
         self.assertEqual(names, expected)
         for meta in ET.parse(xml).getroot().iter('Metadata'):
             size = meta.get('Name').split(' - ')[1]
             width, height = graphics_options.resolution_size(size)
-            lines = list(meta.iter('Line'))
+            # US 1.00 entries also grow the display buffers' heap (32 -> 224 MiB) above 900p.
+            heap = [line for line in meta.iter('Line') if line.get('Value') == '0000000e']
+            # Below 1080 lines the game has no fonts of its own size: 4 jumps make it use the 1080p ones.
+            fonts = [line for line in meta.iter('Line') if line.get('Value') == 'eb']
+            self.assertEqual(len(fonts), 4 if height < 1080 else 0, size)
+            for line in fonts:
+                self.assertIn('3d 37 04 00 00 77', line.get('Pattern'))
+                self.assertEqual(line.get('Pattern').split()[int(line.get('At'))], '77')
+            lines = [line for line in meta.iter('Line') if line not in heap and line not in fonts]
+            if heap:
+                self.assertEqual(len(heap), 3, size)
+                self.assertIn('DMEM to 256 MB', meta.get('Note'))
             values = [int.from_bytes(bytes.fromhex(line.get('Value')), 'little') for line in lines[:2]]
             self.assertEqual(values, [width, height], size)
             if graphics_options.aspect_of(size) == '16:9':
@@ -37,6 +49,39 @@ class Diablo3PatchTests(unittest.TestCase):
                 self.assertEqual(len(lines), 3, size)
                 aspect = struct.unpack('<f', bytes.fromhex(lines[2].get('Value')))[0]
                 self.assertAlmostEqual(aspect, width / height, places=5, msg=size)
+
+    def test_us_1_00_gets_its_own_sites(self):
+        # GitHub #16: the 1.47 signatures are not in the US 1.00 eboot; its own entry is used.
+        xml = ROOT / 'patches' / 'Diablo_III.xml'
+        size_code = bytes.fromhex('41c74648800700004 1c7464c3804000041c74650398ee33f'.replace(' ', ''))
+        heap_code = (bytes.fromhex('ba00000002b90000010041b80300000049 89d9'.replace(' ', '')) + bytes(16)
+                     + bytes.fromhex('be00000002ba3300000031c9') + bytes(16)
+                     + bytes.fromhex('b90000000241b8001000004531c9'))
+        # The four font-size choices (below 1080 lines -> the 1080p fonts).
+        font_code = b''.join(bytes.fromhex(h) + bytes(8) for h in (
+            'c43d37040000771b', '3d37040000771d', '850200bb080000008b45d03d37040000771b',
+            '840200bb080000008b45d03d37040000771b'))
+        image = (bytearray(0x1000) + size_code + bytearray(0x100) + heap_code + bytearray(0x100)
+                 + font_code)
+        segments = [(0, len(image))]
+        writes = patches.compile_patches(xml, ['Resolution Patch - 1440p'], '01.47', segments,
+                                         image=bytes(image))
+        at = 0x1000
+        self.assertIn((at + 4, (2560).to_bytes(4, 'little')), writes)
+        self.assertIn((at + 12, (1440).to_bytes(4, 'little')), writes)
+        self.assertEqual(sum(data == bytes.fromhex('0000000e') for _, data in writes), 3)
+        # 720p fits the 1.00 heap: sizes, and the jumps to the 1080p fonts.
+        small = patches.compile_patches(xml, ['Resolution Patch - 720p'], '01.47', segments,
+                                        image=bytes(image))
+        self.assertEqual(len(small), 6)
+        self.assertEqual(sum(data == b'\xeb' for _, data in small), 4)
+        # The 1.47 code still gets the 1.47 entry.
+        new = bytearray(0x800) + bytes.fromhex('b8000f0000b9800700000f45c841894f4c') + bytearray(0x40) \
+            + bytes.fromhex('b870080000b93804000049 8dbf100d00000f45c841894f50'.replace(' ', '')) + bytearray(0x800)
+        writes = patches.compile_patches(xml, ['Resolution Patch - 1440p'], '01.47', [(0, len(new))],
+                                         image=bytes(new))
+        self.assertEqual(writes, [(0x800 + 6, (2560).to_bytes(4, 'little')),
+                                  (0x800 + 17 + 0x40 + 6, (1440).to_bytes(4, 'little'))])
 
     def test_both_releases_use_it(self):
         for title in ('CUSA00242', 'CUSA00243'):

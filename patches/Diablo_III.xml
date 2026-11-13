@@ -6,28 +6,79 @@
      Each patch replaces the base PS4's 1920 and 1080 (mov ecx, imm32), so the game renders at that size
      on the base PS4 path. Right after, [obj+0x54] = 16/9 (movl imm32 at 0x4bb218): the camera's
      aspect ratio, patched to width/height by the wider sizes. Found by SanctuaryPort; each site by its
-     signature (Pattern/At). -->
+     signature (Pattern/At). Each size has a second entry of the same name for the US 1.00 eboot
+     (no PS4 Pro path: movl $1920/$1080/16:9 to [r14+0x48]/[r14+0x4c]/[r14+0x50] at 0x779a1f, GitHub
+     #16); the first entry whose signatures are all found is applied. Above 900p the 1.00 entries also
+     grow the 32 MiB heap the display buffers come from (0xd2d43f/61/9d) to 224 MiB as in 1.47, and ask
+     for that much more direct memory. The game picks its font set by screen height (eboot 0x2015c1 and
+     three more sites in 1.47, 0x17b47c and three more in 1.00: >2159, >1079, >899, >719 lines...),
+     but the PS4 build only ships the 1080p and 2160p sets, so below 1080 lines no text was drawn
+     (PR #15: the UI "disappears" at 720p/800p). The sizes below 1080 turn the ja after cmp $1079
+     into jmp: the 1080p fonts, which the game scales to the screen. The 16:10 sizes write the
+     camera's aspect ratio like the ultrawide ones. -->
 <Patch>
     <TitleID>
         <ID>CUSA00243</ID>
         <ID>CUSA00242</ID>
     </TitleID>
-    <Metadata Title="Diablo III" Name="Resolution Patch - 480p" Note="Renders at 854x480." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+    <Metadata Title="Diablo III" Name="Resolution Patch - 480p" Note="Renders at 854x480; text uses the 1080p fonts (the game has none for smaller screens)." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x004bb1ea" Value="56030000" Pattern="b8 00 0f 00 00 b9 80 07 00 00 0f 45 c8 41 89 4f 4c" At="6"/>
             <Line Type="bytes" Address="0x004bb202" Value="e0010000" Pattern="b8 70 08 00 00 b9 38 04 00 00 49 8d bf 10 0d 00 00 0f 45 c8 41 89 4f 50" At="6"/>
+            <Line Type="bytes" Address="0x006015d4" Value="eb" Pattern="c7 45 a8 08 00 00 00 3d 37 04 00 00 77 2e" At="12"/>
+            <Line Type="bytes" Address="0x00601aef" Value="eb" Pattern="37 41 b8 08 00 00 00 3d 37 04 00 00 77 2a" At="12"/>
+            <Line Type="bytes" Address="0x00601f2b" Value="eb" Pattern="0e 03 00 8b 45 c8 bb 10 00 00 00 3d 6f 08 00 00 77 33 bb 08 00 00 00 3d 37 04 00 00 77 27" At="28"/>
+            <Line Type="bytes" Address="0x0060204b" Value="eb" Pattern="0d 03 00 8b 45 c8 bb 10 00 00 00 3d 6f 08 00 00 77 33 bb 08 00 00 00 3d 37 04 00 00 77 27" At="28"/>
         </PatchList>
     </Metadata>
-    <Metadata Title="Diablo III" Name="Resolution Patch - 720p" Note="Renders at 1280x720." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+    <Metadata Title="Diablo III" Name="Resolution Patch - 480p" Note="Renders at 854x480; text uses the 1080p fonts (the game has none for smaller screens)." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x00779a23" Value="56030000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="4"/>
+            <Line Type="bytes" Address="0x00779a2b" Value="e0010000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="12"/>
+            <Line Type="bytes" Address="0x0057b481" Value="eb" Pattern="c4 3d 37 04 00 00 77 1b" At="6"/>
+            <Line Type="bytes" Address="0x0057b990" Value="eb" Pattern="3d 37 04 00 00 77 1d" At="5"/>
+            <Line Type="bytes" Address="0x0057bd8d" Value="eb" Pattern="85 02 00 bb 08 00 00 00 8b 45 d0 3d 37 04 00 00 77 1b" At="16"/>
+            <Line Type="bytes" Address="0x0057be9d" Value="eb" Pattern="84 02 00 bb 08 00 00 00 8b 45 d0 3d 37 04 00 00 77 1b" At="16"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="Resolution Patch - 720p" Note="Renders at 1280x720; text uses the 1080p fonts (the game has none for smaller screens)." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x004bb1ea" Value="00050000" Pattern="b8 00 0f 00 00 b9 80 07 00 00 0f 45 c8 41 89 4f 4c" At="6"/>
             <Line Type="bytes" Address="0x004bb202" Value="d0020000" Pattern="b8 70 08 00 00 b9 38 04 00 00 49 8d bf 10 0d 00 00 0f 45 c8 41 89 4f 50" At="6"/>
+            <Line Type="bytes" Address="0x006015d4" Value="eb" Pattern="c7 45 a8 08 00 00 00 3d 37 04 00 00 77 2e" At="12"/>
+            <Line Type="bytes" Address="0x00601aef" Value="eb" Pattern="37 41 b8 08 00 00 00 3d 37 04 00 00 77 2a" At="12"/>
+            <Line Type="bytes" Address="0x00601f2b" Value="eb" Pattern="0e 03 00 8b 45 c8 bb 10 00 00 00 3d 6f 08 00 00 77 33 bb 08 00 00 00 3d 37 04 00 00 77 27" At="28"/>
+            <Line Type="bytes" Address="0x0060204b" Value="eb" Pattern="0d 03 00 8b 45 c8 bb 10 00 00 00 3d 6f 08 00 00 77 33 bb 08 00 00 00 3d 37 04 00 00 77 27" At="28"/>
         </PatchList>
     </Metadata>
-    <Metadata Title="Diablo III" Name="Resolution Patch - 900p" Note="Renders at 1600x900." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+    <Metadata Title="Diablo III" Name="Resolution Patch - 720p" Note="Renders at 1280x720; text uses the 1080p fonts (the game has none for smaller screens)." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x00779a23" Value="00050000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="4"/>
+            <Line Type="bytes" Address="0x00779a2b" Value="d0020000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="12"/>
+            <Line Type="bytes" Address="0x0057b481" Value="eb" Pattern="c4 3d 37 04 00 00 77 1b" At="6"/>
+            <Line Type="bytes" Address="0x0057b990" Value="eb" Pattern="3d 37 04 00 00 77 1d" At="5"/>
+            <Line Type="bytes" Address="0x0057bd8d" Value="eb" Pattern="85 02 00 bb 08 00 00 00 8b 45 d0 3d 37 04 00 00 77 1b" At="16"/>
+            <Line Type="bytes" Address="0x0057be9d" Value="eb" Pattern="84 02 00 bb 08 00 00 00 8b 45 d0 3d 37 04 00 00 77 1b" At="16"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="Resolution Patch - 900p" Note="Renders at 1600x900; text uses the 1080p fonts (the game has none for smaller screens)." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x004bb1ea" Value="40060000" Pattern="b8 00 0f 00 00 b9 80 07 00 00 0f 45 c8 41 89 4f 4c" At="6"/>
             <Line Type="bytes" Address="0x004bb202" Value="84030000" Pattern="b8 70 08 00 00 b9 38 04 00 00 49 8d bf 10 0d 00 00 0f 45 c8 41 89 4f 50" At="6"/>
+            <Line Type="bytes" Address="0x006015d4" Value="eb" Pattern="c7 45 a8 08 00 00 00 3d 37 04 00 00 77 2e" At="12"/>
+            <Line Type="bytes" Address="0x00601aef" Value="eb" Pattern="37 41 b8 08 00 00 00 3d 37 04 00 00 77 2a" At="12"/>
+            <Line Type="bytes" Address="0x00601f2b" Value="eb" Pattern="0e 03 00 8b 45 c8 bb 10 00 00 00 3d 6f 08 00 00 77 33 bb 08 00 00 00 3d 37 04 00 00 77 27" At="28"/>
+            <Line Type="bytes" Address="0x0060204b" Value="eb" Pattern="0d 03 00 8b 45 c8 bb 10 00 00 00 3d 6f 08 00 00 77 33 bb 08 00 00 00 3d 37 04 00 00 77 27" At="28"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="Resolution Patch - 900p" Note="Renders at 1600x900; text uses the 1080p fonts (the game has none for smaller screens)." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x00779a23" Value="40060000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="4"/>
+            <Line Type="bytes" Address="0x00779a2b" Value="84030000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="12"/>
+            <Line Type="bytes" Address="0x0057b481" Value="eb" Pattern="c4 3d 37 04 00 00 77 1b" At="6"/>
+            <Line Type="bytes" Address="0x0057b990" Value="eb" Pattern="3d 37 04 00 00 77 1d" At="5"/>
+            <Line Type="bytes" Address="0x0057bd8d" Value="eb" Pattern="85 02 00 bb 08 00 00 00 8b 45 d0 3d 37 04 00 00 77 1b" At="16"/>
+            <Line Type="bytes" Address="0x0057be9d" Value="eb" Pattern="84 02 00 bb 08 00 00 00 8b 45 d0 3d 37 04 00 00 77 1b" At="16"/>
         </PatchList>
     </Metadata>
     <Metadata Title="Diablo III" Name="Resolution Patch - 1440p" Note="Renders at 2560x1440." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
@@ -36,16 +87,43 @@
             <Line Type="bytes" Address="0x004bb202" Value="a0050000" Pattern="b8 70 08 00 00 b9 38 04 00 00 49 8d bf 10 0d 00 00 0f 45 c8 41 89 4f 50" At="6"/>
         </PatchList>
     </Metadata>
+    <Metadata Title="Diablo III" Name="Resolution Patch - 1440p" Note="Renders at 2560x1440. Requires setting DMEM to 256 MB." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x00779a23" Value="000a0000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="4"/>
+            <Line Type="bytes" Address="0x00779a2b" Value="a0050000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="12"/>
+            <Line Type="bytes" Address="0x00d2d43f" Value="0000000e" Pattern="ba 00 00 00 02 b9 00 00 01 00 41 b8 03 00 00 00 49 89 d9" At="1"/>
+            <Line Type="bytes" Address="0x00d2d461" Value="0000000e" Pattern="be 00 00 00 02 ba 33 00 00 00 31 c9" At="1"/>
+            <Line Type="bytes" Address="0x00d2d49d" Value="0000000e" Pattern="b9 00 00 00 02 41 b8 00 10 00 00 45 31 c9" At="1"/>
+        </PatchList>
+    </Metadata>
     <Metadata Title="Diablo III" Name="Resolution Patch - 1800p" Note="Renders at 3200x1800." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x004bb1ea" Value="800c0000" Pattern="b8 00 0f 00 00 b9 80 07 00 00 0f 45 c8 41 89 4f 4c" At="6"/>
             <Line Type="bytes" Address="0x004bb202" Value="08070000" Pattern="b8 70 08 00 00 b9 38 04 00 00 49 8d bf 10 0d 00 00 0f 45 c8 41 89 4f 50" At="6"/>
         </PatchList>
     </Metadata>
+    <Metadata Title="Diablo III" Name="Resolution Patch - 1800p" Note="Renders at 3200x1800. Requires setting DMEM to 256 MB." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x00779a23" Value="800c0000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="4"/>
+            <Line Type="bytes" Address="0x00779a2b" Value="08070000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="12"/>
+            <Line Type="bytes" Address="0x00d2d43f" Value="0000000e" Pattern="ba 00 00 00 02 b9 00 00 01 00 41 b8 03 00 00 00 49 89 d9" At="1"/>
+            <Line Type="bytes" Address="0x00d2d461" Value="0000000e" Pattern="be 00 00 00 02 ba 33 00 00 00 31 c9" At="1"/>
+            <Line Type="bytes" Address="0x00d2d49d" Value="0000000e" Pattern="b9 00 00 00 02 41 b8 00 10 00 00 45 31 c9" At="1"/>
+        </PatchList>
+    </Metadata>
     <Metadata Title="Diablo III" Name="Resolution Patch - 4K" Note="Renders at 3840x2160." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x004bb1ea" Value="000f0000" Pattern="b8 00 0f 00 00 b9 80 07 00 00 0f 45 c8 41 89 4f 4c" At="6"/>
             <Line Type="bytes" Address="0x004bb202" Value="70080000" Pattern="b8 70 08 00 00 b9 38 04 00 00 49 8d bf 10 0d 00 00 0f 45 c8 41 89 4f 50" At="6"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="Resolution Patch - 4K" Note="Renders at 3840x2160. Requires setting DMEM to 256 MB." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x00779a23" Value="000f0000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="4"/>
+            <Line Type="bytes" Address="0x00779a2b" Value="70080000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="12"/>
+            <Line Type="bytes" Address="0x00d2d43f" Value="0000000e" Pattern="ba 00 00 00 02 b9 00 00 01 00 41 b8 03 00 00 00 49 89 d9" At="1"/>
+            <Line Type="bytes" Address="0x00d2d461" Value="0000000e" Pattern="be 00 00 00 02 ba 33 00 00 00 31 c9" At="1"/>
+            <Line Type="bytes" Address="0x00d2d49d" Value="0000000e" Pattern="b9 00 00 00 02 41 b8 00 10 00 00 45 31 c9" At="1"/>
         </PatchList>
     </Metadata>
     <Metadata Title="Diablo III" Name="Resolution Patch - 2560x1080" Note="Renders at 2560x1080 (21:9), with the camera's aspect ratio." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
@@ -55,11 +133,31 @@
             <Line Type="bytes" Address="0x004bb218" Value="26b41740" Pattern="41 c7 47 54 39 8e e3 3f 49 c7 47 6c" At="4"/>
         </PatchList>
     </Metadata>
+    <Metadata Title="Diablo III" Name="Resolution Patch - 2560x1080" Note="Renders at 2560x1080 (21:9), with the camera's aspect ratio. Requires setting DMEM to 256 MB." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x00779a23" Value="000a0000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="4"/>
+            <Line Type="bytes" Address="0x00779a2b" Value="38040000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="12"/>
+            <Line Type="bytes" Address="0x00779a33" Value="26b41740" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="20"/>
+            <Line Type="bytes" Address="0x00d2d43f" Value="0000000e" Pattern="ba 00 00 00 02 b9 00 00 01 00 41 b8 03 00 00 00 49 89 d9" At="1"/>
+            <Line Type="bytes" Address="0x00d2d461" Value="0000000e" Pattern="be 00 00 00 02 ba 33 00 00 00 31 c9" At="1"/>
+            <Line Type="bytes" Address="0x00d2d49d" Value="0000000e" Pattern="b9 00 00 00 02 41 b8 00 10 00 00 45 31 c9" At="1"/>
+        </PatchList>
+    </Metadata>
     <Metadata Title="Diablo III" Name="Resolution Patch - 3440x1440" Note="Renders at 3440x1440 (21:9), with the camera's aspect ratio." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x004bb1ea" Value="700d0000" Pattern="b8 00 0f 00 00 b9 80 07 00 00 0f 45 c8 41 89 4f 4c" At="6"/>
             <Line Type="bytes" Address="0x004bb202" Value="a0050000" Pattern="b8 70 08 00 00 b9 38 04 00 00 49 8d bf 10 0d 00 00 0f 45 c8 41 89 4f 50" At="6"/>
             <Line Type="bytes" Address="0x004bb218" Value="8ee31840" Pattern="41 c7 47 54 39 8e e3 3f 49 c7 47 6c" At="4"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="Resolution Patch - 3440x1440" Note="Renders at 3440x1440 (21:9), with the camera's aspect ratio. Requires setting DMEM to 256 MB." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x00779a23" Value="700d0000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="4"/>
+            <Line Type="bytes" Address="0x00779a2b" Value="a0050000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="12"/>
+            <Line Type="bytes" Address="0x00779a33" Value="8ee31840" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="20"/>
+            <Line Type="bytes" Address="0x00d2d43f" Value="0000000e" Pattern="ba 00 00 00 02 b9 00 00 01 00 41 b8 03 00 00 00 49 89 d9" At="1"/>
+            <Line Type="bytes" Address="0x00d2d461" Value="0000000e" Pattern="be 00 00 00 02 ba 33 00 00 00 31 c9" At="1"/>
+            <Line Type="bytes" Address="0x00d2d49d" Value="0000000e" Pattern="b9 00 00 00 02 41 b8 00 10 00 00 45 31 c9" At="1"/>
         </PatchList>
     </Metadata>
     <Metadata Title="Diablo III" Name="Resolution Patch - 3840x1600" Note="Renders at 3840x1600 (21:9), with the camera's aspect ratio." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
@@ -69,11 +167,87 @@
             <Line Type="bytes" Address="0x004bb218" Value="9a991940" Pattern="41 c7 47 54 39 8e e3 3f 49 c7 47 6c" At="4"/>
         </PatchList>
     </Metadata>
+    <Metadata Title="Diablo III" Name="Resolution Patch - 3840x1600" Note="Renders at 3840x1600 (21:9), with the camera's aspect ratio. Requires setting DMEM to 256 MB." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x00779a23" Value="000f0000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="4"/>
+            <Line Type="bytes" Address="0x00779a2b" Value="40060000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="12"/>
+            <Line Type="bytes" Address="0x00779a33" Value="9a991940" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="20"/>
+            <Line Type="bytes" Address="0x00d2d43f" Value="0000000e" Pattern="ba 00 00 00 02 b9 00 00 01 00 41 b8 03 00 00 00 49 89 d9" At="1"/>
+            <Line Type="bytes" Address="0x00d2d461" Value="0000000e" Pattern="be 00 00 00 02 ba 33 00 00 00 31 c9" At="1"/>
+            <Line Type="bytes" Address="0x00d2d49d" Value="0000000e" Pattern="b9 00 00 00 02 41 b8 00 10 00 00 45 31 c9" At="1"/>
+        </PatchList>
+    </Metadata>
     <Metadata Title="Diablo III" Name="Resolution Patch - 5120x1440" Note="Renders at 5120x1440 (32:9), with the camera's aspect ratio." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x004bb1ea" Value="00140000" Pattern="b8 00 0f 00 00 b9 80 07 00 00 0f 45 c8 41 89 4f 4c" At="6"/>
             <Line Type="bytes" Address="0x004bb202" Value="a0050000" Pattern="b8 70 08 00 00 b9 38 04 00 00 49 8d bf 10 0d 00 00 0f 45 c8 41 89 4f 50" At="6"/>
             <Line Type="bytes" Address="0x004bb218" Value="398e6340" Pattern="41 c7 47 54 39 8e e3 3f 49 c7 47 6c" At="4"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="Resolution Patch - 5120x1440" Note="Renders at 5120x1440 (32:9), with the camera's aspect ratio. Requires setting DMEM to 256 MB." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x00779a23" Value="00140000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="4"/>
+            <Line Type="bytes" Address="0x00779a2b" Value="a0050000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="12"/>
+            <Line Type="bytes" Address="0x00779a33" Value="398e6340" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="20"/>
+            <Line Type="bytes" Address="0x00d2d43f" Value="0000000e" Pattern="ba 00 00 00 02 b9 00 00 01 00 41 b8 03 00 00 00 49 89 d9" At="1"/>
+            <Line Type="bytes" Address="0x00d2d461" Value="0000000e" Pattern="be 00 00 00 02 ba 33 00 00 00 31 c9" At="1"/>
+            <Line Type="bytes" Address="0x00d2d49d" Value="0000000e" Pattern="b9 00 00 00 02 41 b8 00 10 00 00 45 31 c9" At="1"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="Resolution Patch - 1280x800" Note="Renders at 1280x800 (16:10), with the camera's aspect ratio; text uses the 1080p fonts (the game has none for smaller screens)." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x004bb1ea" Value="00050000" Pattern="b8 00 0f 00 00 b9 80 07 00 00 0f 45 c8 41 89 4f 4c" At="6"/>
+            <Line Type="bytes" Address="0x004bb202" Value="20030000" Pattern="b8 70 08 00 00 b9 38 04 00 00 49 8d bf 10 0d 00 00 0f 45 c8 41 89 4f 50" At="6"/>
+            <Line Type="bytes" Address="0x004bb218" Value="cdcccc3f" Pattern="41 c7 47 54 39 8e e3 3f 49 c7 47 6c" At="4"/>
+            <Line Type="bytes" Address="0x006015d4" Value="eb" Pattern="c7 45 a8 08 00 00 00 3d 37 04 00 00 77 2e" At="12"/>
+            <Line Type="bytes" Address="0x00601aef" Value="eb" Pattern="37 41 b8 08 00 00 00 3d 37 04 00 00 77 2a" At="12"/>
+            <Line Type="bytes" Address="0x00601f2b" Value="eb" Pattern="0e 03 00 8b 45 c8 bb 10 00 00 00 3d 6f 08 00 00 77 33 bb 08 00 00 00 3d 37 04 00 00 77 27" At="28"/>
+            <Line Type="bytes" Address="0x0060204b" Value="eb" Pattern="0d 03 00 8b 45 c8 bb 10 00 00 00 3d 6f 08 00 00 77 33 bb 08 00 00 00 3d 37 04 00 00 77 27" At="28"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="Resolution Patch - 1280x800" Note="Renders at 1280x800 (16:10), with the camera's aspect ratio; text uses the 1080p fonts (the game has none for smaller screens)." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x00779a23" Value="00050000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="4"/>
+            <Line Type="bytes" Address="0x00779a2b" Value="20030000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="12"/>
+            <Line Type="bytes" Address="0x00779a33" Value="cdcccc3f" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="20"/>
+            <Line Type="bytes" Address="0x0057b481" Value="eb" Pattern="c4 3d 37 04 00 00 77 1b" At="6"/>
+            <Line Type="bytes" Address="0x0057b990" Value="eb" Pattern="3d 37 04 00 00 77 1d" At="5"/>
+            <Line Type="bytes" Address="0x0057bd8d" Value="eb" Pattern="85 02 00 bb 08 00 00 00 8b 45 d0 3d 37 04 00 00 77 1b" At="16"/>
+            <Line Type="bytes" Address="0x0057be9d" Value="eb" Pattern="84 02 00 bb 08 00 00 00 8b 45 d0 3d 37 04 00 00 77 1b" At="16"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="Resolution Patch - 1920x1200" Note="Renders at 1920x1200 (16:10), with the camera's aspect ratio." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x004bb1ea" Value="80070000" Pattern="b8 00 0f 00 00 b9 80 07 00 00 0f 45 c8 41 89 4f 4c" At="6"/>
+            <Line Type="bytes" Address="0x004bb202" Value="b0040000" Pattern="b8 70 08 00 00 b9 38 04 00 00 49 8d bf 10 0d 00 00 0f 45 c8 41 89 4f 50" At="6"/>
+            <Line Type="bytes" Address="0x004bb218" Value="cdcccc3f" Pattern="41 c7 47 54 39 8e e3 3f 49 c7 47 6c" At="4"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="Resolution Patch - 1920x1200" Note="Renders at 1920x1200 (16:10), with the camera's aspect ratio. Requires setting DMEM to 256 MB." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x00779a23" Value="80070000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="4"/>
+            <Line Type="bytes" Address="0x00779a2b" Value="b0040000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="12"/>
+            <Line Type="bytes" Address="0x00779a33" Value="cdcccc3f" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="20"/>
+            <Line Type="bytes" Address="0x00d2d43f" Value="0000000e" Pattern="ba 00 00 00 02 b9 00 00 01 00 41 b8 03 00 00 00 49 89 d9" At="1"/>
+            <Line Type="bytes" Address="0x00d2d461" Value="0000000e" Pattern="be 00 00 00 02 ba 33 00 00 00 31 c9" At="1"/>
+            <Line Type="bytes" Address="0x00d2d49d" Value="0000000e" Pattern="b9 00 00 00 02 41 b8 00 10 00 00 45 31 c9" At="1"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="Resolution Patch - 2560x1600" Note="Renders at 2560x1600 (16:10), with the camera's aspect ratio." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x004bb1ea" Value="000a0000" Pattern="b8 00 0f 00 00 b9 80 07 00 00 0f 45 c8 41 89 4f 4c" At="6"/>
+            <Line Type="bytes" Address="0x004bb202" Value="40060000" Pattern="b8 70 08 00 00 b9 38 04 00 00 49 8d bf 10 0d 00 00 0f 45 c8 41 89 4f 50" At="6"/>
+            <Line Type="bytes" Address="0x004bb218" Value="cdcccc3f" Pattern="41 c7 47 54 39 8e e3 3f 49 c7 47 6c" At="4"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="Resolution Patch - 2560x1600" Note="Renders at 2560x1600 (16:10), with the camera's aspect ratio. Requires setting DMEM to 256 MB." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x00779a23" Value="000a0000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="4"/>
+            <Line Type="bytes" Address="0x00779a2b" Value="40060000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="12"/>
+            <Line Type="bytes" Address="0x00779a33" Value="cdcccc3f" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="20"/>
+            <Line Type="bytes" Address="0x00d2d43f" Value="0000000e" Pattern="ba 00 00 00 02 b9 00 00 01 00 41 b8 03 00 00 00 49 89 d9" At="1"/>
+            <Line Type="bytes" Address="0x00d2d461" Value="0000000e" Pattern="be 00 00 00 02 ba 33 00 00 00 31 c9" At="1"/>
+            <Line Type="bytes" Address="0x00d2d49d" Value="0000000e" Pattern="b9 00 00 00 02 41 b8 00 10 00 00 45 31 c9" At="1"/>
         </PatchList>
     </Metadata>
 </Patch>

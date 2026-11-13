@@ -86,11 +86,15 @@ Liverpool::~Liverpool() {
 }
 
 void Liverpool::ProcessCommands() {
-    if (num_commands && rasterizer) {
-        rasterizer->DrainDrawPipe(Vulkan::DrawPipe::ReasonCommands); // sanctuary: commands touch the caches
-    }
     // Process incoming commands with high priority
     while (num_commands) {
+        // sanctuary: commands touch the caches and the scheduler: the draw recording thread must
+        // have run dry. Checked per command: one queued after a single check at the top (the
+        // count was 0 there) used to run while that thread still recorded (host fault at 0x20000,
+        // Scheduler::record_chunk swapped under it). A drain with nothing in flight is free.
+        if (rasterizer) {
+            rasterizer->DrainDrawPipe(Vulkan::DrawPipe::ReasonCommands);
+        }
         Common::UniqueFunction<void> callback{};
         {
             std::scoped_lock lk{submit_mutex};

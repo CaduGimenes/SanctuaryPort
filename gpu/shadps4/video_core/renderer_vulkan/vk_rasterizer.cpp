@@ -72,6 +72,15 @@ Rasterizer::Rasterizer(const Instance& instance_, Scheduler& scheduler_, Runtime
     if (DrawPipeWanted()) {
         constant_ring = std::make_unique<ConstantRing>(instance, scheduler);
         draw_pipe = std::make_unique<DrawPipe>(&RunDrawPacket, this);
+        if (Scheduler::check_threads) {
+            // Stage B while draws are in flight, stage A once they ran; no other thread.
+            scheduler.SetRecordGuard(
+                [](void* context) {
+                    const auto& self = *static_cast<const Rasterizer*>(context);
+                    return DrawPipe::OnStageB() || (self.OnStageA() && self.DrawPipeIdle());
+                },
+                this);
+        }
     }
     // sanctuary: this thread joins the texture binding helper before it changes image state.
     runtime.SetImageAccessHook(&JoinBindHelper, this);
