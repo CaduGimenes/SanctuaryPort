@@ -234,6 +234,7 @@ fn render(state: &State, width: u32, height: u32) -> RgbaImage {
     TINY_SKIA.call_once(|| std::env::set_var("ICED_TEST_BACKEND", "tiny-skia"));
     let settings = Settings {
         fonts: theme::font_bytes().map(Cow::Borrowed).to_vec(),
+        default_font: theme::UI_FONT,
         ..Settings::default()
     };
     let size = Size::new(width as f32, height as f32);
@@ -386,11 +387,6 @@ fn graphics() {
 }
 
 #[test]
-fn performance() {
-    check(Shot::Page(Page::Performance));
-}
-
-#[test]
 fn game() {
     check(Shot::Page(Page::Game));
 }
@@ -510,6 +506,7 @@ fn the_home_block_behind_a_wide_drawer_has_no_shade_box() {
     let image = render(&state, width, height);
     let settings = Settings {
         fonts: theme::font_bytes().map(Cow::Borrowed).to_vec(),
+        default_font: theme::UI_FONT,
         ..Settings::default()
     };
     let block = Simulator::with_size(settings, size, app::view(&state))

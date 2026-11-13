@@ -3463,7 +3463,8 @@
    "Frame rate, render resolution and graphics card. Applied when the game starts.": "Liczba klatek, rozdzielczość renderowania i karta graficzna. Stosowane przy uruchomieniu gry.",
    "Your screen's shape: 21:9 and 32:9 are ultrawide monitors. Lists the render resolutions of that shape; the game widens its view to it.": "Proporcje Twojego ekranu: 21:9 i 32:9 to monitory ultraszerokie. Pokazuje rozdzielczości renderowania o tych proporcjach; gra poszerza do nich widok.",
    "Unlock all cosmetics and transmogs": "Odblokuj wszystkie elementy kosmetyczne i transmogryfikacje",
-   "Every wing, pet, pennant and portrait frame of the game, season rewards included, and every legendary and set item look at the Mystic, in the account saves when the game starts (a backup is kept next to each). Some wings have no icon in the menus but show in game.": "Wszystkie skrzydła, zwierzaki, proporce i ramki portretu z gry, w tym nagrody sezonowe, oraz wszystkie wyglądy przedmiotów legendarnych i z zestawów u Mistyczki, w zapisach konta przy uruchomieniu gry (obok każdego zostaje kopia zapasowa). Niektóre skrzydła nie mają ikony w menu, ale są widoczne w grze."
+   "Every wing, pet, pennant and portrait frame of the game, season rewards included, and every legendary and set item look at the Mystic, in the account saves when the game starts (a backup is kept next to each). Some wings have no icon in the menus but show in game.": "Wszystkie skrzydła, zwierzaki, proporce i ramki portretu z gry, w tym nagrody sezonowe, oraz wszystkie wyglądy przedmiotów legendarnych i z zestawów u Mistyczki, w zapisach konta przy uruchomieniu gry (obok każdego zostaje kopia zapasowa). Niektóre skrzydła nie mają ikony w menu, ale są widoczne w grze.",
+   "Resolution": "Rozdzielczość"
   },
   "fr": {
    "Polish": "Polonais",
@@ -5511,7 +5512,9 @@
   "Frame rate, render resolution and graphics card. Applied when the game starts.": "Частота кадров, разрешение рендеринга и видеокарта. Применяется при запуске игры.",
   "Your screen's shape: 21:9 and 32:9 are ultrawide monitors. Lists the render resolutions of that shape; the game widens its view to it.": "Форма вашего экрана: 21:9 и 32:9 — сверхширокие мониторы. Показывает разрешения рендеринга этой формы; игра расширяет обзор под неё.",
   "Unlock all cosmetics and transmogs": "Открыть все косметические предметы и трансмогрификации",
-  "Every wing, pet, pennant and portrait frame of the game, season rewards included, and every legendary and set item look at the Mystic, in the account saves when the game starts (a backup is kept next to each). Some wings have no icon in the menus but show in game.": "Все крылья, питомцы, вымпелы и рамки портрета из игры, включая сезонные награды, и все облики легендарных и комплектных предметов у Мистика, в сохранениях учётной записи при запуске игры (рядом с каждым остаётся резервная копия). У некоторых крыльев нет значка в меню, но в игре они видны."
+  "Every wing, pet, pennant and portrait frame of the game, season rewards included, and every legendary and set item look at the Mystic, in the account saves when the game starts (a backup is kept next to each). Some wings have no icon in the menus but show in game.": "Все крылья, питомцы, вымпелы и рамки портрета из игры, включая сезонные награды, и все облики легендарных и комплектных предметов у Мистика, в сохранениях учётной записи при запуске игры (рядом с каждым остаётся резервная копия). У некоторых крыльев нет значка в меню, но в игре они видны.",
+  "Off": "Выкл.",
+  "Resolution": "Разрешение"
  },
  "windows_languages": {
   "25": "ru",

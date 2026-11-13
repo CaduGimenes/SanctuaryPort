@@ -18,6 +18,7 @@ use sanctuaryport_launcher::ui::theme;
 fn render(state: &State, out: &std::path::Path, name: &str) {
     let settings = Settings {
         fonts: theme::font_bytes().map(Cow::Borrowed).to_vec(),
+        default_font: theme::UI_FONT,
         ..Settings::default()
     };
     // SP_PREVIEW_HEIGHT: a taller window shows every row of a page without scrolling.

@@ -57,7 +57,9 @@ Then follow [Getting your game ready](#getting-your-game-ready) with your own du
 | ✅ Languages | whatever your dump ships, in any region's release (English, French, Spanish, Portuguese, German, Italian, Polish, Russian...) |
 | ✅ **Trophies** | an on-screen notice with the trophy's name as you earn it, the platinum by itself, and a Trophies page in the launcher |
 | ✅ Render resolution 480p–4K, ultrawide 21:9 / 32:9, 16:10 (Steam Deck 1280x800) | resolution patches for the 1.47 and 1.00 executables (the camera widens to the screen); FSR 1 upscaling and RCAS sharpening |
-| 🧪 FSR 3 (experimental) | temporal anti-aliasing, or upscaling to the window with the HUD at full size (Graphics > Temporal anti-aliasing) |
+| 🧪 FSR 3 (experimental) | temporal anti-aliasing, or upscaling to the window with the HUD at full size (Graphics > Anti-aliasing) |
+| ✅ FXAA | cheap anti-aliasing of the 3D picture before the HUD (Graphics > Anti-aliasing), when FSR 3 is off |
+| 🧪 Game MSAA on AMD and Intel (Windows) | off by default there (black lines); On is experimental: its depth is created without compression |
 | ✅ Updates | the 1.47 update (Eternal Collection) from its own folder; the base game is never changed |
 | ✅ Windows 10 / 11 | played by the community on real Windows PCs (NVIDIA, AMD and Intel graphics); every release is also tested under Wine |
 | ❌ Online play / PSN | offline only |
@@ -68,7 +70,7 @@ Then follow [Getting your game ready](#getting-your-game-ready) with your own du
 [SpartanPort](https://github.com/FelipePrado0/SpartanPort)'s launcher:
 
 - **Home** with your game's own key art (`sce_sys/pic1.png`, read from your dump; nothing is shipped);
-- **Graphics / Performance**: render resolution, window mode, FSR 1 upscaling, FSR 3 (experimental), frame limit;
+- **Graphics**: window mode, render resolution, anti-aliasing (the game's MSAA, FSR 3), upscaling (FSR 1) and sharpening, frame limit, graphics card;
 - **Game**: game folder, language, saves, and **installation from PKG** (base game and add-ons);
 - **Trophies**: every trophy with its icon (from your dump), name and description, and which ones you
   have earned with the port;
@@ -142,9 +144,10 @@ SANCTUARY_GAME_DIR=~/Games/PS4/CUSA00243 SANCTUARY_PATCH_DIR=~/Games/PS4/CUSA002
   | P / Esc | touchpad left / right |
   | Insert | the port's menu (cannot be changed) |
   | F12 | screenshot (`user/screenshots/`) |
-- **Local co-op:** connect more gamepads. The first one is player 1; the next ones become players
-  2, 3 and 4 in the order they connect. In the game, press the bottom face button (A / ✕) on the
-  new gamepad to join.
+- **Local co-op:** connect more gamepads. The first one is player 1; another one joins when you
+  press a button on it, as player 2, 3 or 4 in the order the buttons are pressed (so a device that
+  only reports motion, like a DualSense's motion sensors on Linux, never takes a seat). Press the
+  bottom face button (A / ✕) on the new gamepad to join.
 - **Xbox button icons:** launcher → *Controls* → *Gamepad* → *In-game button icons* → *Xbox* (or
   *Match my controller*). Your game files are never changed.
 - **In-game port menu:** `Insert` (or R3 + L2). **Screenshot:** `F12` (`user/screenshots/`).
@@ -153,7 +156,7 @@ SANCTUARY_GAME_DIR=~/Games/PS4/CUSA00243 SANCTUARY_PATCH_DIR=~/Games/PS4/CUSA002
 
 - The analog stick icons still read L3/R3 with Xbox icons on; Nintendo letters are not drawn yet.
 - Ultrawide: 21:9 (2560x1080, 3440x1440, 3840x1600) and 32:9 (5120x1440) render resolutions, with
-  the camera widened to them (Performance > Aspect ratio); 2560x1080 checked in game, the others
+  the camera widened to them (Graphics > Aspect ratio); 2560x1080 checked in game, the others
   use the same patch. 16:10: 1280x800 (Steam Deck), 1920x1200 and 2560x1600; 1280x800 checked in game.
 
 ## How it works

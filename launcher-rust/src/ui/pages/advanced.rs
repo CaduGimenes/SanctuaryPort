@@ -329,7 +329,7 @@ pub fn view(state: &State) -> Element<'_, Message> {
     }
 
     // One row (R93): the buttons where every row's control ends, the note under them. Clearing
-    // the shader cache is on the Performance page; the log has no tab of its own (SanctuaryPort).
+    // the shader cache is on the Graphics page (Troubleshooting); the log has no tab of its own (SanctuaryPort).
     let files = layout![
         flat(
             tr(lang, "Port folder"),

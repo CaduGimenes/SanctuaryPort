@@ -263,7 +263,12 @@ void SignalEop(const PM4CmdEventWriteEop& eop) {
 // sanctuary: end-of-pipe/-shader events run in order with the draws (Rasterizer::RunInOrder: on
 // the draw recording thread when the draw pipeline is in use).
 void RunEventWriteEop(Vulkan::Rasterizer& rasterizer, const u8* data) {
-    const auto eop = *reinterpret_cast<const PM4CmdEventWriteEop*>(data);
+    auto eop = *reinterpret_cast<const PM4CmdEventWriteEop*>(data);
+    // The GPU clock is the GPU's own timestamp of this point, written once the GPU is past it
+    // (Diablo III's dynamic resolution times its frame with these: vk_guest_clock.h).
+    if (eop.data_sel == DataSelect::GpuClock64 && rasterizer.GpuClockStamp(eop.Address<u64>())) {
+        eop.data_sel.Assign(DataSelect::None);
+    }
     rasterizer.ProcessDownloadImages();
     // Guest memory copies on the copy threads precede the fence the guest sees.
     // SANCTUARY_ASYNC_FENCES=1 writes it once they are done instead of waiting for them; measured

@@ -56,7 +56,7 @@ pub static DISPLAY_MODES: &[Choice] = &[
 ];
 
 pub static ANISOTROPY: &[Choice] = &[
-    c("0", "Game default"),
+    c("0", "Off (game default)"),
     c("2", "2x"),
     c("4", "4x"),
     c("8", "8x"),
@@ -139,9 +139,6 @@ pub static UPSCALERS: &[Choice] = &[
     ),
 ];
 
-/// Spatial anti-aliasing of the finished frame (`anti_aliasing` in sanctuary.ini): FXAA or SMAA.
-/// The temporal TAA is the Upscaler choice "TAA", not a value of this key.
-pub static ANTI_ALIASING: &[Choice] = &[c("off", "Off"), c("fxaa", "FXAA"), c("smaa", "SMAA")];
 
 /// sanctuary.ini frame_generation; the game reads the same values (frame_generation_policy.h).
 pub static FRAME_GENERATION: &[Choice] = &[
@@ -210,7 +207,7 @@ pub static READBACKS: &[Choice] = &[
 pub static NO_MSAA: &[Choice] = &[
     c("", "Automatic"),
     c("1", "Off (fixes black lines)"),
-    c("0", "On"),
+    c("0", "On (experimental on AMD and Intel)"),
 ];
 
 pub static STREAM_MEMORY: &[Choice] = &[
@@ -533,8 +530,7 @@ mod tests {
 
     #[test]
     fn every_table_has_unique_values() {
-        let tables: [&[Choice]; 23] = [
-            ANTI_ALIASING,
+        let tables: [&[Choice]; 22] = [
             FRAME_GENERATION,
             DISPLAY_MODES,
             ANISOTROPY,

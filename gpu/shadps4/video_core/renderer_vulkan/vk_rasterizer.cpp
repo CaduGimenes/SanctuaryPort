@@ -20,8 +20,10 @@
 #include "video_core/renderer_vulkan/vk_depth_stencil_state.h"
 #include "video_core/renderer_vulkan/vk_instance.h"
 #include "video_core/renderer_vulkan/vk_pipeline_cache.h"
+#include "video_core/renderer_vulkan/vk_guest_clock.h"
 #include "video_core/renderer_vulkan/vk_occlusion_query.h"
 #include "video_core/renderer_vulkan/vk_rasterizer.h"
+#include "video_core/renderer_vulkan/vk_fxaa.h"
 #include "video_core/renderer_vulkan/vk_gpu_profiler.h"
 #include "sanctuary_threads.h"
 #include "video_core/renderer_vulkan/vk_runtime.h"
@@ -63,6 +65,7 @@ Rasterizer::Rasterizer(const Instance& instance_, Scheduler& scheduler_, Runtime
                                                   *camera_motion, *scene_targets);
     frame_generation =
         std::make_unique<FrameGeneration>(instance, scheduler, texture_cache, runtime);
+    fxaa = std::make_unique<Fxaa>(instance, scheduler, texture_cache, runtime);
     if (!EmulatorSettings.IsNullGPU()) {
         liverpool->BindRasterizer(this);
     }
@@ -87,6 +90,9 @@ Rasterizer::Rasterizer(const Instance& instance_, Scheduler& scheduler_, Runtime
     // sanctuary: SANCTUARY_OCCLUSION=0 keeps the fixed "always visible" counters.
     if (const char* env = std::getenv("SANCTUARY_OCCLUSION"); !env || env[0] != '0') {
         occlusion_queries = std::make_unique<OcclusionQueries>(instance, scheduler);
+    }
+    if (!GuestGpuClock::Disabled()) {
+        guest_clock = std::make_unique<GuestGpuClock>(instance, scheduler);
     }
     scheduler.SetSubmitCallback([this](Vulkan::SubmitInfo& info) {
         runtime.FlushBarriers();
@@ -777,6 +783,10 @@ bool Rasterizer::OcclusionDump(u64* results, s32 pairs) {
     return occlusion_queries && occlusion_queries->Dump(results, pairs);
 }
 
+bool Rasterizer::GpuClockStamp(u64* address) {
+    return guest_clock && guest_clock->Stamp(address);
+}
+
 bool Rasterizer::RunInOrder(OrderedTask task, const void* data, u32 size, u64 toggle) {
     if (!UseDrawPipe() || SanctuaryToggle::Disabled(toggle)) {
         DrainDrawPipe(DrawPipe::ReasonRasterizer);
@@ -1151,6 +1161,8 @@ void Rasterizer::DrawRecord(const GraphicsPipeline* pipeline, const PreparedDraw
         // targets just before its display copy).
         const auto finished = cb_descs[0].first ? cb_descs[0].first : last_frame_color;
         // Diablo III below the window size: FSR 3 to the window before this display copy.
+        // FXAA (while FSR 3 is off) on the same finished frame, before the HUD.
+        fxaa->Run(finished);
         upscaler->RunDisplayUpscale(finished);
         if (frame_generation->Enabled()) {
             frame_generation->BeginFrame(last_display_buffer, upscaler->TakeFrameGenInputs());

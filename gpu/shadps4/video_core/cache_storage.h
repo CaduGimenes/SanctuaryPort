@@ -34,6 +34,9 @@ public:
     void FinishPreload();
     /// sanctuary: removes every cached blob (an incompatible cache is rebuilt, not ignored).
     void Clear();
+    /// sanctuary: the driver refused a pipeline even without caches: the next start begins with
+    /// an empty cache for this game (Open removes it), so a player never has to delete user/cache.
+    void MarkInvalid();
 
     bool Save(BlobType type, const std::string& name, std::vector<u8>&& data);
     bool Save(BlobType type, const std::string& name, std::vector<u32>&& data);

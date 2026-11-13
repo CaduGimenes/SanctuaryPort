@@ -34,6 +34,8 @@ class GraphicsPipeline;
 class Runtime;
 
 class OcclusionQueries;
+class GuestGpuClock;
+class Fxaa;
 
 class Rasterizer {
 public:
@@ -110,6 +112,9 @@ public:
     /// sanctuary: an occlusion counter dump, in order with the draws (vk_occlusion_query.h).
     /// False when no real counter is available: the caller writes a fixed value.
     bool OcclusionDump(u64* results, s32 pairs);
+    /// sanctuary: an end-of-pipe GPU clock write, in order with the draws (vk_guest_clock.h).
+    /// False when the GPU's own timestamp is not used: the caller writes the clock now.
+    bool GpuClockStamp(u64* address);
     /// Returns true when the task was handed to the recording thread (not run yet).
     bool RunInOrder(OrderedTask task, const void* data, u32 size,
                     u64 toggle = SanctuaryToggle::PipelinedTasks);
@@ -332,6 +337,7 @@ private:
     const Instance& instance;
     Scheduler& scheduler;
     std::unique_ptr<OcclusionQueries> occlusion_queries;
+    std::unique_ptr<GuestGpuClock> guest_clock;
     Runtime& runtime;
     VideoCore::PageManager page_manager;
     VideoCore::BufferCache buffer_cache;
@@ -351,6 +357,7 @@ private:
     u64 motion_geometry{};    ///< vertex-stream identity of the current direct draw
     bool gbuffer_draw = false;
     std::unique_ptr<TemporalUpscaler> upscaler; // sanctuary: FSR (docs/upscaler.md)
+    std::unique_ptr<Fxaa> fxaa;                 // sanctuary: FXAA while FSR 3 is off
     std::unique_ptr<FrameGeneration> frame_generation; // sanctuary: FSR 3 frame generation
     u32 display_draws = 0;                 ///< draws into this frame's display buffer
     VideoCore::ImageId display_image{};    ///< its image at the display copy

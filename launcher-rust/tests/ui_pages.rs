@@ -20,8 +20,28 @@ fn graphics_rows_change_the_right_keys() {
     let dir = tempfile::tempdir().unwrap();
     let mut state = state(dir.path());
     open(&mut state, Page::Graphics);
+    let _ = app::update(
+        &mut state,
+        Message::Tick(iced::time::Instant::now() + std::time::Duration::from_secs(1)),
+    );
+    assert!(state.store.flag("rcas"));
+    // A tall window: the Sharpening row is below the fold of the default one.
+    let clicked: Vec<Message> = {
+        let mut ui = iced_test::simulator::Simulator::with_size(
+            iced::Settings::default(),
+            iced::Size::new(1280.0, 4000.0),
+            app::view(&state),
+        );
+        ui.click("Sharpening (RCAS)").unwrap();
+        ui.into_messages().collect()
+    };
+    for message in clicked {
+        let _ = app::update(&mut state, message);
+    }
+    assert!(!state.store.flag("rcas"));
+    // The Upscaler drop-down stores FSR 1 as the flag the game reads.
     assert!(!state.store.flag("fsr1"));
-    click(&mut state, "Upscale with FSR 1");
+    let _ = app::update(&mut state, Message::Set("fsr1".into(), true.into()));
     assert!(state.store.flag("fsr1"));
     // iced_test cannot open a pick_list: the pure mapping stands in for the click.
     let pick = select_message("display_mode", DISPLAY_MODES, "en", "Borderless").unwrap();
@@ -129,10 +149,10 @@ fn every_row_control_ends_on_the_same_right_edge() {
         let tr = |english: &str| sanctuaryport_launcher::core::i18n::tr(lang, english);
         let labels = [
             tr("Display mode"),
-            tr("Upscale with FSR 1"),
+            tr("Upscaler"),
             format!("{}  ·  {}", tr("Anisotropic filtering"), tr("restart")),
             tr("Show performance overlay"),
-            tr("F12 in the game"),
+            tr("Screenshot key: F12"),
         ];
         let mut ui = settled(&mut state, Page::Graphics, 1280.0, 800.0);
         let edges: Vec<(String, f32)> = labels
@@ -167,14 +187,14 @@ fn a_drop_down_keeps_the_width_of_its_longest_option() {
     let tr = |english: &str| sanctuaryport_launcher::core::i18n::tr("pt", english);
     let restart = |english: &str| format!("{}  ·  {}", tr(english), tr("restart"));
     let rows = performance::rows(&state, "pt");
-    let mut ui = settled(&mut state, Page::Performance, 1280.0, 800.0);
+    let mut ui = settled(&mut state, Page::Graphics, 1280.0, 800.0);
     // Mockup `.sel { font-size: 12.5px }` (R98).
     let size = 12.5;
     for (key, name, hint) in [
         // The longest option of the page (the stream memory row of the screenshot is gone).
         (
             "no_msaa",
-            restart("Game multisampling"),
+            restart("Game MSAA (2x)"),
             tr(performance::NO_MSAA_HINT),
         ),
     ] {
@@ -212,8 +232,8 @@ fn the_multisampling_name_keeps_clear_of_its_drop_down() {
     state.lang = "pt".into();
     state.gpus = gpu_rows(&ARC_LAPTOP);
     let tr = |english: &str| sanctuaryport_launcher::core::i18n::tr("pt", english);
-    let name = format!("{}  ·  {}", tr("Game multisampling"), tr("restart"));
-    let mut ui = settled(&mut state, Page::Performance, 1280.0, 800.0);
+    let name = format!("{}  ·  {}", tr("Game MSAA (2x)"), tr("restart"));
+    let mut ui = settled(&mut state, Page::Graphics, 1280.0, 800.0);
     let control = control(&mut ui, &name);
     let label = ui.find(name.as_str()).unwrap().bounds();
     assert!(
@@ -384,7 +404,7 @@ fn no_msaa_auto_label_names_the_card_and_the_decision() {
         "Automatic (NVIDIA GeForce RTX 4060 Laptop GPU: on)"
     );
     assert_eq!(options[1].1, "Off (fixes black lines)");
-    assert_eq!(options[2].1, "On");
+    assert_eq!(options[2].1, "On (experimental on AMD and Intel)");
     state.store.set("gpu_id", "0".into());
     assert_eq!(
         performance::no_msaa_label(&state, "en")[0].1,
@@ -425,19 +445,19 @@ fn page_has(state: &app::State, labels: &[&str]) {
 }
 
 #[test]
-fn performance_page_offers_the_choice() {
+fn graphics_page_offers_the_multisampling_choice() {
     let dir = tempfile::tempdir().unwrap();
     let mut state = state(dir.path());
     state.lang = "en".into();
     state.gpus = gpu_rows(&ARC_LAPTOP);
-    open(&mut state, Page::Performance);
+    open(&mut state, Page::Graphics);
     assert_eq!(state.store.text("no_msaa"), "");
     // The page shows the rows with their hints. The text inside a closed pick_list is not a
     // widget the simulator can find, so the options are checked through `rows` below.
     page_has(
         &state,
         &[
-            "Game multisampling  ·  restart",
+            "Game MSAA (2x)  ·  restart",
             performance::NO_MSAA_HINT,
             "Graphics card  ·  restart",
         ],
@@ -483,7 +503,7 @@ fn performance_page_offers_the_choice() {
     state.lang = "pt".into();
     let hint = sanctuaryport_launcher::core::i18n::tr("pt", performance::NO_MSAA_HINT);
     assert_ne!(hint, performance::NO_MSAA_HINT);
-    page_has(&state, &["Multisampling do jogo  ·  reiniciar", &hint]);
+    page_has(&state, &["MSAA do jogo (2x)  ·  reiniciar", &hint]);
     let boxes = performance::rows(&state, "pt")
         .into_iter()
         .find(|row| row.key == "no_msaa")
@@ -491,6 +511,44 @@ fn performance_page_offers_the_choice() {
     assert_eq!(
         boxes.pairs[0].1,
         "Automático (Intel(R) Arc(TM) Graphics: desligado)"
+    );
+}
+
+#[test]
+fn anti_aliasing_section_says_what_the_choices_do() {
+    use sanctuaryport_launcher::ui::pages::graphics;
+    let dir = tempfile::tempdir().unwrap();
+    let mut state = state(dir.path());
+    state.lang = "en".into();
+    state.gpus = gpu_rows(&ARC_LAPTOP);
+    open(&mut state, Page::Graphics);
+    // NVIDIA chosen automatically: its MSAA stays on.
+    state.store.set("gpu_id", "1".into());
+    assert_eq!(graphics::anti_aliasing_now(&state), "Now: only the game's MSAA smooths edges.");
+    state.store.set("no_msaa", "1".into());
+    assert_eq!(
+        graphics::anti_aliasing_now(&state),
+        "Now: no edge smoothing. Turn FSR 3 or FXAA on to smooth jagged edges."
+    );
+    state.store.set("fxaa", true.into());
+    assert_eq!(graphics::anti_aliasing_now(&state), "Now: FXAA smooths edges.");
+    state.store.set("no_msaa", "0".into());
+    assert_eq!(graphics::anti_aliasing_now(&state), "Now: the game's MSAA and FXAA smooth edges.");
+    state.store.set("temporal_aa", "fsr3".into());
+    state.store.set("display_mode", "borderless".into());
+    assert!(graphics::anti_aliasing_now(&state).contains("enlarges the picture"));
+    state.store.set("display_mode", "windowed".into());
+    assert!(graphics::anti_aliasing_now(&state).contains("in a window"));
+    // With FSR 3 on, the Upscaler row says FSR 3 enlarges; with Sharpening off, its strength
+    // says so instead of a slider.
+    state.store.set("rcas", false.into());
+    page_has(
+        &state,
+        &[
+            "Now: FSR 3 smooths edges (in a window the window is the render size).",
+            "FSR 3 (set in Anti-aliasing)",
+            "Turn Sharpening on to use this.",
+        ],
     );
 }
 
@@ -1814,10 +1872,10 @@ fn performance_page_has_the_shader_cache_rows() {
     let dir = tempfile::tempdir().unwrap();
     let mut state = state(dir.path());
     state.lang = "en".into();
-    open(&mut state, Page::Performance);
+    open(&mut state, Page::Graphics);
     page_has(&state, &["Shader cache", "Delete shader cache"]);
     // SanctuaryPort: the cache switches the runtime does not read are not offered.
-    let mut ui = settled(&mut state, Page::Performance, 1280.0, 4000.0);
+    let mut ui = settled(&mut state, Page::Graphics, 1280.0, 4000.0);
     assert!(ui.find("Reuse compiled shaders from disk  ·  restart").is_err());
     ui.click("Delete shader cache").unwrap();
     let emitted: Vec<Message> = ui.into_messages().collect();

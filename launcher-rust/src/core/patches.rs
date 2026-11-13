@@ -207,7 +207,7 @@ mod tests {
         assert!(metas
             .iter()
             .all(|meta| meta.name.starts_with(RESOLUTION_PATCH_PREFIX)));
-        // The resolution patches follow the Performance page, so nothing is offered on its own.
+        // The resolution patches follow the Graphics page, so nothing is offered on its own.
         assert!(selectable(&metas).is_empty());
         assert!(game_patch_metas(&diablo_xml(), "01.00").unwrap().is_empty());
     }

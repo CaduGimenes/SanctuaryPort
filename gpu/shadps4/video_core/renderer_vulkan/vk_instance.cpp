@@ -534,6 +534,25 @@ bool Instance::CreateDevice() {
             }
         }
     }
+    // sanctuary: multisampling forced on with a driver that reads compressed multisampled depth
+    // wrong (sanctuary_msaa.h): experimental, that depth is created without compression.
+    bool image_compression_control = false;
+    // SANCTUARY_MSAA_UNCOMPRESSED=1 (development): the same on any driver, to test the path.
+    const char* uncompressed_env = std::getenv("SANCTUARY_MSAA_UNCOMPRESSED");
+    if (!AmdGpu::NoMsaa() && (sanctuary_no_msaa_default(static_cast<VkDriverId>(driver_id)) ||
+                              (uncompressed_env && *uncompressed_env == '1'))) {
+        const auto compression = physical_device.getFeatures2<
+            vk::PhysicalDeviceFeatures2, vk::PhysicalDeviceImageCompressionControlFeaturesEXT>();
+        image_compression_control =
+            compression.get<vk::PhysicalDeviceImageCompressionControlFeaturesEXT>()
+                .imageCompressionControl &&
+            add_extension(VK_EXT_IMAGE_COMPRESSION_CONTROL_EXTENSION_NAME);
+        AmdGpu::msaa_uncompressed_depth.store(image_compression_control, std::memory_order_relaxed);
+        std::printf("GPU: multisampling on this driver is experimental; %s\n",
+                    image_compression_control
+                        ? "its depth is created without compression"
+                        : "the driver cannot turn depth compression off");
+    }
     vk::StructureChain device_chain = {
         vk::DeviceCreateInfo{
             .queueCreateInfoCount = queue_family_index == sparse_queue_family_index ? 1u : 2u,
@@ -695,7 +714,13 @@ bool Instance::CreateDevice() {
         vk::PhysicalDevicePipelineExecutablePropertiesFeaturesKHR{
             .pipelineExecutableInfo = pipeline_executable_features.pipelineExecutableInfo,
         },
+        vk::PhysicalDeviceImageCompressionControlFeaturesEXT{
+            .imageCompressionControl = true,
+        },
     };
+    if (!image_compression_control) {
+        device_chain.unlink<vk::PhysicalDeviceImageCompressionControlFeaturesEXT>();
+    }
     if (!pipeline_executable_properties) {
         device_chain.unlink<vk::PhysicalDevicePipelineExecutablePropertiesFeaturesKHR>();
     }

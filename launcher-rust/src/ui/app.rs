@@ -99,7 +99,7 @@ pub struct State {
     pub launcher_exe: Option<PathBuf>,
     pub log: LogBuffer,
     pub gpus: Vec<GpuRow>,
-    /// The Aspect ratio filter of the Performance page: not saved, it follows the render resolution.
+    /// The Aspect ratio filter of the Graphics page: not saved, it follows the render resolution.
     pub aspect: String,
     pub displays: Vec<Display>,
     /// The window system the monitors were listed under; `persist::refresh_monitors` lists them
@@ -287,7 +287,7 @@ pub enum Message {
     NextPage,
     PreviousPage,
     Set(String, Value),
-    /// The Aspect ratio box of the Performance page.
+    /// The Aspect ratio box of the Graphics page.
     Aspect(String),
     Browse(String),
     /// The folder of a folder setting: the dialog's answer, or the path typed into its field.
@@ -1087,7 +1087,8 @@ pub fn run(paths: Paths) -> iced::Result {
         .theme(|_: &State| theme::theme())
         .subscription(subscription)
         .scale_factor(|state: &State| window_zoom(state.scale, state.desktop_scale))
-        .window(window_settings());
+        .window(window_settings())
+        .default_font(theme::UI_FONT);
     theme::font_bytes()
         .into_iter()
         .fold(app, |app, font| app.font(font))

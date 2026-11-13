@@ -350,6 +350,13 @@ bool CameraMotion::OnObjectBlock(const float* block, u64 shader) {
 }
 
 void CameraMotion::OnSceneDepthCopy(VideoCore::ImageId depth, u32 width, u32 height) {
+    if (geometry_depth_candidate && geometry_depth_candidate != geometry_depth) {
+        geometry_depth = geometry_depth_candidate;
+        static u32 changes = 0;
+        if (++changes <= 16) {
+            std::printf("Camera motion: scene geometry depth is image %u\n", geometry_depth.index);
+        }
+    }
     // The opaque pass is done: every scene camera block of this frame has been seen (the
     // upscaler runs before the frame ends, so the camera is resolved here).
     if (!camera_resolved && !object_matrices.empty()) {

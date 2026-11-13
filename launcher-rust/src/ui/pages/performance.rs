@@ -1,10 +1,11 @@
-//! The Performance page: frame rate, shaders and GPU data.
+//! The picture settings shared by the Graphics page and the first start: render resolutions and
+//! aspect ratios, the multisampling choice and the drop-downs built from them (the Performance
+//! page itself is gone: its rows are on the Graphics page).
 //!
 //! The Aspect ratio box is not saved: it follows the render resolution, and choosing another
 //! aspect moves the resolution to that aspect's closest size.
 
 
-use iced::widget::{button, column, pick_list, text};
 use iced::Element;
 use serde_json::Value;
 
@@ -15,15 +16,12 @@ use crate::core::options::{
     FPS_LIMITS, FRAMES_QUEUED, NO_MSAA, READBACKS, RESOLUTIONS, STREAM_MEMORY,
 };
 use crate::ui::app::{Message, State};
-use crate::ui::theme;
-use crate::ui::widgets::{
-    choice_pairs, min_width, row, section, select_pairs, SELECT_MIN, SELECT_TEXT,
-};
+use crate::ui::widgets::{choice_pairs, select_pairs};
 
 /// Suffix of the labels of the sizes a mod adds.
 const MOD_SUFFIX: &str = " (mod)";
 
-pub const NO_MSAA_HINT: &str = "The game's 2-sample depth buffer, read as a texture by its lighting. AMD's and Intel's Windows drivers read it wrong and the lighting shows black lines, so Automatic turns multisampling off on those cards (Radeon, Arc) and keeps it on elsewhere (NVIDIA). Off and On force the choice on any card.";
+pub const NO_MSAA_HINT: &str = "The game's own edge smoothing. Automatic turns it off on AMD and Intel cards on Windows, where it can draw black lines; On is experimental there.";
 
 
 /// A built-in render resolution's label in `lang`, as the Python's `_()` of it: the whole label
@@ -205,18 +203,7 @@ pub fn rows(state: &State, lang: &str) -> Vec<SelectRow> {
     ]
 }
 
-/// Delete shader cache: the Advanced page's Clear shader cache under the Python's other name,
-/// held while the game runs.
-fn delete_cache_button<'a>(state: &State, lang: &str) -> Element<'a, Message> {
-    let delete = button(text(tr(lang, "Delete shader cache"))).style(theme::button_flat);
-    if state.game.is_live() {
-        delete.into()
-    } else {
-        delete.on_press(Message::ClearShaderCache).into()
-    }
-}
-
-/// The drop-down of `key` as the Performance page draws it (its pairs and current value).
+/// The drop-down of `key` as the Graphics page draws it (its pairs and current value).
 pub fn select_row<'a>(state: &State, lang: &str, key: &str) -> Element<'a, Message> {
     select_from(&rows(state, lang), key)
 }
@@ -227,80 +214,4 @@ fn select_from<'a>(rows: &[SelectRow], key: &str) -> Element<'a, Message> {
         Some(row) => select_pairs(key, &row.pairs, &row.current),
         None => select_pairs(key, &[], ""),
     }
-}
-
-/// SanctuaryPort: not here for Diablo III: the shader cache switches the runtime does not read
-/// (disk reuse, prefetch, corner notes), screen effect switches the game lacks, and the deferred and
-/// stale readbacks the game profile keeps off (with them the 3D hero of hero creation does not draw).
-pub fn view(state: &State) -> Element<'_, Message> {
-    let lang = state.lang.as_str();
-    let hint = |english: &str| tr(lang, english);
-    // A row that needs a new start of the game carries a small `restart` note.
-    let restart = |english: &str| format!("{}  ·  {}", tr(lang, english), tr(lang, "restart"));
-
-    // The rows are built once for the whole page.
-    let selects = rows(state, lang);
-    let pick = |key: &str| select_from(&selects, key);
-
-    // SanctuaryPort: what players change. The pipeline paths, shader cache loading, readbacks,
-    // stream memory and frames queued keep their defaults (the in-game menu still has the live
-    // ones). The screen shape picks the render resolutions (16:9, ultrawide 21:9 and 32:9).
-    let aspect = min_width(
-        SELECT_MIN,
-        pick_list(
-            aspect_options(state),
-            Some(state.aspect.clone()),
-            Message::Aspect,
-        )
-        .text_size(SELECT_TEXT)
-        .style(theme::pick_list_dark),
-    );
-    column![
-        section(state.rtl, &tr(lang, "Frame rate")),
-        row(
-            state.rtl,
-            &tr(lang, "Frame rate limit"),
-            pick("fps_limit"),
-            Some(&hint("Diablo III runs at 60 frames per second.")),
-        ),
-        row(
-            state.rtl,
-            &tr(lang, "Aspect ratio"),
-            aspect.into(),
-            Some(&hint("Your screen's shape: 21:9 and 32:9 are ultrawide monitors. Lists the render resolutions of that shape; the game widens its view to it.")),
-        ),
-        row(
-            state.rtl,
-            &restart("Render resolution"),
-            pick("render_resolution"),
-            Some(&hint(
-                "The size the game draws at; higher is sharper and slower."
-            )),
-        ),
-        section(state.rtl, &tr(lang, "Graphics card")),
-        row(
-            state.rtl,
-            &restart("Graphics card"),
-            pick("gpu_id"),
-            Some(&hint(
-                "The GPU the game runs on. Choose your dedicated card if the game uses the integrated one."
-            )),
-        ),
-        row(
-            state.rtl,
-            &restart("Game multisampling"),
-            pick("no_msaa"),
-            Some(&hint(NO_MSAA_HINT)),
-        ),
-        row(
-            state.rtl,
-            &tr(lang, "Shader cache"),
-            delete_cache_button(state, lang),
-            Some(&hint(
-                "Deletes the saved shaders and pipelines of this saves folder. Use it if graphics look wrong after an update or the cache grew too big; the next start compiles everything again."
-            )),
-        ),
-    ]
-    .spacing(2)
-    .into()
 }

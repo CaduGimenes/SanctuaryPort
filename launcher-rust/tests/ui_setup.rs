@@ -416,14 +416,12 @@ fn the_video_step_edits_the_ini_values() {
     let mut state = at_step(dir.path(), Step::Video);
     {
         let mut ui = simulator(app::view(&state));
-        for label in [
-            "Display mode",
-            "Aspect ratio",
-            "Frame rate limit",
-            "Engine frame rate",
-        ] {
+        for label in ["Display mode", "Aspect ratio", "Frame rate limit"] {
             assert!(ui.find(label).is_ok(), "{label}");
         }
+        // No Engine frame rate row: Diablo III runs at 60 FPS and has no such choice (the row
+        // showed an empty list).
+        assert!(ui.find("Engine frame rate").is_err());
     }
     assert_eq!(state.store.text("display_mode"), "windowed");
     assert_eq!(display_mode_label(&state).as_deref(), Some("Windowed"));

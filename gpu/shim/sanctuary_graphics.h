@@ -126,12 +126,17 @@ inline int ParseRcasStrength(int value) {
 inline float RcasAttenuation(int strength) {
     return 2.0f * (1.0f - float(ParseRcasStrength(strength)) / 100.0f);
 }
-/// Whether the FSR pass runs: FSR 1 when the window is larger than the game's image, RCAS
-/// alone when they are the same size. A smaller window is left to the regular scaling.
+/// The size the FSR pass writes, or {0, 0} when it does not run. FSR 1 upscales to the window
+/// when the window is larger than the game's image; otherwise RCAS sharpens at the image's own
+/// size and the regular scaling takes it to the window (any render resolution, GitHub #17).
+inline std::pair<int, int> FsrPassSize(bool fsr1, bool rcas, int in_w, int in_h, int out_w, int out_h) {
+    if (fsr1 && in_w < out_w && in_h < out_h) return {out_w, out_h};
+    if (rcas) return {in_w, in_h};
+    return {0, 0};
+}
+/// Whether the FSR pass runs (see FsrPassSize).
 inline bool FsrPassRuns(bool fsr1, bool rcas, int in_w, int in_h, int out_w, int out_h) {
-    const bool upscale = in_w < out_w && in_h < out_h;
-    const bool same = in_w == out_w && in_h == out_h;
-    return (fsr1 && upscale) || (rcas && same);
+    return FsrPassSize(fsr1, rcas, in_w, in_h, out_w, out_h).first > 0;
 }
 
 /// What the present limit really allows: the engine ceiling caps it.

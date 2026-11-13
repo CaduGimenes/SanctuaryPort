@@ -517,10 +517,11 @@ fn arabic_sets_rtl() {
 fn play_gets_the_click_under_the_narrow_drawer() {
     let dir = tempfile::tempdir().unwrap();
     let mut state = state_in(dir.path());
-    let _ = app::update(&mut state, Message::ShowPage(Page::Graphics));
+    // The Game page is narrow (Graphics is wide since it took the Performance page's rows).
+    let _ = app::update(&mut state, Message::ShowPage(Page::Game));
     // Let the slide finish.
     tick(&mut state, Instant::now() + Duration::from_secs(1));
-    assert_eq!(state.drawer, DrawerState::Open(Page::Graphics));
+    assert_eq!(state.drawer, DrawerState::Open(Page::Game));
     let messages = click(&state, "PLAY");
     assert!(messages.iter().any(|m| matches!(m, Message::Play)));
     // The dim layer under the drawer does not take the click too.

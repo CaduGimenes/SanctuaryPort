@@ -288,6 +288,11 @@ fn folders_body(state: &State) -> Element<'_, Message> {
             body = body.push(text(line).size(12).color(palette::RED_HI));
         }
     }
+    // Only PKG files at hand: they are installed and the game folder is set from here too.
+    body = body.push(crate::ui::pages::game::install_row(
+        state,
+        &tr(lang, "Have PKG files instead? Install them here."),
+    ));
     body.into()
 }
 
@@ -364,15 +369,7 @@ fn video_body(state: &State) -> Element<'_, Message> {
             state.rtl,
             &tr(lang, "Frame rate limit"),
             select_row(state, lang, "fps_limit"),
-            Some(&hint("The engine frame rate (below) is the highest it can go.")),
-        ),
-        labeled_row(
-            state.rtl,
-            &tr(lang, "Engine frame rate"),
-            select_row(state, lang, "engine_fps"),
-            Some(&hint(
-                "The highest frame rate the game itself runs at (a game patch)."
-            )),
+            Some(&hint("Diablo III runs at 60 frames per second.")),
         ),
     ]
     .spacing(8)

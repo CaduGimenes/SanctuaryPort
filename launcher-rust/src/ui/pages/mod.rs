@@ -22,7 +22,6 @@ pub enum Page {
     #[default]
     Home,
     Graphics,
-    Performance,
     Game,
     Trophies,
     Controls,
@@ -35,10 +34,9 @@ pub enum Page {
 
 impl Page {
     /// Tab order, which is also the order of the arrow keys.
-    pub const ALL: [Page; 7] = [
+    pub const ALL: [Page; 6] = [
         Page::Home,
         Page::Graphics,
-        Page::Performance,
         Page::Game,
         Page::Trophies,
         Page::Controls,
@@ -50,7 +48,6 @@ impl Page {
         match self {
             Page::Home => "Home",
             Page::Graphics => "Graphics",
-            Page::Performance => "Performance",
             Page::Game => "Game",
             Page::Trophies => "Trophies",
             Page::Controls => "Controls",
@@ -66,10 +63,7 @@ impl Page {
         match self {
             Page::Home => "",
             Page::Graphics => {
-                "Stored in sanctuary.ini; the in-game menu (Insert or R3+L2) changes the same values."
-            }
-            Page::Performance => {
-                "Frame rate, render resolution and graphics card. Applied when the game starts."
+                "Rows marked restart apply when the game starts; the in-game menu (Insert or R3+L2) changes the others while you play."
             }
             Page::Game => "Your game dump, saves and language.",
             Page::Trophies => "The trophies this port recorded while you played.",
@@ -84,7 +78,7 @@ impl Page {
     pub fn wide(self) -> bool {
         matches!(
             self,
-            Page::Performance
+            Page::Graphics
                 | Page::Trophies
                 | Page::Controls
                 | Page::Log
@@ -125,7 +119,6 @@ pub fn view(state: &State, page: Page) -> Element<'_, Message> {
     match page {
         Page::Home => text("…").into(),
         Page::Graphics => graphics::view(state),
-        Page::Performance => performance::view(state),
         Page::Game => game::view(state),
         Page::Trophies => trophies::view(state),
         Page::Controls => controls::view(state),

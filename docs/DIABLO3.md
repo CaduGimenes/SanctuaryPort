@@ -81,7 +81,7 @@ anti-aliasing, in-game Image) runs on the finished frame at its copy to the disp
   camera displacement most objects agree on between two frames (static scenery) moves the tracked
   camera (`CameraMotion::OnObjectBlock`, `ResolveObjectCamera`). Near about 1, far about 6000.
 - Depth: the single-sample copy of the 2-sample scene depth the game draws after its opaque pass;
-  the camera is resolved there. Geometry drawn with the scene depth is jittered (Halton).
+  the camera is resolved there. Geometry drawn with the scene depth is jittered (Halton). The scene depth is the last perspective draw's depth before the scene depth copy, fixed there for the next frame: the pause menu draws the hero on a pedestal with its own camera and depth at the start of the frame, and jittering part of it (its colour draws, not its depth pre-pass) made the pedestal flicker (GitHub #18).
 - Window = render size: FSR 3 as anti-aliasing, written back into the frame (alpha kept).
 - Render size below the window: FSR 3 upscales to the window; the display copy samples the result,
   the display buffer and the HUD's own depth are redirected to window-size host images (the HUD is
@@ -101,6 +101,13 @@ anti-aliasing, in-game Image) runs on the finished frame at its copy to the disp
   (`CameraMotion::SceneRect`). With the GPU timestamp counter in nanoseconds (PS4: 100 MHz) the
   game measured its GPU time ten times too long and stayed at its minimum, 70% (1344x756 for
   1080p), all the time; fixed in `pm4_cmds.h` (`GetGpuClock64`): full 1080p at 60 FPS on a 760M.
+  The game times its frame with six end-of-pipe GPU clock writes. Written when the commands were
+  recorded, they measured the recording thread (fast, then stalled on the GPU at random points):
+  at 4K on a 760M the scene jumped between 70% and 95% and ran at 22-30 FPS. They are now Vulkan
+  timestamps written by the GPU and copied to guest memory once it has passed them
+  (`vk_guest_clock.cpp`): the scene stays at 70% there (32-38 FPS) and at 100% at 1080p (60 FPS).
+  `SANCTUARY_GPU_CLOCK=record` brings back the old values. The game's floor is 70%; its post
+  passes always run at the full size.
 - Frame generation (experimental, `frame_generation=1`, read at start): `vk_frame_generation.cpp`.
   Per display buffer (the guest flips on another thread, sometimes after the next frame started):
   depth (R32F copy, `depth_copy.comp`), motion vectors, and the display buffer before the HUD's
@@ -123,25 +130,58 @@ reports (Diablo III ignores it).
 
 ## Local co-op (up to 4 players)
 
-`src/runtime_pad.c`: user N (2..4) owns its own SDL gamepad; a gamepad that connects goes to the
-lowest free player after player 1 and keeps it until it disconnects. Pad handles are the user ids.
+`src/runtime_pad.c`: user N (2..4) owns its own SDL gamepad. A further gamepad is a candidate
+until a button is pressed on it; then it takes the lowest free player after player 1 and keeps it
+until it disconnects (GitHub #20: before, any device SDL listed took player 2 at once, such as a
+DualSense's motion-sensor device whose axes always move, and the real second pad went to player 3).
+A press that player 1's pad holds too is taken for a Steam Input mirror of player 1 and ignored. Pad handles are the user ids.
 `runtime_pad_users()` returns a bitmask that the UserService (`src/runtime_services.c`) turns into
 LOGIN/LOGOUT events and `sceUserServiceGetLoginUserIdList`. The game itself does the rest: the
 new player presses the bottom face button and gets hero creation or selection.
 
+## FXAA
+
+`fxaa=1` in sanctuary.ini (launcher Graphics > Anti-aliasing, in-game menu Image) runs
+`host_shaders/fxaa.comp` (`renderer_vulkan/vk_fxaa.cpp`) on the finished frame at the display
+copy, where FSR 3 would run: Diablo III's A2B10G10R10 frame before the HUD, so the HUD stays sharp.
+Two compute passes (frame to an RGBA16F copy with the filter, then back keeping the frame's alpha);
+off while FSR 3 is on. Frames in another format (menus) are left alone.
+
 ## Xbox button icons
 
-All of the game's PlayStation button glyphs live in one 256x1024 BC3 texture with one mip (XXH3 of
-its guest bytes: `4df903de2d316686`). `tools/brand/make_d3_glyphs.py` draws 21 Xbox cells from
-scratch (no game pixels) into `assets/glyphs/d3_xbox.spg`. When `SANCTUARY_GLYPH_ATLAS` names that
-file, `TextureCache::PatchGlyphs` (`gpu/shadps4/video_core/texture_cache/texture_cache.cpp`)
-uploads those BC3 blocks over the matching texture after each upload of it; the rest of the
+The PS4 game ships Blizzard's Xbox One art unused in `CPKs/ClientCommon.cpk`: the button atlas
+`Textures\2DUIFontIcons_XB1.tex` (1024x256 BC3; the PS4 one is `2DUIFontIcons_PS4.tex`, 256x1024)
+and the controls-screen picture `2DUIConsoleController_XB1.tex`. With Xbox icons on, `run.py`
+reads them from the player's own dump (`scripts/d3_cpk.py`, a read-only reader of Blizzard's console
+archive format, after github.com/RedMadKnight/D3CPKUnpack) and `scripts/d3_glyphs.py` turns them
+into glyph files in the data folder's `out/glyphs/` (cached until the archive changes): each
+PlayStation icon's cell of the PS4 atlas gets the matching Xbox One icon's BC3 blocks, and the
+in-world prompt gets the big A scaled to 48x48. Nothing of the game ships with the port. Archive
+textures are in the GPU's tiled order: 8x8 elements per tile, Morton order inside (x in the low
+bit), tiles row by row. The controller picture of the controls screen is replaced too (`SANCTUARY_GLYPH_CONTROLLER=0`
+keeps the PS4 one). The screen's labels stay where the PS4 pad has its buttons, so on the Xbox One
+picture "Move" pointed at the d-pad and "Town Portal" at the left stick: `redraw_arrows` decodes
+that corner, takes the two arrows out (clean texels copied from beside them, the stick's rings
+redrawn under the old head), draws Move's arrow up into the stick and Town Portal's over it and down
+to the d-pad, and re-encodes only the changed blocks (a small BC3 encoder: Pillow is not on every
+player's Python). Without the archive (or if reading it
+fails) the port's own drawings below are used. `SANCTUARY_GLYPH_SOURCE=port` forces them.
+
+The game's PlayStation button glyphs live in one 256x1024 BC3 texture with one mip (XXH3 of
+its guest bytes: `4df903de2d316686`), except the prompt drawn under the name of a person or object
+one can use (the cross in a grey ring): a 48x48 A1R5G5B5 texture of its own (`e7edff6330b78f1f`),
+loaded the first time a prompt shows (GitHub #11). `tools/brand/make_d3_glyphs.py` draws 21 Xbox cells from
+scratch (no game pixels) into `assets/glyphs/d3_xbox.spg`, and the whole prompt (an A) into
+`assets/glyphs/d3_xbox_prompt.spg`. When `SANCTUARY_GLYPH_ATLAS` names those files (separated by `;`), `TextureCache::PatchGlyphs` (`gpu/shadps4/video_core/texture_cache/texture_cache.cpp`)
+uploads their cells over the matching texture after each upload of it; the rest of the
 texture stays the game's. `run.py` sets the variable for `SANCTUARY_GLYPH_STYLE=xbox`, or `auto` with an
 Xbox-style gamepad (`sanctuary-probe --gamepad`).
 
-`.spg` format (little-endian): `"SPG1"`, u32 width, height, `vk::Format`, u64 guest hash (0: any
-texture of that size and format), u32 cell count; per cell u32 mip, x, y, w, h (texels, multiples
-of 4) followed by its BC blocks, row by row.
+`.spg` format (little-endian): `"SPG1"` (or `"SPG2"`, whose guest check is the zlib CRC32 of the
+guest bytes instead of their XXH3), u32 width, height, `vk::Format`, u64 guest hash (0: any
+texture of that size and format), u32 cell count; per cell u32 mip, x, y, w, h (texels) followed by
+its data row by row: BC blocks for a block-compressed format (sizes multiples of 4), texels for a
+16 or 32-bit format.
 
 The atlas was found with the frame capture: `SANCTUARY_CAPTURE_DISPLAY_PASSES=8` lists the UI passes,
 and `SANCTUARY_DIAG_IMAGES=1 SANCTUARY_CAPTURE_PS=<pixel shader hash>` dumps the textures a shader samples.

@@ -1,12 +1,14 @@
 """Draw the Xbox button cells that SanctuaryPort lays over Diablo III's PlayStation button atlas.
 
-The atlas is a 256x1024 BC3 texture, one mip (guest hash below). Each cell here covers one
+The atlas is a 256x1024 BC3 texture, one mip (guest hash below). The prompt over people and
+objects one can talk to or use is a texture of its own: 48x48 A1R5G5B5, one mip, a PlayStation
+cross in a grey ring on a black disc; d3_xbox_prompt.spg replaces it whole with an Xbox A. Each cell here covers one
 PlayStation glyph of it and is drawn from scratch (no game art): the GPU core uploads these BC3
 blocks over the game's texture after each upload of it (SANCTUARY_GLYPH_ATLAS, texture_cache.cpp
 PatchGlyphs). The rest of the atlas stays the game's.
 
 usage: python3 -I tools/brand/make_d3_glyphs.py [atlas.png]
-  writes assets/glyphs/d3_xbox.spg; with the decoded atlas (a development dump) also writes
+  writes assets/glyphs/d3_xbox.spg and d3_xbox_prompt.spg; with the decoded atlas (a development dump) also writes
   a preview of the result next to it.
 """
 import io
@@ -21,6 +23,10 @@ OUT = ROOT / 'assets' / 'glyphs' / 'd3_xbox.spg'
 WIDTH, HEIGHT = 256, 1024
 BC3 = 137  # vk::Format::eBc3UnormBlock
 GUEST_HASH = 0x4df903de2d316686  # XXH3 of the atlas' guest bytes (CUSA00242 v1.00)
+PROMPT_OUT = ROOT / 'assets' / 'glyphs' / 'd3_xbox_prompt.spg'
+PROMPT_SIZE = 48
+A1R5G5B5 = 8  # vk::Format::eA1R5G5B5UnormPack16
+PROMPT_HASH = 0xe7edff6330b78f1f  # XXH3 of the prompt's guest bytes (CUSA00243 1.47)
 
 FONT_PATHS = ['/usr/share/fonts/TTF/DejaVuSans-Bold.ttf', '/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf',
               '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf']
@@ -215,8 +221,35 @@ def build():
     return canvas, cells
 
 
+def prompt_face():
+    """The in-world prompt: black disc, thin grey ring, green A (as the game's cross prompt)."""
+    s = PROMPT_SIZE * SCALE
+    img = Image.new('RGBA', (s, s), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    d.ellipse((SCALE, SCALE, s - SCALE, s - SCALE), fill=(0, 0, 0))
+    m, w = 6 * SCALE, int(1.6 * SCALE)
+    d.ellipse((m, m, s - m, s - m), outline=(110, 110, 110), width=w)
+    centred_text(d, (s / 2, s / 2), 'A', int(s * 0.5), A)
+    return img.resize((PROMPT_SIZE, PROMPT_SIZE), Image.LANCZOS)
+
+
+def build_prompt():
+    art = prompt_face()
+    texels = bytearray()
+    raw = art.tobytes()
+    for i in range(0, len(raw), 4):
+        r, g, b, a = raw[i:i + 4]
+        texels += struct.pack('<H', (a >= 128) << 15 | (r >> 3) << 10 | (g >> 3) << 5 | b >> 3)
+    out = bytearray(b'SPG1' + struct.pack('<IIIQI', PROMPT_SIZE, PROMPT_SIZE, A1R5G5B5, PROMPT_HASH, 1))
+    out += struct.pack('<5I', 0, 0, 0, PROMPT_SIZE, PROMPT_SIZE) + texels
+    PROMPT_OUT.write_bytes(out)
+    return art
+
+
 if __name__ == '__main__':
     canvas, cells = build()
+    build_prompt()
+    print(f'prompt -> {PROMPT_OUT}')
     print(f'{len(cells)} cells, {OUT.stat().st_size} bytes -> {OUT}')
     if len(sys.argv) > 1:
         atlas = Image.open(sys.argv[1]).convert('RGBA')

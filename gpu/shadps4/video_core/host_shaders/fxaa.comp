@@ -1,0 +1,79 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+// sanctuary: FXAA-style anti-aliasing of the finished frame (before the HUD), for players who want
+// smoother edges without FSR 3. Two passes over the game's 10-bit frame:
+//   default:     frame (rgb10_a2) -> smoothed copy (rgba16f)
+//   FXAA_STORE:  smoothed copy -> frame, keeping the frame's alpha (the game reads data from it)
+// The filter: where the local luma contrast is high, blend along the edge direction found from
+// the four diagonal neighbours (two taps, then four; the four-tap result is kept only when its
+// luma stays within the neighbourhood's range).
+#version 450
+
+layout(local_size_x = 8, local_size_y = 8) in;
+
+#ifdef FXAA_STORE
+layout(binding = 0, rgba16f) uniform readonly image2D smoothed;
+layout(binding = 1, rgb10_a2) uniform image2D frame;
+
+void main() {
+    const ivec2 p = ivec2(gl_GlobalInvocationID.xy);
+    if (any(greaterThanEqual(p, imageSize(frame)))) {
+        return;
+    }
+    imageStore(frame, p, vec4(imageLoad(smoothed, p).rgb, imageLoad(frame, p).a));
+}
+
+#else
+layout(binding = 0, rgb10_a2) uniform readonly image2D frame;
+layout(binding = 1, rgba16f) uniform writeonly image2D smoothed;
+
+ivec2 size;
+
+vec3 fetch(ivec2 p) {
+    return imageLoad(frame, clamp(p, ivec2(0), size - 1)).rgb;
+}
+
+// Bilinear sample at a position in pixels (texel centres at +0.5).
+vec3 sample_at(vec2 pos) {
+    const vec2 q = pos - 0.5;
+    const ivec2 i = ivec2(floor(q));
+    const vec2 f = q - vec2(i);
+    return mix(mix(fetch(i), fetch(i + ivec2(1, 0)), f.x),
+               mix(fetch(i + ivec2(0, 1)), fetch(i + ivec2(1, 1)), f.x), f.y);
+}
+
+float luma(vec3 c) {
+    return dot(c, vec3(0.299, 0.587, 0.114));
+}
+
+void main() {
+    const ivec2 p = ivec2(gl_GlobalInvocationID.xy);
+    size = imageSize(frame);
+    if (any(greaterThanEqual(p, size))) {
+        return;
+    }
+    const vec3 rgb_m = fetch(p);
+    const float l_m = luma(rgb_m);
+    const float l_nw = luma(fetch(p + ivec2(-1, -1)));
+    const float l_ne = luma(fetch(p + ivec2(1, -1)));
+    const float l_sw = luma(fetch(p + ivec2(-1, 1)));
+    const float l_se = luma(fetch(p + ivec2(1, 1)));
+    const float l_min = min(l_m, min(min(l_nw, l_ne), min(l_sw, l_se)));
+    const float l_max = max(l_m, max(max(l_nw, l_ne), max(l_sw, l_se)));
+    // Flat areas and dark low-contrast ones are left alone.
+    if (l_max - l_min < max(0.0312, l_max * 0.125)) {
+        imageStore(smoothed, p, vec4(rgb_m, 1.0));
+        return;
+    }
+    vec2 dir = vec2(-((l_nw + l_ne) - (l_sw + l_se)), (l_nw + l_sw) - (l_ne + l_se));
+    const float reduce = max((l_nw + l_ne + l_sw + l_se) * (0.25 * 0.125), 1.0 / 128.0);
+    const float rcp_min = 1.0 / (min(abs(dir.x), abs(dir.y)) + reduce);
+    dir = clamp(dir * rcp_min, vec2(-8.0), vec2(8.0));
+    const vec2 centre = vec2(p) + 0.5;
+    const vec3 rgb_a = 0.5 * (sample_at(centre + dir * (1.0 / 3.0 - 0.5)) +
+                              sample_at(centre + dir * (2.0 / 3.0 - 0.5)));
+    const vec3 rgb_b = rgb_a * 0.5 + 0.25 * (sample_at(centre - dir * 0.5) +
+                                             sample_at(centre + dir * 0.5));
+    const float l_b = luma(rgb_b);
+    imageStore(smoothed, p, vec4((l_b < l_min || l_b > l_max) ? rgb_a : rgb_b, 1.0));
+}
+#endif

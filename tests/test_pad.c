@@ -220,7 +220,25 @@ int main(void) {
     SDL_Joystick *joystick2=SDL_OpenJoystick(id2);
     assert(joystick2);
     pump();
+    /* #20: a further gamepad joins only when a button is pressed on it. Moving sticks (a motion
+     * sensor device, a drifting stick) does not, nor a button player 1 holds too (a mirror). */
+    assert(runtime_pad_users()==0);
+    assert(SDL_SetJoystickVirtualAxis(joystick2,SDL_GAMEPAD_AXIS_LEFTX,20000));
+    pump();
+    assert(runtime_pad_users()==0);
+    assert(SDL_SetJoystickVirtualAxis(joystick2,SDL_GAMEPAD_AXIS_LEFTX,0));
+    assert(SDL_SetJoystickVirtualButton(joystick,SDL_GAMEPAD_BUTTON_EAST,true));
+    assert(SDL_SetJoystickVirtualButton(joystick2,SDL_GAMEPAD_BUTTON_EAST,true));
+    pump();
+    assert(runtime_pad_users()==0);
+    assert(SDL_SetJoystickVirtualButton(joystick,SDL_GAMEPAD_BUTTON_EAST,false));
+    assert(SDL_SetJoystickVirtualButton(joystick2,SDL_GAMEPAD_BUTTON_EAST,false));
+    assert(SDL_SetJoystickVirtualButton(joystick2,SDL_GAMEPAD_BUTTON_START,true));
+    pump();
     assert(runtime_pad_users()==(1u<<2));
+    assert(SDL_SetJoystickVirtualButton(joystick2,SDL_GAMEPAD_BUTTON_START,false));
+    pump();
+    assert(runtime_pad_users()==(1u<<2));  /* it keeps its seat */
     assert(pad_open(2,0,0,NULL)==2 && pad_open(2,0,0,NULL)==ERR_ALREADY_OPENED);
     assert(SDL_SetJoystickVirtualButton(joystick2,SDL_GAMEPAD_BUTTON_SOUTH,true));
     assert(SDL_SetJoystickVirtualAxis(joystick2,SDL_GAMEPAD_AXIS_LEFTX,-32768));
@@ -240,7 +258,16 @@ int main(void) {
     SDL_Joystick *joystick3=SDL_OpenJoystick(id3), *joystick4=SDL_OpenJoystick(id4);
     assert(joystick3 && joystick4);
     pump();
+    assert(runtime_pad_users()==(1u<<2));
+    /* Seats in the order the buttons are pressed: controller 3 first, then controller 4. */
+    assert(SDL_SetJoystickVirtualButton(joystick3,SDL_GAMEPAD_BUTTON_SOUTH,true));
+    pump();
+    assert(runtime_pad_users()==((1u<<2)|(1u<<3)));
+    assert(SDL_SetJoystickVirtualButton(joystick3,SDL_GAMEPAD_BUTTON_SOUTH,false));
+    assert(SDL_SetJoystickVirtualButton(joystick4,SDL_GAMEPAD_BUTTON_SOUTH,true));
+    pump();
     assert(runtime_pad_users()==((1u<<2)|(1u<<3)|(1u<<4)));
+    assert(SDL_SetJoystickVirtualButton(joystick4,SDL_GAMEPAD_BUTTON_SOUTH,false));
     assert(pad_open(3,0,0,NULL)==3 && pad_open(4,0,0,NULL)==4 && pad_open(5,0,0,NULL)==ERR_INVALID_ARG);
     assert(SDL_SetJoystickVirtualButton(joystick4,SDL_GAMEPAD_BUTTON_NORTH,true));
     pump();

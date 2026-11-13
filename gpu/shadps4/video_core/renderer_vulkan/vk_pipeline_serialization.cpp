@@ -19,6 +19,7 @@
 #include "common/serdes.h"
 #include "common/scope_exit.h"
 #include "video_core/renderer_vulkan/vk_pipeline_serialization.h"
+#include "sanctuary_shader_hash.h"
 #include "common/thread.h"
 #include "sanctuary_overlay.h"
 #include "core/emulator_settings.h"
@@ -33,10 +34,12 @@
 #include "video_core/renderer_vulkan/vk_warmup_inbox.h"
 
 namespace Serialization {
-/* You should increment versions below once corresponding serialization scheme is changed. */
-static constexpr u32 ShaderBinaryVersion = 16u; // knack_pc: alpha as the second blend source
-static constexpr u32 ShaderMetaVersion = 13u; // knack_pc: HwFragmentRuntimeInfo::alpha_to_src1
-static constexpr u32 PipelineKeyVersion = 11u; // knack_pc: GraphicsPipelineKey::alpha_to_src1
+/* You should increment versions below once corresponding serialization scheme is changed.
+ * sanctuary: each is also mixed with a hash of the shader translator's and the pipelines' sources
+ * (cmake/shader_sources_hash.cmake), so a change there never reuses an older cache (GitHub #19). */
+static constexpr u32 ShaderBinaryVersion = 16u ^ SANCTUARY_SHADER_SOURCES_HASH; // knack_pc: alpha as the second blend source
+static constexpr u32 ShaderMetaVersion = 13u ^ SANCTUARY_SHADER_SOURCES_HASH; // knack_pc: HwFragmentRuntimeInfo::alpha_to_src1
+static constexpr u32 PipelineKeyVersion = 11u ^ SANCTUARY_SHADER_SOURCES_HASH; // knack_pc: GraphicsPipelineKey::alpha_to_src1
 } // namespace Serialization
 
 namespace Vulkan {

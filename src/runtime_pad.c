@@ -141,8 +141,26 @@ static SDL_Gamepad *current_gamepad(void) {
     }
     return gamepad;
 }
-/* Players 2..4 keep the gamepad they got; a gamepad that connects goes to the lowest free player
- * after player 1's. Called under lock. */
+/* Local co-op seats. A further gamepad is only a candidate until a button is pressed on it: then it
+ * takes the lowest free player after player 1's and keeps it until it disconnects ("press a
+ * button to join", GitHub #20). Devices that never press a button stay out: the motion-sensor
+ * device a DualSense adds on Linux, whose axes always move, took player 2 before, which then
+ * "moved by itself" while the real second pad went to player 3. A candidate whose pressed
+ * buttons are all held on player 1's pad too at that moment is a mirror of it (a Steam Input copy
+ * of the same controller) and does not join. Called under lock. */
+#define MAX_CANDIDATES 8
+static SDL_Gamepad *candidate[MAX_CANDIDATES];
+static uint32_t pressed_buttons(SDL_Gamepad *g) {
+    uint32_t mask=0;
+    for (int b=0;b<SDL_GAMEPAD_BUTTON_COUNT && b<32;++b)
+        if (SDL_GetGamepadButton(g,(SDL_GamepadButton)b)) mask|=1u<<b;
+    return mask;
+}
+static int seated(SDL_JoystickID id, SDL_Gamepad *first) {
+    if (first && SDL_GetGamepadID(first)==id) return 1;
+    for (int u=2;u<=MAX_PLAYERS;++u) if (extra_pad[u] && SDL_GetGamepadID(extra_pad[u])==id) return 1;
+    return 0;
+}
 static void refresh_extra_pads(void) {
     SDL_Gamepad *first=current_gamepad();
     for (int u=2;u<=MAX_PLAYERS;++u)
@@ -150,21 +168,37 @@ static void refresh_extra_pads(void) {
             printf("Runtime: gamepad of player %d disconnected\n",u);
             SDL_CloseGamepad(extra_pad[u]); extra_pad[u]=NULL;
         }
+    for (int c=0;c<MAX_CANDIDATES;++c)
+        if (candidate[c] && (!SDL_GamepadConnected(candidate[c]) || seated(SDL_GetGamepadID(candidate[c]),first))) {
+            if (!SDL_GamepadConnected(candidate[c])) SDL_CloseGamepad(candidate[c]);
+            candidate[c]=NULL;
+        }
     if (!first) return;
     int count=0;
     SDL_JoystickID *ids=SDL_GetGamepads(&count);
     for (int i=0;ids && i<count;++i) {
-        int used=ids[i]==SDL_GetGamepadID(first);
-        for (int u=2;u<=MAX_PLAYERS && !used;++u) used=extra_pad[u] && SDL_GetGamepadID(extra_pad[u])==ids[i];
-        if (used) continue;
+        if (seated(ids[i],first)) continue;
+        int known=0;
+        for (int c=0;c<MAX_CANDIDATES && !known;++c) known=candidate[c] && SDL_GetGamepadID(candidate[c])==ids[i];
+        for (int c=0;c<MAX_CANDIDATES && !known;++c)
+            if (!candidate[c] && (candidate[c]=SDL_OpenGamepad(ids[i]))) {
+                printf("Runtime: gamepad found: %s (press a button on it to join)\n",SDL_GetGamepadName(candidate[c]));
+                known=1;
+            }
+    }
+    SDL_free(ids);
+    const uint32_t first_buttons=pressed_buttons(first);
+    for (int c=0;c<MAX_CANDIDATES;++c) {
+        if (!candidate[c]) continue;
+        const uint32_t pressed=pressed_buttons(candidate[c]);
+        if (!pressed || (pressed & ~first_buttons)==0) continue; /* idle, or player 1's mirror */
         for (int u=2;u<=MAX_PLAYERS;++u) {
             if (extra_pad[u]) continue;
-            extra_pad[u]=SDL_OpenGamepad(ids[i]);
-            if (extra_pad[u]) printf("Runtime: gamepad connected for player %d: %s\n",u,SDL_GetGamepadName(extra_pad[u]));
+            extra_pad[u]=candidate[c]; candidate[c]=NULL;
+            printf("Runtime: gamepad joined as player %d: %s\n",u,SDL_GetGamepadName(extra_pad[u]));
             break;
         }
     }
-    SDL_free(ids);
 }
 static SDL_Gamepad *extra_gamepad(int user) { refresh_extra_pads(); return extra_pad[user]; }
 /* Button sources: a host button or key and the PS4 button it presses. The defaults below can be

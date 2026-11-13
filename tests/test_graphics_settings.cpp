@@ -37,7 +37,12 @@ int main() {
     assert(G::RcasAttenuation(100) == 0.0f && G::RcasAttenuation(0) == 2.0f && G::RcasAttenuation(75) == 0.5f);
     assert(G::FsrPassRuns(true, false, 1280, 720, 2560, 1440) && !G::FsrPassRuns(false, false, 1280, 720, 2560, 1440));
     assert(G::FsrPassRuns(false, true, 1920, 1080, 1920, 1080) && !G::FsrPassRuns(true, false, 1920, 1080, 1920, 1080));
-    assert(!G::FsrPassRuns(true, true, 2560, 1440, 1920, 1080));  // larger image: regular scaling
+    assert(!G::FsrPassRuns(true, false, 2560, 1440, 1920, 1080));  // larger image: regular scaling
+    // RCAS at every render resolution (#17): at the image's size unless FSR 1 upscales.
+    assert(G::FsrPassSize(true, true, 1280, 720, 1920, 1080) == std::make_pair(1920, 1080));
+    assert(G::FsrPassSize(false, true, 1280, 720, 1920, 1080) == std::make_pair(1280, 720));
+    assert(G::FsrPassSize(true, true, 2560, 1440, 1920, 1080) == std::make_pair(2560, 1440));
+    assert(G::FsrPassSize(false, false, 1280, 720, 1920, 1080) == std::make_pair(0, 0));
     assert(G::EffectiveFps(0, 120) == 120 && G::EffectiveFps(240, 120) == 120 && G::EffectiveFps(60, 240) == 60);
     // An unpatched engine steps 1/60 s per frame: presenting faster speeds the game up.
     assert(G::PresentLimit(120, 60) == 60 && G::PresentLimit(240, 120) == 120 && G::PresentLimit(240, 240) == 240);

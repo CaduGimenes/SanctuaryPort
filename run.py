@@ -160,11 +160,13 @@ def graphics_ini(env):
     return graphics_options.read_ini(env.get('SANCTUARY_CONFIG', ''))
 
 
-def d3_glyph_atlas(env, probe):
-    """Diablo III's button icons are in its own archives (CPKs), not WADs: with an Xbox style the
-    GPU core draws Xbox cells over its PlayStation button atlas (assets/glyphs/d3_xbox.spg,
-    SANCTUARY_GLYPH_ATLAS). The style follows SANCTUARY_GLYPH_STYLE (off, auto, xbox); only xbox is drawn
-    so far (auto picks it for an Xbox-style gamepad). Returns the style."""
+def d3_glyph_atlas(env, probe, game, out):
+    """Diablo III's button icons are in its own archives (CPKs), not WADs. With an Xbox style the GPU
+    core lays Xbox icons over its PlayStation textures (SANCTUARY_GLYPH_ATLAS): Blizzard's own Xbox
+    One art, which the PS4 game ships unused, made into glyph files from this game's
+    CPKs/ClientCommon.cpk (scripts/d3_glyphs.py, cached in out/glyphs); without it, the port's
+    own drawings (assets/glyphs/d3_xbox*.spg). The style follows SANCTUARY_GLYPH_STYLE (off, auto,
+    xbox); only xbox is drawn so far (auto picks it for an Xbox-style gamepad). Returns the style."""
     # The launcher keeps its choice in sanctuary.ini (glyph_style); a style set by the caller wins.
     choice = env.get('SANCTUARY_GLYPH_STYLE') or graphics_ini(env).get('glyph_style') or 'off'
     if choice not in ('auto', 'xbox'):
@@ -180,11 +182,29 @@ def d3_glyph_atlas(env, probe):
     except Exception as error:  # noqa: BLE001  (icons only)
         print(f'Glyphs: {error}; the game keeps its own button icons', flush=True)
         return None
-    if style != 'xbox' or not atlas.is_file():
+    if style != 'xbox':
         print('Glyphs: the game keeps its own (PlayStation) button icons', flush=True)
         return None
-    env['SANCTUARY_GLYPH_ATLAS'] = str(atlas)
-    print(f'Glyphs: xbox{f" ({name})" if name else ""}, drawn over the game\'s button atlas', flush=True)
+    files = []
+    if env.get('SANCTUARY_GLYPH_SOURCE', 'game') == 'game':
+        try:
+            import d3_glyphs
+            files = d3_glyphs.build(game, Path(out) / 'glyphs',
+                                    controller=env.get('SANCTUARY_GLYPH_CONTROLLER') != '0')
+        except Exception as error:  # noqa: BLE001  (icons only: the port's own drawings remain)
+            print(f'Glyphs: the game\'s Xbox One icons could not be read ({error})', flush=True)
+            files = []
+    source = "the game's own Xbox One icons"
+    if not files:
+        files = [p for p in (atlas, atlas.with_name('d3_xbox_prompt.spg')) if p.is_file()]
+        source = "the port's Xbox icons"
+    if not files:
+        print('Glyphs: the game keeps its own (PlayStation) button icons', flush=True)
+        return None
+    # The button atlas, the in-world prompt over people and objects (a texture of its own) and,
+    # unless SANCTUARY_GLYPH_CONTROLLER=0, the controller picture of the controls screen.
+    env['SANCTUARY_GLYPH_ATLAS'] = ';'.join(str(p) for p in files)
+    print(f'Glyphs: xbox{f" ({name})" if name else ""}, {source} over the game\'s PlayStation ones', flush=True)
     return 'xbox'
 
 
@@ -397,7 +417,7 @@ def main():
         print(f'Engine frame rate: {engine_fps} FPS'
               + ('' if engine_fps > 60 or graphics['engine_fps'] == '60' or not frame_rates else
                  ' (the frame rate patch was not found in this eboot.bin)'), flush=True)
-        glyph_style = d3_glyph_atlas(env, probe)
+        glyph_style = d3_glyph_atlas(env, probe, game, out)
         if glyph_style:  # the in-game menu names the buttons the same way
             env['SANCTUARY_GLYPHS'] = glyph_style
             derived.append('SANCTUARY_GLYPHS')

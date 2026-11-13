@@ -66,6 +66,8 @@ python3 -I packaging/windows/fetch_python.py out/win/cache "$dest/python"
 mkdir -p "$dest/launcher" "$dest/assets"
 cp launcher/sanctuaryport.png launcher/sanctuary.png launcher/sanctuary.ico launcher/Cinzel-Black.ttf \
     launcher/OFL-Cinzel.txt "$dest/launcher/"
+# The launcher's embedded Alegreya fonts (OFL): their licence goes with them.
+cp launcher-rust/assets/OFL-AlegreyaSC.txt launcher-rust/assets/OFL-AlegreyaSans.txt "$dest/launcher/"
 cp -r assets/glyphs assets/trophies assets/cosmetics "$dest/assets/"
 cp -r scripts patches "$dest/"
 cp run.py LICENSE README.md COMO_JOGAR.md packaging/windows/README-Windows.txt "$dest/"

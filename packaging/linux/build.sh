@@ -27,6 +27,8 @@ cp -r assets/glyphs assets/trophies assets/cosmetics "$share/assets/"
 for file in sanctuaryport.png sanctuary.png Cinzel-Black.ttf OFL-Cinzel.txt; do
     install -m644 "launcher/$file" "$share/launcher/$file"
 done
+# The launcher's embedded Alegreya fonts (OFL): their licence goes with them.
+install -m644 launcher-rust/assets/OFL-AlegreyaSC.txt launcher-rust/assets/OFL-AlegreyaSans.txt "$share/launcher/"
 icon=launcher/sanctuary.png
 find "$share" -name __pycache__ -prune -exec rm -r {} +
 install -m755 packaging/linux/AppRun "$appdir/AppRun"

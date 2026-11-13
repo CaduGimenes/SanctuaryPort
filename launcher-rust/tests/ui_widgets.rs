@@ -49,11 +49,11 @@ fn a_check_box_sends_a_bool() {
     // An ini switch too: the store writes the bool as "1" / "0".
     let dir = tempfile::tempdir().unwrap();
     let mut state = common::state(dir.path());
-    common::open(&mut state, Page::Graphics);
-    let sent = common::messages(&state, "Upscale with FSR 1");
+    common::open(&mut state, Page::Game);
+    let sent = common::messages(&state, "Unlock all cosmetics and transmogs");
     assert!(
         sent.iter().any(
-            |message| matches!(message, Message::Set(key, value) if key == "fsr1" && *value == json!(true))
+            |message| matches!(message, Message::Set(key, value) if key == "unlock_cosmetics" && *value == json!(true))
         ),
         "{sent:?}"
     );

@@ -33,32 +33,34 @@ const INPUT_PLACEHOLDER: Color = Color::from_rgb8(0x5a, 0x52, 0x50);
 /// A hovered field's edge (mockup `#langbtn:hover`).
 const LINE_HOVER: Color = Color::from_rgb8(0x4a, 0x3a, 0x3a);
 
-/// Page titles and the PLAY button: Metamorphous (OFL), angular and flared like Diablo's lettering.
+/// Page titles and the PLAY button: Alegreya SC ExtraBold (OFL), calligraphic small capitals with
+/// Latin, Polish, Czech, Turkish and Cyrillic letters (Metamorphous had no Cyrillic).
 pub const CINZEL_BLACK: Font = Font {
-    family: Family::Name("Metamorphous"),
+    family: Family::Name("Alegreya SC"),
+    weight: iced::font::Weight::ExtraBold,
     ..Font::DEFAULT
 };
-/// Tabs and section headings.
+/// Tabs and section headings: Alegreya SC Bold.
 pub const CINZEL_BOLD: Font = Font {
-    family: Family::Name("Metamorphous"),
+    family: Family::Name("Alegreya SC"),
+    weight: iced::font::Weight::Bold,
     ..Font::DEFAULT
 };
-/// Where the 2.6.0 launcher already uses Bodoni Moda.
-pub const BODONI: Font = Font {
-    family: Family::Name("Bodoni Moda"),
+/// Everything else: Alegreya Sans (OFL), bundled so the text looks the same on Windows, Linux and
+/// the Steam Deck. Arabic, Chinese, Japanese and Korean fall back to the system's fonts.
+pub const UI_FONT: Font = Font {
+    family: Family::Name("Alegreya Sans"),
     ..Font::DEFAULT
 };
-/// Everything else: the system sans.
-pub const UI_FONT: Font = Font::DEFAULT;
 pub const MONO_FONT: Font = Font::MONOSPACE;
 
 /// The embedded faces, to hand to `iced::application(...).font(...)`.
 pub fn font_bytes() -> [&'static [u8]; 4] {
     [
-        include_bytes!("../../assets/Metamorphous-Regular.ttf"),
-        include_bytes!("../../assets/Cinzel-Black.ttf"),
-        include_bytes!("../../assets/Cinzel-Bold.ttf"),
-        include_bytes!("../../assets/BodoniModa.ttf"),
+        include_bytes!("../../assets/AlegreyaSC-ExtraBold.ttf"),
+        include_bytes!("../../assets/AlegreyaSC-Bold.ttf"),
+        include_bytes!("../../assets/AlegreyaSans-Regular.ttf"),
+        include_bytes!("../../assets/AlegreyaSans-Medium.ttf"),
     ]
 }
 

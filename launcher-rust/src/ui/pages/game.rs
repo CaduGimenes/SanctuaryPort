@@ -567,6 +567,17 @@ pub fn start_pkg_install(state: &mut State, files: Vec<std::path::PathBuf>) {
 
 fn install_section(state: &State) -> Element<'_, Message> {
     let lang = state.lang.as_str();
+    column![
+        section(state.rtl, &tr(lang, "Installation")),
+        install_row(state, &tr(lang, "Game and add-ons")),
+    ]
+    .spacing(2)
+    .into()
+}
+
+/// The Install from PKG row (also on the first start's Folders step), named `label`.
+pub fn install_row<'a>(state: &'a State, label: &str) -> Element<'a, Message> {
+    let lang = state.lang.as_str();
     let (running, text) = state
         .pkg_install
         .lock()
@@ -586,10 +597,5 @@ fn install_section(state: &State) -> Element<'_, Message> {
     } else {
         text
     };
-    column![
-        section(state.rtl, &tr(lang, "Installation")),
-        row(state.rtl, &tr(lang, "Game and add-ons"), button.into(), Some(&note)),
-    ]
-    .spacing(2)
-    .into()
+    row(state.rtl, label, button.into(), Some(&note))
 }

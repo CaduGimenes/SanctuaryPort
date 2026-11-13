@@ -586,7 +586,7 @@ pub fn quick_segments(state: &State) -> Vec<(String, bool)> {
         _ => "60 FPS".to_string(),
     };
     let _ = FPS_LIMITS;
-    // The size the game renders at (Performance > Render resolution), which is what a player
+    // The size the game renders at (Graphics > Render resolution), which is what a player
     // chose: the output resolution stays at the game's own 1920 x 1080.
     let render = state.store.text("render_resolution");
     let (width, height) = crate::core::options::resolution_size(&render).unwrap_or((1920, 1080));

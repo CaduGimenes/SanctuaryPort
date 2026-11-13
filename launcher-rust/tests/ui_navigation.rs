@@ -31,19 +31,19 @@ use sanctuaryport_launcher::ui::widgets;
 use sanctuaryport_launcher::ui::widgets::modal::{Modal, ModalKind, ModalMessage};
 
 /// The page order of the Global Constraints (SanctuaryPort: the log has no tab).
-const ORDER: [Page; 7] = [
+const ORDER: [Page; 6] = [
     Page::Home,
     Page::Graphics,
-    Page::Performance,
     Page::Game,
     Page::Trophies,
     Page::Controls,
     Page::Advanced,
 ];
 
-/// The pages whose drawer takes 72 % of the window (R95 adds Performance).
+/// The pages whose drawer takes 72 % of the window (the Graphics page took the Performance
+/// page's rows and its width).
 const WIDE: [Page; 4] = [
-    Page::Performance,
+    Page::Graphics,
     Page::Trophies,
     Page::Controls,
     Page::Log,
@@ -121,14 +121,14 @@ fn the_drawer_width_slides_between_the_two_sizes() {
     let tick = |state: &mut State, at| {
         let _ = app::update(state, Message::Tick(at));
     };
-    let _ = app::update(&mut state, Message::ShowPage(Page::Graphics));
+    let _ = app::update(&mut state, Message::ShowPage(Page::Game));
     // Opening from closed slides in at the page's own width.
     assert!((drawer_width(&state) - 0.46 * 1280.0).abs() < 0.01);
     let opened = state.now;
     tick(&mut state, opened + Duration::from_secs(1));
     assert!(!app::drawer_animating(&state));
 
-    // Ruling R81: Graphics (46 %) to Log (72 %) in the slide's 220 ms.
+    // Ruling R81: Game (46 %) to Log (72 %) in the slide's 220 ms.
     let _ = app::update(&mut state, Message::ShowPage(Page::Log));
     let switched = state.now;
     tick(&mut state, switched + Duration::from_millis(110));
@@ -303,7 +303,7 @@ fn rtl_puts_the_drawer_on_the_right() {
     assert_eq!(state.lang, "ar");
     assert!(state.rtl);
     // The tab labels are in Arabic, so the page is opened by its message, not by its label.
-    let _ = app::update(&mut state, Message::ShowPage(Page::Graphics));
+    let _ = app::update(&mut state, Message::ShowPage(Page::Game));
     let _ = app::update(
         &mut state,
         Message::Tick(Instant::now() + Duration::from_secs(1)),
@@ -401,14 +401,10 @@ fn a_red_hairline_tops_the_bar_and_edges_the_drawer() {
 }
 
 /// The drawer subtitles of the mockup (`launcher-mockup-v13.html`), without its sample counts.
-const SUBTITLES: [(Page, &str); 7] = [
+const SUBTITLES: [(Page, &str); 6] = [
     (
         Page::Graphics,
-        "Stored in sanctuary.ini; the in-game menu (Insert or R3+L2) changes the same values.",
-    ),
-    (
-        Page::Performance,
-        "Frame rate, render resolution and graphics card. Applied when the game starts.",
+        "Rows marked restart apply when the game starts; the in-game menu (Insert or R3+L2) changes the others while you play.",
     ),
     (Page::Game, "Your game dump, saves and language."),
     (
@@ -473,7 +469,7 @@ fn rtl_mirrors_the_drawer_rows_and_header() {
     let _ = app::update(&mut state, Message::ShowPage(Page::Graphics));
     let mut ui = settled_ui(&mut state);
     // A row: its control (the screenshots button) sits to the left of its name.
-    let name = ui.find(tr("ar", "F12 in the game")).unwrap().bounds();
+    let name = ui.find(tr("ar", "Screenshot key: F12")).unwrap().bounds();
     let control = ui
         .find(tr("ar", "Open the screenshots folder"))
         .unwrap()
@@ -504,7 +500,7 @@ fn rtl_mirrors_the_drawer_rows_and_header() {
     state.lang = "en".into();
     let _ = app::update(&mut state, Message::ShowPage(Page::Graphics));
     let mut ui = settled_ui(&mut state);
-    let name = ui.find("F12 in the game").unwrap().bounds();
+    let name = ui.find("Screenshot key: F12").unwrap().bounds();
     let control = ui.find("Open the screenshots folder").unwrap().bounds();
     assert!(name.x < control.x);
     let save = ui.find("Save").unwrap().bounds();

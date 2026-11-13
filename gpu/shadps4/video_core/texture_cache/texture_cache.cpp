@@ -4,6 +4,9 @@
 #include <cstdio>
 #include <cstring>
 #include <filesystem>
+#include <string>
+#include <string_view>
+#include <miniz.h>
 #include <xxhash.h>
 #include "video_core/amdgpu/liverpool.h"
 
@@ -1390,127 +1393,165 @@ ImageView& TextureCache::FindDepthTarget(ImageId image_id, const ImageDesc& desc
     return image.FindView(desc.view_info, false);
 }
 
-// SanctuaryPort: controller glyphs. SANCTUARY_GLYPH_ATLAS=<file> names cells drawn over a game
-// texture after each upload of it (Diablo III: Xbox buttons over the PlayStation ones of its
-// button atlas). File (little-endian): "SPG1", u32 width, height, vk::Format, u64 XXH3 of the
-// guest bytes (0: any), u32 cell count; per cell u32 mip, x, y, w, h (texels, multiples of 4)
-// and its BC blocks, row by row. Only the cells change: the rest is the game's own texture.
+// SanctuaryPort: controller glyphs. SANCTUARY_GLYPH_ATLAS=<file>[;<file>...] names cells drawn
+// over game textures after each upload of them (Diablo III: Xbox buttons over the PlayStation ones
+// of its button atlas and of its 48x48 in-world prompt). File (little-endian): "SPG1", u32 width,
+// height, vk::Format, u64 XXH3 of the guest bytes (0: any), u32 cell count; per cell u32 mip, x, y,
+// w, h (texels) and its data, row by row: 4x4 blocks of 16 bytes for a block-compressed format
+// (x, y, w, h multiples of 4), texels otherwise (16 or 32-bit formats). Only the cells change: the
+// rest is the game's own texture. "SPG2" is the same with the guest bytes' zlib CRC32 in place of
+// the XXH3 (files run.py makes from the game's own art, scripts/d3_glyphs.py).
 namespace {
 struct GlyphCell {
     u32 mip, x, y, w, h;
     std::vector<u8> blocks;
 };
 struct GlyphAtlas {
-    bool loaded = false;
     u32 width = 0, height = 0;
     vk::Format format = vk::Format::eUndefined;
     u64 guest_hash = 0;
+    bool crc32 = false;  // guest_hash is a CRC32 ("SPG2")
     std::vector<GlyphCell> cells;
+    std::string path;
+    mutable bool logged = false, told = false;
 };
-const GlyphAtlas& LoadGlyphAtlas() {
-    static const GlyphAtlas atlas = [] {
-        GlyphAtlas a;
-        const char* path = std::getenv("SANCTUARY_GLYPH_ATLAS");
-        if (!path || !*path) {
-            return a;
-        }
-        FILE* f = std::fopen(path, "rb");
-        if (!f) {
-            std::fprintf(stderr, "Glyphs: cannot open %s\n", path);
-            return a;
-        }
-        char magic[4];
-        u32 head[3];
-        u64 hash;
-        u32 count;
-        bool ok = std::fread(magic, 1, 4, f) == 4 && !std::memcmp(magic, "SPG1", 4) &&
-                  std::fread(head, 4, 3, f) == 3 && std::fread(&hash, 8, 1, f) == 1 &&
-                  std::fread(&count, 4, 1, f) == 1 && count < 4096;
-        for (u32 i = 0; ok && i < count; ++i) {
-            GlyphCell c;
-            u32 r[5];
-            ok = std::fread(r, 4, 5, f) == 5 && r[2] % 4 == 0 && r[3] % 4 == 0 && r[4] % 4 == 0;
-            if (!ok) {
-                break;
-            }
-            c.mip = r[0], c.x = r[1], c.y = r[2], c.w = r[3], c.h = r[4];
-            c.blocks.resize(size_t(c.w / 4) * (c.h / 4) * 16);
-            ok = std::fread(c.blocks.data(), 1, c.blocks.size(), f) == c.blocks.size();
-            a.cells.push_back(std::move(c));
-        }
-        std::fclose(f);
+/// Bytes of one cell of w x h texels: BC blocks, 16 or 32-bit texels; 0 for other formats.
+size_t GlyphCellBytes(vk::Format format, u32 w, u32 h) {
+    const u32 f = u32(format);
+    if (f >= u32(vk::Format::eBc1RgbUnormBlock) && f <= u32(vk::Format::eBc7SrgbBlock)) {
+        const bool half = f <= u32(vk::Format::eBc1RgbaSrgbBlock) ||
+                          (f >= u32(vk::Format::eBc4UnormBlock) && f <= u32(vk::Format::eBc4SnormBlock));
+        return w % 4 || h % 4 ? 0 : size_t(w / 4) * (h / 4) * (half ? 8 : 16);
+    }
+    if (f >= u32(vk::Format::eR4G4B4A4UnormPack16) && f <= u32(vk::Format::eA1R5G5B5UnormPack16)) {
+        return size_t(w) * h * 2;
+    }
+    if (f >= u32(vk::Format::eR8G8B8A8Unorm) && f <= u32(vk::Format::eB8G8R8A8Srgb)) {
+        return size_t(w) * h * 4;
+    }
+    return 0;
+}
+bool LoadGlyphFile(const std::string& path, GlyphAtlas& a) {
+    FILE* f = std::fopen(path.c_str(), "rb");
+    if (!f) {
+        std::fprintf(stderr, "Glyphs: cannot open %s\n", path.c_str());
+        return false;
+    }
+    char magic[4];
+    u32 head[3];
+    u64 hash;
+    u32 count;
+    bool ok = std::fread(magic, 1, 4, f) == 4 &&
+              (!std::memcmp(magic, "SPG1", 4) || !std::memcmp(magic, "SPG2", 4)) &&
+              std::fread(head, 4, 3, f) == 3 && std::fread(&hash, 8, 1, f) == 1 &&
+              std::fread(&count, 4, 1, f) == 1 && count < 4096;
+    a.width = ok ? head[0] : 0, a.height = ok ? head[1] : 0;
+    a.format = ok ? vk::Format(head[2]) : vk::Format::eUndefined, a.guest_hash = ok ? hash : 0;
+    a.crc32 = ok && magic[3] == '2';
+    for (u32 i = 0; ok && i < count; ++i) {
+        GlyphCell c;
+        u32 r[5];
+        ok = std::fread(r, 4, 5, f) == 5;
+        const size_t bytes = ok ? GlyphCellBytes(a.format, r[3], r[4]) : 0;
+        ok = ok && bytes && r[1] + r[3] <= a.width && r[2] + r[4] <= a.height;
         if (!ok) {
-            std::fprintf(stderr, "Glyphs: %s is not a glyph atlas\n", path);
-            return GlyphAtlas{};
+            break;
         }
-        a.loaded = true;
-        a.width = head[0], a.height = head[1], a.format = vk::Format(head[2]), a.guest_hash = hash;
-        std::printf("Glyphs: %zu cells for a %ux%u texture from %s\n", a.cells.size(), a.width,
-                    a.height, path);
-        return a;
+        c.mip = r[0], c.x = r[1], c.y = r[2], c.w = r[3], c.h = r[4];
+        c.blocks.resize(bytes);
+        ok = std::fread(c.blocks.data(), 1, c.blocks.size(), f) == c.blocks.size();
+        a.cells.push_back(std::move(c));
+    }
+    std::fclose(f);
+    if (!ok) {
+        std::fprintf(stderr, "Glyphs: %s is not a glyph atlas\n", path.c_str());
+        return false;
+    }
+    a.path = path;
+    std::printf("Glyphs: %zu cells for a %ux%u texture from %s\n", a.cells.size(), a.width,
+                a.height, path.c_str());
+    return true;
+}
+const std::vector<GlyphAtlas>& LoadGlyphAtlases() {
+    static const std::vector<GlyphAtlas> atlases = [] {
+        std::vector<GlyphAtlas> list;
+        const char* paths = std::getenv("SANCTUARY_GLYPH_ATLAS");
+        std::string_view rest = paths ? paths : "";
+        while (!rest.empty()) {
+            const size_t cut = rest.find(';');
+            const std::string path{rest.substr(0, cut)};
+            rest = cut == std::string_view::npos ? std::string_view{} : rest.substr(cut + 1);
+            GlyphAtlas a;
+            if (!path.empty() && LoadGlyphFile(path, a)) {
+                list.push_back(std::move(a));
+            }
+        }
+        return list;
     }();
-    return atlas;
+    return atlases;
 }
 } // namespace
 
 void TextureCache::PatchGlyphs(Image& image) {
-    const GlyphAtlas& atlas = LoadGlyphAtlas();
-    if (!atlas.loaded || image.info.size.width != atlas.width ||
-        image.info.size.height != atlas.height || image.info.pixel_format != atlas.format) {
-        return;
-    }
-    const u64 hash = XXH3_64bits(std::bit_cast<const u8*>(image.info.guest_address),
-                                 image.info.guest_size);
-    static bool logged = false;
-    if (!logged) {
-        logged = true;
-        std::printf("Glyphs: candidate %#llx, %u mips, guest hash %016llx%s\n",
-                    static_cast<unsigned long long>(image.info.guest_address),
-                    image.info.resources.levels, static_cast<unsigned long long>(hash),
-                    atlas.guest_hash && hash != atlas.guest_hash ? " (not the atlas)" : "");
-    }
-    if (atlas.guest_hash && hash != atlas.guest_hash) {
-        return;
-    }
-    u64 total = 0;
-    for (const auto& c : atlas.cells) {
-        if (c.mip < image.info.resources.levels) {
-            total += Common::AlignUp(c.blocks.size(), 16);
-        }
-    }
-    if (!total) {
-        return;
-    }
-    const auto staging = runtime.GetStagingPool().Request(total, MemoryType::HostUncached, 16);
-    boost::container::small_vector<vk::BufferImageCopy, 64> copies;
-    u64 at = 0;
-    for (const auto& c : atlas.cells) {
-        if (c.mip >= image.info.resources.levels) {
+    const auto& atlases = LoadGlyphAtlases();
+    for (const GlyphAtlas& atlas : atlases) {
+        if (image.info.size.width != atlas.width || image.info.size.height != atlas.height ||
+            image.info.pixel_format != atlas.format) {
             continue;
         }
-        std::memcpy(staging.mapped + at, c.blocks.data(), c.blocks.size());
-        copies.push_back({
-            .bufferOffset = staging.offset + at,
-            .bufferRowLength = 0,
-            .bufferImageHeight = 0,
-            .imageSubresource{
-                .aspectMask = vk::ImageAspectFlagBits::eColor,
-                .mipLevel = c.mip,
-                .baseArrayLayer = 0,
-                .layerCount = 1,
-            },
-            .imageOffset = {s32(c.x), s32(c.y), 0},
-            .imageExtent = {c.w, c.h, 1},
-        });
-        at += Common::AlignUp(c.blocks.size(), 16);
-    }
-    staging.Flush();
-    runtime.UploadImage(&image, staging.buffer, copies);
-    static bool told = false;
-    if (!told) {
-        told = true;
-        std::printf("Glyphs: %zu cells drawn over the texture at %#llx\n", copies.size(),
-                    static_cast<unsigned long long>(image.info.guest_address));
+        const u8* guest = std::bit_cast<const u8*>(image.info.guest_address);
+        const u64 hash = atlas.crc32 ? u64(mz_crc32(MZ_CRC32_INIT, guest, image.info.guest_size))
+                                     : XXH3_64bits(guest, image.info.guest_size);
+        if (!atlas.logged) {
+            atlas.logged = true;
+            std::printf("Glyphs: candidate %#llx, %u mips, guest hash %016llx%s\n",
+                        static_cast<unsigned long long>(image.info.guest_address),
+                        image.info.resources.levels, static_cast<unsigned long long>(hash),
+                        atlas.guest_hash && hash != atlas.guest_hash ? " (not the atlas)" : "");
+        }
+        if (atlas.guest_hash && hash != atlas.guest_hash) {
+            continue;
+        }
+        u64 total = 0;
+        for (const auto& c : atlas.cells) {
+            if (c.mip < image.info.resources.levels) {
+                total += Common::AlignUp(c.blocks.size(), 16);
+            }
+        }
+        if (!total) {
+            continue;
+        }
+        const auto staging = runtime.GetStagingPool().Request(total, MemoryType::HostUncached, 16);
+        boost::container::small_vector<vk::BufferImageCopy, 64> copies;
+        u64 at = 0;
+        for (const auto& c : atlas.cells) {
+            if (c.mip >= image.info.resources.levels) {
+                continue;
+            }
+            std::memcpy(staging.mapped + at, c.blocks.data(), c.blocks.size());
+            copies.push_back({
+                .bufferOffset = staging.offset + at,
+                .bufferRowLength = 0,
+                .bufferImageHeight = 0,
+                .imageSubresource{
+                    .aspectMask = vk::ImageAspectFlagBits::eColor,
+                    .mipLevel = c.mip,
+                    .baseArrayLayer = 0,
+                    .layerCount = 1,
+                },
+                .imageOffset = {s32(c.x), s32(c.y), 0},
+                .imageExtent = {c.w, c.h, 1},
+            });
+            at += Common::AlignUp(c.blocks.size(), 16);
+        }
+        staging.Flush();
+        runtime.UploadImage(&image, staging.buffer, copies);
+        if (!atlas.told) {
+            atlas.told = true;
+            std::printf("Glyphs: %zu cells drawn over the texture at %#llx\n", copies.size(),
+                        static_cast<unsigned long long>(image.info.guest_address));
+        }
+        return;
     }
 }
 

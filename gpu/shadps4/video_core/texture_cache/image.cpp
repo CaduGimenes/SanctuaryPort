@@ -10,6 +10,7 @@
 #include "video_core/renderer_vulkan/vk_scheduler.h"
 #include "video_core/texture_cache/blit_helper.h"
 #include "video_core/texture_cache/image.h"
+#include "video_core/amdgpu/sanctuary_msaa.h"
 
 #include <vk_mem_alloc.h>
 
@@ -101,6 +102,7 @@ void UniqueImage::Destroy() {
 
 void UniqueImage::Create(const vk::ImageCreateInfo& image_ci) {
     this->image_ci = image_ci;
+    this->image_ci.pNext = nullptr; // a chain the caller kept on its stack (image compression)
     ASSERT(!image);
     const VmaAllocationCreateInfo alloc_ci = {
         .flags = VMA_ALLOCATION_CREATE_WITHIN_BUDGET_BIT,
@@ -205,10 +207,21 @@ Image::Image(const Vulkan::Instance& instance, Vulkan::Runtime& runtime_,
         .initialLayout = vk::ImageLayout::eUndefined,
     };
 
+    // sanctuary: experimental multisampling on drivers that read compressed multisampled depth
+    // wrong: that depth without compression (amdgpu/sanctuary_msaa.h).
+    vk::ImageCompressionControlEXT uncompressed{
+        .flags = vk::ImageCompressionFlagBitsEXT::eDisabled,
+    };
+    vk::ImageCreateInfo create_info = image_ci;
+    if (AmdGpu::MsaaUncompressedDepth() && info.props.is_depth &&
+        image_ci.samples != vk::SampleCountFlagBits::e1) {
+        create_info.pNext = &uncompressed;
+    }
+
     backing = &backing_images.emplace_back();
     backing->num_samples = info.num_samples;
     backing->image = UniqueImage{instance.GetDevice(), instance.GetAllocator()};
-    backing->image.Create(image_ci);
+    backing->image.Create(create_info);
 
     Vulkan::SetObjectName(instance.GetDevice(), GetImage(),
                           "Image {}x{}x{} {} {} {:#x}:{:#x} L:{} M:{} S:{}", info.size.width,

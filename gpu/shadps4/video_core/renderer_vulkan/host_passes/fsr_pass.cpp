@@ -133,18 +133,21 @@ void FsrPass::Create(vk::Device device, VmaAllocator allocator, u32 num_images) 
 vk::ImageView FsrPass::Render(vk::CommandBuffer cmdbuf, vk::ImageView input,
                               vk::Extent2D input_size, vk::Extent2D output_size, Settings settings,
                               bool /*hdr*/) {
-    // sanctuary: FSR 1 upscales when the window is larger; RCAS alone also runs at the same size.
-    if (!SanctuaryGraphics::FsrPassRuns(settings.enable, settings.use_rcas, int(input_size.width),
-                                   int(input_size.height), int(output_size.width),
-                                   int(output_size.height))) {
+    // sanctuary: FSR 1 upscales when the window is larger; otherwise RCAS sharpens at the
+    // image's own size and the post process pass scales it to the window (GitHub #17).
+    const auto [pass_w, pass_h] = SanctuaryGraphics::FsrPassSize(
+        settings.enable, settings.use_rcas, int(input_size.width), int(input_size.height),
+        int(output_size.width), int(output_size.height));
+    if (pass_w == 0) {
         DebugState.is_using_fsr = false;
         return input;
     }
 
     DebugState.is_using_fsr = true;
 
-    if (output_size != cur_size) {
-        ResizeAndInvalidate(output_size.width, output_size.height);
+    const vk::Extent2D pass_size{u32(pass_w), u32(pass_h)};
+    if (pass_size != cur_size) {
+        ResizeAndInvalidate(pass_size.width, pass_size.height);
     }
     auto [width, height] = cur_size;
 

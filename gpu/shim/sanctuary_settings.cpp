@@ -100,6 +100,8 @@ void Set(Values& v, const std::string& key, const std::string& value) {
         v.fsr1 = i != 0;
     } else if (key == "rcas") {
         v.rcas = i != 0;
+    } else if (key == "fxaa") {
+        v.fxaa = i != 0;
     } else if (key == "rcas_strength") {
         v.rcas_strength = SanctuaryGraphics::ParseRcasStrength(value.empty() ? -1 : i);
     } else if (key == "frames_queued") {
@@ -299,6 +301,7 @@ void Save() {
                  resolution_names[std::clamp(v.render_resolution.load(), 0, int(resolution_names.size()) - 1)].c_str(),
                  v.engine_fps.load(), int(v.deferred_readback.load()), int(v.stale_readback.load()),
                  int(v.restart_unconfirmed.load()));
+    std::fprintf(file, "fxaa=%d\n", int(v.fxaa.load()));
     std::fprintf(file, "anisotropy=%d\nvibration=%d\nmouse_prompt_distance=%d\nmouse_lock=%d\nmouse_aim_style=%d\n"
                        "mouse_aim_sensitivity=%d\n",
                  v.anisotropy.load(), v.vibration.load(), v.mouse_prompt_distance.load(), int(v.mouse_lock.load()),

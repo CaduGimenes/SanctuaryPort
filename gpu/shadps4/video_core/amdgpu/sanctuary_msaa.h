@@ -11,7 +11,8 @@
 // sizes and addresses still use the real sample count (GuestNumSamples).
 //
 // On with AMD's and Intel's Windows drivers (sanctuary_msaa_default.h); SANCTUARY_NO_MSAA=0 or 1 decides
-// otherwise (vk_instance.cpp).
+// otherwise (vk_instance.cpp). SANCTUARY_NO_MSAA=0 on those drivers is experimental: the multisampled
+// depth is then created uncompressed where the driver allows it (MsaaUncompressedDepth).
 
 #pragma once
 
@@ -23,6 +24,13 @@ inline std::atomic<bool> no_msaa{false};
 
 inline bool NoMsaa() {
     return no_msaa.load(std::memory_order_relaxed);
+}
+/// Experimental: multisampling kept on (SANCTUARY_NO_MSAA=0) with a driver that reads compressed
+/// multisampled depth wrong: those depth images are created without compression
+/// (VK_EXT_image_compression_control), the suspected cause of the black lines.
+inline std::atomic<bool> msaa_uncompressed_depth{false};
+inline bool MsaaUncompressedDepth() {
+    return msaa_uncompressed_depth.load(std::memory_order_relaxed);
 }
 
 } // namespace AmdGpu

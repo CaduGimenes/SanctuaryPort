@@ -331,40 +331,41 @@ void ImageTab() {
         if (!Hidden("vsync")) {
             CheckRow("VSync", s.vsync, "Waits for the monitor: no tearing, a little more input delay.");
         }
-        CheckRow("Upscale with FSR 1", s.fsr1,
-                 "When the game renders below the window (Render resolution, Performance tab), AMD FSR 1 "
-                 "upscales the picture instead of a plain stretch. Any graphics card.");
         ImGui::EndTable();
     }
-    ImGui::SeparatorText("Anti-aliasing (experimental)");
-    if (BeginRows("##temporal")) {
-        static const char* const aa_labels[] = {"Off", "FSR 3"};
-        static const int aa_values[] = {SanctuarySettings::UpscalerOff, SanctuarySettings::UpscalerFsr3};
-        ChoiceRow("Temporal anti-aliasing", s.upscaler, aa_labels, aa_values, 2,
-                  "AMD FSR 3 uses the previous frames: at the window size it smooths jagged edges; "
-                  "with a Render resolution below the window it upscales the game to the window "
-                  "(HUD at full size). Experimental: tell us if something smears or flickers.");
-        ImGui::EndTable();
-    }
+    // The same sections as the launcher's Graphics page: Anti-aliasing, then Upscaling.
+    const bool fsr3 = s.upscaler == SanctuarySettings::UpscalerFsr3;
     const int iw = s.image_width, ih = s.image_height, ww = s.window_width, wh = s.window_height;
-    const bool downscaling = iw > ww || ih > wh;
-    const bool rcas_blocked = s.rcas && !s.rcas_applied;
-    ImGui::SeparatorText("Sharpening");
-    if (BeginRows("##scaling")) {
-        ImGui::BeginDisabled(rcas_blocked);
-        CheckRow("Sharpening (RCAS)", s.rcas,
-                 rcas_blocked && downscaling ? "No effect: the game's image is larger than the window."
-                 : rcas_blocked              ? "No effect: the game's image is smaller than the window."
-                                             : "Sharpens the final image.");
+    ImGui::SeparatorText("Anti-aliasing");
+    if (BeginRows("##temporal")) {
+        static const char* const aa_labels[] = {"Off", "FSR 3 (experimental)"};
+        static const int aa_values[] = {SanctuarySettings::UpscalerOff, SanctuarySettings::UpscalerFsr3};
+        ChoiceRow("Temporal anti-aliasing (FSR 3)", s.upscaler, aa_labels, aa_values, 2,
+                  "Smooths edges using the previous frames: the best quality. Below the window it "
+                  "also enlarges the picture (HUD at full size). Tell us if something smears or flickers.");
+        ImGui::BeginDisabled(fsr3);
+        CheckRow("FXAA", s.fxaa,
+                 fsr3 ? "Not used while FSR 3 is on."
+                      : "Cheap smoothing of the 3D picture (the HUD stays sharp), a little soft.");
         ImGui::EndDisabled();
-        ImGui::BeginDisabled(!s.rcas || rcas_blocked);
+        ImGui::EndTable();
+    }
+    ImGui::SeparatorText("Upscaling");
+    if (BeginRows("##scaling")) {
+        ImGui::BeginDisabled(fsr3);
+        CheckRow("Upscale with FSR 1", s.fsr1,
+                 fsr3 ? "FSR 3 (Anti-aliasing) already enlarges the picture."
+                      : "Used when the Render resolution is below the window: sharper than a plain stretch.");
+        ImGui::EndDisabled();
+        CheckRow("Sharpening (RCAS)", s.rcas, "Adds back detail after smoothing or enlarging.");
+        ImGui::BeginDisabled(!s.rcas);
         SliderRow("Sharpening strength", s.rcas_strength, 0, 100, "%d%%", "How strong the sharpening is.");
         ImGui::EndDisabled();
         ImGui::EndTable();
     }
     ImGui::SeparatorText("Textures (applied on restart)");
     if (BeginRows("##textures")) {
-        static const char* const anisotropy_labels[] = {"Game default", "2x", "4x", "8x", "16x"};
+        static const char* const anisotropy_labels[] = {"Off (game default)", "2x", "4x", "8x", "16x"};
         ChoiceRow("Anisotropic filtering", s.anisotropy, anisotropy_labels, G::Anisotropies.data(),
                   int(G::Anisotropies.size()),
                   "Sharper floors and walls seen at an angle. Little cost on most GPUs.");

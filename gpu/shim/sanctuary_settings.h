@@ -55,6 +55,8 @@ struct Values {
     std::atomic<bool> async_shaders{true};
     std::atomic<bool> fsr1{false};
     std::atomic<bool> rcas{true};
+    /// FXAA of the finished frame while FSR 3 is off (vk_fxaa.cpp), sanctuary.ini `fxaa`.
+    std::atomic<bool> fxaa{false};
     std::atomic<int> rcas_strength{75};
     /// Set by the presenter: sharpening ran on the last frame (it needs FSR 1 when the game's
     /// image is smaller than the window).

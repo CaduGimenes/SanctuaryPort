@@ -95,10 +95,13 @@ public:
     static constexpr u32 ObjectBlockSize = 2384;
     /// Returns true when the block holds this frame's scene camera (a perspective matrix).
     bool OnObjectBlock(const float* block, u64 shader);
-    /// Diablo III: the depth target of draws with the scene camera (the 2-sample scene depth):
-    /// geometry drawn with it is jittered.
+    /// Diablo III: the depth target of a draw with a perspective camera. The last one before the
+    /// scene depth copy is the scene's (the 2-sample scene depth): geometry drawn with it is
+    /// jittered. Others are not: the pause menu draws the hero on a pedestal with its own camera
+    /// and depth at the start of the frame, and taking that depth as the scene's mid-frame
+    /// jittered part of the pedestal's draws and not its depth pre-pass (it flickered, #18).
     void NoteGeometryDepth(VideoCore::ImageId depth) noexcept {
-        geometry_depth = depth;
+        geometry_depth_candidate = depth;
     }
     [[nodiscard]] VideoCore::ImageId GeometryDepth() const noexcept {
         return geometry_depth;
@@ -141,6 +144,7 @@ private:
     std::array<u32, 2> render_size{};
     VideoCore::ImageId depth_id{};
     VideoCore::ImageId geometry_depth{};
+    VideoCore::ImageId geometry_depth_candidate{};
 
     // Diablo III object-to-clip matrices of this frame and the previous one, by object key.
     struct ObjectMatrix {

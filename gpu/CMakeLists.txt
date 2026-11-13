@@ -123,6 +123,8 @@ add_host_shader(depth_copy.comp depth_copy_comp)
 add_host_shader(taa.comp taa_comp)
 add_host_shader(taa_sharpen.comp taa_sharpen_comp)
 add_host_shader(taa_sharpen.comp taa_sharpen_ldr_comp LDR_OUTPUT=1)
+add_host_shader(fxaa.comp fxaa_comp)
+add_host_shader(fxaa.comp fxaa_store_comp FXAA_STORE=1)
 add_host_shader(buffer_multi_copy.comp buffer_multi_copy_comp)
 add_host_shader(depth_resample.frag depth_resample_frag)
 add_host_shader(depth_resample.frag depth_stencil_resample_frag HAS_STENCIL=1)
@@ -160,6 +162,22 @@ add_library(sanctuarygpu ${SANCTUARYGPU_KIND} ${VIDEO_CORE} ${RECOMPILER} ${COMM
     shadps4/core/libraries/kernel/equeue.cpp ${AVPLAYER}
     shadps4/core/libraries/videodec/video_utils.cpp)
 add_dependencies(sanctuarygpu host_shaders)
+# The shader cache version follows the shader translator's sources (cmake/shader_sources_hash.cmake).
+file(GLOB_RECURSE SHADER_HASH_INPUTS CONFIGURE_DEPENDS shadps4/shader_recompiler/*.cpp
+    shadps4/shader_recompiler/*.h shadps4/video_core/renderer_vulkan/vk_pipeline_cache.*
+    shadps4/video_core/renderer_vulkan/vk_pipeline_serialization.*
+    shadps4/video_core/renderer_vulkan/vk_graphics_pipeline.* shadps4/video_core/renderer_vulkan/vk_compute_pipeline.*)
+list(SORT SHADER_HASH_INPUTS)
+string(REPLACE ";" "\n" SHADER_HASH_LIST_TEXT "${SHADER_HASH_INPUTS}")
+file(WRITE ${SHADER_INCLUDE}/shader_hash_inputs.txt "${SHADER_HASH_LIST_TEXT}")
+add_custom_command(OUTPUT ${SHADER_INCLUDE}/sanctuary_shader_hash.h
+    COMMAND ${CMAKE_COMMAND} -DLIST=${SHADER_INCLUDE}/shader_hash_inputs.txt
+            -DOUT=${SHADER_INCLUDE}/sanctuary_shader_hash.h
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/shader_sources_hash.cmake
+    DEPENDS ${SHADER_HASH_INPUTS} ${CMAKE_CURRENT_SOURCE_DIR}/cmake/shader_sources_hash.cmake
+    COMMENT "Hashing the shader translator's sources")
+add_custom_target(shader_sources_hash DEPENDS ${SHADER_INCLUDE}/sanctuary_shader_hash.h)
+add_dependencies(sanctuarygpu shader_sources_hash)
 # In-game settings menu: Dear ImGui (third_party/imgui, MIT) with its Vulkan backend, and an
 # embedded Cyrillic font (third_party/fonts).
 target_sources(sanctuarygpu PRIVATE third_party/imgui/imgui.cpp third_party/imgui/imgui_draw.cpp

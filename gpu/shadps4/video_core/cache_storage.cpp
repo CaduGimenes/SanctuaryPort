@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: Copyright 2025-2026 shadPS4 Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include <cstdio>
 #include "common/elf_info.h"
 #include "common/io_file.h"
 #include "common/polyfill_thread.h"
@@ -95,6 +96,20 @@ void DataBase::Open() {
     const auto& game_info = Common::ElfInfo::Instance();
 
     using namespace Common::FS;
+    // sanctuary: a start that stopped on a pipeline the driver refused left a marker (MarkInvalid):
+    // this game's whole cache goes, shaders, pipeline keys and driver binaries alike.
+    {
+        const auto dir = GetUserPath(PathType::CacheDir);
+        const auto marker = dir / (std::string{game_info.GameSerial()} + ".invalid");
+        std::error_code ec;
+        if (std::filesystem::exists(marker, ec)) {
+            std::filesystem::remove_all(dir / game_info.GameSerial(), ec);
+            std::filesystem::remove(dir / (std::string{game_info.GameSerial()} + ".zip"), ec);
+            std::filesystem::remove(marker, ec);
+            std::printf("Shader cache: cleared, the last start stopped on a pipeline the driver "
+                        "refused; everything is compiled again\n");
+        }
+    }
     if (EmulatorSettings.IsPipelineCacheArchived()) {
         mz_zip_zero_struct(&zip_ar);
 
@@ -118,6 +133,19 @@ void DataBase::Open() {
 
     io_worker = std::jthread{ProcessIO};
     opened = true;
+}
+
+void DataBase::MarkInvalid() {
+    const auto& game_info = Common::ElfInfo::Instance();
+    const auto marker = Common::FS::GetUserPath(Common::FS::PathType::CacheDir) /
+                        (std::string{game_info.GameSerial()} + ".invalid");
+    std::error_code ec;
+    std::filesystem::create_directories(marker.parent_path(), ec);
+    if (FILE* f = std::fopen(marker.string().c_str(), "wb")) {
+        std::fputs("The driver refused a pipeline; this game's cache is cleared at the next start.\n", f);
+        std::fclose(f);
+    }
+    std::printf("Shader cache: marked for clearing at the next start\n");
 }
 
 void DataBase::Close() {

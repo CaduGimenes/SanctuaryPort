@@ -13,6 +13,7 @@
 #include "video_core/renderer_vulkan/liverpool_to_vk.h"
 #include "video_core/renderer_vulkan/vk_blend_rewrite.h"
 #include "video_core/renderer_vulkan/vk_graphics_pipeline.h"
+#include "video_core/cache_storage.h"
 #include "video_core/renderer_vulkan/vk_instance.h"
 #include "video_core/renderer_vulkan/vk_lighting_test.h"
 #include "video_core/renderer_vulkan/vk_pipeline_serialization.h"
@@ -460,6 +461,10 @@ GraphicsPipeline::GraphicsPipeline(
         auto retry = device.createGraphicsPipelineUnique({}, pipeline_info);
         pipeline_result = retry.result;
         pipe = std::move(retry.value);
+    }
+    if (pipeline_result != vk::Result::eSuccess) {
+        // sanctuary: likely a stale cache (GitHub #19): the next start begins with a clean one.
+        Storage::DataBase::Instance().MarkInvalid();
     }
     ASSERT_MSG(pipeline_result == vk::Result::eSuccess, "Failed to create graphics pipeline: {}",
                vk::to_string(pipeline_result));

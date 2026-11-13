@@ -70,9 +70,10 @@ início.
 ## Co-op local (até 4 jogadores)
 
 Ligue mais controles (Xbox, DualSense, DualShock 4, qualquer um que o SDL reconheça). O primeiro é
-o jogador 1, junto com o teclado e o mouse. Os seguintes viram os jogadores 2, 3 e 4, na ordem em
-que você conecta. Com o jogo rodando, aperte o botão de baixo (A no Xbox, ✕ no PlayStation) no
-controle novo para entrar: o Diablo abre a criação ou a escolha de herói daquele jogador.
+o jogador 1, junto com o teclado e o mouse. Cada controle novo entra quando você aperta um botão
+nele, virando o jogador 2, 3 ou 4 na ordem em que os botões forem apertados. Com o jogo rodando,
+aperte o botão de baixo (A no Xbox, ✕ no PlayStation) no controle novo para entrar: o Diablo abre
+a criação ou a escolha de herói daquele jogador.
 
 ## Botões do Xbox no jogo
 
