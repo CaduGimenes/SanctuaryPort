@@ -76,13 +76,14 @@ pub fn read_trp_icons(path: &Path) -> BTreeMap<u32, Vec<u8>> {
 /// The file the port records unlocks in, inside the saves folder (`src/runtime_services.c`).
 pub const UNLOCKS_FILE: &str = "trophies.txt";
 
-/// The trophy ids the port recorded: `user/trophies.txt` holds one id per line, in unlock order.
+/// The trophy ids the port recorded: `user/trophies.txt` holds one unlock per line, in unlock
+/// order: the id, then (since 0.2.1) the unlock time in Unix seconds.
 pub fn read_unlocked_trophies(path: &Path) -> BTreeSet<u32> {
     let Ok(data) = fs::read_to_string(path) else {
         return BTreeSet::new();
     };
-    data.split_whitespace()
-        .filter_map(|word| word.parse::<u32>().ok())
+    data.lines()
+        .filter_map(|line| line.split_whitespace().next()?.parse::<u32>().ok())
         .filter(|&id| id < 128)
         .collect()
 }
@@ -337,6 +338,9 @@ mod tests {
             BTreeSet::from([0, 5, 31, 32, 127])
         );
         assert!(read_unlocked_trophies(&dir.path().join("none.txt")).is_empty());
+        // Since 0.2.1 each line has the unlock time after the id.
+        let path = write(&dir, "timed.txt", b"5 1790000000\n40 1790000123\n7\n");
+        assert_eq!(read_unlocked_trophies(&path), BTreeSet::from([5, 7, 40]));
     }
 
     #[test]

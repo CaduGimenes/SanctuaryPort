@@ -2668,7 +2668,9 @@
    "When you report a problem, attach last_run.log from the port folder: it is the log of the last start.": "Ao relatar um problema, anexe o last_run.log da pasta do port: é o registro da última partida.",
    "Launcher options, system tools and the log of the last start.": "Opções do launcher, ferramentas do sistema e o registro da última partida.",
    "Frame rate, render resolution and graphics card. Applied when the game starts.": "Taxa de quadros, resolução de renderização e placa de vídeo. Aplicado ao iniciar o jogo.",
-   "Your screen's shape: 21:9 and 32:9 are ultrawide monitors. Lists the render resolutions of that shape; the game widens its view to it.": "O formato da sua tela: 21:9 e 32:9 são monitores ultrawide. Mostra as resoluções de renderização desse formato; o jogo amplia a visão para ele."
+   "Your screen's shape: 21:9 and 32:9 are ultrawide monitors. Lists the render resolutions of that shape; the game widens its view to it.": "O formato da sua tela: 21:9 e 32:9 são monitores ultrawide. Mostra as resoluções de renderização desse formato; o jogo amplia a visão para ele.",
+   "Unlock all cosmetics and transmogs": "Desbloquear todos os cosméticos e transmogs",
+   "Every wing, pet, pennant and portrait frame of the game, season rewards included, and every legendary and set item look at the Mystic, in the account saves when the game starts (a backup is kept next to each). Some wings have no icon in the menus but show in game.": "Todas as asas, mascotes, pendões e molduras de retrato do jogo, recompensas de temporada incluídas, e todas as aparências de itens lendários e de conjunto na Mística, nos saves da conta quando o jogo inicia (uma cópia de segurança fica ao lado de cada um). Algumas asas não têm ícone nos menus, mas aparecem no jogo."
   },
   "es": {
    "The launcher cannot write to {}, so it cannot replace itself there. Open the releases page to download the new version by hand?": "El launcher no puede escribir en {}, así que no puede reemplazarse ahí. ¿Abrir la página de releases para descargar la versión nueva a mano?",
@@ -3136,7 +3138,9 @@
    "When you report a problem, attach last_run.log from the port folder: it is the log of the last start.": "Al informar de un problema, adjunta last_run.log de la carpeta del port: es el registro del último inicio.",
    "Launcher options, system tools and the log of the last start.": "Opciones del launcher, herramientas del sistema y el registro del último inicio.",
    "Frame rate, render resolution and graphics card. Applied when the game starts.": "Frecuencia de fotogramas, resolución de renderizado y tarjeta gráfica. Se aplica al iniciar el juego.",
-   "Your screen's shape: 21:9 and 32:9 are ultrawide monitors. Lists the render resolutions of that shape; the game widens its view to it.": "La forma de tu pantalla: 21:9 y 32:9 son monitores ultrapanorámicos. Muestra las resoluciones de renderizado de esa forma; el juego amplía su vista a ella."
+   "Your screen's shape: 21:9 and 32:9 are ultrawide monitors. Lists the render resolutions of that shape; the game widens its view to it.": "La forma de tu pantalla: 21:9 y 32:9 son monitores ultrapanorámicos. Muestra las resoluciones de renderizado de esa forma; el juego amplía su vista a ella.",
+   "Unlock all cosmetics and transmogs": "Desbloquear todos los cosméticos y transfiguraciones",
+   "Every wing, pet, pennant and portrait frame of the game, season rewards included, and every legendary and set item look at the Mystic, in the account saves when the game starts (a backup is kept next to each). Some wings have no icon in the menus but show in game.": "Todas las alas, mascotas, banderines y marcos de retrato del juego, recompensas de temporada incluidas, y todas las apariencias de objetos legendarios y de conjunto en la Mística, en las partidas de la cuenta al iniciar el juego (se guarda una copia junto a cada una). Algunas alas no tienen icono en los menús, pero se ven en el juego."
   },
   "pl": {
    "Polish": "Polski",
@@ -3457,7 +3461,9 @@
    "When you report a problem, attach last_run.log from the port folder: it is the log of the last start.": "Zgłaszając problem, dołącz plik last_run.log z folderu portu: to dziennik ostatniego uruchomienia.",
    "Launcher options, system tools and the log of the last start.": "Opcje launchera, narzędzia systemowe i dziennik ostatniego uruchomienia.",
    "Frame rate, render resolution and graphics card. Applied when the game starts.": "Liczba klatek, rozdzielczość renderowania i karta graficzna. Stosowane przy uruchomieniu gry.",
-   "Your screen's shape: 21:9 and 32:9 are ultrawide monitors. Lists the render resolutions of that shape; the game widens its view to it.": "Proporcje Twojego ekranu: 21:9 i 32:9 to monitory ultraszerokie. Pokazuje rozdzielczości renderowania o tych proporcjach; gra poszerza do nich widok."
+   "Your screen's shape: 21:9 and 32:9 are ultrawide monitors. Lists the render resolutions of that shape; the game widens its view to it.": "Proporcje Twojego ekranu: 21:9 i 32:9 to monitory ultraszerokie. Pokazuje rozdzielczości renderowania o tych proporcjach; gra poszerza do nich widok.",
+   "Unlock all cosmetics and transmogs": "Odblokuj wszystkie elementy kosmetyczne i transmogryfikacje",
+   "Every wing, pet, pennant and portrait frame of the game, season rewards included, and every legendary and set item look at the Mystic, in the account saves when the game starts (a backup is kept next to each). Some wings have no icon in the menus but show in game.": "Wszystkie skrzydła, zwierzaki, proporce i ramki portretu z gry, w tym nagrody sezonowe, oraz wszystkie wyglądy przedmiotów legendarnych i z zestawów u Mistyczki, w zapisach konta przy uruchomieniu gry (obok każdego zostaje kopia zapasowa). Niektóre skrzydła nie mają ikony w menu, ale są widoczne w grze."
   },
   "fr": {
    "Polish": "Polonais",
@@ -3523,7 +3529,9 @@
    "Sharpens the game's picture on its way to the window. Also in the in-game menu.": "Rend l'image du jeu plus nette en route vers la fenêtre. Aussi dans le menu du jeu.",
    "Spanish (Spain)": "Espagnol (Espagne)",
    "English (UK)": "Anglais (Royaume-Uni)",
-   "The language of the game's text and speech, on every start. Only the languages your dump ships are listed: each release has its own.": "La langue des textes et des voix du jeu, à chaque lancement. Seules les langues de votre dump sont proposées : chaque version a les siennes."
+   "The language of the game's text and speech, on every start. Only the languages your dump ships are listed: each release has its own.": "La langue des textes et des voix du jeu, à chaque lancement. Seules les langues de votre dump sont proposées : chaque version a les siennes.",
+   "Unlock all cosmetics and transmogs": "Débloquer tous les cosmétiques et transmogrifications",
+   "Every wing, pet, pennant and portrait frame of the game, season rewards included, and every legendary and set item look at the Mystic, in the account saves when the game starts (a backup is kept next to each). Some wings have no icon in the menus but show in game.": "Toutes les ailes, mascottes, fanions et cadres de portrait du jeu, récompenses de saison comprises, et toutes les apparences d'objets légendaires et d'ensemble chez la Mystique, dans les sauvegardes du compte au lancement du jeu (une copie est gardée à côté de chacune). Certaines ailes n'ont pas d'icône dans les menus mais s'affichent en jeu."
   },
   "de": {
    "Polish": "Polnisch",
@@ -3580,7 +3588,9 @@
    "Spanish (Latin America)": "Spanisch (Lateinamerika)",
    "Spanish (Spain)": "Spanisch (Spanien)",
    "English (UK)": "Englisch (Vereinigtes Königreich)",
-   "The language of the game's text and speech, on every start. Only the languages your dump ships are listed: each release has its own.": "Die Sprache von Text und Sprachausgabe des Spiels, bei jedem Start. Nur die Sprachen deines Dumps werden angezeigt: jede Version hat ihre eigenen."
+   "The language of the game's text and speech, on every start. Only the languages your dump ships are listed: each release has its own.": "Die Sprache von Text und Sprachausgabe des Spiels, bei jedem Start. Nur die Sprachen deines Dumps werden angezeigt: jede Version hat ihre eigenen.",
+   "Unlock all cosmetics and transmogs": "Alle kosmetischen Gegenstände und Transmogrifikationen freischalten",
+   "Every wing, pet, pennant and portrait frame of the game, season rewards included, and every legendary and set item look at the Mystic, in the account saves when the game starts (a backup is kept next to each). Some wings have no icon in the menus but show in game.": "Alle Flügel, Begleiter, Wimpel und Porträtrahmen des Spiels, Saisonbelohnungen eingeschlossen, und alle Aussehen legendärer und Set-Gegenstände bei der Mystikerin, in den Kontospielständen beim Spielstart (neben jedem bleibt eine Sicherung). Manche Flügel haben in den Menüs kein Symbol, sind im Spiel aber zu sehen."
   },
   "it": {
    "Polish": "Polacco",
@@ -5499,7 +5509,9 @@
   "When you report a problem, attach last_run.log from the port folder: it is the log of the last start.": "Сообщая о проблеме, приложите last_run.log из папки порта: это журнал последнего запуска.",
   "Launcher options, system tools and the log of the last start.": "Настройки лаунчера, системные инструменты и журнал последнего запуска.",
   "Frame rate, render resolution and graphics card. Applied when the game starts.": "Частота кадров, разрешение рендеринга и видеокарта. Применяется при запуске игры.",
-  "Your screen's shape: 21:9 and 32:9 are ultrawide monitors. Lists the render resolutions of that shape; the game widens its view to it.": "Форма вашего экрана: 21:9 и 32:9 — сверхширокие мониторы. Показывает разрешения рендеринга этой формы; игра расширяет обзор под неё."
+  "Your screen's shape: 21:9 and 32:9 are ultrawide monitors. Lists the render resolutions of that shape; the game widens its view to it.": "Форма вашего экрана: 21:9 и 32:9 — сверхширокие мониторы. Показывает разрешения рендеринга этой формы; игра расширяет обзор под неё.",
+  "Unlock all cosmetics and transmogs": "Открыть все косметические предметы и трансмогрификации",
+  "Every wing, pet, pennant and portrait frame of the game, season rewards included, and every legendary and set item look at the Mystic, in the account saves when the game starts (a backup is kept next to each). Some wings have no icon in the menus but show in game.": "Все крылья, питомцы, вымпелы и рамки портрета из игры, включая сезонные награды, и все облики легендарных и комплектных предметов у Мистика, в сохранениях учётной записи при запуске игры (рядом с каждым остаётся резервная копия). У некоторых крыльев нет значка в меню, но в игре они видны."
  },
  "windows_languages": {
   "25": "ru",

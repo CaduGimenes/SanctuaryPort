@@ -22,7 +22,7 @@ use crate::ui::follow::{follow, Cause};
 use crate::ui::play::{refuse_while_live, LiveAction};
 use crate::ui::theme;
 use crate::ui::widgets::{
-    choice_pairs, folder, min_width, row, section, select_pairs, Modal, SELECT_MIN,
+    checkbox, choice_pairs, folder, min_width, row, section, select_pairs, Modal, SELECT_MIN,
     SELECT_TEXT,
 };
 
@@ -398,6 +398,15 @@ pub fn view(state: &State) -> Element<'_, Message> {
         ),
         section(state.rtl, &tr(lang, "Saves")),
         backups_row(state),
+        checkbox(
+            state.rtl,
+            "unlock_cosmetics",
+            &tr(lang, "Unlock all cosmetics and transmogs"),
+            state.store.flag("unlock_cosmetics"),
+            Some(&hint(
+                "Every wing, pet, pennant and portrait frame of the game, season rewards included, and every legendary and set item look at the Mystic, in the account saves when the game starts (a backup is kept next to each). Some wings have no icon in the menus but show in game."
+            )),
+        ),
         section(state.rtl, &tr(lang, "Language")),
         row(
             state.rtl,
@@ -485,8 +494,12 @@ pub struct PkgStatus {
 }
 
 /// Where PKGs install: `~/Games/PS4` (the game in `<TITLE_ID>`, add-ons in `addcont/`).
+/// Windows has no `HOME`: the user folder. (Before, the path stayed relative and the add-ons
+/// landed in the launcher's own folder; run.py still looks there, GitHub #13.)
 pub fn pkg_games_dir() -> std::path::PathBuf {
     std::env::var_os("HOME")
+        .filter(|home| !home.is_empty())
+        .or_else(|| std::env::var_os("USERPROFILE").filter(|home| !home.is_empty()))
         .map(std::path::PathBuf::from)
         .unwrap_or_default()
         .join("Games")

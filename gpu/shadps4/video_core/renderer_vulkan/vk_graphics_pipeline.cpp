@@ -452,6 +452,15 @@ GraphicsPipeline::GraphicsPipeline(
     auto [pipeline_result, pipe] =
         CreateCachedGraphicsPipeline(device, pipeline_cache, pipeline_info, key,
                                      instance.GetPipelineBinaryGlobalKey(), binary_directory);
+    if (pipeline_result != vk::Result::eSuccess) {
+        // sanctuary: once more without any cache before giving up (GitHub #12: AMD's Windows
+        // driver failed here in the sessions after the first), and say which pipeline it was.
+        LOG_ERROR(Render_Vulkan, "Graphics pipeline {} failed ({}); retrying without caches",
+                  debug_str, vk::to_string(pipeline_result));
+        auto retry = device.createGraphicsPipelineUnique({}, pipeline_info);
+        pipeline_result = retry.result;
+        pipe = std::move(retry.value);
+    }
     ASSERT_MSG(pipeline_result == vk::Result::eSuccess, "Failed to create graphics pipeline: {}",
                vk::to_string(pipeline_result));
     pipeline = std::move(pipe);

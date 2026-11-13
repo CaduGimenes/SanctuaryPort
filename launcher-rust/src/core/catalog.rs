@@ -334,6 +334,7 @@ pub static SETTINGS: &[Setting] = &[
     ini("deferred_readback", Flag, Bool(true), true, 10),
     ini("cheat_double_jumps", Flag, Bool(false), true, 19),
     ini("cheat_very_hard", Flag, Bool(false), true, 18),
+    ini("unlock_cosmetics", Flag, Bool(false), true, 52),
     seeded("glyph_style", Pick(GLYPH_STYLES), Text("off"), 17),
     ini("mouse_prompt_distance", Kind::Int, Int(48), true, 22),
     ini("mouse_aim_style", Pick(AIM_STYLES), Text("0"), true, 24),
@@ -536,14 +537,14 @@ mod tests {
                 "cheat_very_hard"
             ]
         );
-        assert_eq!(keys.last(), Some(&"temporal_aa"));
+        assert_eq!(keys.last(), Some(&"unlock_cosmetics"));
         let shown: Vec<_> = rows.iter().filter(|s| s.written).map(|s| s.key).collect();
         assert_eq!(shown, SHOWN_INI_KEYS.iter().copied().collect::<Vec<_>>());
     }
 
     #[test]
     fn shown_ini_keys_are_the_47_controls_of_the_window() {
-        assert_eq!(SHOWN_INI_KEYS.len(), 48); // SanctuaryPort: + fsr1, rcas, rcas_strength, temporal_aa
+        assert_eq!(SHOWN_INI_KEYS.len(), 49); // SanctuaryPort: + fsr1, rcas, rcas_strength, temporal_aa, unlock_cosmetics
         for seeded in ["monitor", "hdr", "glyph_style"] {
             assert!(SHOWN_INI_KEYS.contains(&seeded), "{seeded}");
         }

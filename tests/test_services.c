@@ -104,6 +104,12 @@ int main(void) {
     assert(trophy_unlock_state(1,1,flags,&count)==0 && flags[1]==2u && !flags[0] && count==2);
     assert(trophy_unlock_state(1,1,NULL,&count)==TROPHY_INVALID && trophy_release(0)==TROPHY_INVALID);
     assert(!strcmp(last_notice,"Trophy unlocked (33)")); /* no list: the number */
+    { /* "id unix-time" per line; an older file (ids alone) still loads. */
+      FILE *f=fopen("out/trophies.txt","r"); int id=0; long long when=0;
+      assert(f && fscanf(f,"%d %lld",&id,&when)==2 && id==33 && when>1700000000LL); fclose(f);
+      f=fopen("out/trophies.txt","w"); fputs("5\n40 1790000000\n",f); fclose(f);
+      trophies_loaded=0; trophy_count=0; memset(trophy_flags,0,sizeof(trophy_flags));
+      assert(trophy_unlock_state(1,1,flags,&count)==0 && flags[0]==1u<<5 && flags[1]==1u<<8); }
 
     /* With the port's list: the name in the notice, and the platinum once its group is complete
      * (trophy 3 is an add-on's, another group, and does not count). */

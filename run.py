@@ -298,17 +298,27 @@ def main():
         # its own title first, then the known releases, then any other folder there.
         title = game_profiles.title_id(game)
         diablo3 = game_profiles.is_diablo3(game)
-        addcont_root = Path(base_game).resolve().parent / 'addcont'
+        # Also where the launcher installs add-on PKGs (Games/PS4/addcont in the home folder; on
+        # Windows older launchers resolved it against their own folder, GitHub #13): add-ons
+        # installed there were checked in the launcher but never reached the game.
+        addcont_roots = []
+        for root in (Path(base_game).resolve().parent / 'addcont',
+                     Path.home() / 'Games' / 'PS4' / 'addcont',
+                     PORT / 'Games' / 'PS4' / 'addcont',
+                     Path.cwd() / 'Games' / 'PS4' / 'addcont'):
+            if root.is_dir() and root.resolve() not in [r.resolve() for r in addcont_roots]:
+                addcont_roots.append(root)
         titles = [title] if title else []
         if diablo3:
             titles += [t for t in game_profiles.DIABLO3_TITLES if t != title]
-            if addcont_root.is_dir():
-                titles += sorted(p.name for p in addcont_root.iterdir() if p.is_dir() and p.name not in titles)
-        for candidate in titles:
-            addcont = addcont_root / candidate
-            if 'SANCTUARY_ADDCONT_DIR' not in env and addcont.is_dir():
-                env['SANCTUARY_ADDCONT_DIR'] = str(addcont)
-                print(f'Add-ons: {addcont}', flush=True)
+            for root in addcont_roots:
+                titles += sorted(p.name for p in root.iterdir() if p.is_dir() and p.name not in titles)
+        for addcont_root in addcont_roots:
+            for candidate in titles:
+                addcont = addcont_root / candidate
+                if 'SANCTUARY_ADDCONT_DIR' not in env and addcont.is_dir():
+                    env['SANCTUARY_ADDCONT_DIR'] = str(addcont)
+                    print(f'Add-ons: {addcont}', flush=True)
         # Some dumps keep the add-ons inside the game folder instead: use it when no addcont/
         # folder was found.
         if diablo3 and 'SANCTUARY_ADDCONT_DIR' not in env and game_profiles.inline_addons(base_game):
@@ -410,6 +420,15 @@ def main():
                 print(f'Saves backed up to {made}', flush=True)
         except OSError as error:
             print(f'Save backup failed, starting anyway: {error}', flush=True)
+        # Launcher › Game › Saves: unlock every cosmetic and transmog appearance
+        # (scripts/cosmetics.py) in the account saves, after the backup above; saves without
+        # anything new are left untouched.
+        if diablo3 and graphics_ini(env).get('unlock_cosmetics') in ('1', 'true'):
+            import cosmetics
+            try:
+                cosmetics.main(['cosmetics.py', 'unlock', str(user_dir / 'savedata')])
+            except (OSError, ValueError, SystemExit) as error:
+                print(f'Cosmetics: not unlocked ({error}), starting anyway', flush=True)
         this = ['--run'] if getattr(sys, 'frozen', False) else [str(Path(__file__).resolve())]
         # Windows: the probe starts the new launch and ends, so it waits for this process. Linux:
         # the probe replaces itself with the new launch while this process still waits for it.

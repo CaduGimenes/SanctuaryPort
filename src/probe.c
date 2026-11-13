@@ -720,6 +720,12 @@ static int cpu_supported(char *missing, size_t size) {
 }
 
 int main(int argc, char **argv) {
+#ifndef _WIN32
+    /* SANCTUARY_DEBUGGABLE=1 (development): any process of this user may read this one's memory
+     * (tools that inspect the game's data while it runs). */
+    { const char *d = getenv("SANCTUARY_DEBUGGABLE");
+      if (d && d[0] == '1') prctl(PR_SET_PTRACER, PR_SET_PTRACER_ANY, 0, 0, 0); }
+#endif
     setvbuf(stdout, NULL, _IONBF, 0);
 #ifndef _WIN32
     /* Keep host heap objects handed to the guest (thread handles, TLS) in the

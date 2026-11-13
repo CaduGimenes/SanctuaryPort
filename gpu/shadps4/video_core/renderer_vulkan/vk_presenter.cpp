@@ -905,8 +905,7 @@ void Presenter::Present(Frame* frame, bool is_reusing_frame, bool is_game_frame)
         const auto shown = Clock::now();
         const auto half = std::chrono::duration<double, std::milli>(
             std::clamp(real_interval_ms * 0.5, 2.0, 25.0));
-        static const bool nosleep = std::getenv("FG_NOSLEEP") != nullptr; // TEMP
-        if (!nosleep) std::this_thread::sleep_until(shown + std::chrono::duration_cast<Clock::duration>(half));
+        std::this_thread::sleep_until(shown + std::chrono::duration_cast<Clock::duration>(half));
     }
     // Free the frame for reuse
     const auto free_frame = [&] {

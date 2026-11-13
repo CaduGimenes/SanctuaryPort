@@ -507,7 +507,8 @@ static ABI int32_t ime_result(uint32_t *result) {
 }
 static ABI int32_t ime_term(void) { memset(&ime,0,sizeof(ime)); return 0; }
 
-/* ---- Trophies: unlocks are kept in <user>/trophies.txt (one id per line) and shown on screen.
+/* ---- Trophies: unlocks are kept in <user>/trophies.txt ("id unix-time" per line; older files
+ * have the id alone) and shown on screen.
  * The names come from the port's list (SANCTUARY_TROPHY_LIST: run.py writes out/trophies.tsv from
  * assets/trophies/<game>.json, "id<TAB>tier<TAB>group<TAB>name" per line): the game's own texts
  * (TROPCONF.ESFM) need Sony's trophy key. As on a PS4, the platinum comes by itself once every
@@ -522,7 +523,9 @@ static void trophies_load(void) {
     trophies_loaded=1;
     snprintf(trophy_path,sizeof(trophy_path),"%s/trophies.txt",runtime_file_user_dir());
     FILE *file=fopen(trophy_path,"r");
-    for (int id; file && fscanf(file,"%d",&id)==1;) if (id>=0 && id<128) trophy_flags[id/32]|=1u<<id%32;
+    char row[64];
+    for (int id; file && fgets(row,sizeof(row),file);)
+        if (sscanf(row,"%d",&id)==1 && id>=0 && id<128) trophy_flags[id/32]|=1u<<id%32;
     if (file) fclose(file);
     const char *list=getenv("SANCTUARY_TROPHY_LIST");
     FILE *names=list && *list ? fopen(list,"r") : NULL;
@@ -579,7 +582,8 @@ static int trophy_has(int id) { return (trophy_flags[id/32]>>id%32)&1; }
 static void trophy_record(int id) {
     trophy_flags[id/32]|=1u<<id%32;
     FILE *file=fopen(trophy_path,"a");
-    if (file) { fprintf(file,"%d\n",id); fclose(file); }
+    /* The unlock time (Unix seconds) after the id: trophy trackers show it (GitHub #3). */
+    if (file) { fprintf(file,"%d %lld\n",id,(long long)time(NULL)); fclose(file); }
 }
 /* The platinum of id's group when id completed it (every other listed trophy of the group is
  * unlocked and the platinum is not yet), else -1; lock held. */

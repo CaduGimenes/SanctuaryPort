@@ -22,7 +22,7 @@ strip "$share/sanctuaryport-launcher"
 install -m755 run.sh "$share/run.sh"
 cp run.py LICENSE README.md COMO_JOGAR.md "$share/"
 cp -r scripts patches "$share/"
-cp -r assets/glyphs assets/trophies "$share/assets/"
+cp -r assets/glyphs assets/trophies assets/cosmetics "$share/assets/"
 # launcher/sanctuaryport.png marks the port folder for the launcher (paths::default_port_dir).
 for file in sanctuaryport.png sanctuary.png Cinzel-Black.ttf OFL-Cinzel.txt; do
     install -m644 "launcher/$file" "$share/launcher/$file"

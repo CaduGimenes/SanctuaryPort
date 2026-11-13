@@ -391,6 +391,8 @@ vk::ResultValue<vk::UniquePipeline> CreateCachedGraphicsPipeline(
     auto result = create(nullptr, captured_info, false);
     if (result.result != vk::Result::eSuccess) {
         ++binary_errors;
+        LOG_WARNING(Render_Vulkan, "Pipeline with captured data failed: {}; built without it",
+                    vk::to_string(result.result));
         return create(cache, info, false);
     }
     VkReleaseCapturedPipelineDataInfoKHR release{

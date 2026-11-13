@@ -1,0 +1,8234 @@
+{
+ "note": "Diablo III cosmetic table (wings, pets, pennants, portrait frames) in the order of the account save bitfield (SavedDefinition.account_wide_cosmetic_item_data): index = bit. gbid = hash of the internal name (h = h*33 + c over the lowercase name, int32). Read from CUSA00242/CUSA00243 1.47 at run time (tools/d3save.py, HANDOFF).",
+ "items": [
+  {
+   "bit": 0,
+   "gbid": 1081301157,
+   "name": "Cosmetic_Wings_Blue"
+  },
+  {
+   "bit": 1,
+   "gbid": 1464422747,
+   "name": "Cosmetic_Wings_Bug"
+  },
+  {
+   "bit": 2,
+   "gbid": 1464439640,
+   "name": "Cosmetic_Wings_Red"
+  },
+  {
+   "bit": 3,
+   "gbid": 1030142027,
+   "name": "Cosmetic_Wings_Imperius"
+  },
+  {
+   "bit": 4,
+   "gbid": 988742338,
+   "name": "Cosmetic_Pet_FallenHound_Skeletal"
+  },
+  {
+   "bit": 5,
+   "gbid": -937743655,
+   "name": "Cosmetic_WoD_Flag"
+  },
+  {
+   "bit": 6,
+   "gbid": 1245039173,
+   "name": "Cosmetic_Portrait_Frame_1"
+  },
+  {
+   "bit": 7,
+   "gbid": 393991534,
+   "name": "Art_Test_Pennant_6"
+  },
+  {
+   "bit": 8,
+   "gbid": 208405024,
+   "name": "Cosmetic_Wings_demonic_blackBlue"
+  },
+  {
+   "bit": 9,
+   "gbid": 393991531,
+   "name": "Art_Test_Pennant_3"
+  },
+  {
+   "bit": 10,
+   "gbid": 703352258,
+   "name": "Art_Test_Pet_5"
+  },
+  {
+   "bit": 11,
+   "gbid": 703352254,
+   "name": "Art_Test_Pet_1"
+  },
+  {
+   "bit": 12,
+   "gbid": 2015178386,
+   "name": "Cosmetic_Wings_angel_flame_cyan"
+  },
+  {
+   "bit": 13,
+   "gbid": -1863380202,
+   "name": "Cosmetic_Portrait_Frame_11"
+  },
+  {
+   "bit": 14,
+   "gbid": 263764950,
+   "name": "Cosmetic_Portrait_Paragon_50"
+  },
+  {
+   "bit": 15,
+   "gbid": -1527508877,
+   "name": "Cosmetic_Pet_teddyBear_02"
+  },
+  {
+   "bit": 16,
+   "gbid": -1527508876,
+   "name": "Cosmetic_Pet_teddyBear_03"
+  },
+  {
+   "bit": 17,
+   "gbid": 393991529,
+   "name": "Art_Test_Pennant_1"
+  },
+  {
+   "bit": 18,
+   "gbid": 114305539,
+   "name": "Cosmetic_Portrait_Paragon_200"
+  },
+  {
+   "bit": 19,
+   "gbid": 114306628,
+   "name": "Cosmetic_Portrait_Paragon_300"
+  },
+  {
+   "bit": 20,
+   "gbid": 177825850,
+   "name": "cos_pennant_03"
+  },
+  {
+   "bit": 21,
+   "gbid": -922089455,
+   "name": "Cosmetic_Wings_angel_twoTone_greyscale"
+  },
+  {
+   "bit": 22,
+   "gbid": 703352255,
+   "name": "Art_Test_Pet_2"
+  },
+  {
+   "bit": 23,
+   "gbid": 703352257,
+   "name": "Art_Test_Pet_4"
+  },
+  {
+   "bit": 24,
+   "gbid": 703352259,
+   "name": "Art_Test_Pet_6"
+  },
+  {
+   "bit": 25,
+   "gbid": -1863380232,
+   "name": "Cosmetic_Portrait_Frame_04"
+  },
+  {
+   "bit": 26,
+   "gbid": 262300867,
+   "name": "Cosmetic_Wings_angel_flame_orange"
+  },
+  {
+   "bit": 27,
+   "gbid": -1863380235,
+   "name": "Cosmetic_Portrait_Frame_01"
+  },
+  {
+   "bit": 28,
+   "gbid": 114304450,
+   "name": "Cosmetic_Portrait_Paragon_100"
+  },
+  {
+   "bit": 29,
+   "gbid": 263765049,
+   "name": "Cosmetic_Portrait_Paragon_80"
+  },
+  {
+   "bit": 30,
+   "gbid": -1863380203,
+   "name": "Cosmetic_Portrait_Frame_10"
+  },
+  {
+   "bit": 31,
+   "gbid": 263765016,
+   "name": "Cosmetic_Portrait_Paragon_70"
+  },
+  {
+   "bit": 32,
+   "gbid": 703352256,
+   "name": "Art_Test_Pet_3"
+  },
+  {
+   "bit": 33,
+   "gbid": 1464422100,
+   "name": "Cosmetic_Wings_bat"
+  },
+  {
+   "bit": 34,
+   "gbid": 263765082,
+   "name": "Cosmetic_Portrait_Paragon_90"
+  },
+  {
+   "bit": 35,
+   "gbid": -1647814559,
+   "name": "Cosmetic_Pet_thousandPounder"
+  },
+  {
+   "bit": 36,
+   "gbid": 263764851,
+   "name": "Cosmetic_Portrait_Paragon_20"
+  },
+  {
+   "bit": 37,
+   "gbid": 177825849,
+   "name": "cos_pennant_02"
+  },
+  {
+   "bit": 38,
+   "gbid": 114310984,
+   "name": "Cosmetic_Portrait_Paragon_700"
+  },
+  {
+   "bit": 39,
+   "gbid": 393991532,
+   "name": "Art_Test_Pennant_4"
+  },
+  {
+   "bit": 40,
+   "gbid": 263764917,
+   "name": "Cosmetic_Portrait_Paragon_40"
+  },
+  {
+   "bit": 41,
+   "gbid": -1944264991,
+   "name": "Cosmetic_Portrait_Paragon_0"
+  },
+  {
+   "bit": 42,
+   "gbid": 2046555709,
+   "name": "Art_Test_Wings_1"
+  },
+  {
+   "bit": 43,
+   "gbid": 177825852,
+   "name": "cos_pennant_05"
+  },
+  {
+   "bit": 44,
+   "gbid": -1454306710,
+   "name": "Cosmetic_Wings_angel_twoTone_purple"
+  },
+  {
+   "bit": 45,
+   "gbid": 208454467,
+   "name": "Cosmetic_Wings_demonic_blackCyan"
+  },
+  {
+   "bit": 46,
+   "gbid": 2046555710,
+   "name": "Art_Test_Wings_2"
+  },
+  {
+   "bit": 47,
+   "gbid": 263764818,
+   "name": "Cosmetic_Portrait_Paragon_10"
+  },
+  {
+   "bit": 48,
+   "gbid": 114307717,
+   "name": "Cosmetic_Portrait_Paragon_400"
+  },
+  {
+   "bit": 49,
+   "gbid": 393991530,
+   "name": "Art_Test_Pennant_2"
+  },
+  {
+   "bit": 50,
+   "gbid": -1815774861,
+   "name": "Cosmetic_Wings_demonic_blackRed"
+  },
+  {
+   "bit": 51,
+   "gbid": -1863380231,
+   "name": "Cosmetic_Portrait_Frame_05"
+  },
+  {
+   "bit": 52,
+   "gbid": -1944264990,
+   "name": "Cosmetic_Portrait_Paragon_1"
+  },
+  {
+   "bit": 53,
+   "gbid": -1863380233,
+   "name": "Cosmetic_Portrait_Frame_03"
+  },
+  {
+   "bit": 54,
+   "gbid": -1863380227,
+   "name": "Cosmetic_Portrait_Frame_09"
+  },
+  {
+   "bit": 55,
+   "gbid": -1863380201,
+   "name": "Cosmetic_Portrait_Frame_12"
+  },
+  {
+   "bit": 56,
+   "gbid": 263764983,
+   "name": "Cosmetic_Portrait_Paragon_60"
+  },
+  {
+   "bit": 57,
+   "gbid": 263764884,
+   "name": "Cosmetic_Portrait_Paragon_30"
+  },
+  {
+   "bit": 58,
+   "gbid": -2072242152,
+   "name": "Cosmetic_Wings_angel_twoTone_gold"
+  },
+  {
+   "bit": 59,
+   "gbid": 2046555713,
+   "name": "Art_Test_Wings_5"
+  },
+  {
+   "bit": 60,
+   "gbid": 114312073,
+   "name": "Cosmetic_Portrait_Paragon_800"
+  },
+  {
+   "bit": 61,
+   "gbid": -1527508875,
+   "name": "Cosmetic_Pet_teddyBear_04"
+  },
+  {
+   "bit": 62,
+   "gbid": 2046555711,
+   "name": "Art_Test_Wings_3"
+  },
+  {
+   "bit": 63,
+   "gbid": 211305012,
+   "name": "Cosmetic_Wings_demonic_blackYellow"
+  },
+  {
+   "bit": 64,
+   "gbid": -1527508878,
+   "name": "Cosmetic_Pet_teddyBear_01"
+  },
+  {
+   "bit": 65,
+   "gbid": 177825851,
+   "name": "cos_pennant_04"
+  },
+  {
+   "bit": 66,
+   "gbid": 291388174,
+   "name": "Cosmetic_Pet_fallenHound_01"
+  },
+  {
+   "bit": 67,
+   "gbid": -1863380229,
+   "name": "Cosmetic_Portrait_Frame_07"
+  },
+  {
+   "bit": 68,
+   "gbid": 114308806,
+   "name": "Cosmetic_Portrait_Paragon_500"
+  },
+  {
+   "bit": 69,
+   "gbid": 393991533,
+   "name": "Art_Test_Pennant_5"
+  },
+  {
+   "bit": 70,
+   "gbid": 2046555712,
+   "name": "Art_Test_Wings_4"
+  },
+  {
+   "bit": 71,
+   "gbid": -1863380234,
+   "name": "Cosmetic_Portrait_Frame_02"
+  },
+  {
+   "bit": 72,
+   "gbid": -1863380228,
+   "name": "Cosmetic_Portrait_Frame_08"
+  },
+  {
+   "bit": 73,
+   "gbid": -1863380230,
+   "name": "Cosmetic_Portrait_Frame_06"
+  },
+  {
+   "bit": 74,
+   "gbid": -1863380200,
+   "name": "Cosmetic_Portrait_Frame_13"
+  },
+  {
+   "bit": 75,
+   "gbid": 177825848,
+   "name": "cos_pennant_01"
+  },
+  {
+   "bit": 76,
+   "gbid": 114309895,
+   "name": "Cosmetic_Portrait_Paragon_600"
+  },
+  {
+   "bit": 77,
+   "gbid": 1275862571,
+   "name": null
+  },
+  {
+   "bit": 78,
+   "gbid": 702834903,
+   "name": "Cosmetic_Wings_bat_04"
+  },
+  {
+   "bit": 79,
+   "gbid": 702834904,
+   "name": "Cosmetic_Wings_bat_05"
+  },
+  {
+   "bit": 80,
+   "gbid": 393991536,
+   "name": "Art_Test_Pennant_8"
+  },
+  {
+   "bit": 81,
+   "gbid": 393991535,
+   "name": "Art_Test_Pennant_7"
+  },
+  {
+   "bit": 82,
+   "gbid": 2046555715,
+   "name": "Art_Test_Wings_7"
+  },
+  {
+   "bit": 83,
+   "gbid": 2046555714,
+   "name": "Art_Test_Wings_6"
+  },
+  {
+   "bit": 84,
+   "gbid": -1863380198,
+   "name": "Cosmetic_Portrait_Frame_15"
+  },
+  {
+   "bit": 85,
+   "gbid": 702834905,
+   "name": "Cosmetic_Wings_bat_06"
+  },
+  {
+   "bit": 86,
+   "gbid": -1604783273,
+   "name": null
+  },
+  {
+   "bit": 87,
+   "gbid": 702834901,
+   "name": "Cosmetic_Wings_bat_02"
+  },
+  {
+   "bit": 88,
+   "gbid": 517654224,
+   "name": "Cosmetic_Pet_ProtossProbe"
+  },
+  {
+   "bit": 89,
+   "gbid": -1863380199,
+   "name": "Cosmetic_Portrait_Frame_14"
+  },
+  {
+   "bit": 90,
+   "gbid": 702834902,
+   "name": "Cosmetic_Wings_bat_03"
+  },
+  {
+   "bit": 91,
+   "gbid": 949147390,
+   "name": "Cosmetic_PortraitFrame_AngelvsDemon_T3"
+  },
+  {
+   "bit": 92,
+   "gbid": 1404174869,
+   "name": "Cosmetic_Pet_jadeSerpent_03"
+  },
+  {
+   "bit": 93,
+   "gbid": 1666320302,
+   "name": "Cosmetic_PortraitFrame_Crusader"
+  },
+  {
+   "bit": 94,
+   "gbid": 586020315,
+   "name": "Cosmetic_Portrait_Frame_HellStar_T5"
+  },
+  {
+   "bit": 95,
+   "gbid": -2120012502,
+   "name": "Cosmetic_PortraitFrame_Imperius_T4"
+  },
+  {
+   "bit": 96,
+   "gbid": -1863380170,
+   "name": "Cosmetic_Portrait_Frame_20"
+  },
+  {
+   "bit": 97,
+   "gbid": 360887078,
+   "name": "Cosmetic_Portrait_Frame_Soulstone_T3"
+  },
+  {
+   "bit": 98,
+   "gbid": 409592465,
+   "name": "Cosmetic_PortraitFrame_Heaven_T2"
+  },
+  {
+   "bit": 99,
+   "gbid": -1650237611,
+   "name": "cos_pennant_p4_ZodiacHorse_01"
+  },
+  {
+   "bit": 100,
+   "gbid": 938200550,
+   "name": "cos_pennant_p4_setDngn_Wiz"
+  },
+  {
+   "bit": 101,
+   "gbid": 455845058,
+   "name": "cos_pennant_p4_ZodiacRooster_01"
+  },
+  {
+   "bit": 102,
+   "gbid": 116818617,
+   "name": "Art_Test_Pennant_10"
+  },
+  {
+   "bit": 103,
+   "gbid": -403974312,
+   "name": "Cosmetic_Wings_Shiva_01"
+  },
+  {
+   "bit": 104,
+   "gbid": 28430311,
+   "name": "cos_pennant_p4_setDngn_WD"
+  },
+  {
+   "bit": 105,
+   "gbid": 116818626,
+   "name": "Art_Test_Pennant_19"
+  },
+  {
+   "bit": 106,
+   "gbid": 1508058349,
+   "name": "Cosmetic_Pet_goatman_melee_02"
+  },
+  {
+   "bit": 107,
+   "gbid": 466824273,
+   "name": "Cosmetic_PortraitFrame_EternalWoods_T2"
+  },
+  {
+   "bit": 108,
+   "gbid": 116818651,
+   "name": "Art_Test_Pennant_21"
+  },
+  {
+   "bit": 109,
+   "gbid": 702834906,
+   "name": "Cosmetic_wings_bat_07"
+  },
+  {
+   "bit": 110,
+   "gbid": 895493953,
+   "name": "cos_pennant_p4_setDngn_Monk"
+  },
+  {
+   "bit": 111,
+   "gbid": -1380721408,
+   "name": "Cosmetic_Portrait_Frame_S4_T2"
+  },
+  {
+   "bit": 112,
+   "gbid": 116818621,
+   "name": "Art_Test_Pennant_14"
+  },
+  {
+   "bit": 113,
+   "gbid": -1380685472,
+   "name": "Cosmetic_Portrait_Frame_S5_T1"
+  },
+  {
+   "bit": 114,
+   "gbid": 1404174867,
+   "name": "Cosmetic_Pet_jadeSerpent_01"
+  },
+  {
+   "bit": 115,
+   "gbid": -1380721405,
+   "name": "Cosmetic_Portrait_Frame_S4_T5"
+  },
+  {
+   "bit": 116,
+   "gbid": -83682124,
+   "name": "cos_pennant_harvest_01"
+  },
+  {
+   "bit": 117,
+   "gbid": -1380721407,
+   "name": "Cosmetic_Portrait_Frame_S4_T3"
+  },
+  {
+   "bit": 118,
+   "gbid": 409592467,
+   "name": "Cosmetic_PortraitFrame_Heaven_T4"
+  },
+  {
+   "bit": 119,
+   "gbid": -1380685469,
+   "name": "Cosmetic_Portrait_Frame_S5_T4"
+  },
+  {
+   "bit": 120,
+   "gbid": -1686273653,
+   "name": "Cosmetic_PortraitFrame_BloodshardEncrusted_T4"
+  },
+  {
+   "bit": 121,
+   "gbid": 949147387,
+   "name": "Cosmetic_PortraitFrame_AngelvsDemon_T0"
+  },
+  {
+   "bit": 122,
+   "gbid": -1863380169,
+   "name": "Cosmetic_Portrait_Frame_21"
+  },
+  {
+   "bit": 123,
+   "gbid": 1735787955,
+   "name": "Art_Test_Pet_15"
+  },
+  {
+   "bit": 124,
+   "gbid": 1898911879,
+   "name": "Cosmetic_Portrait_Frame_TalRasha_T0"
+  },
+  {
+   "bit": 125,
+   "gbid": 2129557714,
+   "name": "Cosmetic_PortraitFrame_PandemoniumFortress_T5"
+  },
+  {
+   "bit": 126,
+   "gbid": 1156357301,
+   "name": "cos_pennant_p4_bookofCain_01"
+  },
+  {
+   "bit": 127,
+   "gbid": 423580970,
+   "name": "Cosmetic_PortraitFrame_Monk"
+  },
+  {
+   "bit": 128,
+   "gbid": 1497375554,
+   "name": "Cosmetic_Pet_thousandPounder_02"
+  },
+  {
+   "bit": 129,
+   "gbid": 861216371,
+   "name": "Console_pennant_p4_setDngn_cdr"
+  },
+  {
+   "bit": 130,
+   "gbid": 1209305989,
+   "name": "Cosmetic_Pet_spider_01"
+  },
+  {
+   "bit": 131,
+   "gbid": -674024205,
+   "name": "Cosmetic_Pet_crawlingHand_04"
+  },
+  {
+   "bit": 132,
+   "gbid": -2120012506,
+   "name": "Cosmetic_PortraitFrame_Imperius_T0"
+  },
+  {
+   "bit": 133,
+   "gbid": 1197521008,
+   "name": "Console_Wings_SetDngn_Mastery"
+  },
+  {
+   "bit": 134,
+   "gbid": 1336361310,
+   "name": "Cosmetic_Pet_FloatingSkull_02"
+  },
+  {
+   "bit": 135,
+   "gbid": -1099972160,
+   "name": "cos_pennant_bcon_2015"
+  },
+  {
+   "bit": 136,
+   "gbid": 2129557713,
+   "name": "Cosmetic_PortraitFrame_PandemoniumFortress_T4"
+  },
+  {
+   "bit": 137,
+   "gbid": -1141138017,
+   "name": "Cosmetic_Pet_destroyer_01"
+  },
+  {
+   "bit": 138,
+   "gbid": 590649887,
+   "name": "cos_pennant_p4_ZodiacGoat_01"
+  },
+  {
+   "bit": 139,
+   "gbid": 2113242414,
+   "name": "cos_pennant_p4_ZodiacDog_01"
+  },
+  {
+   "bit": 140,
+   "gbid": 1905890381,
+   "name": "cosmetic_wings_bfly_04"
+  },
+  {
+   "bit": 141,
+   "gbid": 291388179,
+   "name": "Cosmetic_Pet_fallenHound_06"
+  },
+  {
+   "bit": 142,
+   "gbid": 466824271,
+   "name": "Cosmetic_PortraitFrame_EternalWoods_T0"
+  },
+  {
+   "bit": 143,
+   "gbid": -1704491238,
+   "name": "Cosmetic_Wings_Illidan"
+  },
+  {
+   "bit": 144,
+   "gbid": 604200072,
+   "name": "Cosmetic_PortraitFrame_Overwatch"
+  },
+  {
+   "bit": 145,
+   "gbid": 291388178,
+   "name": "Cosmetic_Pet_fallenHound_05"
+  },
+  {
+   "bit": 146,
+   "gbid": -2120012504,
+   "name": "Cosmetic_PortraitFrame_Imperius_T2"
+  },
+  {
+   "bit": 147,
+   "gbid": 409592466,
+   "name": "Cosmetic_PortraitFrame_Heaven_T3"
+  },
+  {
+   "bit": 148,
+   "gbid": 1834718654,
+   "name": "Cosmetic_PortraitFrame_Demonhunter"
+  },
+  {
+   "bit": 149,
+   "gbid": -1863380168,
+   "name": "Cosmetic_Portrait_Frame_22"
+  },
+  {
+   "bit": 150,
+   "gbid": 1905890378,
+   "name": "Cosmetic_Wings_bfly_01"
+  },
+  {
+   "bit": 151,
+   "gbid": 1735787956,
+   "name": "Art_Test_Pet_16"
+  },
+  {
+   "bit": 152,
+   "gbid": 703352260,
+   "name": "Art_Test_Pet_7"
+  },
+  {
+   "bit": 153,
+   "gbid": 116818619,
+   "name": "Art_Test_Pennant_12"
+  },
+  {
+   "bit": 154,
+   "gbid": 2129557709,
+   "name": "Cosmetic_PortraitFrame_PandemoniumFortress_T0"
+  },
+  {
+   "bit": 155,
+   "gbid": -306795884,
+   "name": "Console_pennant_barbSigil_01"
+  },
+  {
+   "bit": 156,
+   "gbid": -1183138282,
+   "name": "Art_Test_Wings_19"
+  },
+  {
+   "bit": 157,
+   "gbid": 360887080,
+   "name": "Cosmetic_Portrait_Frame_Soulstone_T5"
+  },
+  {
+   "bit": 158,
+   "gbid": -424644769,
+   "name": "Cosmetic_Pet_wickerman"
+  },
+  {
+   "bit": 159,
+   "gbid": 1735787951,
+   "name": "Art_Test_Pet_11"
+  },
+  {
+   "bit": 160,
+   "gbid": -1893294376,
+   "name": "Cosmetic_Pet_Murkgoblin_01"
+  },
+  {
+   "bit": 161,
+   "gbid": 1898911883,
+   "name": "Cosmetic_Portrait_Frame_TalRasha_T4"
+  },
+  {
+   "bit": 162,
+   "gbid": 347688656,
+   "name": "Cosmetic_Pet_hoodednightmare_01"
+  },
+  {
+   "bit": 163,
+   "gbid": 789315591,
+   "name": "Cosmetic_Portrait_Frame_Adventure_T2"
+  },
+  {
+   "bit": 164,
+   "gbid": 1735787953,
+   "name": "Art_Test_Pet_13"
+  },
+  {
+   "bit": 165,
+   "gbid": -1183138287,
+   "name": "Art_Test_Wings_14"
+  },
+  {
+   "bit": 166,
+   "gbid": 586020310,
+   "name": "Cosmetic_Portrait_Frame_HellStar_T0"
+  },
+  {
+   "bit": 167,
+   "gbid": -633830173,
+   "name": "Cosmetic_PortraitFrame_TreasureGoblin_T5"
+  },
+  {
+   "bit": 168,
+   "gbid": 1905890383,
+   "name": "Cosmetic_Wings_bfly_06"
+  },
+  {
+   "bit": 169,
+   "gbid": -1863380196,
+   "name": "Cosmetic_Portrait_Frame_17"
+  },
+  {
+   "bit": 170,
+   "gbid": -61128984,
+   "name": "cos_pennant_p4_ZodiacRabbit_01"
+  },
+  {
+   "bit": 171,
+   "gbid": 1898911880,
+   "name": "Cosmetic_Portrait_Frame_TalRasha_T1"
+  },
+  {
+   "bit": 172,
+   "gbid": -1183138285,
+   "name": "Art_Test_Wings_16"
+  },
+  {
+   "bit": 173,
+   "gbid": 586020312,
+   "name": "Cosmetic_Portrait_Frame_HellStar_T2"
+  },
+  {
+   "bit": 174,
+   "gbid": 895083523,
+   "name": "cos_pennant_p4_setDngn_Barb"
+  },
+  {
+   "bit": 175,
+   "gbid": 360887075,
+   "name": "Cosmetic_Portrait_Frame_Soulstone_T0"
+  },
+  {
+   "bit": 176,
+   "gbid": -1527508873,
+   "name": "Cosmetic_Pet_teddybear_06"
+  },
+  {
+   "bit": 177,
+   "gbid": -1183138284,
+   "name": "Art_Test_Wings_17"
+  },
+  {
+   "bit": 178,
+   "gbid": -633830178,
+   "name": "Cosmetic_PortraitFrame_TreasureGoblin_T0"
+  },
+  {
+   "bit": 179,
+   "gbid": -1863380194,
+   "name": "Cosmetic_Portrait_Frame_19"
+  },
+  {
+   "bit": 180,
+   "gbid": -1183138255,
+   "name": "Art_Test_Wings_23"
+  },
+  {
+   "bit": 181,
+   "gbid": -1200439285,
+   "name": "Cosmetic_Pet_succubus_01"
+  },
+  {
+   "bit": 182,
+   "gbid": -1866770376,
+   "name": "Console_pennant_wdSigil_01"
+  },
+  {
+   "bit": 183,
+   "gbid": 466824276,
+   "name": "Cosmetic_PortraitFrame_EternalWoods_T5"
+  },
+  {
+   "bit": 184,
+   "gbid": -864659297,
+   "name": "Cosmetic_Pet_VoodooDoll_01"
+  },
+  {
+   "bit": 185,
+   "gbid": 949147392,
+   "name": "Cosmetic_PortraitFrame_AngelvsDemon_T5"
+  },
+  {
+   "bit": 186,
+   "gbid": 703352261,
+   "name": "Art_Test_Pet_8"
+  },
+  {
+   "bit": 187,
+   "gbid": 1735787954,
+   "name": "Art_Test_Pet_14"
+  },
+  {
+   "bit": 188,
+   "gbid": -674024206,
+   "name": "Cosmetic_Pet_crawlingHand_03"
+  },
+  {
+   "bit": 189,
+   "gbid": 949147388,
+   "name": "Cosmetic_PortraitFrame_AngelvsDemon_T1"
+  },
+  {
+   "bit": 190,
+   "gbid": -1025273596,
+   "name": "cos_pennant_monkSigil_01"
+  },
+  {
+   "bit": 191,
+   "gbid": -1405558266,
+   "name": "Console_pennant_p4_setDngn_dh"
+  },
+  {
+   "bit": 192,
+   "gbid": -1644259505,
+   "name": "Console_pennant_p4_setDngn_monk"
+  },
+  {
+   "bit": 193,
+   "gbid": 95923716,
+   "name": "Cosmetic_Pet_gluttony_01"
+  },
+  {
+   "bit": 194,
+   "gbid": -633830174,
+   "name": "Cosmetic_PortraitFrame_TreasureGoblin_T4"
+  },
+  {
+   "bit": 195,
+   "gbid": -674024207,
+   "name": "Cosmetic_Pet_crawlingHand_02"
+  },
+  {
+   "bit": 196,
+   "gbid": 1735787957,
+   "name": "Art_Test_Pet_17"
+  },
+  {
+   "bit": 197,
+   "gbid": -633830177,
+   "name": "Cosmetic_PortraitFrame_TreasureGoblin_T1"
+  },
+  {
+   "bit": 198,
+   "gbid": 116818622,
+   "name": "Art_Test_Pennant_15"
+  },
+  {
+   "bit": 199,
+   "gbid": 116818620,
+   "name": "Art_Test_Pennant_13"
+  },
+  {
+   "bit": 200,
+   "gbid": -935528369,
+   "name": "cos_pennant_p4_ZodiacTiger_01"
+  },
+  {
+   "bit": 201,
+   "gbid": 291388175,
+   "name": "Cosmetic_Pet_fallenHound_02"
+  },
+  {
+   "bit": 202,
+   "gbid": -1380685470,
+   "name": "Cosmetic_Portrait_Frame_S5_T3"
+  },
+  {
+   "bit": 203,
+   "gbid": 703352262,
+   "name": "Art_Test_Pet_9"
+  },
+  {
+   "bit": 204,
+   "gbid": -1405557643,
+   "name": "Console_pennant_p4_setDngn_wd"
+  },
+  {
+   "bit": 205,
+   "gbid": 409592468,
+   "name": "Cosmetic_PortraitFrame_Heaven_T5"
+  },
+  {
+   "bit": 206,
+   "gbid": -1380685471,
+   "name": "Cosmetic_Portrait_Frame_S5_T2"
+  },
+  {
+   "bit": 207,
+   "gbid": 1769352763,
+   "name": "cos_pennant_p4_ZodiacOx_01"
+  },
+  {
+   "bit": 208,
+   "gbid": 393991537,
+   "name": "Art_Test_Pennant_9"
+  },
+  {
+   "bit": 209,
+   "gbid": -1686273652,
+   "name": "Cosmetic_PortraitFrame_BloodshardEncrusted_T5"
+  },
+  {
+   "bit": 210,
+   "gbid": -1686273654,
+   "name": "Cosmetic_PortraitFrame_BloodshardEncrusted_T3"
+  },
+  {
+   "bit": 211,
+   "gbid": -1686273656,
+   "name": "Cosmetic_PortraitFrame_BloodshardEncrusted_T1"
+  },
+  {
+   "bit": 212,
+   "gbid": 550271607,
+   "name": "Cosmetic_Wings_Seraphim_02"
+  },
+  {
+   "bit": 213,
+   "gbid": -1708606185,
+   "name": "Cosmetic_PortraitFrame_Barbarian"
+  },
+  {
+   "bit": 214,
+   "gbid": 224691469,
+   "name": "Console_Wings_SetDngn_Basic"
+  },
+  {
+   "bit": 215,
+   "gbid": -1380721406,
+   "name": "Cosmetic_Portrait_Frame_S4_T4"
+  },
+  {
+   "bit": 216,
+   "gbid": 1081297790,
+   "name": "Cosmetic_Wings_bird"
+  },
+  {
+   "bit": 217,
+   "gbid": 586020313,
+   "name": "Cosmetic_Portrait_Frame_HellStar_T3"
+  },
+  {
+   "bit": 218,
+   "gbid": 2129557711,
+   "name": "Cosmetic_PortraitFrame_PandemoniumFortress_T2"
+  },
+  {
+   "bit": 219,
+   "gbid": 116818624,
+   "name": "Art_Test_Pennant_17"
+  },
+  {
+   "bit": 220,
+   "gbid": 949147391,
+   "name": "Cosmetic_PortraitFrame_AngelvsDemon_T4"
+  },
+  {
+   "bit": 221,
+   "gbid": 1898911882,
+   "name": "Cosmetic_Portrait_Frame_TalRasha_T3"
+  },
+  {
+   "bit": 222,
+   "gbid": 1735787950,
+   "name": "Art_Test_Pet_10"
+  },
+  {
+   "bit": 223,
+   "gbid": -633830176,
+   "name": "Cosmetic_PortraitFrame_TreasureGoblin_T2"
+  },
+  {
+   "bit": 224,
+   "gbid": 1905890380,
+   "name": "Cosmetic_Wings_bfly_03"
+  },
+  {
+   "bit": 225,
+   "gbid": -1475100257,
+   "name": "Cosmetic_PortraitFrame_witchdoctor"
+  },
+  {
+   "bit": 226,
+   "gbid": 861238324,
+   "name": "Console_pennant_p4_setDngn_wiz"
+  },
+  {
+   "bit": 227,
+   "gbid": 116818625,
+   "name": "Art_Test_Pennant_18"
+  },
+  {
+   "bit": 228,
+   "gbid": 127020830,
+   "name": "cos_pennant_p2_Heroes"
+  },
+  {
+   "bit": 229,
+   "gbid": -1183138291,
+   "name": "Art_Test_Wings_10"
+  },
+  {
+   "bit": 230,
+   "gbid": 2129557710,
+   "name": "Cosmetic_PortraitFrame_PandemoniumFortress_T1"
+  },
+  {
+   "bit": 231,
+   "gbid": -1562301750,
+   "name": "cos_pennant_p2_Anniversary"
+  },
+  {
+   "bit": 232,
+   "gbid": 1428615110,
+   "name": "cos_pennant_barbSigil_01"
+  },
+  {
+   "bit": 233,
+   "gbid": 1377380860,
+   "name": "Cosmetic_Pet_demonTrooper_01"
+  },
+  {
+   "bit": 234,
+   "gbid": 938178597,
+   "name": "cos_pennant_p4_setDngn_Cdr"
+  },
+  {
+   "bit": 235,
+   "gbid": -1526517200,
+   "name": "Cosmetic_Pet_cowking_01"
+  },
+  {
+   "bit": 236,
+   "gbid": 1967180567,
+   "name": "Cosmetic_Pet_squire"
+  },
+  {
+   "bit": 237,
+   "gbid": -210446749,
+   "name": "Cosmetic_Pet_ghost_01"
+  },
+  {
+   "bit": 238,
+   "gbid": -1743135338,
+   "name": "Console_pennant_cdrSigil_01"
+  },
+  {
+   "bit": 239,
+   "gbid": 360887076,
+   "name": "Cosmetic_Portrait_Frame_Soulstone_T1"
+  },
+  {
+   "bit": 240,
+   "gbid": -1183138258,
+   "name": "Art_Test_Wings_20"
+  },
+  {
+   "bit": 241,
+   "gbid": 28429688,
+   "name": "cos_pennant_p4_setDngn_DH"
+  },
+  {
+   "bit": 242,
+   "gbid": 1508058348,
+   "name": "Cosmetic_Pet_goatman_melee_01"
+  },
+  {
+   "bit": 243,
+   "gbid": -1380721410,
+   "name": "Cosmetic_Portrait_Frame_S4_T0"
+  },
+  {
+   "bit": 244,
+   "gbid": 2046555717,
+   "name": "Art_Test_Wings_9"
+  },
+  {
+   "bit": 245,
+   "gbid": -1183138290,
+   "name": "Art_Test_Wings_11"
+  },
+  {
+   "bit": 246,
+   "gbid": 1375359175,
+   "name": "cos_pennant_p4_ZodiacMonkey_01"
+  },
+  {
+   "bit": 247,
+   "gbid": 1461474781,
+   "name": "Cosmetic_Portrait_Frame_Bcon_2015"
+  },
+  {
+   "bit": 248,
+   "gbid": 409592463,
+   "name": "Cosmetic_PortraitFrame_Heaven_T0"
+  },
+  {
+   "bit": 249,
+   "gbid": -674024208,
+   "name": "Cosmetic_Pet_crawlingHand_01"
+  },
+  {
+   "bit": 250,
+   "gbid": -1150262185,
+   "name": "Console_pennant_wizSigil_01"
+  },
+  {
+   "bit": 251,
+   "gbid": 218434287,
+   "name": "cos_pennant_p4_ZodiacDragon_01"
+  },
+  {
+   "bit": 252,
+   "gbid": 909568905,
+   "name": "Cosmetic_Pet_babysiege_01"
+  },
+  {
+   "bit": 253,
+   "gbid": -1183138288,
+   "name": "Art_Test_Wings_13"
+  },
+  {
+   "bit": 254,
+   "gbid": -1686273655,
+   "name": "Cosmetic_PortraitFrame_BloodshardEncrusted_T2"
+  },
+  {
+   "bit": 255,
+   "gbid": 2129557712,
+   "name": "Cosmetic_PortraitFrame_PandemoniumFortress_T3"
+  },
+  {
+   "bit": 256,
+   "gbid": 522011784,
+   "name": "cos_pennant_cdrSigil_01"
+  },
+  {
+   "bit": 257,
+   "gbid": 1404174868,
+   "name": "Cosmetic_Pet_jadeSerpent_02"
+  },
+  {
+   "bit": 258,
+   "gbid": 360887079,
+   "name": "Cosmetic_Portrait_Frame_Soulstone_T4"
+  },
+  {
+   "bit": 259,
+   "gbid": -1667979030,
+   "name": "cos_pennant_wdSigil_01"
+  },
+  {
+   "bit": 260,
+   "gbid": -1170181788,
+   "name": "cos_pennant_holloween_01"
+  },
+  {
+   "bit": 261,
+   "gbid": 671128753,
+   "name": "Cosmetic_Wings_SetDngn_Basic"
+  },
+  {
+   "bit": 262,
+   "gbid": 466824272,
+   "name": "Cosmetic_PortraitFrame_EternalWoods_T1"
+  },
+  {
+   "bit": 263,
+   "gbid": -1380685473,
+   "name": "Cosmetic_Portrait_Frame_S5_T0"
+  },
+  {
+   "bit": 264,
+   "gbid": 1898911881,
+   "name": "Cosmetic_Portrait_Frame_TalRasha_T2"
+  },
+  {
+   "bit": 265,
+   "gbid": -1380721409,
+   "name": "Cosmetic_Portrait_Frame_S4_T1"
+  },
+  {
+   "bit": 266,
+   "gbid": 586020311,
+   "name": "Cosmetic_Portrait_Frame_HellStar_T1"
+  },
+  {
+   "bit": 267,
+   "gbid": 949147389,
+   "name": "Cosmetic_PortraitFrame_AngelvsDemon_T2"
+  },
+  {
+   "bit": 268,
+   "gbid": 409592464,
+   "name": "Cosmetic_PortraitFrame_Heaven_T1"
+  },
+  {
+   "bit": 269,
+   "gbid": 116818618,
+   "name": "Art_Test_Pennant_11"
+  },
+  {
+   "bit": 270,
+   "gbid": 471039389,
+   "name": "Cosmetic_Pet_nightmare_01"
+  },
+  {
+   "bit": 271,
+   "gbid": 1905890379,
+   "name": "Cosmetic_Wings_bfly_02"
+  },
+  {
+   "bit": 272,
+   "gbid": 466824274,
+   "name": "Cosmetic_PortraitFrame_EternalWoods_T3"
+  },
+  {
+   "bit": 273,
+   "gbid": 291388176,
+   "name": "Cosmetic_Pet_fallenHound_03"
+  },
+  {
+   "bit": 274,
+   "gbid": -1183138286,
+   "name": "Art_Test_Wings_15"
+  },
+  {
+   "bit": 275,
+   "gbid": -1527508874,
+   "name": "Cosmetic_Pet_teddyBear_05"
+  },
+  {
+   "bit": 276,
+   "gbid": 1534282706,
+   "name": "Console_pennant_monkSigil_01"
+  },
+  {
+   "bit": 277,
+   "gbid": 116818650,
+   "name": "Art_Test_Pennant_20"
+  },
+  {
+   "bit": 278,
+   "gbid": 789315592,
+   "name": "Cosmetic_Portrait_Frame_Adventure_T3"
+  },
+  {
+   "bit": 279,
+   "gbid": -2120012501,
+   "name": "Cosmetic_PortraitFrame_Imperius_T5"
+  },
+  {
+   "bit": 280,
+   "gbid": 1905890382,
+   "name": "Cosmetic_Wings_bfly_05"
+  },
+  {
+   "bit": 281,
+   "gbid": 566077307,
+   "name": "cos_pennant_dhSigil_01"
+  },
+  {
+   "bit": 282,
+   "gbid": 2029657407,
+   "name": "Cosmetic_Wings_bird_02"
+  },
+  {
+   "bit": 283,
+   "gbid": -1863380195,
+   "name": "Cosmetic_Portrait_Frame_18"
+  },
+  {
+   "bit": 284,
+   "gbid": 789315593,
+   "name": "Cosmetic_Portrait_Frame_Adventure_T4"
+  },
+  {
+   "bit": 285,
+   "gbid": 1329910150,
+   "name": "cos_pennant_p4_ZodiacSnake_01"
+  },
+  {
+   "bit": 286,
+   "gbid": -1644669935,
+   "name": "Console_pennant_p4_setDngn_barb"
+  },
+  {
+   "bit": 287,
+   "gbid": -1863380197,
+   "name": "Cosmetic_Portrait_Frame_16"
+  },
+  {
+   "bit": 288,
+   "gbid": 586020314,
+   "name": "Cosmetic_Portrait_Frame_HellStar_T4"
+  },
+  {
+   "bit": 289,
+   "gbid": 1735787952,
+   "name": "Art_Test_Pet_12"
+  },
+  {
+   "bit": 290,
+   "gbid": 1335990173,
+   "name": "Cosmetic_Wings_Mercy"
+  },
+  {
+   "bit": 291,
+   "gbid": 1898911884,
+   "name": "Cosmetic_Portrait_Frame_TalRasha_T5"
+  },
+  {
+   "bit": 292,
+   "gbid": 1168709051,
+   "name": "Cosmetic_Pet_nephalem_golem_01"
+  },
+  {
+   "bit": 293,
+   "gbid": -997099603,
+   "name": "Cosmetic_Pet_mimic_01"
+  },
+  {
+   "bit": 294,
+   "gbid": 367285961,
+   "name": "Console_pennant_dhSigil_01"
+  },
+  {
+   "bit": 295,
+   "gbid": 1905890384,
+   "name": "Cosmetic_Wings_bfly_07"
+  },
+  {
+   "bit": 296,
+   "gbid": -1649965093,
+   "name": "cos_pennant_p4_ZodiacRat_01"
+  },
+  {
+   "bit": 297,
+   "gbid": -2072424806,
+   "name": "Cosmetic_Wings_angel_twoTone_blue"
+  },
+  {
+   "bit": 298,
+   "gbid": 789315589,
+   "name": "Cosmetic_Portrait_Frame_Adventure_T0"
+  },
+  {
+   "bit": 299,
+   "gbid": -1719215692,
+   "name": "cos_pennant_p4_ZodiacPig_01"
+  },
+  {
+   "bit": 300,
+   "gbid": -1183138289,
+   "name": "Art_Test_Wings_12"
+  },
+  {
+   "bit": 301,
+   "gbid": 1114884937,
+   "name": "cos_pennant_wizSigil_01"
+  },
+  {
+   "bit": 302,
+   "gbid": 2036418836,
+   "name": "Cosmetic_Wings_SetDngn_Mastery"
+  },
+  {
+   "bit": 303,
+   "gbid": 360887077,
+   "name": "Cosmetic_Portrait_Frame_Soulstone_T2"
+  },
+  {
+   "bit": 304,
+   "gbid": 550271606,
+   "name": "cosmetic_wings_seraphim_01"
+  },
+  {
+   "bit": 305,
+   "gbid": -633830175,
+   "name": "Cosmetic_PortraitFrame_TreasureGoblin_T3"
+  },
+  {
+   "bit": 306,
+   "gbid": 116818623,
+   "name": "Art_Test_Pennant_16"
+  },
+  {
+   "bit": 307,
+   "gbid": 291388177,
+   "name": "Cosmetic_Pet_fallenHound_04"
+  },
+  {
+   "bit": 308,
+   "gbid": 789315594,
+   "name": "Cosmetic_Portrait_Frame_Adventure_T5"
+  },
+  {
+   "bit": 309,
+   "gbid": 466824275,
+   "name": "Cosmetic_PortraitFrame_EternalWoods_T4"
+  },
+  {
+   "bit": 310,
+   "gbid": -1183138283,
+   "name": "Art_Test_Wings_18"
+  },
+  {
+   "bit": 311,
+   "gbid": 789315590,
+   "name": "Cosmetic_Portrait_Frame_Adventure_T1"
+  },
+  {
+   "bit": 312,
+   "gbid": -1183138256,
+   "name": "Art_Test_Wings_22"
+  },
+  {
+   "bit": 313,
+   "gbid": 1336361309,
+   "name": "Cosmetic_Pet_FloatingSkull_01"
+  },
+  {
+   "bit": 314,
+   "gbid": -1183138257,
+   "name": "Art_Test_Wings_21"
+  },
+  {
+   "bit": 315,
+   "gbid": -2120012505,
+   "name": "Cosmetic_PortraitFrame_Imperius_T1"
+  },
+  {
+   "bit": 316,
+   "gbid": -1380685468,
+   "name": "Cosmetic_Portrait_Frame_S5_T5"
+  },
+  {
+   "bit": 317,
+   "gbid": 471039390,
+   "name": "Cosmetic_Pet_nightmare_02"
+  },
+  {
+   "bit": 318,
+   "gbid": 567892925,
+   "name": "cosmetic_wings_andariel_01"
+  },
+  {
+   "bit": 319,
+   "gbid": 2102838278,
+   "name": "Cosmetic_PortraitFrame_Wizard"
+  },
+  {
+   "bit": 320,
+   "gbid": -1409455477,
+   "name": "cos_pennant_p4_bookofTyrael_01"
+  },
+  {
+   "bit": 321,
+   "gbid": -1686273657,
+   "name": "Cosmetic_PortraitFrame_BloodshardEncrusted_T0"
+  },
+  {
+   "bit": 322,
+   "gbid": 2046555716,
+   "name": "Art_Test_Wings_8"
+  },
+  {
+   "bit": 323,
+   "gbid": -2120012503,
+   "name": "Cosmetic_PortraitFrame_Imperius_T3"
+  },
+  {
+   "bit": 324,
+   "gbid": -562468112,
+   "name": "P5_Cosmetic_Wings_bfly_03"
+  },
+  {
+   "bit": 325,
+   "gbid": -562468108,
+   "name": "P5_Cosmetic_Wings_bfly_07"
+  },
+  {
+   "bit": 326,
+   "gbid": -1324221698,
+   "name": "P5_Cosmetic_wings_bat_07"
+  },
+  {
+   "bit": 327,
+   "gbid": -562468114,
+   "name": "P5_Cosmetic_Wings_bfly_01"
+  },
+  {
+   "bit": 328,
+   "gbid": 1292861222,
+   "name": "Cosmetic_Pennant_Harvest_01"
+  },
+  {
+   "bit": 329,
+   "gbid": -1967557379,
+   "name": "Cosmetic_Pet_bladedsoul_01"
+  },
+  {
+   "bit": 330,
+   "gbid": -819510535,
+   "name": "Cosmetic_Pet_yeti_01"
+  },
+  {
+   "bit": 331,
+   "gbid": -1324221701,
+   "name": "P5_Cosmetic_Wings_bat_04"
+  },
+  {
+   "bit": 332,
+   "gbid": -1162235772,
+   "name": "Cosmetic_Pet_zombie_01"
+  },
+  {
+   "bit": 333,
+   "gbid": -166853470,
+   "name": "P5_Cosmetic_Wings_bird"
+  },
+  {
+   "bit": 334,
+   "gbid": 1272126538,
+   "name": "P5_Cosmetic_Pennant_Harvest_01"
+  },
+  {
+   "bit": 335,
+   "gbid": 1742926680,
+   "name": "P5_cos_Pennant_Harvest_01"
+  },
+  {
+   "bit": 336,
+   "gbid": 1369935753,
+   "name": "Cosmetic_Pet_Diablo"
+  },
+  {
+   "bit": 337,
+   "gbid": -1183180088,
+   "name": "Cosmetic_PortraitFrame_RetroAngel"
+  },
+  {
+   "bit": 338,
+   "gbid": 167459531,
+   "name": "Cosmetic_Pet_Butcher"
+  },
+  {
+   "bit": 339,
+   "gbid": -1179938892,
+   "name": "Cosmetic_PortraitFrame_RetroDemon"
+  },
+  {
+   "bit": 340,
+   "gbid": 1729774130,
+   "name": "Cosmetic_Pet_MooCow"
+  },
+  {
+   "bit": 341,
+   "gbid": -106731398,
+   "name": "P6_Cosmetic_Wings_GhostKerrigan"
+  },
+  {
+   "bit": 342,
+   "gbid": 721772994,
+   "name": "P6_Cosmetic_Wings_NecroAchievement"
+  },
+  {
+   "bit": 343,
+   "gbid": -375765842,
+   "name": "Cosmetic_Pet_Diablo_Shadow"
+  },
+  {
+   "bit": 344,
+   "gbid": -1530075115,
+   "name": "P6_Cosmetic_Wings_twitch"
+  },
+  {
+   "bit": 345,
+   "gbid": 671111717,
+   "name": "cos_pennant_p6_setDngn_Necro"
+  },
+  {
+   "bit": 346,
+   "gbid": 726768249,
+   "name": "P6_Cosmetic_Wings_Necro"
+  },
+  {
+   "bit": 347,
+   "gbid": -465725498,
+   "name": "cos_pennant_NecroSigil_01"
+  },
+  {
+   "bit": 348,
+   "gbid": 2001444264,
+   "name": "Cosmetic_PortraitFrame_Twitch"
+  },
+  {
+   "bit": 349,
+   "gbid": -758173532,
+   "name": "Cosmetic_Pet_TaldarimProbe"
+  },
+  {
+   "bit": 350,
+   "gbid": -1036340648,
+   "name": "Cosmetic_Pet_Bloodling"
+  },
+  {
+   "bit": 351,
+   "gbid": 1094085036,
+   "name": "Cosmetic_PortraitFrame_Necro"
+  },
+  {
+   "bit": 352,
+   "gbid": -810103821,
+   "name": "cos_pennant_P6_necro"
+  },
+  {
+   "bit": 353,
+   "gbid": -1851634444,
+   "name": "Cosmetic_Pet_Murkromancer"
+  }
+ ],
+ "transmog_note": "Transmog appearances (legendary and set items): one bit per entry of the game's 1076-entry transmog table, in each partition's crafter_data.transmog_data. \"valid\" marks the 764 the game keeps when it loads a save with every bit set (it drops legacy item versions, placeholders and tests).",
+ "transmog": [
+  {
+   "bit": 0,
+   "gbid": 1841261931,
+   "name": "Unique_Gloves_011_104",
+   "valid": false
+  },
+  {
+   "bit": 1,
+   "gbid": 172016957,
+   "name": "Unique_Chest_001",
+   "valid": false
+  },
+  {
+   "bit": 2,
+   "gbid": 139560000,
+   "name": "Unique_Axe_1H_005_1xx",
+   "valid": false
+  },
+  {
+   "bit": 3,
+   "gbid": -1958384165,
+   "name": "Unique_Shoulder_017_x1",
+   "valid": true
+  },
+  {
+   "bit": 4,
+   "gbid": 356352527,
+   "name": "Unique_Sword_1H_012_1xx",
+   "valid": false
+  },
+  {
+   "bit": 5,
+   "gbid": 903144205,
+   "name": "Unique_Pants_002",
+   "valid": false
+  },
+  {
+   "bit": 6,
+   "gbid": 1065040961,
+   "name": "Unique_Shield_012_1xx",
+   "valid": false
+  },
+  {
+   "bit": 7,
+   "gbid": 1031587769,
+   "name": "Unique_Polearm_004",
+   "valid": false
+  },
+  {
+   "bit": 8,
+   "gbid": -1855266162,
+   "name": "Unique_Helm_003_1xx",
+   "valid": false
+  },
+  {
+   "bit": 9,
+   "gbid": 1350327417,
+   "name": "Unique_Sword_1H_104_x1",
+   "valid": true
+  },
+  {
+   "bit": 10,
+   "gbid": 1664515185,
+   "name": "Unique_Mighty_1H_011_1xx",
+   "valid": false
+  },
+  {
+   "bit": 11,
+   "gbid": 394684208,
+   "name": "Unique_CeremonialDagger_002",
+   "valid": false
+  },
+  {
+   "bit": 12,
+   "gbid": 1949308470,
+   "name": "Unique_Mace_2H_002_1xx",
+   "valid": false
+  },
+  {
+   "bit": 13,
+   "gbid": 1312234197,
+   "name": "Unique_Sword_1H_010_x1",
+   "valid": true
+  },
+  {
+   "bit": 14,
+   "gbid": -1832457508,
+   "name": "Unique_Fist_010_1xx",
+   "valid": false
+  },
+  {
+   "bit": 15,
+   "gbid": -1516528698,
+   "name": "Unique_Axe_2H_101_x1",
+   "valid": true
+  },
+  {
+   "bit": 16,
+   "gbid": -491282318,
+   "name": "Unique_SpiritStone_009_1xx",
+   "valid": false
+  },
+  {
+   "bit": 17,
+   "gbid": 1885062412,
+   "name": "Unique_Mace_1H_005_104",
+   "valid": false
+  },
+  {
+   "bit": 18,
+   "gbid": -1178676596,
+   "name": "Unique_Polearm_003_104",
+   "valid": false
+  },
+  {
+   "bit": 19,
+   "gbid": 588174435,
+   "name": "Unique_HandXBow_003_1xx",
+   "valid": false
+  },
+  {
+   "bit": 20,
+   "gbid": 300184992,
+   "name": "Unique_Staff_007",
+   "valid": false
+  },
+  {
+   "bit": 21,
+   "gbid": 503794611,
+   "name": "Unique_Chest_012_104",
+   "valid": false
+  },
+  {
+   "bit": 22,
+   "gbid": 421782062,
+   "name": "Unique_Sword_2H_010_1xx",
+   "valid": false
+  },
+  {
+   "bit": 23,
+   "gbid": 575501830,
+   "name": "Unique_Gloves_009_x1",
+   "valid": true
+  },
+  {
+   "bit": 24,
+   "gbid": 335455512,
+   "name": "Unique_Helm_014_x1",
+   "valid": true
+  },
+  {
+   "bit": 25,
+   "gbid": 1919456565,
+   "name": "Unique_Mace_1H_011_1xx",
+   "valid": false
+  },
+  {
+   "bit": 26,
+   "gbid": 1841122324,
+   "name": "Unique_Mighty_2H_004",
+   "valid": false
+  },
+  {
+   "bit": 27,
+   "gbid": 1663329264,
+   "name": "Unique_Mighty_1H_010_1xx",
+   "valid": false
+  },
+  {
+   "bit": 28,
+   "gbid": -246121938,
+   "name": "Unique_Shoulder_003_1xx",
+   "valid": false
+  },
+  {
+   "bit": 29,
+   "gbid": -1203861584,
+   "name": "Unique_CeremonialDagger_011_1xx",
+   "valid": false
+  },
+  {
+   "bit": 30,
+   "gbid": 752460501,
+   "name": "Unique_Mace_2H_001",
+   "valid": false
+  },
+  {
+   "bit": 31,
+   "gbid": 820715096,
+   "name": "Unique_CruShield_107_x1",
+   "valid": true
+  },
+  {
+   "bit": 32,
+   "gbid": 1109225227,
+   "name": "Unique_SpiritStone_002",
+   "valid": false
+  },
+  {
+   "bit": 33,
+   "gbid": 1887434254,
+   "name": "Unique_Mace_1H_007_104",
+   "valid": false
+  },
+  {
+   "bit": 34,
+   "gbid": 512098502,
+   "name": "Unique_Chest_019_1xx",
+   "valid": false
+  },
+  {
+   "bit": 35,
+   "gbid": 394684207,
+   "name": "Unique_CeremonialDagger_001",
+   "valid": false
+  },
+  {
+   "bit": 36,
+   "gbid": -1831271587,
+   "name": "Unique_Fist_011_1xx",
+   "valid": false
+  },
+  {
+   "bit": 37,
+   "gbid": 1638662959,
+   "name": "Unique_Helm_004",
+   "valid": false
+  },
+  {
+   "bit": 38,
+   "gbid": -63608098,
+   "name": "Unique_Mojo_004",
+   "valid": false
+  },
+  {
+   "bit": 39,
+   "gbid": -1959606023,
+   "name": "Unique_Shoulder_006_x1",
+   "valid": true
+  },
+  {
+   "bit": 40,
+   "gbid": 394684210,
+   "name": "Unique_CeremonialDagger_004",
+   "valid": false
+  },
+  {
+   "bit": 41,
+   "gbid": -1980689583,
+   "name": "Unique_Shoulder_Set_12_x1",
+   "valid": true
+  },
+  {
+   "bit": 42,
+   "gbid": 1276019972,
+   "name": "Unique_Wand_010_104",
+   "valid": false
+  },
+  {
+   "bit": 43,
+   "gbid": -400543125,
+   "name": "Unique_Quiver_002_x1",
+   "valid": false
+  },
+  {
+   "bit": 44,
+   "gbid": 1889808540,
+   "name": "Unique_Mace_1H_009_1xx",
+   "valid": false
+  },
+  {
+   "bit": 45,
+   "gbid": 626123907,
+   "name": "Unique_HandXBow_012_1xx",
+   "valid": false
+  },
+  {
+   "bit": 46,
+   "gbid": -840690590,
+   "name": "Unique_Fist_007",
+   "valid": false
+  },
+  {
+   "bit": 47,
+   "gbid": 785098567,
+   "name": "Unique_Axe_1H_004_x1",
+   "valid": true
+  },
+  {
+   "bit": 48,
+   "gbid": 1941431482,
+   "name": "Unique_Boots_015_x1",
+   "valid": true
+  },
+  {
+   "bit": 49,
+   "gbid": 1898762361,
+   "name": "Unique_Wand_101_x1",
+   "valid": true
+  },
+  {
+   "bit": 50,
+   "gbid": -361371795,
+   "name": "Unique_Quiver_103_x1",
+   "valid": false
+  },
+  {
+   "bit": 51,
+   "gbid": 608242228,
+   "name": "Unique_Sword_1H_017",
+   "valid": false
+  },
+  {
+   "bit": 52,
+   "gbid": 647377615,
+   "name": "Unique_Sword_2H_011",
+   "valid": false
+  },
+  {
+   "bit": 53,
+   "gbid": 200340296,
+   "name": "Unique_Shield_101_x1",
+   "valid": true
+  },
+  {
+   "bit": 54,
+   "gbid": 394684212,
+   "name": "Unique_CeremonialDagger_006",
+   "valid": false
+  },
+  {
+   "bit": 55,
+   "gbid": 1111092658,
+   "name": "Unique_Dagger_003",
+   "valid": false
+  },
+  {
+   "bit": 56,
+   "gbid": 1109225226,
+   "name": "Unique_SpiritStone_001",
+   "valid": false
+  },
+  {
+   "bit": 57,
+   "gbid": -1894126180,
+   "name": "Unique_Mace_1H_010_x1",
+   "valid": true
+  },
+  {
+   "bit": 58,
+   "gbid": 608242191,
+   "name": "Unique_Sword_1H_003",
+   "valid": false
+  },
+  {
+   "bit": 59,
+   "gbid": -1153421170,
+   "name": "Unique_HandXBow_006_x1",
+   "valid": true
+  },
+  {
+   "bit": 60,
+   "gbid": 394684209,
+   "name": "Unique_CeremonialDagger_003",
+   "valid": false
+  },
+  {
+   "bit": 61,
+   "gbid": -1270289579,
+   "name": "Unique_Cloak_006_1xx",
+   "valid": false
+  },
+  {
+   "bit": 62,
+   "gbid": 383832590,
+   "name": "Unique_Sword_2H_001_1xx",
+   "valid": false
+  },
+  {
+   "bit": 63,
+   "gbid": 1244000105,
+   "name": "Unique_Wand_006_104",
+   "valid": false
+  },
+  {
+   "bit": 64,
+   "gbid": 163296789,
+   "name": null,
+   "valid": false
+  },
+  {
+   "bit": 65,
+   "gbid": 2058393501,
+   "name": "Unique_Gloves_Set_05_x1",
+   "valid": true
+  },
+  {
+   "bit": 66,
+   "gbid": 703827188,
+   "name": "Unique_WizardHat_001",
+   "valid": false
+  },
+  {
+   "bit": 67,
+   "gbid": -1519080587,
+   "name": "Unique_Orb_005_x1",
+   "valid": true
+  },
+  {
+   "bit": 68,
+   "gbid": 1852160515,
+   "name": "Unique_CombatStaff_2H_007_104",
+   "valid": false
+  },
+  {
+   "bit": 69,
+   "gbid": -1630705445,
+   "name": "Unique_Mojo_010_1xx",
+   "valid": false
+  },
+  {
+   "bit": 70,
+   "gbid": -352601706,
+   "name": "Unique_Boots_019_1xx",
+   "valid": false
+  },
+  {
+   "bit": 71,
+   "gbid": -1473414695,
+   "name": null,
+   "valid": false
+  },
+  {
+   "bit": 72,
+   "gbid": 647377583,
+   "name": "Unique_Sword_2H_002",
+   "valid": false
+  },
+  {
+   "bit": 73,
+   "gbid": 592915675,
+   "name": "Unique_HandXBow_007_104",
+   "valid": false
+  },
+  {
+   "bit": 74,
+   "gbid": -1262522622,
+   "name": "Unique_Staff_009_1xx",
+   "valid": false
+  },
+  {
+   "bit": 75,
+   "gbid": -1512550088,
+   "name": "Unique_Mighty_1H_001_x1",
+   "valid": true
+  },
+  {
+   "bit": 76,
+   "gbid": 1111092657,
+   "name": "Unique_Dagger_002",
+   "valid": false
+  },
+  {
+   "bit": 77,
+   "gbid": 1738060259,
+   "name": "Unique_Spear_003_1xx",
+   "valid": false
+  },
+  {
+   "bit": 78,
+   "gbid": 59215970,
+   "name": "Unique_Mace_2H_006_x1",
+   "valid": true
+  },
+  {
+   "bit": 79,
+   "gbid": 1318103756,
+   "name": "Unique_Chest_026_x1",
+   "valid": true
+  },
+  {
+   "bit": 80,
+   "gbid": 1979237206,
+   "name": null,
+   "valid": false
+  },
+  {
+   "bit": 81,
+   "gbid": 1311084213,
+   "name": "Unique_Sword_1H_001_x1",
+   "valid": true
+  },
+  {
+   "bit": 82,
+   "gbid": 510910137,
+   "name": "Unique_Chest_018_104",
+   "valid": false
+  },
+  {
+   "bit": 83,
+   "gbid": 254276496,
+   "name": "Unique_Pants_014_1xx",
+   "valid": false
+  },
+  {
+   "bit": 84,
+   "gbid": 335383638,
+   "name": "Unique_Helm_012_x1",
+   "valid": true
+  },
+  {
+   "bit": 85,
+   "gbid": 442984219,
+   "name": "Unique_Mighty_2H_012_x1",
+   "valid": true
+  },
+  {
+   "bit": 86,
+   "gbid": 630867591,
+   "name": "Unique_HandXBow_016_1xx",
+   "valid": false
+  },
+  {
+   "bit": 87,
+   "gbid": 1735685973,
+   "name": "Unique_Spear_001_104",
+   "valid": false
+  },
+  {
+   "bit": 88,
+   "gbid": 261789203,
+   "name": "Unique_Boots_007",
+   "valid": false
+  },
+  {
+   "bit": 89,
+   "gbid": 576544003,
+   "name": "Unique_Gloves_015_x1",
+   "valid": true
+  },
+  {
+   "bit": 90,
+   "gbid": 903144204,
+   "name": "Unique_Pants_001",
+   "valid": false
+  },
+  {
+   "bit": 91,
+   "gbid": 1948120105,
+   "name": "Unique_Mace_2H_001_104",
+   "valid": false
+  },
+  {
+   "bit": 92,
+   "gbid": -359717232,
+   "name": "Unique_Boots_013_1xx",
+   "valid": false
+  },
+  {
+   "bit": 93,
+   "gbid": 300184993,
+   "name": "Unique_Staff_008",
+   "valid": false
+  },
+  {
+   "bit": 94,
+   "gbid": -362089074,
+   "name": "Unique_Boots_011_1xx",
+   "valid": false
+  },
+  {
+   "bit": 95,
+   "gbid": -494655273,
+   "name": "Unique_WizardHat_004_1xx",
+   "valid": false
+  },
+  {
+   "bit": 96,
+   "gbid": 1881504649,
+   "name": "Unique_Mace_1H_002_104",
+   "valid": false
+  },
+  {
+   "bit": 97,
+   "gbid": -1209862269,
+   "name": "Unique_Staff_002_x1",
+   "valid": true
+  },
+  {
+   "bit": 98,
+   "gbid": 270555849,
+   "name": "Unique_VoodooMask_002",
+   "valid": false
+  },
+  {
+   "bit": 99,
+   "gbid": 1804500824,
+   "name": "Unique_Gloves_003_1xx",
+   "valid": false
+  },
+  {
+   "bit": 100,
+   "gbid": -353787627,
+   "name": "Unique_Boots_018_1xx",
+   "valid": false
+  },
+  {
+   "bit": 101,
+   "gbid": 1848379901,
+   "name": "Unique_Gloves_017_1xx",
+   "valid": false
+  },
+  {
+   "bit": 102,
+   "gbid": 1031832729,
+   "name": "Unique_Shield_007_104",
+   "valid": false
+  },
+  {
+   "bit": 103,
+   "gbid": 1407501483,
+   "name": "Unique_Orb_003_1xx",
+   "valid": false
+  },
+  {
+   "bit": 104,
+   "gbid": -247310303,
+   "name": "Unique_Shoulder_002_104",
+   "valid": false
+  },
+  {
+   "bit": 105,
+   "gbid": -973813217,
+   "name": "Unique_Dagger_008_x1",
+   "valid": true
+  },
+  {
+   "bit": 106,
+   "gbid": -1791051597,
+   "name": "Unique_Flail_1H_105_x1",
+   "valid": true
+  },
+  {
+   "bit": 107,
+   "gbid": -1848150636,
+   "name": "Unique_Helm_009_1xx",
+   "valid": false
+  },
+  {
+   "bit": 108,
+   "gbid": 647377584,
+   "name": "Unique_Sword_2H_003",
+   "valid": false
+  },
+  {
+   "bit": 109,
+   "gbid": 1313456055,
+   "name": "Unique_Sword_1H_021_x1",
+   "valid": true
+  },
+  {
+   "bit": 110,
+   "gbid": 572923409,
+   "name": "ThorTest_Mojo",
+   "valid": true
+  },
+  {
+   "bit": 111,
+   "gbid": 137185714,
+   "name": "Unique_Axe_1H_003_104",
+   "valid": false
+  },
+  {
+   "bit": 112,
+   "gbid": 608242190,
+   "name": "Unique_Sword_1H_002",
+   "valid": false
+  },
+  {
+   "bit": 113,
+   "gbid": 647377616,
+   "name": "Unique_Sword_2H_012",
+   "valid": false
+  },
+  {
+   "bit": 114,
+   "gbid": 1183779302,
+   "name": "Unique_XBow_001",
+   "valid": false
+  },
+  {
+   "bit": 115,
+   "gbid": 200484044,
+   "name": null,
+   "valid": false
+  },
+  {
+   "bit": 116,
+   "gbid": 1031587767,
+   "name": "Unique_Polearm_002",
+   "valid": false
+  },
+  {
+   "bit": 117,
+   "gbid": -961580764,
+   "name": "Unique_Mojo_002_x1",
+   "valid": true
+  },
+  {
+   "bit": 118,
+   "gbid": 608242192,
+   "name": "Unique_Sword_1H_004",
+   "valid": false
+  },
+  {
+   "bit": 119,
+   "gbid": -1275035707,
+   "name": "Unique_Cloak_002_104",
+   "valid": false
+  },
+  {
+   "bit": 120,
+   "gbid": 217512945,
+   "name": "Unique_Pants_006_1xx",
+   "valid": false
+  },
+  {
+   "bit": 121,
+   "gbid": -1862105533,
+   "name": "Unique_Fist_008_1xx",
+   "valid": false
+  },
+  {
+   "bit": 122,
+   "gbid": 1444265034,
+   "name": "Unique_Orb_011_1xx",
+   "valid": false
+  },
+  {
+   "bit": 123,
+   "gbid": 824126149,
+   "name": "Unique_Axe_1H_101_x1",
+   "valid": true
+  },
+  {
+   "bit": 124,
+   "gbid": -838272988,
+   "name": "Unique_Offhand_001_x1",
+   "valid": true
+  },
+  {
+   "bit": 125,
+   "gbid": -1660353470,
+   "name": "Unique_Mojo_008_1xx",
+   "valid": false
+  },
+  {
+   "bit": 126,
+   "gbid": 1638662956,
+   "name": "Unique_Helm_001",
+   "valid": false
+  },
+  {
+   "bit": 127,
+   "gbid": 647377588,
+   "name": "Unique_Sword_2H_007",
+   "valid": false
+  },
+  {
+   "bit": 128,
+   "gbid": 1739243736,
+   "name": "Unique_Spear_004_104",
+   "valid": false
+  },
+  {
+   "bit": 129,
+   "gbid": -1450789304,
+   "name": "Unique_XBow_003_1xx",
+   "valid": false
+  },
+  {
+   "bit": 130,
+   "gbid": -1819688532,
+   "name": "Unique_Helm_010_1xx",
+   "valid": false
+  },
+  {
+   "bit": 131,
+   "gbid": 590543833,
+   "name": "Unique_HandXBow_005_104",
+   "valid": false
+  },
+  {
+   "bit": 132,
+   "gbid": -327166488,
+   "name": "Unique_Quiver_007_1xx",
+   "valid": false
+  },
+  {
+   "bit": 133,
+   "gbid": -1851708399,
+   "name": "Unique_Helm_006_1xx",
+   "valid": false
+  },
+  {
+   "bit": 134,
+   "gbid": -1993027113,
+   "name": "Unique_Helm_Set_09_x1",
+   "valid": true
+  },
+  {
+   "bit": 135,
+   "gbid": 1847416831,
+   "name": "Unique_CombatStaff_2H_003_104",
+   "valid": false
+  },
+  {
+   "bit": 136,
+   "gbid": -1961527512,
+   "name": "Unique_VoodooMask_001_1xx",
+   "valid": false
+  },
+  {
+   "bit": 137,
+   "gbid": 820499474,
+   "name": "Unique_CruShield_101_x1",
+   "valid": true
+  },
+  {
+   "bit": 138,
+   "gbid": -330726695,
+   "name": "Unique_Quiver_004_104",
+   "valid": false
+  },
+  {
+   "bit": 139,
+   "gbid": 204987091,
+   "name": "Unique_Axe_2H_003_104",
+   "valid": false
+  },
+  {
+   "bit": 140,
+   "gbid": -1181045994,
+   "name": "Unique_Polearm_001_1xx",
+   "valid": false
+  },
+  {
+   "bit": 141,
+   "gbid": 508540739,
+   "name": "Unique_Chest_016_1xx",
+   "valid": false
+  },
+  {
+   "bit": 142,
+   "gbid": 1699110774,
+   "name": "Unique_Mighty_2H_006_1xx",
+   "valid": false
+  },
+  {
+   "bit": 143,
+   "gbid": 1278394258,
+   "name": "Unique_Wand_012_1xx",
+   "valid": false
+  },
+  {
+   "bit": 144,
+   "gbid": 1846230910,
+   "name": "Unique_CombatStaff_2H_002_104",
+   "valid": false
+  },
+  {
+   "bit": 145,
+   "gbid": 259071144,
+   "name": "Unique_Chest_Set_09_x1",
+   "valid": true
+  },
+  {
+   "bit": 146,
+   "gbid": 1350507102,
+   "name": "Unique_Sword_1H_109_x1",
+   "valid": true
+  },
+  {
+   "bit": 147,
+   "gbid": 469402902,
+   "name": "Unique_Chest_006_104",
+   "valid": false
+  },
+  {
+   "bit": 148,
+   "gbid": -1473378758,
+   "name": "Unique_Mighty_1H_102_x1",
+   "valid": true
+  },
+  {
+   "bit": 149,
+   "gbid": 300184988,
+   "name": "Unique_Staff_003",
+   "valid": false
+  },
+  {
+   "bit": 150,
+   "gbid": -239006412,
+   "name": "Unique_Shoulder_009_1xx",
+   "valid": false
+  },
+  {
+   "bit": 151,
+   "gbid": 200448107,
+   "name": "Unique_Shield_104_x1",
+   "valid": true
+  },
+  {
+   "bit": 152,
+   "gbid": 1247560312,
+   "name": "Unique_Wand_009_1xx",
+   "valid": false
+  },
+  {
+   "bit": 153,
+   "gbid": -1170690939,
+   "name": "Unique_Staff_103_x1",
+   "valid": true
+  },
+  {
+   "bit": 154,
+   "gbid": 323144295,
+   "name": "Unique_Sword_1H_007_104",
+   "valid": false
+  },
+  {
+   "bit": 155,
+   "gbid": -1953226065,
+   "name": "Unique_VoodooMask_008_1xx",
+   "valid": false
+  },
+  {
+   "bit": 156,
+   "gbid": 373333110,
+   "name": "Unique_Helm_102_x1",
+   "valid": true
+  },
+  {
+   "bit": 157,
+   "gbid": 1109225229,
+   "name": "Unique_SpiritStone_004",
+   "valid": false
+  },
+  {
+   "bit": 158,
+   "gbid": -1097773113,
+   "name": "Unique_Fist_004_x1",
+   "valid": true
+  },
+  {
+   "bit": 159,
+   "gbid": 1183779335,
+   "name": "Unique_XBow_011",
+   "valid": false
+  },
+  {
+   "bit": 160,
+   "gbid": 513724853,
+   "name": "Unique_Bow_008",
+   "valid": false
+  },
+  {
+   "bit": 161,
+   "gbid": 1854534801,
+   "name": "Unique_CombatStaff_2H_009_1xx",
+   "valid": false
+  },
+  {
+   "bit": 162,
+   "gbid": 1109225232,
+   "name": "Unique_SpiritStone_007",
+   "valid": false
+  },
+  {
+   "bit": 163,
+   "gbid": 1277749690,
+   "name": "Shoulders_ps3_promo",
+   "valid": true
+  },
+  {
+   "bit": 164,
+   "gbid": 1033018650,
+   "name": "Unique_Shield_008_104",
+   "valid": false
+  },
+  {
+   "bit": 165,
+   "gbid": -801205711,
+   "name": "Unique_VoodooMask_101_x1",
+   "valid": true
+  },
+  {
+   "bit": 166,
+   "gbid": -1234695530,
+   "name": "Unique_CeremonialDagger_008_1xx",
+   "valid": false
+  },
+  {
+   "bit": 167,
+   "gbid": 1034207015,
+   "name": "Unique_Shield_009_1xx",
+   "valid": false
+  },
+  {
+   "bit": 168,
+   "gbid": -774201764,
+   "name": "Unique_Pants_009_x1",
+   "valid": true
+  },
+  {
+   "bit": 169,
+   "gbid": 219884787,
+   "name": "Unique_Pants_008_1xx",
+   "valid": false
+  },
+  {
+   "bit": 170,
+   "gbid": -1993063050,
+   "name": "Unique_Helm_Set_08_x1",
+   "valid": true
+  },
+  {
+   "bit": 171,
+   "gbid": 1109225231,
+   "name": "Unique_SpiritStone_006",
+   "valid": false
+  },
+  {
+   "bit": 172,
+   "gbid": -1980581772,
+   "name": "Unique_Shoulder_Set_15_x1",
+   "valid": true
+  },
+  {
+   "bit": 173,
+   "gbid": 1638662989,
+   "name": "Unique_Helm_011",
+   "valid": false
+  },
+  {
+   "bit": 174,
+   "gbid": -1114429525,
+   "name": "Unique_HandXBow_102_x1",
+   "valid": true
+  },
+  {
+   "bit": 175,
+   "gbid": 1736871894,
+   "name": "Unique_Spear_002_104",
+   "valid": false
+  },
+  {
+   "bit": 176,
+   "gbid": 134813872,
+   "name": "Unique_Axe_1H_001_104",
+   "valid": false
+  },
+  {
+   "bit": 177,
+   "gbid": 1318067819,
+   "name": "Unique_Chest_025_x1",
+   "valid": true
+  },
+  {
+   "bit": 178,
+   "gbid": -801653481,
+   "name": "Unique_Boots_Set_08_x1",
+   "valid": true
+  },
+  {
+   "bit": 179,
+   "gbid": 270555853,
+   "name": "Unique_VoodooMask_006",
+   "valid": false
+  },
+  {
+   "bit": 180,
+   "gbid": 513724878,
+   "name": "Unique_Bow_010",
+   "valid": false
+  },
+  {
+   "bit": 181,
+   "gbid": 1111092661,
+   "name": "Unique_Dagger_006",
+   "valid": false
+  },
+  {
+   "bit": 182,
+   "gbid": 826009651,
+   "name": "Unique_Pants_Set_05_x1",
+   "valid": true
+  },
+  {
+   "bit": 183,
+   "gbid": 1028274966,
+   "name": "Unique_Shield_004_104",
+   "valid": false
+  },
+  {
+   "bit": 184,
+   "gbid": 335491449,
+   "name": "Unique_Helm_015_x1",
+   "valid": true
+  },
+  {
+   "bit": 185,
+   "gbid": -1920578441,
+   "name": "Unique_Shoulder_103_x1",
+   "valid": true
+  },
+  {
+   "bit": 186,
+   "gbid": 1240442342,
+   "name": "Unique_Wand_003_104",
+   "valid": false
+  },
+  {
+   "bit": 187,
+   "gbid": -1948873536,
+   "name": "Unique_Polearm_102_x1",
+   "valid": true
+  },
+  {
+   "bit": 188,
+   "gbid": 1351369590,
+   "name": "Unique_Sword_1H_110_x1",
+   "valid": true
+  },
+  {
+   "bit": 189,
+   "gbid": 253090575,
+   "name": "Unique_Pants_013_1xx",
+   "valid": false
+  },
+  {
+   "bit": 190,
+   "gbid": 414491869,
+   "name": "Unique_WizardHat_101_x1",
+   "valid": true
+  },
+  {
+   "bit": 191,
+   "gbid": 1630123476,
+   "name": "Unique_Mighty_1H_005_1xx",
+   "valid": false
+  },
+  {
+   "bit": 192,
+   "gbid": 392131593,
+   "name": "Unique_Sword_2H_008_104",
+   "valid": false
+  },
+  {
+   "bit": 193,
+   "gbid": 162390824,
+   "name": "Unique_Shield_011_x1",
+   "valid": true
+  },
+  {
+   "bit": 194,
+   "gbid": 674787317,
+   "name": "Unique_SpiritStone_103_x1",
+   "valid": true
+  },
+  {
+   "bit": 195,
+   "gbid": 1109225230,
+   "name": "Unique_SpiritStone_005",
+   "valid": false
+  },
+  {
+   "bit": 196,
+   "gbid": -1826527903,
+   "name": "Unique_Fist_015_1xx",
+   "valid": false
+  },
+  {
+   "bit": 197,
+   "gbid": -1954411986,
+   "name": "Unique_VoodooMask_007_1xx",
+   "valid": false
+  },
+  {
+   "bit": 198,
+   "gbid": 826117462,
+   "name": "Unique_Pants_Set_08_x1",
+   "valid": true
+  },
+  {
+   "bit": 199,
+   "gbid": 200412170,
+   "name": "Unique_Shield_103_x1",
+   "valid": true
+  },
+  {
+   "bit": 200,
+   "gbid": 1823614361,
+   "name": "Unique_CeremonialDagger_102_x1",
+   "valid": true
+  },
+  {
+   "bit": 201,
+   "gbid": 163188978,
+   "name": "Unique_Flail_2H_103_x1",
+   "valid": true
+  },
+  {
+   "bit": 202,
+   "gbid": -1480088942,
+   "name": "Unique_Orb_101_x1",
+   "valid": true
+  },
+  {
+   "bit": 203,
+   "gbid": 414527806,
+   "name": "Unique_WizardHat_102_x1",
+   "valid": true
+  },
+  {
+   "bit": 204,
+   "gbid": 1025905568,
+   "name": "Unique_Shield_002_1xx",
+   "valid": false
+  },
+  {
+   "bit": 205,
+   "gbid": -1629519524,
+   "name": "Unique_Mojo_011_1xx",
+   "valid": false
+  },
+  {
+   "bit": 206,
+   "gbid": 261789205,
+   "name": "Unique_Boots_009",
+   "valid": false
+  },
+  {
+   "bit": 207,
+   "gbid": 1354687622,
+   "name": "Unique_Chest_101_x1",
+   "valid": true
+  },
+  {
+   "bit": 208,
+   "gbid": -1058745531,
+   "name": "Unique_Fist_101_x1",
+   "valid": true
+  },
+  {
+   "bit": 209,
+   "gbid": 1312521693,
+   "name": "Unique_Sword_1H_018_x1",
+   "valid": true
+  },
+  {
+   "bit": 210,
+   "gbid": -1980545835,
+   "name": "Unique_Shoulder_Set_16_x1",
+   "valid": true
+  },
+  {
+   "bit": 211,
+   "gbid": 614421601,
+   "name": "Unique_Gloves_103_x1",
+   "valid": true
+  },
+  {
+   "bit": 212,
+   "gbid": 1960603706,
+   "name": "Unique_Bow_005_x1",
+   "valid": true
+  },
+  {
+   "bit": 213,
+   "gbid": -1849336557,
+   "name": "Unique_Helm_008_1xx",
+   "valid": false
+  },
+  {
+   "bit": 214,
+   "gbid": -1516492761,
+   "name": "Unique_Axe_2H_102_x1",
+   "valid": true
+  },
+  {
+   "bit": 215,
+   "gbid": 1999667225,
+   "name": "Unique_Bow_103_x1",
+   "valid": true
+  },
+  {
+   "bit": 216,
+   "gbid": 241750642,
+   "name": "Unique_Axe_2H_011_104",
+   "valid": false
+  },
+  {
+   "bit": 217,
+   "gbid": 1279580179,
+   "name": "Unique_Wand_013_1xx",
+   "valid": false
+  },
+  {
+   "bit": 218,
+   "gbid": -840690562,
+   "name": "Unique_Fist_012",
+   "valid": false
+  },
+  {
+   "bit": 219,
+   "gbid": -328354853,
+   "name": "Unique_Quiver_006_104",
+   "valid": false
+  },
+  {
+   "bit": 220,
+   "gbid": -773339276,
+   "name": "Unique_Pants_010_x1",
+   "valid": true
+  },
+  {
+   "bit": 221,
+   "gbid": 1801986933,
+   "name": "Unique_Mighty_1H_006",
+   "valid": false
+  },
+  {
+   "bit": 222,
+   "gbid": -801133837,
+   "name": null,
+   "valid": false
+  },
+  {
+   "bit": 223,
+   "gbid": 212105061,
+   "name": "Unique_Axe_2H_009_1xx",
+   "valid": false
+  },
+  {
+   "bit": 224,
+   "gbid": 1239256421,
+   "name": "Unique_Wand_002_104",
+   "valid": false
+  },
+  {
+   "bit": 225,
+   "gbid": 1960675580,
+   "name": "Unique_Bow_007_x1",
+   "valid": true
+  },
+  {
+   "bit": 226,
+   "gbid": 1882690570,
+   "name": "Unique_Mace_1H_003_104",
+   "valid": false
+  },
+  {
+   "bit": 227,
+   "gbid": 1801986962,
+   "name": "Unique_Mighty_1H_012",
+   "valid": false
+  },
+  {
+   "bit": 228,
+   "gbid": 221630008,
+   "name": "Unique_Cloak_001_x1",
+   "valid": true
+  },
+  {
+   "bit": 229,
+   "gbid": 414563743,
+   "name": "Unique_WizardHat_103_x1",
+   "valid": true
+  },
+  {
+   "bit": 230,
+   "gbid": 608242230,
+   "name": "Unique_Sword_1H_019",
+   "valid": false
+  },
+  {
+   "bit": 231,
+   "gbid": 1669258869,
+   "name": "Unique_Mighty_1H_015_1xx",
+   "valid": false
+  },
+  {
+   "bit": 232,
+   "gbid": 2059543485,
+   "name": "Unique_Gloves_Set_14_x1",
+   "valid": true
+  },
+  {
+   "bit": 233,
+   "gbid": 820571348,
+   "name": "Unique_CruShield_103_x1",
+   "valid": true
+  },
+  {
+   "bit": 234,
+   "gbid": 586988514,
+   "name": "Unique_HandXBow_002_1xx",
+   "valid": false
+  },
+  {
+   "bit": 235,
+   "gbid": 513724846,
+   "name": "Unique_Bow_001",
+   "valid": false
+  },
+  {
+   "bit": 236,
+   "gbid": 1888620175,
+   "name": "Unique_Mace_1H_008_104",
+   "valid": false
+  },
+  {
+   "bit": 237,
+   "gbid": 176323551,
+   "name": "Unique_Axe_1H_013_1xx",
+   "valid": false
+  },
+  {
+   "bit": 238,
+   "gbid": 261789197,
+   "name": "Unique_Boots_001",
+   "valid": false
+  },
+  {
+   "bit": 239,
+   "gbid": -990399304,
+   "name": "Unique_Sword_2H_102_x1",
+   "valid": true
+  },
+  {
+   "bit": 240,
+   "gbid": 202615249,
+   "name": "Unique_Axe_2H_001_104",
+   "valid": false
+  },
+  {
+   "bit": 241,
+   "gbid": -1860919612,
+   "name": "Unique_Fist_009_1xx",
+   "valid": false
+  },
+  {
+   "bit": 242,
+   "gbid": 446615928,
+   "name": "Unique_CombatStaff_2H_008_x1",
+   "valid": true
+  },
+  {
+   "bit": 243,
+   "gbid": 504982976,
+   "name": "Unique_Chest_013_1xx",
+   "valid": false
+  },
+  {
+   "bit": 244,
+   "gbid": -174075631,
+   "name": "Unique_XBow_004_x1",
+   "valid": true
+  },
+  {
+   "bit": 245,
+   "gbid": 1986069577,
+   "name": "Unique_Mace_2H_010_104",
+   "valid": false
+  },
+  {
+   "bit": 246,
+   "gbid": 464661662,
+   "name": "Unique_Chest_002_1xx",
+   "valid": false
+  },
+  {
+   "bit": 247,
+   "gbid": 647377585,
+   "name": "Unique_Sword_2H_004",
+   "valid": false
+  },
+  {
+   "bit": 248,
+   "gbid": -801617544,
+   "name": "Unique_Boots_Set_09_x1",
+   "valid": true
+  },
+  {
+   "bit": 249,
+   "gbid": -188196519,
+   "name": null,
+   "valid": false
+  },
+  {
+   "bit": 250,
+   "gbid": 1351441464,
+   "name": "Unique_Sword_1H_112_x1",
+   "valid": true
+  },
+  {
+   "bit": 251,
+   "gbid": 1408687404,
+   "name": "Unique_Orb_004_1xx",
+   "valid": false
+  },
+  {
+   "bit": 252,
+   "gbid": 300184986,
+   "name": "Unique_Staff_001",
+   "valid": false
+  },
+  {
+   "bit": 253,
+   "gbid": -174003757,
+   "name": "Unique_XBow_006_x1",
+   "valid": true
+  },
+  {
+   "bit": 254,
+   "gbid": 1638662957,
+   "name": "Unique_Helm_002",
+   "valid": false
+  },
+  {
+   "bit": 255,
+   "gbid": 1988441419,
+   "name": "Unique_Mace_2H_012_104",
+   "valid": false
+  },
+  {
+   "bit": 256,
+   "gbid": 300184991,
+   "name": "Unique_Staff_006",
+   "valid": false
+  },
+  {
+   "bit": 257,
+   "gbid": -1959534149,
+   "name": "Unique_Shoulder_008_x1",
+   "valid": true
+  },
+  {
+   "bit": 258,
+   "gbid": 238734028,
+   "name": "Unique_Shoulder_001",
+   "valid": false
+  },
+  {
+   "bit": 259,
+   "gbid": 1803314903,
+   "name": "Unique_Gloves_002_1xx",
+   "valid": false
+  },
+  {
+   "bit": 260,
+   "gbid": 280081686,
+   "name": "Unique_Bow_009_1xx",
+   "valid": false
+  },
+  {
+   "bit": 261,
+   "gbid": -1791159408,
+   "name": "Unique_Flail_1H_102_x1",
+   "valid": true
+  },
+  {
+   "bit": 262,
+   "gbid": -2041491920,
+   "name": "Unique_Dagger_010_1xx",
+   "valid": false
+  },
+  {
+   "bit": 263,
+   "gbid": 1111092662,
+   "name": "Unique_Dagger_007",
+   "valid": false
+  },
+  {
+   "bit": 264,
+   "gbid": -1271477944,
+   "name": "Unique_Cloak_005_104",
+   "valid": false
+  },
+  {
+   "bit": 265,
+   "gbid": -334284458,
+   "name": "Unique_Quiver_001_104",
+   "valid": false
+  },
+  {
+   "bit": 266,
+   "gbid": 1979309080,
+   "name": "Unique_Boots_103_x1",
+   "valid": true
+  },
+  {
+   "bit": 267,
+   "gbid": 1109225228,
+   "name": "Unique_SpiritStone_003",
+   "valid": false
+  },
+  {
+   "bit": 268,
+   "gbid": 1350363354,
+   "name": "Unique_Sword_1H_105_x1",
+   "valid": true
+  },
+  {
+   "bit": 269,
+   "gbid": 1941251797,
+   "name": "Unique_Boots_010_x1",
+   "valid": true
+  },
+  {
+   "bit": 270,
+   "gbid": 513724883,
+   "name": "Unique_Bow_015",
+   "valid": false
+  },
+  {
+   "bit": 271,
+   "gbid": 1845047433,
+   "name": "Unique_CombatStaff_2H_001_1xx",
+   "valid": false
+  },
+  {
+   "bit": 272,
+   "gbid": 358721925,
+   "name": "Unique_Sword_1H_014_104",
+   "valid": false
+  },
+  {
+   "bit": 273,
+   "gbid": 826153399,
+   "name": "Unique_Pants_Set_09_x1",
+   "valid": true
+  },
+  {
+   "bit": 274,
+   "gbid": -2120788693,
+   "name": "Unique_Spear_102_x1",
+   "valid": true
+  },
+  {
+   "bit": 275,
+   "gbid": 589357912,
+   "name": "Unique_HandXBow_004_104",
+   "valid": false
+  },
+  {
+   "bit": 276,
+   "gbid": -135048049,
+   "name": "Unique_Xbow_101_x1",
+   "valid": true
+  },
+  {
+   "bit": 277,
+   "gbid": 674751380,
+   "name": "Unique_SpiritStone_102_x1",
+   "valid": true
+  },
+  {
+   "bit": 278,
+   "gbid": -329540774,
+   "name": "Unique_Quiver_005_104",
+   "valid": false
+  },
+  {
+   "bit": 279,
+   "gbid": 1731130641,
+   "name": "Unique_Mighty_2H_010_1xx",
+   "valid": false
+  },
+  {
+   "bit": 280,
+   "gbid": 373369047,
+   "name": "Unique_Helm_103_x1",
+   "valid": true
+  },
+  {
+   "bit": 281,
+   "gbid": 140743477,
+   "name": "Unique_Axe_1H_006_104",
+   "valid": false
+  },
+  {
+   "bit": 282,
+   "gbid": 585802593,
+   "name": "Unique_HandXBow_001_1xx",
+   "valid": false
+  },
+  {
+   "bit": 283,
+   "gbid": -360903153,
+   "name": "Unique_Boots_012_1xx",
+   "valid": false
+  },
+  {
+   "bit": 284,
+   "gbid": -800539434,
+   "name": "Unique_Boots_Set_16_x1",
+   "valid": true
+  },
+  {
+   "bit": 285,
+   "gbid": -1791123471,
+   "name": "Unique_Flail_1H_103_x1",
+   "valid": true
+  },
+  {
+   "bit": 286,
+   "gbid": 507354818,
+   "name": "Unique_Chest_015_1xx",
+   "valid": false
+  },
+  {
+   "bit": 287,
+   "gbid": 903144208,
+   "name": "Unique_Pants_005",
+   "valid": false
+  },
+  {
+   "bit": 288,
+   "gbid": -840690561,
+   "name": "Unique_Fist_013",
+   "valid": false
+  },
+  {
+   "bit": 289,
+   "gbid": -1992128688,
+   "name": "Unique_Helm_Set_11_x1",
+   "valid": true
+  },
+  {
+   "bit": 290,
+   "gbid": -1479981131,
+   "name": null,
+   "valid": false
+  },
+  {
+   "bit": 291,
+   "gbid": -990435241,
+   "name": "Unique_Sword_2H_101_x1",
+   "valid": true
+  },
+  {
+   "bit": 292,
+   "gbid": 827123698,
+   "name": "Unique_Pants_Set_13_x1",
+   "valid": true
+  },
+  {
+   "bit": 293,
+   "gbid": 827231509,
+   "name": "Unique_Pants_Set_16_x1",
+   "valid": true
+  },
+  {
+   "bit": 294,
+   "gbid": 1941395545,
+   "name": "Unique_Boots_014_x1",
+   "valid": true
+  },
+  {
+   "bit": 295,
+   "gbid": 1880321172,
+   "name": "Unique_Mace_1H_001_1xx",
+   "valid": false
+  },
+  {
+   "bit": 296,
+   "gbid": 1350399291,
+   "name": "Unique_Sword_1H_106_x1",
+   "valid": true
+  },
+  {
+   "bit": 297,
+   "gbid": 373297173,
+   "name": null,
+   "valid": false
+  },
+  {
+   "bit": 298,
+   "gbid": -1812573006,
+   "name": "Unique_Helm_016_1xx",
+   "valid": false
+  },
+  {
+   "bit": 299,
+   "gbid": 1848605196,
+   "name": "Unique_CombatStaff_2H_004_1xx",
+   "valid": false
+  },
+  {
+   "bit": 300,
+   "gbid": 1940245561,
+   "name": "Unique_Boots_005_x1",
+   "valid": true
+  },
+  {
+   "bit": 301,
+   "gbid": -1856140771,
+   "name": "Unique_Mace_1H_101_x1",
+   "valid": true
+  },
+  {
+   "bit": 302,
+   "gbid": 703827190,
+   "name": "Unique_WizardHat_003",
+   "valid": false
+  },
+  {
+   "bit": 303,
+   "gbid": -1233509609,
+   "name": "Unique_CeremonialDagger_009_1xx",
+   "valid": false
+  },
+  {
+   "bit": 304,
+   "gbid": -843818268,
+   "name": "Helm_console_promo",
+   "valid": true
+  },
+  {
+   "bit": 305,
+   "gbid": 1844819694,
+   "name": "Unique_Gloves_014_104",
+   "valid": false
+  },
+  {
+   "bit": 306,
+   "gbid": 1445450955,
+   "name": "Unique_Orb_012_1xx",
+   "valid": false
+  },
+  {
+   "bit": 307,
+   "gbid": 238734034,
+   "name": "Unique_Shoulder_007",
+   "valid": false
+  },
+  {
+   "bit": 308,
+   "gbid": 1405129641,
+   "name": "Unique_Orb_001_1xx",
+   "valid": false
+  },
+  {
+   "bit": 309,
+   "gbid": 1350471165,
+   "name": "Unique_Sword_1H_108_x1",
+   "valid": true
+  },
+  {
+   "bit": 310,
+   "gbid": -840197356,
+   "name": "Unique_VoodooMask_005_x1",
+   "valid": true
+  },
+  {
+   "bit": 311,
+   "gbid": -1856104834,
+   "name": "Unique_Mace_1H_102_x1",
+   "valid": true
+  },
+  {
+   "bit": 312,
+   "gbid": 480933691,
+   "name": null,
+   "valid": false
+  },
+  {
+   "bit": 313,
+   "gbid": 1849788673,
+   "name": "Unique_CombatStaff_2H_005_104",
+   "valid": false
+  },
+  {
+   "bit": 314,
+   "gbid": 1350255543,
+   "name": "Unique_Sword_1H_102_x1",
+   "valid": true
+  },
+  {
+   "bit": 315,
+   "gbid": 575214334,
+   "name": "Unique_Gloves_001_x1",
+   "valid": true
+  },
+  {
+   "bit": 316,
+   "gbid": -922481308,
+   "name": null,
+   "valid": false
+  },
+  {
+   "bit": 317,
+   "gbid": 240567165,
+   "name": "Unique_Axe_2H_010_1xx",
+   "valid": false
+  },
+  {
+   "bit": 318,
+   "gbid": -735317930,
+   "name": "Unique_Pants_102_x1",
+   "valid": true
+  },
+  {
+   "bit": 319,
+   "gbid": -361335858,
+   "name": "Unique_Quiver_104_x1",
+   "valid": false
+  },
+  {
+   "bit": 320,
+   "gbid": 614385664,
+   "name": "Unique_Gloves_102_x1",
+   "valid": true
+  },
+  {
+   "bit": 321,
+   "gbid": 903144210,
+   "name": "Unique_Pants_007",
+   "valid": false
+  },
+  {
+   "bit": 322,
+   "gbid": -1864477375,
+   "name": "Unique_Fist_006_1xx",
+   "valid": false
+  },
+  {
+   "bit": 323,
+   "gbid": 1183779303,
+   "name": "Unique_XBow_002",
+   "valid": false
+  },
+  {
+   "bit": 324,
+   "gbid": -1659169993,
+   "name": "Unique_Mojo_009_104",
+   "valid": false
+  },
+  {
+   "bit": 325,
+   "gbid": -392923020,
+   "name": "Unique_Boots_008_1xx",
+   "valid": false
+  },
+  {
+   "bit": 326,
+   "gbid": -135012112,
+   "name": "Unique_Xbow_102_x1",
+   "valid": true
+  },
+  {
+   "bit": 327,
+   "gbid": 1979273143,
+   "name": "Unique_Boots_102_x1",
+   "valid": true
+  },
+  {
+   "bit": 328,
+   "gbid": 1638662962,
+   "name": "Unique_Helm_007",
+   "valid": false
+  },
+  {
+   "bit": 329,
+   "gbid": -840690594,
+   "name": "Unique_Fist_003",
+   "valid": false
+  },
+  {
+   "bit": 330,
+   "gbid": 824162086,
+   "name": null,
+   "valid": false
+  },
+  {
+   "bit": 331,
+   "gbid": 1957609917,
+   "name": "Unique_Mace_2H_009_1xx",
+   "valid": false
+  },
+  {
+   "bit": 332,
+   "gbid": 141931842,
+   "name": "Unique_Axe_1H_007_1xx",
+   "valid": false
+  },
+  {
+   "bit": 333,
+   "gbid": -735353867,
+   "name": "Unique_Pants_101_x1",
+   "valid": true
+  },
+  {
+   "bit": 334,
+   "gbid": 260801338,
+   "name": "Unique_Cloak_102_x1",
+   "valid": true
+  },
+  {
+   "bit": 335,
+   "gbid": -1980725520,
+   "name": "Unique_Shoulder_Set_11_x1",
+   "valid": true
+  },
+  {
+   "bit": 336,
+   "gbid": 163332726,
+   "name": null,
+   "valid": false
+  },
+  {
+   "bit": 337,
+   "gbid": -492468239,
+   "name": "Unique_SpiritStone_008_1xx",
+   "valid": false
+  },
+  {
+   "bit": 338,
+   "gbid": -773267402,
+   "name": "Unique_Pants_012_x1",
+   "valid": true
+  },
+  {
+   "bit": 339,
+   "gbid": 1285509784,
+   "name": "Unique_Wand_018_1xx",
+   "valid": false
+  },
+  {
+   "bit": 340,
+   "gbid": 1999631288,
+   "name": "Unique_Bow_102_x1",
+   "valid": true
+  },
+  {
+   "bit": 341,
+   "gbid": 485535699,
+   "name": "Unique_CombatStaff_2H_102_x1",
+   "valid": true
+  },
+  {
+   "bit": 342,
+   "gbid": -800611308,
+   "name": "Unique_Boots_Set_14_x1",
+   "valid": true
+  },
+  {
+   "bit": 343,
+   "gbid": 1999595351,
+   "name": "Unique_Bow_101_x1",
+   "valid": true
+  },
+  {
+   "bit": 344,
+   "gbid": -840690592,
+   "name": "Unique_Fist_005",
+   "valid": false
+  },
+  {
+   "bit": 345,
+   "gbid": 488992903,
+   "name": "Unique_ChestArmor_028_1xx",
+   "valid": false
+  },
+  {
+   "bit": 346,
+   "gbid": 674823254,
+   "name": null,
+   "valid": false
+  },
+  {
+   "bit": 347,
+   "gbid": 1809242064,
+   "name": "Unique_Gloves_007_104",
+   "valid": false
+  },
+  {
+   "bit": 348,
+   "gbid": -63608099,
+   "name": "Unique_Mojo_003",
+   "valid": false
+  },
+  {
+   "bit": 349,
+   "gbid": -1920650315,
+   "name": "Unique_Shoulder_101_x1",
+   "valid": true
+  },
+  {
+   "bit": 350,
+   "gbid": 827159635,
+   "name": "Unique_Pants_Set_14_x1",
+   "valid": true
+  },
+  {
+   "bit": 351,
+   "gbid": 2059435674,
+   "name": "Unique_Gloves_Set_11_x1",
+   "valid": true
+  },
+  {
+   "bit": 352,
+   "gbid": 355166606,
+   "name": "Unique_Sword_1H_011_1xx",
+   "valid": false
+  },
+  {
+   "bit": 353,
+   "gbid": -1791195345,
+   "name": "Unique_Flail_1H_101_x1",
+   "valid": true
+  },
+  {
+   "bit": 354,
+   "gbid": -800647245,
+   "name": "Unique_Boots_Set_13_x1",
+   "valid": true
+  },
+  {
+   "bit": 355,
+   "gbid": -801689418,
+   "name": "Unique_Boots_Set_07_x1",
+   "valid": true
+  },
+  {
+   "bit": 356,
+   "gbid": -1791087534,
+   "name": "Unique_Flail_1H_104_x1",
+   "valid": true
+  },
+  {
+   "bit": 357,
+   "gbid": -934857509,
+   "name": "Unique_Dagger_103_x1",
+   "valid": true
+  },
+  {
+   "bit": 358,
+   "gbid": -801169774,
+   "name": "Unique_VoodooMask_102_x1",
+   "valid": true
+  },
+  {
+   "bit": 359,
+   "gbid": 501422769,
+   "name": "Unique_Chest_010_104",
+   "valid": false
+  },
+  {
+   "bit": 360,
+   "gbid": -801761292,
+   "name": "Unique_Boots_Set_05_x1",
+   "valid": true
+  },
+  {
+   "bit": 361,
+   "gbid": -331910172,
+   "name": "Unique_Quiver_003_1xx",
+   "valid": false
+  },
+  {
+   "bit": 362,
+   "gbid": 506168897,
+   "name": "Unique_Chest_014_1xx",
+   "valid": false
+  },
+  {
+   "bit": 363,
+   "gbid": 163117104,
+   "name": "Unique_Flail_2H_101_x1",
+   "valid": true
+  },
+  {
+   "bit": 364,
+   "gbid": 548862053,
+   "name": "Unique_Chest_027_1xx",
+   "valid": false
+  },
+  {
+   "bit": 365,
+   "gbid": -1981623945,
+   "name": "Unique_Shoulder_Set_09_x1",
+   "valid": true
+  },
+  {
+   "bit": 366,
+   "gbid": 1941503356,
+   "name": "Unique_Boots_017_x1",
+   "valid": true
+  },
+  {
+   "bit": 367,
+   "gbid": 1351405527,
+   "name": "Unique_Sword_1H_111_x1",
+   "valid": true
+  },
+  {
+   "bit": 368,
+   "gbid": -1920614378,
+   "name": "Unique_Shoulder_102_x1",
+   "valid": true
+  },
+  {
+   "bit": 369,
+   "gbid": 1810430429,
+   "name": "Unique_Gloves_008_1xx",
+   "valid": false
+  },
+  {
+   "bit": 370,
+   "gbid": 820751033,
+   "name": "Unique_CruShield_108_x1",
+   "valid": true
+  },
+  {
+   "bit": 371,
+   "gbid": 2058501312,
+   "name": "Unique_Gloves_Set_08_x1",
+   "valid": true
+  },
+  {
+   "bit": 372,
+   "gbid": -912456881,
+   "name": "Flail_1H_000",
+   "valid": false
+  },
+  {
+   "bit": 373,
+   "gbid": 1350219606,
+   "name": "Unique_Sword_1H_101_x1",
+   "valid": true
+  },
+  {
+   "bit": 374,
+   "gbid": -1394445518,
+   "name": "Unique_Sword_1H_Set_03_x1",
+   "valid": true
+  },
+  {
+   "bit": 375,
+   "gbid": -1981659882,
+   "name": "Unique_Shoulder_Set_08_x1",
+   "valid": true
+  },
+  {
+   "bit": 376,
+   "gbid": 163260852,
+   "name": null,
+   "valid": false
+  },
+  {
+   "bit": 377,
+   "gbid": 1693178725,
+   "name": "Unique_Mighty_2H_001_104",
+   "valid": false
+  },
+  {
+   "bit": 378,
+   "gbid": 480897754,
+   "name": "Unique_Mighty_2H_101_x1",
+   "valid": true
+  },
+  {
+   "bit": 379,
+   "gbid": -1993170861,
+   "name": "Unique_Helm_Set_05_x1",
+   "valid": true
+  },
+  {
+   "bit": 380,
+   "gbid": 1354723559,
+   "name": "Unique_Chest_102_x1",
+   "valid": true
+  },
+  {
+   "bit": 381,
+   "gbid": -1981695819,
+   "name": "Unique_Shoulder_Set_07_x1",
+   "valid": true
+  },
+  {
+   "bit": 382,
+   "gbid": -1028276902,
+   "name": "Unique_Sword_2H_014_x1",
+   "valid": true
+  },
+  {
+   "bit": 383,
+   "gbid": -2120824630,
+   "name": "Unique_Spear_101_x1",
+   "valid": true
+  },
+  {
+   "bit": 384,
+   "gbid": 1183779336,
+   "name": "Unique_XBow_012",
+   "valid": false
+  },
+  {
+   "bit": 385,
+   "gbid": 259035207,
+   "name": "Unique_Chest_Set_08_x1",
+   "valid": true
+  },
+  {
+   "bit": 386,
+   "gbid": 200555918,
+   "name": "Unique_Shield_107_x1",
+   "valid": true
+  },
+  {
+   "bit": 387,
+   "gbid": -1993098987,
+   "name": "Unique_Helm_Set_07_x1",
+   "valid": true
+  },
+  {
+   "bit": 388,
+   "gbid": 98279489,
+   "name": "Unique_Mace_2H_104_x1",
+   "valid": true
+  },
+  {
+   "bit": 389,
+   "gbid": -1394481455,
+   "name": "Unique_Sword_1H_Set_02_x1",
+   "valid": true
+  },
+  {
+   "bit": 390,
+   "gbid": -1058709594,
+   "name": null,
+   "valid": false
+  },
+  {
+   "bit": 391,
+   "gbid": -1791015660,
+   "name": "Unique_Flail_1H_106_x1",
+   "valid": true
+  },
+  {
+   "bit": 392,
+   "gbid": 820679159,
+   "name": "Unique_CruShield_106_x1",
+   "valid": true
+  },
+  {
+   "bit": 393,
+   "gbid": 2059471611,
+   "name": "Unique_Gloves_Set_12_x1",
+   "valid": true
+  },
+  {
+   "bit": 394,
+   "gbid": -934893446,
+   "name": "Unique_Dagger_102_x1",
+   "valid": true
+  },
+  {
+   "bit": 395,
+   "gbid": -934929383,
+   "name": "Unique_Dagger_101_x1",
+   "valid": true
+  },
+  {
+   "bit": 396,
+   "gbid": 2058537249,
+   "name": "Unique_Gloves_Set_09_x1",
+   "valid": true
+  },
+  {
+   "bit": 397,
+   "gbid": 163153041,
+   "name": "Unique_Flail_2H_102_x1",
+   "valid": true
+  },
+  {
+   "bit": 398,
+   "gbid": -361443669,
+   "name": "Unique_Quiver_101_x1",
+   "valid": false
+  },
+  {
+   "bit": 399,
+   "gbid": -1992092751,
+   "name": "Unique_Helm_Set_12_x1",
+   "valid": true
+  },
+  {
+   "bit": 400,
+   "gbid": 200376233,
+   "name": "Unique_Shield_102_x1",
+   "valid": true
+  },
+  {
+   "bit": 401,
+   "gbid": 258927396,
+   "name": "Unique_Chest_Set_05_x1",
+   "valid": true
+  },
+  {
+   "bit": 402,
+   "gbid": -1114465462,
+   "name": "Unique_HandXBow_101_x1",
+   "valid": true
+  },
+  {
+   "bit": 403,
+   "gbid": 260765401,
+   "name": "Unique_Cloak_101_x1",
+   "valid": true
+  },
+  {
+   "bit": 404,
+   "gbid": 824198023,
+   "name": "Unique_Axe_1H_103_x1",
+   "valid": true
+  },
+  {
+   "bit": 405,
+   "gbid": -1170726876,
+   "name": "Unique_Staff_102_x1",
+   "valid": true
+  },
+  {
+   "bit": 406,
+   "gbid": -1473342821,
+   "name": "Unique_Mighty_1H_103_x1",
+   "valid": true
+  },
+  {
+   "bit": 407,
+   "gbid": 820607285,
+   "name": "Unique_CruShield_104_x1",
+   "valid": true
+  },
+  {
+   "bit": 408,
+   "gbid": 485499762,
+   "name": "Unique_CombatStaff_2H_101_x1",
+   "valid": true
+  },
+  {
+   "bit": 409,
+   "gbid": -922445371,
+   "name": "Unique_Mojo_102_x1",
+   "valid": true
+  },
+  {
+   "bit": 410,
+   "gbid": -361407732,
+   "name": "Unique_Quiver_102_x1",
+   "valid": false
+  },
+  {
+   "bit": 411,
+   "gbid": 1898834235,
+   "name": null,
+   "valid": false
+  },
+  {
+   "bit": 412,
+   "gbid": 2059579422,
+   "name": "Unique_Gloves_Set_15_x1",
+   "valid": true
+  },
+  {
+   "bit": 413,
+   "gbid": 820643222,
+   "name": "Unique_CruShield_105_x1",
+   "valid": true
+  },
+  {
+   "bit": 414,
+   "gbid": 826081525,
+   "name": "Unique_Pants_Set_07_x1",
+   "valid": true
+  },
+  {
+   "bit": 415,
+   "gbid": -1790979723,
+   "name": "Unique_Flail_1H_107_x1",
+   "valid": true
+  },
+  {
+   "bit": 416,
+   "gbid": 260077380,
+   "name": "Unique_Chest_Set_14_x1",
+   "valid": true
+  },
+  {
+   "bit": 417,
+   "gbid": 2058465375,
+   "name": "Unique_Gloves_Set_07_x1",
+   "valid": true
+  },
+  {
+   "bit": 418,
+   "gbid": 674715443,
+   "name": "Unique_SpiritStone_101_x1",
+   "valid": true
+  },
+  {
+   "bit": 419,
+   "gbid": -1170655002,
+   "name": "Unique_Staff_104_x1",
+   "valid": true
+  },
+  {
+   "bit": 420,
+   "gbid": -1981767693,
+   "name": "Unique_Shoulder_Set_05_x1",
+   "valid": true
+  },
+  {
+   "bit": 421,
+   "gbid": -1948909473,
+   "name": "Unique_Polearm_101_x1",
+   "valid": true
+  },
+  {
+   "bit": 422,
+   "gbid": 200519981,
+   "name": "Unique_Shield_106_x1",
+   "valid": true
+  },
+  {
+   "bit": 423,
+   "gbid": 1898798298,
+   "name": "Unique_Wand_102_x1",
+   "valid": true
+  },
+  {
+   "bit": 424,
+   "gbid": -1991984940,
+   "name": "Unique_Helm_Set_15_x1",
+   "valid": true
+  },
+  {
+   "bit": 425,
+   "gbid": -1170762813,
+   "name": "Unique_Staff_101_x1",
+   "valid": true
+  },
+  {
+   "bit": 426,
+   "gbid": 1823578424,
+   "name": "Unique_CeremonialDagger_101_x1",
+   "valid": true
+  },
+  {
+   "bit": 427,
+   "gbid": 827195572,
+   "name": "Unique_Pants_Set_15_x1",
+   "valid": true
+  },
+  {
+   "bit": 428,
+   "gbid": 98243552,
+   "name": "Unique_Mace_2H_103_x1",
+   "valid": true
+  },
+  {
+   "bit": 429,
+   "gbid": 2059507548,
+   "name": "Unique_Gloves_Set_13_x1",
+   "valid": true
+  },
+  {
+   "bit": 430,
+   "gbid": 163224915,
+   "name": "Unique_Flail_2H_104_x1",
+   "valid": true
+  },
+  {
+   "bit": 431,
+   "gbid": 260041443,
+   "name": "Unique_Chest_Set_13_x1",
+   "valid": true
+  },
+  {
+   "bit": 432,
+   "gbid": 1350291480,
+   "name": "Unique_Sword_1H_103_x1",
+   "valid": true
+  },
+  {
+   "bit": 433,
+   "gbid": 1350435228,
+   "name": "Unique_Sword_1H_107_x1",
+   "valid": true
+  },
+  {
+   "bit": 434,
+   "gbid": 614349727,
+   "name": "Unique_Gloves_101_x1",
+   "valid": true
+  },
+  {
+   "bit": 435,
+   "gbid": 820535411,
+   "name": "Unique_CruShield_102_x1",
+   "valid": true
+  },
+  {
+   "bit": 436,
+   "gbid": -1480017068,
+   "name": "Unique_Orb_103_x1",
+   "valid": true
+  },
+  {
+   "bit": 437,
+   "gbid": -1856068897,
+   "name": "Unique_Mace_1H_103_x1",
+   "valid": true
+  },
+  {
+   "bit": 438,
+   "gbid": 509897201,
+   "name": "Gloves_ps3_promo",
+   "valid": true
+  },
+  {
+   "bit": 439,
+   "gbid": -1516456824,
+   "name": "Unique_Axe_2H_103_x1",
+   "valid": true
+  },
+  {
+   "bit": 440,
+   "gbid": -1480053005,
+   "name": "Unique_Orb_102_x1",
+   "valid": true
+  },
+  {
+   "bit": 441,
+   "gbid": 576400255,
+   "name": "Unique_Gloves_011_x1",
+   "valid": true
+  },
+  {
+   "bit": 442,
+   "gbid": 1315552229,
+   "name": "Unique_Chest_001_x1",
+   "valid": true
+  },
+  {
+   "bit": 443,
+   "gbid": 162426761,
+   "name": "Unique_Shield_012_x1",
+   "valid": true
+  },
+  {
+   "bit": 444,
+   "gbid": -1987937055,
+   "name": "Unique_Polearm_004_x1",
+   "valid": true
+  },
+  {
+   "bit": 445,
+   "gbid": 1785628952,
+   "name": "Unique_CeremonialDagger_011_x1",
+   "valid": true
+  },
+  {
+   "bit": 446,
+   "gbid": 59108159,
+   "name": "Unique_Mace_2H_003_x1",
+   "valid": true
+  },
+  {
+   "bit": 447,
+   "gbid": 635615987,
+   "name": "Unique_SpiritStone_002_x1",
+   "valid": true
+  },
+  {
+   "bit": 448,
+   "gbid": -1895060542,
+   "name": "Unique_Mace_1H_007_x1",
+   "valid": true
+  },
+  {
+   "bit": 449,
+   "gbid": -1894988668,
+   "name": "Unique_Mace_1H_009_x1",
+   "valid": true
+  },
+  {
+   "bit": 450,
+   "gbid": -1097665302,
+   "name": "Unique_Fist_007_x1",
+   "valid": true
+  },
+  {
+   "bit": 451,
+   "gbid": 1312485756,
+   "name": "Unique_Sword_1H_017_x1",
+   "valid": true
+  },
+  {
+   "bit": 452,
+   "gbid": -1028384713,
+   "name": "Unique_Sword_2H_011_x1",
+   "valid": true
+  },
+  {
+   "bit": 453,
+   "gbid": 1784622716,
+   "name": "Unique_CeremonialDagger_006_x1",
+   "valid": true
+  },
+  {
+   "bit": 454,
+   "gbid": -973992902,
+   "name": "Unique_Dagger_003_x1",
+   "valid": true
+  },
+  {
+   "bit": 455,
+   "gbid": 635580050,
+   "name": "Unique_SpiritStone_001_x1",
+   "valid": true
+  },
+  {
+   "bit": 456,
+   "gbid": 1311156087,
+   "name": "Unique_Sword_1H_003_x1",
+   "valid": true
+  },
+  {
+   "bit": 457,
+   "gbid": -1029534697,
+   "name": "Unique_Sword_2H_002_x1",
+   "valid": true
+  },
+  {
+   "bit": 458,
+   "gbid": -1153385233,
+   "name": "Unique_HandXBow_007_x1",
+   "valid": true
+  },
+  {
+   "bit": 459,
+   "gbid": 1860776952,
+   "name": "Unique_Wand_010_x1",
+   "valid": true
+  },
+  {
+   "bit": 460,
+   "gbid": -974028839,
+   "name": "Unique_Dagger_002_x1",
+   "valid": true
+  },
+  {
+   "bit": 461,
+   "gbid": -773195528,
+   "name": "Unique_Pants_014_x1",
+   "valid": true
+  },
+  {
+   "bit": 462,
+   "gbid": -1152235249,
+   "name": "Unique_HandXBow_016_x1",
+   "valid": true
+  },
+  {
+   "bit": 463,
+   "gbid": 2135007273,
+   "name": "Unique_Spear_001_x1",
+   "valid": true
+  },
+  {
+   "bit": 464,
+   "gbid": -774489260,
+   "name": "Unique_Pants_001_x1",
+   "valid": true
+  },
+  {
+   "bit": 465,
+   "gbid": 59036285,
+   "name": "Unique_Mace_2H_001_x1",
+   "valid": true
+  },
+  {
+   "bit": 466,
+   "gbid": 1226090826,
+   "name": "Unique_Flail_1H_Promo_01_x1",
+   "valid": true
+  },
+  {
+   "bit": 467,
+   "gbid": -1209646647,
+   "name": "Unique_Staff_008_x1",
+   "valid": true
+  },
+  {
+   "bit": 468,
+   "gbid": -1895240227,
+   "name": "Unique_Mace_1H_002_x1",
+   "valid": true
+  },
+  {
+   "bit": 469,
+   "gbid": -840305167,
+   "name": "Unique_VoodooMask_002_x1",
+   "valid": true
+  },
+  {
+   "bit": 470,
+   "gbid": 1941539293,
+   "name": "Unique_Boots_018_x1",
+   "valid": true
+  },
+  {
+   "bit": 471,
+   "gbid": 576615877,
+   "name": "Unique_Gloves_017_x1",
+   "valid": true
+  },
+  {
+   "bit": 472,
+   "gbid": 161420525,
+   "name": "Unique_Shield_007_x1",
+   "valid": true
+  },
+  {
+   "bit": 473,
+   "gbid": -1959749771,
+   "name": "Unique_Shoulder_002_x1",
+   "valid": true
+  },
+  {
+   "bit": 474,
+   "gbid": 785062630,
+   "name": "Unique_Axe_1H_003_x1",
+   "valid": true
+  },
+  {
+   "bit": 475,
+   "gbid": 221665945,
+   "name": "Unique_Cloak_002_x1",
+   "valid": true
+  },
+  {
+   "bit": 476,
+   "gbid": -1492848355,
+   "name": "PH_Helm",
+   "valid": false
+  },
+  {
+   "bit": 477,
+   "gbid": 334161780,
+   "name": "Unique_Helm_001_x1",
+   "valid": true
+  },
+  {
+   "bit": 478,
+   "gbid": -1028348776,
+   "name": "Unique_Sword_2H_012_x1",
+   "valid": true
+  },
+  {
+   "bit": 479,
+   "gbid": 1316989709,
+   "name": "Unique_Chest_018_x1",
+   "valid": true
+  },
+  {
+   "bit": 480,
+   "gbid": 446436243,
+   "name": "Unique_CombatStaff_2H_003_x1",
+   "valid": true
+  },
+  {
+   "bit": 481,
+   "gbid": -1153457107,
+   "name": "Unique_HandXBow_005_x1",
+   "valid": true
+  },
+  {
+   "bit": 482,
+   "gbid": -1555592217,
+   "name": "Unique_Axe_2H_003_x1",
+   "valid": true
+  },
+  {
+   "bit": 483,
+   "gbid": 1859914464,
+   "name": "Unique_Wand_009_x1",
+   "valid": true
+  },
+  {
+   "bit": 484,
+   "gbid": 1311299835,
+   "name": "Unique_Sword_1H_007_x1",
+   "valid": true
+  },
+  {
+   "bit": 485,
+   "gbid": 635687861,
+   "name": "Unique_SpiritStone_004_x1",
+   "valid": true
+  },
+  {
+   "bit": 486,
+   "gbid": -172997521,
+   "name": "Unique_XBow_011_x1",
+   "valid": true
+  },
+  {
+   "bit": 487,
+   "gbid": 1960711517,
+   "name": "Unique_Bow_008_x1",
+   "valid": true
+  },
+  {
+   "bit": 488,
+   "gbid": -1209826332,
+   "name": "Unique_Staff_003_x1",
+   "valid": true
+  },
+  {
+   "bit": 489,
+   "gbid": 1784514905,
+   "name": "Unique_CeremonialDagger_003_x1",
+   "valid": true
+  },
+  {
+   "bit": 490,
+   "gbid": 161456462,
+   "name": "Unique_Shield_008_x1",
+   "valid": true
+  },
+  {
+   "bit": 491,
+   "gbid": 635759735,
+   "name": "Unique_SpiritStone_006_x1",
+   "valid": true
+  },
+  {
+   "bit": 492,
+   "gbid": 2135043210,
+   "name": "Unique_Spear_002_x1",
+   "valid": true
+  },
+  {
+   "bit": 493,
+   "gbid": 1859806653,
+   "name": "Unique_Wand_006_x1",
+   "valid": true
+  },
+  {
+   "bit": 494,
+   "gbid": -1029319075,
+   "name": "Unique_Sword_2H_008_x1",
+   "valid": true
+  },
+  {
+   "bit": 495,
+   "gbid": 635723798,
+   "name": "Unique_SpiritStone_005_x1",
+   "valid": true
+  },
+  {
+   "bit": 496,
+   "gbid": 1311120150,
+   "name": "Unique_Sword_1H_002_x1",
+   "valid": true
+  },
+  {
+   "bit": 497,
+   "gbid": 1316774087,
+   "name": "Unique_Chest_012_x1",
+   "valid": true
+  },
+  {
+   "bit": 498,
+   "gbid": 1940389309,
+   "name": "Unique_Boots_009_x1",
+   "valid": true
+  },
+  {
+   "bit": 499,
+   "gbid": 414599680,
+   "name": "Unique_WizardHat_104_x1",
+   "valid": true
+  },
+  {
+   "bit": 500,
+   "gbid": -1096659066,
+   "name": "Unique_Fist_012_x1",
+   "valid": true
+  },
+  {
+   "bit": 501,
+   "gbid": -1512370403,
+   "name": "Unique_Mighty_1H_006_x1",
+   "valid": true
+  },
+  {
+   "bit": 502,
+   "gbid": 1859662905,
+   "name": "Unique_Wand_002_x1",
+   "valid": true
+  },
+  {
+   "bit": 503,
+   "gbid": -1895204290,
+   "name": "Unique_Mace_1H_003_x1",
+   "valid": true
+  },
+  {
+   "bit": 504,
+   "gbid": 1960459958,
+   "name": "Unique_Bow_001_x1",
+   "valid": true
+  },
+  {
+   "bit": 505,
+   "gbid": 1940101813,
+   "name": "Unique_Boots_001_x1",
+   "valid": true
+  },
+  {
+   "bit": 506,
+   "gbid": -1555664091,
+   "name": "Unique_Axe_2H_001_x1",
+   "valid": true
+  },
+  {
+   "bit": 507,
+   "gbid": -1959498212,
+   "name": "Unique_Shoulder_009_x1",
+   "valid": true
+  },
+  {
+   "bit": 508,
+   "gbid": -1554478170,
+   "name": "Unique_Axe_2H_011_x1",
+   "valid": true
+  },
+  {
+   "bit": 509,
+   "gbid": -1029462823,
+   "name": "Unique_Sword_2H_004_x1",
+   "valid": true
+  },
+  {
+   "bit": 510,
+   "gbid": -493654160,
+   "name": "Unique_SpiritStone_007_1xx",
+   "valid": false
+  },
+  {
+   "bit": 511,
+   "gbid": -1519116524,
+   "name": "Unique_Orb_004_x1",
+   "valid": true
+  },
+  {
+   "bit": 512,
+   "gbid": -1209898206,
+   "name": "Unique_Staff_001_x1",
+   "valid": true
+  },
+  {
+   "bit": 513,
+   "gbid": 60258143,
+   "name": "Unique_Mace_2H_012_x1",
+   "valid": true
+  },
+  {
+   "bit": 514,
+   "gbid": -1029355012,
+   "name": "Unique_Sword_2H_007_x1",
+   "valid": true
+  },
+  {
+   "bit": 515,
+   "gbid": 784990756,
+   "name": "Unique_Axe_1H_001_x1",
+   "valid": true
+  },
+  {
+   "bit": 516,
+   "gbid": -973849154,
+   "name": "Unique_Dagger_007_x1",
+   "valid": true
+  },
+  {
+   "bit": 517,
+   "gbid": 221773756,
+   "name": "Unique_Cloak_005_x1",
+   "valid": true
+  },
+  {
+   "bit": 518,
+   "gbid": -840161419,
+   "name": "Unique_VoodooMask_006_x1",
+   "valid": true
+  },
+  {
+   "bit": 519,
+   "gbid": 635651924,
+   "name": "Unique_SpiritStone_003_x1",
+   "valid": true
+  },
+  {
+   "bit": 520,
+   "gbid": -1959785708,
+   "name": "Unique_Shoulder_001_x1",
+   "valid": true
+  },
+  {
+   "bit": 521,
+   "gbid": -594428401,
+   "name": "PH_ChestArmor",
+   "valid": false
+  },
+  {
+   "bit": 522,
+   "gbid": 1961789627,
+   "name": "Unique_Bow_015_x1",
+   "valid": true
+  },
+  {
+   "bit": 523,
+   "gbid": 1312377945,
+   "name": "Unique_Sword_1H_014_x1",
+   "valid": true
+  },
+  {
+   "bit": 524,
+   "gbid": -400399377,
+   "name": "Unique_Quiver_006_x1",
+   "valid": false
+  },
+  {
+   "bit": 525,
+   "gbid": -1153493044,
+   "name": "Unique_HandXBow_004_x1",
+   "valid": true
+  },
+  {
+   "bit": 526,
+   "gbid": 1317025646,
+   "name": "Unique_Chest_019_x1",
+   "valid": true
+  },
+  {
+   "bit": 527,
+   "gbid": -400435314,
+   "name": "Unique_Quiver_005_x1",
+   "valid": false
+  },
+  {
+   "bit": 528,
+   "gbid": 1784550842,
+   "name": "Unique_CeremonialDagger_004_x1",
+   "valid": true
+  },
+  {
+   "bit": 529,
+   "gbid": 335347701,
+   "name": "Unique_Helm_011_x1",
+   "valid": true
+  },
+  {
+   "bit": 530,
+   "gbid": 786248551,
+   "name": "Unique_Axe_1H_013_x1",
+   "valid": true
+  },
+  {
+   "bit": 531,
+   "gbid": -1987972992,
+   "name": "Unique_Polearm_003_x1",
+   "valid": true
+  },
+  {
+   "bit": 532,
+   "gbid": -1096623129,
+   "name": "Unique_Fist_013_x1",
+   "valid": true
+  },
+  {
+   "bit": 533,
+   "gbid": 1028277410,
+   "name": "Unique_Shield_004_1xx",
+   "valid": false
+  },
+  {
+   "bit": 534,
+   "gbid": 334269591,
+   "name": "Unique_Helm_004_x1",
+   "valid": true
+  },
+  {
+   "bit": 535,
+   "gbid": -400579062,
+   "name": "Unique_Quiver_001_x1",
+   "valid": false
+  },
+  {
+   "bit": 536,
+   "gbid": 335527386,
+   "name": "Unique_Helm_016_x1",
+   "valid": true
+  },
+  {
+   "bit": 537,
+   "gbid": 446472180,
+   "name": "Unique_CombatStaff_2H_004_x1",
+   "valid": true
+  },
+  {
+   "bit": 538,
+   "gbid": -1492657844,
+   "name": "PH_Mojo",
+   "valid": false
+  },
+  {
+   "bit": 539,
+   "gbid": 595814643,
+   "name": "Unique_CeremonialDagger_Promo_01_x1",
+   "valid": true
+  },
+  {
+   "bit": 540,
+   "gbid": 375428350,
+   "name": "Unique_WizardHat_003_x1",
+   "valid": true
+  },
+  {
+   "bit": 541,
+   "gbid": -1096551255,
+   "name": "Unique_Fist_015_x1",
+   "valid": true
+  },
+  {
+   "bit": 542,
+   "gbid": 441870172,
+   "name": "Unique_Mighty_2H_004_x1",
+   "valid": true
+  },
+  {
+   "bit": 543,
+   "gbid": -961508890,
+   "name": "Unique_Mojo_004_x1",
+   "valid": true
+  },
+  {
+   "bit": 544,
+   "gbid": 375356476,
+   "name": "Unique_WizardHat_001_x1",
+   "valid": true
+  },
+  {
+   "bit": 545,
+   "gbid": 576508066,
+   "name": "Unique_Gloves_014_x1",
+   "valid": true
+  },
+  {
+   "bit": 546,
+   "gbid": -774453323,
+   "name": "Unique_Pants_002_x1",
+   "valid": true
+  },
+  {
+   "bit": 547,
+   "gbid": 1312557630,
+   "name": "Unique_Sword_1H_019_x1",
+   "valid": true
+  },
+  {
+   "bit": 548,
+   "gbid": 1940317435,
+   "name": "Unique_Boots_007_x1",
+   "valid": true
+  },
+  {
+   "bit": 549,
+   "gbid": -1451975225,
+   "name": "Unique_XBow_002_1xx",
+   "valid": false
+  },
+  {
+   "bit": 550,
+   "gbid": 1311192024,
+   "name": "Unique_Sword_1H_004_x1",
+   "valid": true
+  },
+  {
+   "bit": 551,
+   "gbid": 334377402,
+   "name": "Unique_Helm_007_x1",
+   "valid": true
+  },
+  {
+   "bit": 552,
+   "gbid": 446579991,
+   "name": "Unique_CombatStaff_2H_007_x1",
+   "valid": true
+  },
+  {
+   "bit": 553,
+   "gbid": 1961609942,
+   "name": "Unique_Bow_010_x1",
+   "valid": true
+  },
+  {
+   "bit": 554,
+   "gbid": 2135115084,
+   "name": "Unique_Spear_004_x1",
+   "valid": true
+  },
+  {
+   "bit": 555,
+   "gbid": -2026108002,
+   "name": "PH_Boots",
+   "valid": false
+  },
+  {
+   "bit": 556,
+   "gbid": -400471251,
+   "name": "Unique_Quiver_004_x1",
+   "valid": false
+  },
+  {
+   "bit": 557,
+   "gbid": -1511328230,
+   "name": "Unique_Mighty_1H_012_x1",
+   "valid": true
+  },
+  {
+   "bit": 558,
+   "gbid": 446508117,
+   "name": "Unique_CombatStaff_2H_005_x1",
+   "valid": true
+  },
+  {
+   "bit": 559,
+   "gbid": 974107120,
+   "name": "Unique_Helm_Promo_01_x1",
+   "valid": true
+  },
+  {
+   "bit": 560,
+   "gbid": 575429956,
+   "name": "Unique_Gloves_007_x1",
+   "valid": true
+  },
+  {
+   "bit": 561,
+   "gbid": -961544827,
+   "name": "Unique_Mojo_003_x1",
+   "valid": true
+  },
+  {
+   "bit": 562,
+   "gbid": -774345512,
+   "name": "Unique_Pants_005_x1",
+   "valid": true
+  },
+  {
+   "bit": 563,
+   "gbid": -1241811056,
+   "name": "Unique_CeremonialDagger_002_1xx",
+   "valid": false
+  },
+  {
+   "bit": 564,
+   "gbid": -400507188,
+   "name": "Unique_Quiver_003_x1",
+   "valid": false
+  },
+  {
+   "bit": 565,
+   "gbid": 1318139693,
+   "name": "Unique_Chest_027_x1",
+   "valid": true
+  },
+  {
+   "bit": 566,
+   "gbid": -1959570086,
+   "name": "Unique_Shoulder_007_x1",
+   "valid": true
+  },
+  {
+   "bit": 567,
+   "gbid": -1511220419,
+   "name": "Unique_Mighty_1H_015_x1",
+   "valid": true
+  },
+  {
+   "bit": 568,
+   "gbid": -961329205,
+   "name": "Unique_Mojo_009_x1",
+   "valid": true
+  },
+  {
+   "bit": 569,
+   "gbid": -174183442,
+   "name": "Unique_XBow_001_x1",
+   "valid": true
+  },
+  {
+   "bit": 570,
+   "gbid": -1934140787,
+   "name": "Unique_Orb_Promo_01_x1",
+   "valid": true
+  },
+  {
+   "bit": 571,
+   "gbid": -96858155,
+   "name": "Unique_Mighty_2H_Promo_01_x1",
+   "valid": true
+  },
+  {
+   "bit": 572,
+   "gbid": 334197717,
+   "name": "Unique_Helm_002_x1",
+   "valid": true
+  },
+  {
+   "bit": 573,
+   "gbid": 441762361,
+   "name": "Unique_Mighty_2H_001_x1",
+   "valid": true
+  },
+  {
+   "bit": 574,
+   "gbid": -922409434,
+   "name": "Unique_Mojo_103_x1",
+   "valid": true
+  },
+  {
+   "bit": 575,
+   "gbid": 386204432,
+   "name": "Unique_Sword_2H_003_1xx",
+   "valid": false
+  },
+  {
+   "bit": 576,
+   "gbid": -172961584,
+   "name": "Unique_XBow_012_x1",
+   "valid": true
+  },
+  {
+   "bit": 577,
+   "gbid": -973885091,
+   "name": "Unique_Dagger_006_x1",
+   "valid": true
+  },
+  {
+   "bit": 578,
+   "gbid": -1895132416,
+   "name": "Unique_Mace_1H_005_x1",
+   "valid": true
+  },
+  {
+   "bit": 579,
+   "gbid": -767866790,
+   "name": "PH_1HWeapon",
+   "valid": false
+  },
+  {
+   "bit": 580,
+   "gbid": -1097809050,
+   "name": "Unique_Fist_003_x1",
+   "valid": true
+  },
+  {
+   "bit": 581,
+   "gbid": 2050033703,
+   "name": "PH_Gloves",
+   "valid": false
+  },
+  {
+   "bit": 582,
+   "gbid": -1097737176,
+   "name": "Unique_Fist_005_x1",
+   "valid": true
+  },
+  {
+   "bit": 583,
+   "gbid": -1264894464,
+   "name": "Unique_Staff_007_1xx",
+   "valid": false
+  },
+  {
+   "bit": 584,
+   "gbid": -2010009315,
+   "name": "PH_Pants",
+   "valid": false
+  },
+  {
+   "bit": 585,
+   "gbid": 229247441,
+   "name": "Unique_Sword_1H_Promo_01_x1",
+   "valid": true
+  },
+  {
+   "bit": 586,
+   "gbid": 446400306,
+   "name": "Unique_CombatStaff_2H_002_x1",
+   "valid": true
+  },
+  {
+   "bit": 587,
+   "gbid": -1895024605,
+   "name": "Unique_Mace_1H_008_x1",
+   "valid": true
+  },
+  {
+   "bit": 588,
+   "gbid": 2032005920,
+   "name": "Unique_Fist_Promo_01_x1",
+   "valid": true
+  },
+  {
+   "bit": 589,
+   "gbid": -44923323,
+   "name": "Unique_HandXBow_Promo_01_x1",
+   "valid": true
+  },
+  {
+   "bit": 590,
+   "gbid": 1316702213,
+   "name": "Unique_Chest_010_x1",
+   "valid": true
+  },
+  {
+   "bit": 591,
+   "gbid": 469405346,
+   "name": "Unique_Chest_006_1xx",
+   "valid": false
+  },
+  {
+   "bit": 592,
+   "gbid": 1784443031,
+   "name": "Unique_CeremonialDagger_001_x1",
+   "valid": true
+  },
+  {
+   "bit": 593,
+   "gbid": -1780286480,
+   "name": "PH_Shield",
+   "valid": false
+  },
+  {
+   "bit": 594,
+   "gbid": 1861064448,
+   "name": "Unique_Wand_018_x1",
+   "valid": true
+  },
+  {
+   "bit": 595,
+   "gbid": -1554514107,
+   "name": "Unique_Axe_2H_010_x1",
+   "valid": true
+  },
+  {
+   "bit": 596,
+   "gbid": -1988008929,
+   "name": "Unique_Polearm_002_x1",
+   "valid": true
+  },
+  {
+   "bit": 597,
+   "gbid": -774273638,
+   "name": "Unique_Pants_007_x1",
+   "valid": true
+  },
+  {
+   "bit": 598,
+   "gbid": 785170441,
+   "name": "Unique_Axe_1H_006_x1",
+   "valid": true
+  },
+  {
+   "bit": 599,
+   "gbid": 1859698842,
+   "name": "Unique_Wand_003_x1",
+   "valid": true
+  },
+  {
+   "bit": 600,
+   "gbid": -1209718521,
+   "name": "Unique_Staff_006_x1",
+   "valid": true
+  },
+  {
+   "bit": 601,
+   "gbid": 60186269,
+   "name": "Unique_Mace_2H_010_x1",
+   "valid": true
+  },
+  {
+   "bit": 602,
+   "gbid": -1099096773,
+   "name": "PH_2HWeapon",
+   "valid": false
+  },
+  {
+   "bit": 603,
+   "gbid": 974143057,
+   "name": "Unique_Helm_Promo_02_x1",
+   "valid": true
+  },
+  {
+   "bit": 604,
+   "gbid": 215071258,
+   "name": "PH_Orb",
+   "valid": false
+  },
+  {
+   "bit": 605,
+   "gbid": -537237168,
+   "name": "PH_Shoulders",
+   "valid": false
+  },
+  {
+   "bit": 606,
+   "gbid": -1266666514,
+   "name": "p2_handXbow_norm_unique_02",
+   "valid": false
+  },
+  {
+   "bit": 607,
+   "gbid": 1239902833,
+   "name": "x1_Helm_norm_season_01",
+   "valid": false
+  },
+  {
+   "bit": 608,
+   "gbid": 1902294393,
+   "name": "x1_shoulderPads_norm_season_01",
+   "valid": false
+  },
+  {
+   "bit": 609,
+   "gbid": -1511364167,
+   "name": "Unique_Mighty_1H_011_x1",
+   "valid": true
+  },
+  {
+   "bit": 610,
+   "gbid": 635867546,
+   "name": "Unique_SpiritStone_009_x1",
+   "valid": true
+  },
+  {
+   "bit": 611,
+   "gbid": -1894090243,
+   "name": "Unique_Mace_1H_011_x1",
+   "valid": true
+  },
+  {
+   "bit": 612,
+   "gbid": 507255184,
+   "name": "Unique_Shoulder_Promo_01_x1",
+   "valid": true
+  },
+  {
+   "bit": 613,
+   "gbid": 1821181577,
+   "name": "x1_chestArmor_norm_promo_03",
+   "valid": true
+  },
+  {
+   "bit": 614,
+   "gbid": 1413644935,
+   "name": "p2_Mojo_norm_unique_01",
+   "valid": false
+  },
+  {
+   "bit": 615,
+   "gbid": -960466717,
+   "name": "Unique_Mojo_010_x1",
+   "valid": true
+  },
+  {
+   "bit": 616,
+   "gbid": -1266666513,
+   "name": "p2_handXbow_norm_unique_03",
+   "valid": true
+  },
+  {
+   "bit": 617,
+   "gbid": 1935108657,
+   "name": "P1_Unique_SpiritStone_008",
+   "valid": true
+  },
+  {
+   "bit": 618,
+   "gbid": 1413644936,
+   "name": "p2_Mojo_norm_unique_02",
+   "valid": true
+  },
+  {
+   "bit": 619,
+   "gbid": 1941359608,
+   "name": "Unique_Boots_013_x1",
+   "valid": true
+  },
+  {
+   "bit": 620,
+   "gbid": 93570834,
+   "name": "p2_fistWeapon_norm_unique_01",
+   "valid": false
+  },
+  {
+   "bit": 621,
+   "gbid": 93570835,
+   "name": null,
+   "valid": false
+  },
+  {
+   "bit": 622,
+   "gbid": -922373497,
+   "name": null,
+   "valid": false
+  },
+  {
+   "bit": 623,
+   "gbid": -1415147493,
+   "name": "p1_Wand_norm_unique_01",
+   "valid": true
+  },
+  {
+   "bit": 624,
+   "gbid": 2135079147,
+   "name": "Unique_Spear_003_x1",
+   "valid": true
+  },
+  {
+   "bit": 625,
+   "gbid": -1518038414,
+   "name": "Unique_Orb_011_x1",
+   "valid": true
+  },
+  {
+   "bit": 626,
+   "gbid": 1312306071,
+   "name": "Unique_Sword_1H_012_x1",
+   "valid": true
+  },
+  {
+   "bit": 627,
+   "gbid": 1306966712,
+   "name": "ThorTest_Quiver",
+   "valid": false
+  },
+  {
+   "bit": 628,
+   "gbid": 334341465,
+   "name": "Unique_Helm_006_x1",
+   "valid": true
+  },
+  {
+   "bit": 629,
+   "gbid": -1409366405,
+   "name": "p1_Staff_norm_promo_01",
+   "valid": false
+  },
+  {
+   "bit": 630,
+   "gbid": 2112365407,
+   "name": "x1_shoulderPads_norm_promo_03",
+   "valid": true
+  },
+  {
+   "bit": 631,
+   "gbid": -840089545,
+   "name": "Unique_VoodooMask_008_x1",
+   "valid": true
+  },
+  {
+   "bit": 632,
+   "gbid": 1413644937,
+   "name": "p2_Mojo_norm_unique_03",
+   "valid": true
+  },
+  {
+   "bit": 633,
+   "gbid": -363391670,
+   "name": "HandXbow_000",
+   "valid": false
+  },
+  {
+   "bit": 634,
+   "gbid": 376423603,
+   "name": "p2_xbow_norm_unique_02",
+   "valid": true
+  },
+  {
+   "bit": 635,
+   "gbid": 161492399,
+   "name": "Unique_Shield_009_x1",
+   "valid": true
+  },
+  {
+   "bit": 636,
+   "gbid": -840125482,
+   "name": "Unique_VoodooMask_007_x1",
+   "valid": true
+  },
+  {
+   "bit": 637,
+   "gbid": -870273164,
+   "name": "p2_flail2H_norm_unique_01",
+   "valid": false
+  },
+  {
+   "bit": 638,
+   "gbid": -840341104,
+   "name": "Unique_VoodooMask_001_x1",
+   "valid": true
+  },
+  {
+   "bit": 639,
+   "gbid": 161240840,
+   "name": "Unique_Shield_002_x1",
+   "valid": true
+  },
+  {
+   "bit": 640,
+   "gbid": -639326280,
+   "name": "x1_Boots_norm_promo_03",
+   "valid": true
+  },
+  {
+   "bit": 641,
+   "gbid": -65175862,
+   "name": "Unique_Dagger_010_x1_210",
+   "valid": true
+  },
+  {
+   "bit": 642,
+   "gbid": 334449276,
+   "name": "Unique_Helm_009_x1",
+   "valid": true
+  },
+  {
+   "bit": 643,
+   "gbid": -870273163,
+   "name": "p2_flail2H_norm_unique_02",
+   "valid": false
+  },
+  {
+   "bit": 644,
+   "gbid": 1983862517,
+   "name": "p1_CruShield_norm_unique_02",
+   "valid": true
+  },
+  {
+   "bit": 645,
+   "gbid": -1029570634,
+   "name": "Unique_Sword_2H_001_x1",
+   "valid": true
+  },
+  {
+   "bit": 646,
+   "gbid": -1473010435,
+   "name": "p1_Mace_norm_promo_01",
+   "valid": false
+  },
+  {
+   "bit": 647,
+   "gbid": -1097629365,
+   "name": "Unique_Fist_008_x1",
+   "valid": true
+  },
+  {
+   "bit": 648,
+   "gbid": 376423602,
+   "name": "p2_xbow_norm_unique_01",
+   "valid": true
+  },
+  {
+   "bit": 649,
+   "gbid": 1316917835,
+   "name": "Unique_Chest_016_x1",
+   "valid": true
+  },
+  {
+   "bit": 650,
+   "gbid": -1153564918,
+   "name": "Unique_HandXBow_002_x1",
+   "valid": true
+  },
+  {
+   "bit": 651,
+   "gbid": 1937623756,
+   "name": "Art_Test_Chest_1",
+   "valid": true
+  },
+  {
+   "bit": 652,
+   "gbid": -1516420887,
+   "name": null,
+   "valid": false
+  },
+  {
+   "bit": 653,
+   "gbid": 2028438506,
+   "name": "p1_orb_norm_promo_01",
+   "valid": false
+  },
+  {
+   "bit": 654,
+   "gbid": 575250271,
+   "name": "Unique_Gloves_002_x1",
+   "valid": true
+  },
+  {
+   "bit": 655,
+   "gbid": -774309575,
+   "name": "Unique_Pants_006_x1",
+   "valid": true
+  },
+  {
+   "bit": 656,
+   "gbid": -1511400104,
+   "name": "Unique_Mighty_1H_010_x1",
+   "valid": true
+  },
+  {
+   "bit": 657,
+   "gbid": 960941427,
+   "name": "p2_flail1H_norm_unique_01",
+   "valid": false
+  },
+  {
+   "bit": 658,
+   "gbid": 1316810024,
+   "name": "Unique_Chest_013_x1",
+   "valid": true
+  },
+  {
+   "bit": 659,
+   "gbid": 795980376,
+   "name": "Art_Test_CruShield_1",
+   "valid": true
+  },
+  {
+   "bit": 660,
+   "gbid": -990363367,
+   "name": "Unique_Sword_2H_103_x1",
+   "valid": true
+  },
+  {
+   "bit": 661,
+   "gbid": 221809693,
+   "name": "Unique_Cloak_006_x1",
+   "valid": true
+  },
+  {
+   "bit": 662,
+   "gbid": 537275943,
+   "name": "p1_fistWeapon_norm_promo_01",
+   "valid": false
+  },
+  {
+   "bit": 663,
+   "gbid": 161312714,
+   "name": "Unique_Shield_004_x1",
+   "valid": true
+  },
+  {
+   "bit": 664,
+   "gbid": 335311764,
+   "name": "Unique_Helm_010_x1",
+   "valid": true
+  },
+  {
+   "bit": 665,
+   "gbid": 1236604967,
+   "name": "FistWeapon_1H_000",
+   "valid": false
+  },
+  {
+   "bit": 666,
+   "gbid": 1784730527,
+   "name": "Unique_CeremonialDagger_009_x1",
+   "valid": true
+  },
+  {
+   "bit": 667,
+   "gbid": 1142135055,
+   "name": "p1_bow_norm_promo_01",
+   "valid": false
+  },
+  {
+   "bit": 668,
+   "gbid": -1518002477,
+   "name": "Unique_Orb_012_x1",
+   "valid": true
+  },
+  {
+   "bit": 669,
+   "gbid": 375464287,
+   "name": "Unique_WizardHat_004_x1",
+   "valid": true
+  },
+  {
+   "bit": 670,
+   "gbid": 88665049,
+   "name": "Wand_000",
+   "valid": false
+  },
+  {
+   "bit": 671,
+   "gbid": -1266666515,
+   "name": "p2_handXbow_norm_unique_01",
+   "valid": false
+  },
+  {
+   "bit": 672,
+   "gbid": -1953260964,
+   "name": "p2_combatStaff_norm_unique_01",
+   "valid": true
+  },
+  {
+   "bit": 673,
+   "gbid": -1096695003,
+   "name": "Unique_Fist_011_x1",
+   "valid": true
+  },
+  {
+   "bit": 674,
+   "gbid": -174147505,
+   "name": "Unique_XBow_002_x1",
+   "valid": true
+  },
+  {
+   "bit": 675,
+   "gbid": -1097701239,
+   "name": "Unique_Fist_006_x1",
+   "valid": true
+  },
+  {
+   "bit": 676,
+   "gbid": 1979345017,
+   "name": "Unique_Boots_104_x1",
+   "valid": true
+  },
+  {
+   "bit": 677,
+   "gbid": -635269584,
+   "name": "CeremonialDagger_1H_000",
+   "valid": false
+  },
+  {
+   "bit": 678,
+   "gbid": 575286208,
+   "name": "Unique_Gloves_003_x1",
+   "valid": true
+  },
+  {
+   "bit": 679,
+   "gbid": -960430780,
+   "name": "Unique_Mojo_011_x1",
+   "valid": true
+  },
+  {
+   "bit": 680,
+   "gbid": 334413339,
+   "name": "Unique_Helm_008_x1",
+   "valid": true
+  },
+  {
+   "bit": 681,
+   "gbid": 334233654,
+   "name": "Unique_Helm_003_x1",
+   "valid": true
+  },
+  {
+   "bit": 682,
+   "gbid": 1860848826,
+   "name": "Unique_Wand_012_x1",
+   "valid": true
+  },
+  {
+   "bit": 683,
+   "gbid": -542544859,
+   "name": null,
+   "valid": false
+  },
+  {
+   "bit": 684,
+   "gbid": -389442788,
+   "name": "p1_mightyWeapon_2H_norm_promo_01",
+   "valid": false
+  },
+  {
+   "bit": 685,
+   "gbid": 59323781,
+   "name": "Unique_Mace_2H_009_x1",
+   "valid": true
+  },
+  {
+   "bit": 686,
+   "gbid": 446364369,
+   "name": "Unique_CombatStaff_2H_001_x1",
+   "valid": true
+  },
+  {
+   "bit": 687,
+   "gbid": 1941287734,
+   "name": "Unique_Boots_011_x1",
+   "valid": true
+  },
+  {
+   "bit": 688,
+   "gbid": -305758345,
+   "name": "x1_pants_norm_promo_03",
+   "valid": true
+  },
+  {
+   "bit": 689,
+   "gbid": 1283598556,
+   "name": "Art_Test_Pants_2",
+   "valid": true
+  },
+  {
+   "bit": 690,
+   "gbid": 1571690839,
+   "name": "x1_Helm_norm_promo_03",
+   "valid": true
+  },
+  {
+   "bit": 691,
+   "gbid": 1784478968,
+   "name": "Unique_CeremonialDagger_002_x1",
+   "valid": true
+  },
+  {
+   "bit": 692,
+   "gbid": 441942046,
+   "name": "Unique_Mighty_2H_006_x1",
+   "valid": true
+  },
+  {
+   "bit": 693,
+   "gbid": -1097593428,
+   "name": "Unique_Fist_009_x1",
+   "valid": true
+  },
+  {
+   "bit": 694,
+   "gbid": -174111568,
+   "name": "Unique_XBow_003_x1",
+   "valid": true
+  },
+  {
+   "bit": 695,
+   "gbid": -1519152461,
+   "name": "Unique_Orb_003_x1",
+   "valid": true
+  },
+  {
+   "bit": 696,
+   "gbid": -1028420650,
+   "name": "Unique_Sword_2H_010_x1",
+   "valid": true
+  },
+  {
+   "bit": 697,
+   "gbid": -115330289,
+   "name": "Unique_ChestArmor_028_x1",
+   "valid": true
+  },
+  {
+   "bit": 698,
+   "gbid": 931997597,
+   "name": "Art_Test_Boots_2",
+   "valid": true
+  },
+  {
+   "bit": 699,
+   "gbid": -961365142,
+   "name": "Unique_Mojo_008_x1",
+   "valid": true
+  },
+  {
+   "bit": 700,
+   "gbid": -1988044866,
+   "name": "Unique_Polearm_001_x1",
+   "valid": true
+  },
+  {
+   "bit": 701,
+   "gbid": -1209610710,
+   "name": "Unique_Staff_009_x1",
+   "valid": true
+  },
+  {
+   "bit": 702,
+   "gbid": 575465893,
+   "name": "Unique_Gloves_008_x1",
+   "valid": true
+  },
+  {
+   "bit": 703,
+   "gbid": 785206378,
+   "name": "Unique_Axe_1H_007_x1",
+   "valid": true
+  },
+  {
+   "bit": 704,
+   "gbid": 1983862516,
+   "name": "p1_CruShield_norm_unique_01",
+   "valid": true
+  },
+  {
+   "bit": 705,
+   "gbid": -1869550020,
+   "name": "Art_Test_Shoulder_2",
+   "valid": true
+  },
+  {
+   "bit": 706,
+   "gbid": 1960747454,
+   "name": "Unique_Bow_009_x1",
+   "valid": true
+  },
+  {
+   "bit": 707,
+   "gbid": 931997596,
+   "name": "Art_Test_Boots_1",
+   "valid": true
+  },
+  {
+   "bit": 708,
+   "gbid": 1860884763,
+   "name": "Unique_Wand_013_x1",
+   "valid": true
+  },
+  {
+   "bit": 709,
+   "gbid": 1937623757,
+   "name": "Art_Test_Chest_2",
+   "valid": true
+  },
+  {
+   "bit": 710,
+   "gbid": -1519224335,
+   "name": "Unique_Orb_001_x1",
+   "valid": true
+  },
+  {
+   "bit": 711,
+   "gbid": 1316845961,
+   "name": "Unique_Chest_014_x1",
+   "valid": true
+  },
+  {
+   "bit": 712,
+   "gbid": 1315588166,
+   "name": "Unique_Chest_002_x1",
+   "valid": true
+  },
+  {
+   "bit": 713,
+   "gbid": 795980377,
+   "name": "Art_Test_CruShield_2",
+   "valid": true
+  },
+  {
+   "bit": 714,
+   "gbid": 1312270134,
+   "name": "Unique_Sword_1H_011_x1",
+   "valid": true
+  },
+  {
+   "bit": 715,
+   "gbid": -1959713834,
+   "name": "Unique_Shoulder_003_x1",
+   "valid": true
+  },
+  {
+   "bit": 716,
+   "gbid": 1940353372,
+   "name": "Unique_Boots_008_x1",
+   "valid": true
+  },
+  {
+   "bit": 717,
+   "gbid": 442912345,
+   "name": "Unique_Mighty_2H_010_x1",
+   "valid": true
+  },
+  {
+   "bit": 718,
+   "gbid": -1895276164,
+   "name": "Unique_Mace_1H_001_x1",
+   "valid": true
+  },
+  {
+   "bit": 719,
+   "gbid": 1661412389,
+   "name": "Axe_1H_000",
+   "valid": false
+  },
+  {
+   "bit": 720,
+   "gbid": 1422434076,
+   "name": "Art_Test_Helm_2",
+   "valid": true
+  },
+  {
+   "bit": 721,
+   "gbid": 93570836,
+   "name": "p2_fistWeapon_norm_unique_03",
+   "valid": false
+  },
+  {
+   "bit": 722,
+   "gbid": -1512406340,
+   "name": "Unique_Mighty_1H_005_x1",
+   "valid": true
+  },
+  {
+   "bit": 723,
+   "gbid": -774237701,
+   "name": "Unique_Pants_008_x1",
+   "valid": true
+  },
+  {
+   "bit": 724,
+   "gbid": 59072222,
+   "name": "Unique_Mace_2H_002_x1",
+   "valid": true
+  },
+  {
+   "bit": 725,
+   "gbid": 1941575230,
+   "name": "Unique_Boots_019_x1",
+   "valid": true
+  },
+  {
+   "bit": 726,
+   "gbid": 1941323671,
+   "name": "Unique_Boots_012_x1",
+   "valid": true
+  },
+  {
+   "bit": 727,
+   "gbid": -1153528981,
+   "name": "Unique_HandXBow_003_x1",
+   "valid": true
+  },
+  {
+   "bit": 728,
+   "gbid": 229283378,
+   "name": "Unique_Sword_1H_Promo_02_x1",
+   "valid": true
+  },
+  {
+   "bit": 729,
+   "gbid": -1555376595,
+   "name": "Unique_Axe_2H_009_x1",
+   "valid": true
+  },
+  {
+   "bit": 730,
+   "gbid": -1473306884,
+   "name": null,
+   "valid": false
+  },
+  {
+   "bit": 731,
+   "gbid": 1283598555,
+   "name": "Art_Test_Pants_1",
+   "valid": true
+  },
+  {
+   "bit": 732,
+   "gbid": -1209682584,
+   "name": "Unique_Staff_007_x1",
+   "valid": true
+  },
+  {
+   "bit": 733,
+   "gbid": -800575371,
+   "name": "Unique_Boots_Set_15_x1",
+   "valid": true
+  },
+  {
+   "bit": 734,
+   "gbid": 1999703162,
+   "name": "Unique_Bow_104_x1",
+   "valid": true
+  },
+  {
+   "bit": 735,
+   "gbid": 1315731914,
+   "name": "Unique_Chest_006_x1",
+   "valid": true
+  },
+  {
+   "bit": 736,
+   "gbid": -1415147492,
+   "name": "p1_wand_norm_unique_02",
+   "valid": true
+  },
+  {
+   "bit": 737,
+   "gbid": 1316881898,
+   "name": "Unique_Chest_015_x1",
+   "valid": true
+  },
+  {
+   "bit": 738,
+   "gbid": 785134504,
+   "name": "Unique_Axe_1H_005_x1",
+   "valid": true
+  },
+  {
+   "bit": 739,
+   "gbid": 1784694590,
+   "name": "Unique_CeremonialDagger_008_x1",
+   "valid": true
+  },
+  {
+   "bit": 740,
+   "gbid": -542544858,
+   "name": "Art_Test_Gloves_2",
+   "valid": true
+  },
+  {
+   "bit": 741,
+   "gbid": -773231465,
+   "name": "Unique_Pants_013_x1",
+   "valid": true
+  },
+  {
+   "bit": 742,
+   "gbid": 635795672,
+   "name": "Unique_SpiritStone_007_x1",
+   "valid": true
+  },
+  {
+   "bit": 743,
+   "gbid": -1029498760,
+   "name": "Unique_Sword_2H_003_x1",
+   "valid": true
+  },
+  {
+   "bit": 744,
+   "gbid": -1096730940,
+   "name": "Unique_Fist_010_x1",
+   "valid": true
+  },
+  {
+   "bit": 745,
+   "gbid": 204261921,
+   "name": "x1_Gloves_norm_promo_03",
+   "valid": true
+  },
+  {
+   "bit": 746,
+   "gbid": -1153600855,
+   "name": "Unique_HandXBow_001_x1",
+   "valid": true
+  },
+  {
+   "bit": 747,
+   "gbid": -1152378997,
+   "name": "Unique_HandXBow_012_x1",
+   "valid": true
+  },
+  {
+   "bit": 748,
+   "gbid": 446651865,
+   "name": "Unique_CombatStaff_2H_009_x1",
+   "valid": true
+  },
+  {
+   "bit": 749,
+   "gbid": -542544856,
+   "name": "Art_Test_Gloves_4",
+   "valid": true
+  },
+  {
+   "bit": 750,
+   "gbid": 931997603,
+   "name": "Art_Test_Boots_8",
+   "valid": true
+  },
+  {
+   "bit": 751,
+   "gbid": 1283598557,
+   "name": "Art_Test_Pants_3",
+   "valid": true
+  },
+  {
+   "bit": 752,
+   "gbid": 1283598562,
+   "name": "Art_Test_Pants_8",
+   "valid": true
+  },
+  {
+   "bit": 753,
+   "gbid": 931997601,
+   "name": "Art_Test_Boots_6",
+   "valid": true
+  },
+  {
+   "bit": 754,
+   "gbid": 916911835,
+   "name": "p1_ceremonialDagger_norm_unique_02",
+   "valid": true
+  },
+  {
+   "bit": 755,
+   "gbid": 931997600,
+   "name": "Art_Test_Boots_5",
+   "valid": true
+  },
+  {
+   "bit": 756,
+   "gbid": -542544854,
+   "name": "Art_Test_Gloves_6",
+   "valid": true
+  },
+  {
+   "bit": 757,
+   "gbid": -1506919977,
+   "name": "Art_Test_Flail_2H_2",
+   "valid": true
+  },
+  {
+   "bit": 758,
+   "gbid": 1937623763,
+   "name": "Art_Test_Chest_8",
+   "valid": true
+  },
+  {
+   "bit": 759,
+   "gbid": -233132078,
+   "name": "p1_fistWeapon_norm_unique_02",
+   "valid": true
+  },
+  {
+   "bit": 760,
+   "gbid": 1937623761,
+   "name": "Art_Test_Chest_6",
+   "valid": true
+  },
+  {
+   "bit": 761,
+   "gbid": 1784501907,
+   "name": "p1_flail1H_norm_unique_02",
+   "valid": false
+  },
+  {
+   "bit": 762,
+   "gbid": 1937623759,
+   "name": "Art_Test_Chest_4",
+   "valid": true
+  },
+  {
+   "bit": 763,
+   "gbid": -46712685,
+   "name": "p1_flail2H_norm_unique_01",
+   "valid": false
+  },
+  {
+   "bit": 764,
+   "gbid": -936099818,
+   "name": "P1_Unique_WizardHat_003",
+   "valid": true
+  },
+  {
+   "bit": 765,
+   "gbid": 1784501906,
+   "name": "p1_flail1H_norm_unique_01",
+   "valid": true
+  },
+  {
+   "bit": 766,
+   "gbid": 1283598560,
+   "name": "Art_Test_Pants_6",
+   "valid": true
+  },
+  {
+   "bit": 767,
+   "gbid": 931997598,
+   "name": "Art_Test_Boots_3",
+   "valid": true
+  },
+  {
+   "bit": 768,
+   "gbid": -542544852,
+   "name": "Art_Test_Gloves_8",
+   "valid": true
+  },
+  {
+   "bit": 769,
+   "gbid": -233132079,
+   "name": "p1_fistWeapon_norm_unique_01",
+   "valid": true
+  },
+  {
+   "bit": 770,
+   "gbid": 931997599,
+   "name": "Art_Test_Boots_4",
+   "valid": true
+  },
+  {
+   "bit": 771,
+   "gbid": 916911834,
+   "name": "P1_CeremonialDagger_norm_unique_01",
+   "valid": true
+  },
+  {
+   "bit": 772,
+   "gbid": -542544855,
+   "name": "Art_Test_Gloves_5",
+   "valid": true
+  },
+  {
+   "bit": 773,
+   "gbid": 1937623758,
+   "name": "Art_Test_Chest_3",
+   "valid": true
+  },
+  {
+   "bit": 774,
+   "gbid": -1506919978,
+   "name": "Art_Test_Flail_2H_1",
+   "valid": true
+  },
+  {
+   "bit": 775,
+   "gbid": 1283598561,
+   "name": "Art_Test_Pants_7",
+   "valid": true
+  },
+  {
+   "bit": 776,
+   "gbid": 1283598558,
+   "name": "Art_Test_Pants_4",
+   "valid": true
+  },
+  {
+   "bit": 777,
+   "gbid": -1506955915,
+   "name": "Art_Test_Flail_1H_1",
+   "valid": true
+  },
+  {
+   "bit": 778,
+   "gbid": 1349166157,
+   "name": "Art_Test_Fist_3",
+   "valid": true
+  },
+  {
+   "bit": 779,
+   "gbid": 1349166156,
+   "name": "Art_Test_Fist_2",
+   "valid": true
+  },
+  {
+   "bit": 780,
+   "gbid": 931997602,
+   "name": "Art_Test_Boots_7",
+   "valid": true
+  },
+  {
+   "bit": 781,
+   "gbid": 1937623762,
+   "name": "Art_Test_Chest_7",
+   "valid": true
+  },
+  {
+   "bit": 782,
+   "gbid": -46712684,
+   "name": "p1_flail2H_norm_unique_02",
+   "valid": false
+  },
+  {
+   "bit": 783,
+   "gbid": 1283598559,
+   "name": "Art_Test_Pants_5",
+   "valid": true
+  },
+  {
+   "bit": 784,
+   "gbid": 1937623760,
+   "name": "Art_Test_Chest_5",
+   "valid": true
+  },
+  {
+   "bit": 785,
+   "gbid": -542544857,
+   "name": "Art_Test_Gloves_3",
+   "valid": true
+  },
+  {
+   "bit": 786,
+   "gbid": 1349166155,
+   "name": "Art_Test_Fist_1",
+   "valid": true
+  },
+  {
+   "bit": 787,
+   "gbid": -542544853,
+   "name": "Art_Test_Gloves_7",
+   "valid": true
+  },
+  {
+   "bit": 788,
+   "gbid": -1981731756,
+   "name": "Unique_Shoulder_Set_06_x1",
+   "valid": true
+  },
+  {
+   "bit": 789,
+   "gbid": 826045588,
+   "name": "Unique_Pants_Set_06_x1",
+   "valid": true
+  },
+  {
+   "bit": 790,
+   "gbid": -801905304,
+   "name": "Unique_Boots_Set_01_p1",
+   "valid": true
+  },
+  {
+   "bit": 791,
+   "gbid": 334197453,
+   "name": "Unique_Helm_002_p1",
+   "valid": true
+  },
+  {
+   "bit": 792,
+   "gbid": 827015887,
+   "name": "Unique_Pants_Set_10_x1",
+   "valid": true
+  },
+  {
+   "bit": 793,
+   "gbid": 258783384,
+   "name": "Unique_Chest_Set_01_p1",
+   "valid": true
+  },
+  {
+   "bit": 794,
+   "gbid": 259933632,
+   "name": "Unique_Chest_Set_10_x1",
+   "valid": true
+  },
+  {
+   "bit": 795,
+   "gbid": 260149254,
+   "name": "Unique_Chest_Set_16_x1",
+   "valid": true
+  },
+  {
+   "bit": 796,
+   "gbid": 258963333,
+   "name": "Unique_Chest_Set_06_x1",
+   "valid": true
+  },
+  {
+   "bit": 797,
+   "gbid": 2058249489,
+   "name": "Unique_Gloves_Set_01_p1",
+   "valid": true
+  },
+  {
+   "bit": 798,
+   "gbid": -1981911705,
+   "name": "Unique_Shoulder_Set_01_p1",
+   "valid": true
+  },
+  {
+   "bit": 799,
+   "gbid": -777123311,
+   "name": "Unique_Orb_Set_06_x1",
+   "valid": true
+  },
+  {
+   "bit": 800,
+   "gbid": 825865639,
+   "name": "Unique_Pants_Set_01_p1",
+   "valid": true
+  },
+  {
+   "bit": 801,
+   "gbid": 2059399737,
+   "name": "Unique_Gloves_Set_10_x1",
+   "valid": true
+  },
+  {
+   "bit": 802,
+   "gbid": -2143372979,
+   "name": "P1_Unique_Boots_010",
+   "valid": true
+  },
+  {
+   "bit": 803,
+   "gbid": -1991949003,
+   "name": "Unique_Helm_Set_16_x1",
+   "valid": true
+  },
+  {
+   "bit": 804,
+   "gbid": -1993314873,
+   "name": "Unique_Helm_Set_01_p1",
+   "valid": true
+  },
+  {
+   "bit": 805,
+   "gbid": -1993134924,
+   "name": "Unique_Helm_Set_06_x1",
+   "valid": true
+  },
+  {
+   "bit": 806,
+   "gbid": -1992164625,
+   "name": "Unique_Helm_Set_10_x1",
+   "valid": true
+  },
+  {
+   "bit": 807,
+   "gbid": -800755056,
+   "name": "Unique_Boots_Set_10_x1",
+   "valid": true
+  },
+  {
+   "bit": 808,
+   "gbid": 258999270,
+   "name": "Unique_Chest_Set_07_x1",
+   "valid": true
+  },
+  {
+   "bit": 809,
+   "gbid": 2059615359,
+   "name": "Unique_Gloves_Set_16_x1",
+   "valid": true
+  },
+  {
+   "bit": 810,
+   "gbid": 2058429438,
+   "name": "Unique_Gloves_Set_06_x1",
+   "valid": true
+  },
+  {
+   "bit": 811,
+   "gbid": -1980761457,
+   "name": "Unique_Shoulder_Set_10_x1",
+   "valid": true
+  },
+  {
+   "bit": 812,
+   "gbid": -801725355,
+   "name": "Unique_Boots_Set_06_x1",
+   "valid": true
+  },
+  {
+   "bit": 813,
+   "gbid": 221665681,
+   "name": "Unique_Cloak_002_p1",
+   "valid": true
+  },
+  {
+   "bit": 814,
+   "gbid": -586378095,
+   "name": "X1_Pants_norm_season_01",
+   "valid": false
+  },
+  {
+   "bit": 815,
+   "gbid": 1422434077,
+   "name": "Art_Test_Helm_3",
+   "valid": true
+  },
+  {
+   "bit": 816,
+   "gbid": 691149644,
+   "name": "Art_Test_Boots_10",
+   "valid": true
+  },
+  {
+   "bit": 817,
+   "gbid": -1565608501,
+   "name": "Art_Test_Shoulder_10",
+   "valid": true
+  },
+  {
+   "bit": 818,
+   "gbid": 1422434080,
+   "name": "Art_Test_Helm_6",
+   "valid": true
+  },
+  {
+   "bit": 819,
+   "gbid": -304315733,
+   "name": "Art_Test_Helm_10",
+   "valid": true
+  },
+  {
+   "bit": 820,
+   "gbid": -590920594,
+   "name": "Art_Test_Pants_13",
+   "valid": true
+  },
+  {
+   "bit": 821,
+   "gbid": -724111114,
+   "name": "Art_Test_Gloves_11",
+   "valid": true
+  },
+  {
+   "bit": 822,
+   "gbid": -724111115,
+   "name": "Art_Test_Gloves_10",
+   "valid": true
+  },
+  {
+   "bit": 823,
+   "gbid": 883162595,
+   "name": "X1_chestArmor_norm_season_01",
+   "valid": false
+  },
+  {
+   "bit": 824,
+   "gbid": 1422434079,
+   "name": "Art_Test_Helm_5",
+   "valid": true
+  },
+  {
+   "bit": 825,
+   "gbid": -1869550016,
+   "name": "Art_Test_Shoulder_6",
+   "valid": true
+  },
+  {
+   "bit": 826,
+   "gbid": -1869550015,
+   "name": "Art_Test_Shoulder_7",
+   "valid": true
+  },
+  {
+   "bit": 827,
+   "gbid": -542544851,
+   "name": "Art_Test_Gloves_9",
+   "valid": true
+  },
+  {
+   "bit": 828,
+   "gbid": -935578501,
+   "name": "X1_Gloves_norm_season_01",
+   "valid": false
+  },
+  {
+   "bit": 829,
+   "gbid": -590920597,
+   "name": "Art_Test_Pants_10",
+   "valid": true
+  },
+  {
+   "bit": 830,
+   "gbid": 1422434082,
+   "name": "Art_Test_Helm_8",
+   "valid": true
+  },
+  {
+   "bit": 831,
+   "gbid": -1869550018,
+   "name": "Art_Test_Shoulder_4",
+   "valid": true
+  },
+  {
+   "bit": 832,
+   "gbid": 1290781938,
+   "name": "X1_Boots_norm_season_01",
+   "valid": false
+  },
+  {
+   "bit": 833,
+   "gbid": -590920596,
+   "name": "Art_Test_Pants_11",
+   "valid": true
+  },
+  {
+   "bit": 834,
+   "gbid": 1283598563,
+   "name": "Art_Test_Pants_9",
+   "valid": true
+  },
+  {
+   "bit": 835,
+   "gbid": 1422434081,
+   "name": "Art_Test_Helm_7",
+   "valid": true
+  },
+  {
+   "bit": 836,
+   "gbid": 931997604,
+   "name": "Art_Test_Boots_9",
+   "valid": true
+  },
+  {
+   "bit": 837,
+   "gbid": 1422434078,
+   "name": "Art_Test_Helm_4",
+   "valid": true
+  },
+  {
+   "bit": 838,
+   "gbid": -590920595,
+   "name": "Art_Test_Pants_12",
+   "valid": true
+  },
+  {
+   "bit": 839,
+   "gbid": 1889450717,
+   "name": "P2_Unique_Staff_003",
+   "valid": true
+  },
+  {
+   "bit": 840,
+   "gbid": -1869550017,
+   "name": "Art_Test_Shoulder_5",
+   "valid": true
+  },
+  {
+   "bit": 841,
+   "gbid": -1869550014,
+   "name": "Art_Test_Shoulder_8",
+   "valid": true
+  },
+  {
+   "bit": 842,
+   "gbid": -1869550019,
+   "name": "Art_Test_Shoulder_3",
+   "valid": true
+  },
+  {
+   "bit": 843,
+   "gbid": -206156951,
+   "name": "P2_Unique_Gloves_03",
+   "valid": true
+  },
+  {
+   "bit": 844,
+   "gbid": -184773473,
+   "name": "P2_Unique_Pants_03",
+   "valid": true
+  },
+  {
+   "bit": 845,
+   "gbid": 259969569,
+   "name": "Unique_Chest_Set_11_x1",
+   "valid": true
+  },
+  {
+   "bit": 846,
+   "gbid": 702613915,
+   "name": "Art_Test_Orb_4",
+   "valid": true
+  },
+  {
+   "bit": 847,
+   "gbid": -1565608500,
+   "name": "Art_Test_Shoulder_11",
+   "valid": true
+  },
+  {
+   "bit": 848,
+   "gbid": 1097296767,
+   "name": "P2_Unique_Boots_02",
+   "valid": true
+  },
+  {
+   "bit": 849,
+   "gbid": -1046338483,
+   "name": "P2_Unique_Helm_001",
+   "valid": true
+  },
+  {
+   "bit": 850,
+   "gbid": 841509025,
+   "name": "P2_Unique_Shield_002",
+   "valid": true
+  },
+  {
+   "bit": 851,
+   "gbid": -184773472,
+   "name": "P2_Unique_Pants_04",
+   "valid": true
+  },
+  {
+   "bit": 852,
+   "gbid": -206156952,
+   "name": "P2_Unique_Gloves_02",
+   "valid": true
+  },
+  {
+   "bit": 853,
+   "gbid": 702613913,
+   "name": "Art_Test_Orb_2",
+   "valid": true
+  },
+  {
+   "bit": 854,
+   "gbid": 827051824,
+   "name": "Unique_Pants_Set_11_x1",
+   "valid": true
+  },
+  {
+   "bit": 855,
+   "gbid": 1351477401,
+   "name": "Unique_Sword_1H_113_x1",
+   "valid": true
+  },
+  {
+   "bit": 856,
+   "gbid": -206156953,
+   "name": "P2_Unique_Gloves_01",
+   "valid": true
+  },
+  {
+   "bit": 857,
+   "gbid": -184773474,
+   "name": "P2_Unique_Pants_02",
+   "valid": true
+  },
+  {
+   "bit": 858,
+   "gbid": 1097296766,
+   "name": "P2_Unique_Boots_01",
+   "valid": true
+  },
+  {
+   "bit": 859,
+   "gbid": -934821572,
+   "name": "Unique_Dagger_104_x1",
+   "valid": true
+  },
+  {
+   "bit": 860,
+   "gbid": -700134034,
+   "name": null,
+   "valid": false
+  },
+  {
+   "bit": 861,
+   "gbid": -1869550013,
+   "name": "Art_Test_Shoulder_9",
+   "valid": true
+  },
+  {
+   "bit": 862,
+   "gbid": 702613914,
+   "name": "Art_Test_Orb_3",
+   "valid": true
+  },
+  {
+   "bit": 863,
+   "gbid": -990327430,
+   "name": "Unique_Sword_2H_104_x1",
+   "valid": true
+  },
+  {
+   "bit": 864,
+   "gbid": -990291493,
+   "name": "Unique_Sword_2H_105_x1",
+   "valid": true
+  },
+  {
+   "bit": 865,
+   "gbid": -184773475,
+   "name": "P2_Unique_Pants_01",
+   "valid": true
+  },
+  {
+   "bit": 866,
+   "gbid": -304315732,
+   "name": "Art_Test_Helm_11",
+   "valid": true
+  },
+  {
+   "bit": 867,
+   "gbid": 1422434083,
+   "name": "Art_Test_Helm_9",
+   "valid": true
+  },
+  {
+   "bit": 868,
+   "gbid": -206156950,
+   "name": "P2_Unique_Gloves_04",
+   "valid": true
+  },
+  {
+   "bit": 869,
+   "gbid": 258783385,
+   "name": "Unique_Chest_Set_01_p2",
+   "valid": true
+  },
+  {
+   "bit": 870,
+   "gbid": -1993242998,
+   "name": "Unique_Helm_Set_03_p2",
+   "valid": true
+  },
+  {
+   "bit": 871,
+   "gbid": 2058285427,
+   "name": "Unique_Gloves_Set_02_p2",
+   "valid": true
+  },
+  {
+   "bit": 872,
+   "gbid": -801833429,
+   "name": "Unique_Boots_Set_03_p2",
+   "valid": true
+  },
+  {
+   "bit": 873,
+   "gbid": 2125089234,
+   "name": "P2_Unique_Mighty_2H_001",
+   "valid": true
+  },
+  {
+   "bit": 874,
+   "gbid": 1175281612,
+   "name": "P2_Unique_Orb_003",
+   "valid": true
+  },
+  {
+   "bit": 875,
+   "gbid": -801833428,
+   "name": "Unique_Boots_Set_03_p3",
+   "valid": true
+  },
+  {
+   "bit": 876,
+   "gbid": 825865640,
+   "name": "Unique_Pants_Set_01_p2",
+   "valid": true
+  },
+  {
+   "bit": 877,
+   "gbid": -1993314872,
+   "name": "Unique_Helm_Set_01_p2",
+   "valid": true
+  },
+  {
+   "bit": 878,
+   "gbid": -1993242997,
+   "name": "Unique_Helm_Set_03_p3",
+   "valid": true
+  },
+  {
+   "bit": 879,
+   "gbid": 258783386,
+   "name": "Unique_Chest_Set_01_p3",
+   "valid": true
+  },
+  {
+   "bit": 880,
+   "gbid": -1993278934,
+   "name": "Unique_Helm_Set_02_p3",
+   "valid": true
+  },
+  {
+   "bit": 881,
+   "gbid": 2058249491,
+   "name": "Unique_Gloves_Set_01_p3",
+   "valid": true
+  },
+  {
+   "bit": 882,
+   "gbid": 825937515,
+   "name": "Unique_Pants_Set_03_p3",
+   "valid": true
+  },
+  {
+   "bit": 883,
+   "gbid": -801869365,
+   "name": "Unique_Boots_Set_02_p3",
+   "valid": true
+  },
+  {
+   "bit": 884,
+   "gbid": -801905302,
+   "name": "Unique_Boots_Set_01_p3",
+   "valid": true
+  },
+  {
+   "bit": 885,
+   "gbid": 2058285428,
+   "name": "Unique_Gloves_Set_02_p3",
+   "valid": true
+  },
+  {
+   "bit": 886,
+   "gbid": 258855260,
+   "name": "Unique_Chest_Set_03_p3",
+   "valid": true
+  },
+  {
+   "bit": 887,
+   "gbid": 258819323,
+   "name": "Unique_Chest_Set_02_p3",
+   "valid": true
+  },
+  {
+   "bit": 888,
+   "gbid": -1993314871,
+   "name": "Unique_Helm_Set_01_p3",
+   "valid": true
+  },
+  {
+   "bit": 889,
+   "gbid": -801869366,
+   "name": "Unique_Boots_Set_02_p2",
+   "valid": true
+  },
+  {
+   "bit": 890,
+   "gbid": 2058249490,
+   "name": "Unique_Gloves_Set_01_p2",
+   "valid": true
+  },
+  {
+   "bit": 891,
+   "gbid": -36755477,
+   "name": "P2_Helm_LOTV",
+   "valid": false
+  },
+  {
+   "bit": 892,
+   "gbid": 825937514,
+   "name": "Unique_Pants_Set_03_p2",
+   "valid": true
+  },
+  {
+   "bit": 893,
+   "gbid": 258819322,
+   "name": "Unique_Chest_Set_02_p2",
+   "valid": true
+  },
+  {
+   "bit": 894,
+   "gbid": 825901577,
+   "name": "Unique_Pants_Set_02_p2",
+   "valid": true
+  },
+  {
+   "bit": 895,
+   "gbid": 825901578,
+   "name": "Unique_Pants_Set_02_p3",
+   "valid": true
+  },
+  {
+   "bit": 896,
+   "gbid": -1981839830,
+   "name": "Unique_Shoulder_Set_03_p2",
+   "valid": true
+  },
+  {
+   "bit": 897,
+   "gbid": 258855259,
+   "name": "Unique_Chest_Set_03_p2",
+   "valid": true
+  },
+  {
+   "bit": 898,
+   "gbid": -801905303,
+   "name": "Unique_Boots_Set_01_p2",
+   "valid": true
+  },
+  {
+   "bit": 899,
+   "gbid": -1981875766,
+   "name": "Unique_Shoulder_Set_02_p3",
+   "valid": true
+  },
+  {
+   "bit": 900,
+   "gbid": 2058321365,
+   "name": "Unique_Gloves_Set_03_p3",
+   "valid": true
+  },
+  {
+   "bit": 901,
+   "gbid": 825865641,
+   "name": "Unique_Pants_Set_01_p3",
+   "valid": true
+  },
+  {
+   "bit": 902,
+   "gbid": 2058321364,
+   "name": "Unique_Gloves_Set_03_p2",
+   "valid": true
+  },
+  {
+   "bit": 903,
+   "gbid": -1449741837,
+   "name": "P2_ShoulderPads_LOTV",
+   "valid": false
+  },
+  {
+   "bit": 904,
+   "gbid": -1981875767,
+   "name": "Unique_Shoulder_Set_02_p2",
+   "valid": true
+  },
+  {
+   "bit": 905,
+   "gbid": -1981911703,
+   "name": "Unique_Shoulder_Set_01_p3",
+   "valid": true
+  },
+  {
+   "bit": 906,
+   "gbid": -1993278935,
+   "name": "Unique_Helm_Set_02_p2",
+   "valid": true
+  },
+  {
+   "bit": 907,
+   "gbid": -1981839829,
+   "name": "Unique_Shoulder_Set_03_p3",
+   "valid": true
+  },
+  {
+   "bit": 908,
+   "gbid": 841509030,
+   "name": "P2_Unique_Shield_007",
+   "valid": true
+  },
+  {
+   "bit": 909,
+   "gbid": -1981911704,
+   "name": "Unique_Shoulder_Set_01_p2",
+   "valid": true
+  },
+  {
+   "bit": 910,
+   "gbid": 717504149,
+   "name": "P4_Unique_HandXBow_02",
+   "valid": true
+  },
+  {
+   "bit": 911,
+   "gbid": -304315726,
+   "name": "Art_Test_Helm_17",
+   "valid": true
+  },
+  {
+   "bit": 912,
+   "gbid": 1288371997,
+   "name": "P4_Unique_Staff_001",
+   "valid": true
+  },
+  {
+   "bit": 913,
+   "gbid": 1925746096,
+   "name": "P4_Unique_Shoulder_101",
+   "valid": true
+  },
+  {
+   "bit": 914,
+   "gbid": -638474348,
+   "name": "P4_Unique_Dagger_002",
+   "valid": true
+  },
+  {
+   "bit": 915,
+   "gbid": 717504148,
+   "name": "P4_Unique_HandXBow_01",
+   "valid": true
+  },
+  {
+   "bit": 916,
+   "gbid": -1527099964,
+   "name": "Art_Test_Mace_1H_2",
+   "valid": true
+  },
+  {
+   "bit": 917,
+   "gbid": -1506955914,
+   "name": "Art_Test_Flail_1H_2",
+   "valid": true
+  },
+  {
+   "bit": 918,
+   "gbid": 1584901006,
+   "name": "P4_Unique_Orb_003",
+   "valid": true
+  },
+  {
+   "bit": 919,
+   "gbid": 1159896909,
+   "name": "TransmogHelm_Illidan",
+   "valid": false
+  },
+  {
+   "bit": 920,
+   "gbid": -2116071426,
+   "name": "P4_Unique_Mojo_001",
+   "valid": true
+  },
+  {
+   "bit": 921,
+   "gbid": 842995367,
+   "name": "P3_Unique_HandXBow_005",
+   "valid": true
+  },
+  {
+   "bit": 922,
+   "gbid": 1584901007,
+   "name": "P4_Unique_Orb_004",
+   "valid": true
+  },
+  {
+   "bit": 923,
+   "gbid": -1992020877,
+   "name": "Unique_Helm_Set_14_x1",
+   "valid": true
+  },
+  {
+   "bit": 924,
+   "gbid": 1925746098,
+   "name": "P4_Unique_Shoulder_103",
+   "valid": true
+  },
+  {
+   "bit": 925,
+   "gbid": 565941040,
+   "name": "P3_Unique_Shoulder_102",
+   "valid": true
+  },
+  {
+   "bit": 926,
+   "gbid": -1980617709,
+   "name": "Unique_Shoulder_Set_14_x1",
+   "valid": true
+  },
+  {
+   "bit": 927,
+   "gbid": -686179530,
+   "name": "P4_flail1H_norm_unique_02",
+   "valid": true
+  },
+  {
+   "bit": 928,
+   "gbid": 2135114822,
+   "name": "Unique_Spear_004_p3",
+   "valid": true
+  },
+  {
+   "bit": 929,
+   "gbid": 1160204002,
+   "name": "P4_Unique_Chest_012",
+   "valid": true
+  },
+  {
+   "bit": 930,
+   "gbid": 1677910869,
+   "name": "P4_Unique_Mighty_2H_101",
+   "valid": true
+  },
+  {
+   "bit": 931,
+   "gbid": -413799279,
+   "name": "P4_Unique_Helm_102",
+   "valid": true
+  },
+  {
+   "bit": 932,
+   "gbid": 1692870602,
+   "name": "P4_Unique_Flail_2H_001",
+   "valid": true
+  },
+  {
+   "bit": 933,
+   "gbid": 1638775479,
+   "name": "P4_Unique_Mighty_1H_104",
+   "valid": true
+  },
+  {
+   "bit": 934,
+   "gbid": -285119529,
+   "name": "P3_Unique_Mighty_1H_006",
+   "valid": true
+  },
+  {
+   "bit": 935,
+   "gbid": 827087761,
+   "name": "Unique_Pants_Set_12_x1",
+   "valid": true
+  },
+  {
+   "bit": 936,
+   "gbid": 746976661,
+   "name": "P4_fistWeapon_norm_unique_02",
+   "valid": true
+  },
+  {
+   "bit": 937,
+   "gbid": 1677909785,
+   "name": "P4_Unique_Mighty_2H_006",
+   "valid": true
+  },
+  {
+   "bit": 938,
+   "gbid": 1584901004,
+   "name": "P4_Unique_Orb_001",
+   "valid": true
+  },
+  {
+   "bit": 939,
+   "gbid": 1665606857,
+   "name": "P4_Unique_Polearm_01",
+   "valid": true
+  },
+  {
+   "bit": 940,
+   "gbid": -2116071424,
+   "name": "P4_Unique_Mojo_003",
+   "valid": true
+  },
+  {
+   "bit": 941,
+   "gbid": -800683182,
+   "name": "Unique_Boots_Set_12_x1",
+   "valid": true
+  },
+  {
+   "bit": 942,
+   "gbid": 1584901005,
+   "name": "P4_Unique_Orb_002",
+   "valid": true
+  },
+  {
+   "bit": 943,
+   "gbid": -1882704736,
+   "name": "P4_Unique_Sword_1H_01",
+   "valid": true
+  },
+  {
+   "bit": 944,
+   "gbid": -413799278,
+   "name": "P4_Unique_Helm_103",
+   "valid": true
+  },
+  {
+   "bit": 945,
+   "gbid": 565941039,
+   "name": "P3_Unique_Shoulder_101",
+   "valid": true
+  },
+  {
+   "bit": 946,
+   "gbid": -304315729,
+   "name": "Art_Test_Helm_14",
+   "valid": true
+  },
+  {
+   "bit": 947,
+   "gbid": 2141721069,
+   "name": "P4_Unique_Flail_2H_Set_01_x1",
+   "valid": true
+  },
+  {
+   "bit": 948,
+   "gbid": -952039302,
+   "name": "TransmogShield_313",
+   "valid": false
+  },
+  {
+   "bit": 949,
+   "gbid": -1992056814,
+   "name": "Unique_Helm_Set_13_x1",
+   "valid": true
+  },
+  {
+   "bit": 950,
+   "gbid": -1565608497,
+   "name": "Art_Test_Shoulder_14",
+   "valid": true
+  },
+  {
+   "bit": 951,
+   "gbid": 1417415311,
+   "name": "P3_Unique_Helm_101",
+   "valid": true
+  },
+  {
+   "bit": 952,
+   "gbid": 1296237551,
+   "name": "P4_Unique_Fist_009_x1",
+   "valid": true
+  },
+  {
+   "bit": 953,
+   "gbid": -1170685627,
+   "name": "P4_Unique_Shield_Set_01_x1",
+   "valid": true
+  },
+  {
+   "bit": 954,
+   "gbid": 260113317,
+   "name": "Unique_Chest_Set_15_x1",
+   "valid": true
+  },
+  {
+   "bit": 955,
+   "gbid": -1980653646,
+   "name": "Unique_Shoulder_Set_13_x1",
+   "valid": true
+  },
+  {
+   "bit": 956,
+   "gbid": 1692870603,
+   "name": "P4_Unique_Flail_2H_002",
+   "valid": true
+  },
+  {
+   "bit": 957,
+   "gbid": 1891331216,
+   "name": "P4_Unique_Pants_002",
+   "valid": true
+  },
+  {
+   "bit": 958,
+   "gbid": 1638774391,
+   "name": "P4_Unique_Mighty_1H_005",
+   "valid": true
+  },
+  {
+   "bit": 959,
+   "gbid": 1401814465,
+   "name": "P4_Unique_Fist_102",
+   "valid": true
+  },
+  {
+   "bit": 960,
+   "gbid": -1968612863,
+   "name": "P4_Unique_Axe_1H_102",
+   "valid": true
+  },
+  {
+   "bit": 961,
+   "gbid": -1282511668,
+   "name": "Lewis_Test_Dagger",
+   "valid": true
+  },
+  {
+   "bit": 962,
+   "gbid": 1777573174,
+   "name": "P4_flail2H_norm_unique_01",
+   "valid": true
+  },
+  {
+   "bit": 963,
+   "gbid": 1417415312,
+   "name": null,
+   "valid": false
+  },
+  {
+   "bit": 964,
+   "gbid": 565941041,
+   "name": null,
+   "valid": false
+  },
+  {
+   "bit": 965,
+   "gbid": 1417415313,
+   "name": null,
+   "valid": false
+  },
+  {
+   "bit": 966,
+   "gbid": -692981644,
+   "name": "TransmogShoulders_001",
+   "valid": true
+  },
+  {
+   "bit": 967,
+   "gbid": -1915655615,
+   "name": "TransmogHelm_001",
+   "valid": true
+  },
+  {
+   "bit": 968,
+   "gbid": -1915655614,
+   "name": "TransmogHelm_002",
+   "valid": true
+  },
+  {
+   "bit": 969,
+   "gbid": 868864648,
+   "name": "TransmogFist_241_002",
+   "valid": true
+  },
+  {
+   "bit": 970,
+   "gbid": 1268253959,
+   "name": "TransmogMace_241_001",
+   "valid": false
+  },
+  {
+   "bit": 971,
+   "gbid": -1901213636,
+   "name": "TransmogFlail_241_004",
+   "valid": true
+  },
+  {
+   "bit": 972,
+   "gbid": -1901213639,
+   "name": "TransmogFlail_241_001",
+   "valid": true
+  },
+  {
+   "bit": 973,
+   "gbid": 868864647,
+   "name": "TransmogFist_241_001",
+   "valid": true
+  },
+  {
+   "bit": 974,
+   "gbid": 1345846545,
+   "name": "TransmogAxe_241_003",
+   "valid": true
+  },
+  {
+   "bit": 975,
+   "gbid": 1460786533,
+   "name": "TransmogStaff_241_001",
+   "valid": true
+  },
+  {
+   "bit": 976,
+   "gbid": 1345846544,
+   "name": "TransmogAxe_241_002",
+   "valid": true
+  },
+  {
+   "bit": 977,
+   "gbid": 761073718,
+   "name": "P41_Unique_Fist_007",
+   "valid": true
+  },
+  {
+   "bit": 978,
+   "gbid": 2089009826,
+   "name": "TransmogSword_241_003",
+   "valid": true
+  },
+  {
+   "bit": 979,
+   "gbid": 1345846543,
+   "name": "TransmogAxe_241_001",
+   "valid": true
+  },
+  {
+   "bit": 980,
+   "gbid": 2089009824,
+   "name": "TransmogSword_241_001",
+   "valid": true
+  },
+  {
+   "bit": 981,
+   "gbid": 2089009827,
+   "name": "TransmogSword_241_004",
+   "valid": true
+  },
+  {
+   "bit": 982,
+   "gbid": 1445202891,
+   "name": "P41_Unique_Gloves_002",
+   "valid": true
+  },
+  {
+   "bit": 983,
+   "gbid": -1418348863,
+   "name": "TransmogPolearm_241_001",
+   "valid": true
+  },
+  {
+   "bit": 984,
+   "gbid": 2089009828,
+   "name": "TransmogSword_241_005",
+   "valid": true
+  },
+  {
+   "bit": 985,
+   "gbid": 1345846546,
+   "name": "TransmogAxe_241_004",
+   "valid": true
+  },
+  {
+   "bit": 986,
+   "gbid": 1286110481,
+   "name": "TransmogXbow_241_001",
+   "valid": true
+  },
+  {
+   "bit": 987,
+   "gbid": 2089009825,
+   "name": "TransmogSword_241_002",
+   "valid": true
+  },
+  {
+   "bit": 988,
+   "gbid": 173517644,
+   "name": "TransmogSpear_241_001",
+   "valid": false
+  },
+  {
+   "bit": 989,
+   "gbid": 1445202926,
+   "name": "P41_Unique_Gloves_014",
+   "valid": true
+  },
+  {
+   "bit": 990,
+   "gbid": 1714382,
+   "name": "P41_Unique_Dagger_102_x1",
+   "valid": true
+  },
+  {
+   "bit": 991,
+   "gbid": 1484349569,
+   "name": "P41_Unique_CombatStaff_2H_005",
+   "valid": true
+  },
+  {
+   "bit": 992,
+   "gbid": 760767651,
+   "name": "P42_handXbow_norm_unique_03",
+   "valid": true
+  },
+  {
+   "bit": 993,
+   "gbid": -293058381,
+   "name": "P42_Unique_Mojo_004",
+   "valid": true
+  },
+  {
+   "bit": 994,
+   "gbid": -555900599,
+   "name": "P42_Unique_Flail_1H_106_x1",
+   "valid": true
+  },
+  {
+   "bit": 995,
+   "gbid": -2092166876,
+   "name": "P4_Unique_HandXBow_001",
+   "valid": true
+  },
+  {
+   "bit": 996,
+   "gbid": -379156678,
+   "name": "P42_Unique_Mojo_003_x1",
+   "valid": true
+  },
+  {
+   "bit": 997,
+   "gbid": -514234980,
+   "name": "P42_Unique_Fist_013_x1",
+   "valid": true
+  },
+  {
+   "bit": 998,
+   "gbid": -545974251,
+   "name": "p4_Helm_norm_anniversary_01",
+   "valid": false
+  },
+  {
+   "bit": 999,
+   "gbid": -380433061,
+   "name": "P43_Unique_HandXBow_005",
+   "valid": true
+  },
+  {
+   "bit": 1000,
+   "gbid": -1667628944,
+   "name": "p43_RetroAxe_001",
+   "valid": false
+  },
+  {
+   "bit": 1001,
+   "gbid": -616794194,
+   "name": "P43_Unique_Sword_2H_012_x1",
+   "valid": true
+  },
+  {
+   "bit": 1002,
+   "gbid": -484564528,
+   "name": "P43_Unique_Dagger_003_x1",
+   "valid": true
+  },
+  {
+   "bit": 1003,
+   "gbid": -1801991875,
+   "name": "p43_RetroTransmog_WirtsLeg",
+   "valid": false
+  },
+  {
+   "bit": 1004,
+   "gbid": -1385268356,
+   "name": "P43_Unique_Fist_003_x1",
+   "valid": true
+  },
+  {
+   "bit": 1005,
+   "gbid": 786688478,
+   "name": "P5_Unique_Dagger_003_x1",
+   "valid": true
+  },
+  {
+   "bit": 1006,
+   "gbid": 1064858330,
+   "name": "P43_Unique_Gloves_007_x1",
+   "valid": true
+  },
+  {
+   "bit": 1007,
+   "gbid": 2123052388,
+   "name": "P6_Unique_Scythe1H_01",
+   "valid": true
+  },
+  {
+   "bit": 1008,
+   "gbid": -1761289924,
+   "name": "P6_Necro_Set_1_Pants",
+   "valid": true
+  },
+  {
+   "bit": 1009,
+   "gbid": -1993638951,
+   "name": "P6_Necro_Unique_Helm_21",
+   "valid": true
+  },
+  {
+   "bit": 1010,
+   "gbid": 1284610786,
+   "name": "P6_Unique_Phylactery_03",
+   "valid": true
+  },
+  {
+   "bit": 1011,
+   "gbid": 1284610787,
+   "name": "P6_Unique_Phylactery_04",
+   "valid": true
+  },
+  {
+   "bit": 1012,
+   "gbid": 2097938736,
+   "name": "P6_Necro_Set_4_Chest",
+   "valid": true
+  },
+  {
+   "bit": 1013,
+   "gbid": 1667839014,
+   "name": "P6_Necro_Set_1_Gloves",
+   "valid": true
+  },
+  {
+   "bit": 1014,
+   "gbid": 2124238311,
+   "name": "P6_Unique_Scythe2H_03",
+   "valid": true
+  },
+  {
+   "bit": 1015,
+   "gbid": -2039961422,
+   "name": "P6_Necro_Set_4_Shoulders",
+   "valid": true
+  },
+  {
+   "bit": 1016,
+   "gbid": 2124238310,
+   "name": "P6_Unique_Scythe2H_02",
+   "valid": true
+  },
+  {
+   "bit": 1017,
+   "gbid": 1005379048,
+   "name": "P6_Necro_Set_3_Gloves",
+   "valid": true
+  },
+  {
+   "bit": 1018,
+   "gbid": 821646014,
+   "name": "P6_Necro_Set_3_Pants",
+   "valid": true
+  },
+  {
+   "bit": 1019,
+   "gbid": 1284610785,
+   "name": "P6_Unique_Phylactery_02",
+   "valid": true
+  },
+  {
+   "bit": 1020,
+   "gbid": 1336609031,
+   "name": "P6_Necro_Set_2_Gloves",
+   "valid": true
+  },
+  {
+   "bit": 1021,
+   "gbid": 1590673385,
+   "name": "Art_Test_Staff_1",
+   "valid": true
+  },
+  {
+   "bit": 1022,
+   "gbid": 2124238309,
+   "name": "P6_Unique_Scythe2H_01",
+   "valid": true
+  },
+  {
+   "bit": 1023,
+   "gbid": 674149065,
+   "name": "P6_Necro_Set_4_Gloves",
+   "valid": true
+  },
+  {
+   "bit": 1024,
+   "gbid": -1667341666,
+   "name": "P6_Necro_Set_3_Helm",
+   "valid": true
+  },
+  {
+   "bit": 1025,
+   "gbid": 1903976182,
+   "name": "P6_Unique_Spear_01",
+   "valid": true
+  },
+  {
+   "bit": 1026,
+   "gbid": -1993638950,
+   "name": "P6_Necro_Unique_Helm_22",
+   "valid": true
+  },
+  {
+   "bit": 1027,
+   "gbid": 1775003966,
+   "name": "Art_Test_Sword_1H_3",
+   "valid": true
+  },
+  {
+   "bit": 1028,
+   "gbid": 778057211,
+   "name": "P6_Necro_Unique_Boots_22",
+   "valid": true
+  },
+  {
+   "bit": 1029,
+   "gbid": 778057210,
+   "name": "P6_Necro_Unique_Boots_21",
+   "valid": true
+  },
+  {
+   "bit": 1030,
+   "gbid": -469821955,
+   "name": "P6_Necro_Set_2_Pants",
+   "valid": true
+  },
+  {
+   "bit": 1031,
+   "gbid": 1284610784,
+   "name": "P6_Unique_Phylactery_01",
+   "valid": true
+  },
+  {
+   "bit": 1032,
+   "gbid": 2143837475,
+   "name": "P6_Necro_Unique_Gloves_21",
+   "valid": true
+  },
+  {
+   "bit": 1033,
+   "gbid": -162363153,
+   "name": "P6_Necro_Set_1_Shoulders",
+   "valid": true
+  },
+  {
+   "bit": 1034,
+   "gbid": 2097015296,
+   "name": "P6_Necro_Set_4_Boots",
+   "valid": true
+  },
+  {
+   "bit": 1035,
+   "gbid": -1777388611,
+   "name": "P6_Necro_Set_1_Boots",
+   "valid": true
+  },
+  {
+   "bit": 1036,
+   "gbid": 2124238312,
+   "name": "P6_Unique_Scythe2H_04",
+   "valid": true
+  },
+  {
+   "bit": 1037,
+   "gbid": -396017877,
+   "name": "P6_Necro_Unique_Chest_22",
+   "valid": true
+  },
+  {
+   "bit": 1038,
+   "gbid": -1776465171,
+   "name": "P6_Necro_Set_1_Chest",
+   "valid": true
+  },
+  {
+   "bit": 1039,
+   "gbid": -1745612452,
+   "name": "P6_Necro_Set_1_Helm",
+   "valid": true
+  },
+  {
+   "bit": 1040,
+   "gbid": 2123052391,
+   "name": "P6_Unique_Scythe1H_04",
+   "valid": true
+  },
+  {
+   "bit": 1041,
+   "gbid": -504013030,
+   "name": "P6_Necro_Unique_Pants_22",
+   "valid": true
+  },
+  {
+   "bit": 1042,
+   "gbid": 2123052389,
+   "name": "P6_Unique_Scythe1H_02",
+   "valid": true
+  },
+  {
+   "bit": 1043,
+   "gbid": 1775003964,
+   "name": "Art_Test_Sword_1H_1",
+   "valid": true
+  },
+  {
+   "bit": 1044,
+   "gbid": 805547327,
+   "name": "P6_Necro_Set_3_Boots",
+   "valid": true
+  },
+  {
+   "bit": 1045,
+   "gbid": -987649171,
+   "name": "P6_Necro_Unique_Shoulders_22",
+   "valid": true
+  },
+  {
+   "bit": 1046,
+   "gbid": 2123052390,
+   "name": "P6_Unique_Scythe1H_03",
+   "valid": true
+  },
+  {
+   "bit": 1047,
+   "gbid": -1706477059,
+   "name": "P6_Necro_Set_2_Helm",
+   "valid": true
+  },
+  {
+   "bit": 1048,
+   "gbid": 2143837476,
+   "name": "P6_Necro_Unique_Gloves_22",
+   "valid": true
+  },
+  {
+   "bit": 1049,
+   "gbid": -484997202,
+   "name": "P6_Necro_Set_2_Chest",
+   "valid": true
+  },
+  {
+   "bit": 1050,
+   "gbid": 1590673387,
+   "name": "Art_Test_Staff_3",
+   "valid": true
+  },
+  {
+   "bit": 1051,
+   "gbid": 2113113983,
+   "name": "P6_Necro_Set_4_Pants",
+   "valid": true
+  },
+  {
+   "bit": 1052,
+   "gbid": -485920642,
+   "name": "P6_Necro_Set_2_Boots",
+   "valid": true
+  },
+  {
+   "bit": 1053,
+   "gbid": -504013031,
+   "name": "P6_Necro_Unique_Pants_21",
+   "valid": true
+  },
+  {
+   "bit": 1054,
+   "gbid": 806470767,
+   "name": "P6_Necro_Set_3_Chest",
+   "valid": true
+  },
+  {
+   "bit": 1055,
+   "gbid": 2075082288,
+   "name": "P6_Necro_Set_2_Shoulders",
+   "valid": true
+  },
+  {
+   "bit": 1056,
+   "gbid": 1590673388,
+   "name": "Art_Test_Staff_4",
+   "valid": true
+  },
+  {
+   "bit": 1057,
+   "gbid": -1628206273,
+   "name": "P6_Necro_Set_4_Helm",
+   "valid": true
+  },
+  {
+   "bit": 1058,
+   "gbid": -987649172,
+   "name": "P6_Necro_Unique_Shoulders_21",
+   "valid": true
+  },
+  {
+   "bit": 1059,
+   "gbid": 1775003965,
+   "name": "Art_Test_Sword_1H_2",
+   "valid": true
+  },
+  {
+   "bit": 1060,
+   "gbid": 1590673386,
+   "name": "Art_Test_Staff_2",
+   "valid": true
+  },
+  {
+   "bit": 1061,
+   "gbid": 702613912,
+   "name": "Art_Test_Orb_1",
+   "valid": true
+  },
+  {
+   "bit": 1062,
+   "gbid": 2077105940,
+   "name": "P6_Unique_Shield_01",
+   "valid": true
+  },
+  {
+   "bit": 1063,
+   "gbid": 17560433,
+   "name": "P6_Necro_Set_3_Shoulders",
+   "valid": true
+  },
+  {
+   "bit": 1064,
+   "gbid": -396017878,
+   "name": "P6_Necro_Unique_Chest_21",
+   "valid": true
+  },
+  {
+   "bit": 1065,
+   "gbid": 1775003967,
+   "name": "Art_Test_Sword_1H_4",
+   "valid": true
+  },
+  {
+   "bit": 1066,
+   "gbid": 1747207177,
+   "name": "P61_Unique_Flail_1H_105_x1",
+   "valid": true
+  },
+  {
+   "bit": 1067,
+   "gbid": -223029400,
+   "name": "P61_Unique_VoodooMask_102_x1",
+   "valid": true
+  },
+  {
+   "bit": 1068,
+   "gbid": 1571905343,
+   "name": "P61_Unique_CombatStaff_2H_001",
+   "valid": true
+  },
+  {
+   "bit": 1069,
+   "gbid": 1976308075,
+   "name": "P61_Necro_Unique_Helm_22",
+   "valid": true
+  },
+  {
+   "bit": 1070,
+   "gbid": 237815937,
+   "name": "P61_Unique_Flail_2H_104",
+   "valid": true
+  },
+  {
+   "bit": 1071,
+   "gbid": 1618957961,
+   "name": "P61_Unique_CruShield_102_x1",
+   "valid": true
+  },
+  {
+   "bit": 1072,
+   "gbid": 1655219915,
+   "name": "P61_Necro_Unique_Pants_22",
+   "valid": true
+  },
+  {
+   "bit": 1073,
+   "gbid": -1036928904,
+   "name": "P61_Unique_Staff_009",
+   "valid": true
+  },
+  {
+   "bit": 1074,
+   "gbid": 1655219914,
+   "name": "P61_Necro_Unique_Pants_21",
+   "valid": true
+  },
+  {
+   "bit": 1075,
+   "gbid": 1209211922,
+   "name": "P61_Wand_norm_unique_02",
+   "valid": true
+  }
+ ]
+}
