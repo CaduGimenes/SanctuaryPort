@@ -11,6 +11,10 @@
   <a href="https://recomplauncher.com/game/sanctuaryport"><picture><source media="(prefers-color-scheme: dark)" srcset="https://recomplauncher.com/assets/press/launcher/badge-light.svg"><img alt="Get it on RecompLauncher" src="https://recomplauncher.com/assets/press/launcher/badge-dark.svg" height="48"></picture></a>
 </p>
 
+<p align="center">
+  <a href="https://buymeacoffee.com/cadugimenek"><img alt="Buy me a coffee" src="https://img.shields.io/badge/Buy%20me%20a%20coffee-FFDD00?style=for-the-badge&logo=buymeacoffee&logoColor=black" height="40"></a>
+</p>
+
 ---
 
 SanctuaryPort runs the PlayStation 4 version of **Diablo III** natively on a PC: the Brazilian

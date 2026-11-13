@@ -2,6 +2,8 @@
 
 [English](README.md) · Português (Brasil)
 
+[![Me pague um café](https://img.shields.io/badge/Buy%20me%20a%20coffee-FFDD00?style=for-the-badge&logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/cadugimenek)
+
 Port nativo da versão de PS4 de **Diablo III**: a versão brasileira (CUSA00243) com a
 atualização 1.47, que é a **Eternal Collection** (com o Necromante), e a americana *Reaper of
 Souls – Ultimate Evil Edition* 1.00 (CUSA00242). O código original do jogo roda direto no seu processador, um runtime substitui as
