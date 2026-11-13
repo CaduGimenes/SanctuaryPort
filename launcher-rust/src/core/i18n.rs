@@ -112,6 +112,20 @@ static UI_EXTRA: &[(&str, &[(&str, &str)])] = &[
             ("ru", "Дешёвое сглаживание 3D-картинки (HUD остаётся чётким), немного мягкое. Не используется при включённом FSR 3."),
         ],
     ),
+    // Graphics > Frame rate (2026-11-13): the game's own frame limiter.
+    (
+        "The game's own frame limiter. 120 and Unlimited go past 60 when your PC keeps up; the game's speed stays the same.",
+        &[("zh", "游戏自带的帧率限制。电脑性能足够时，120 和无限制可以超过 60 帧；游戏速度保持不变。"),
+            ("pt", "O limitador de quadros do próprio jogo. 120 e Ilimitado passam de 60 quando o PC aguenta; a velocidade do jogo continua a mesma."),
+            ("es", "El limitador de fotogramas del propio juego. 120 e Ilimitado superan los 60 si tu PC puede; la velocidad del juego no cambia."),
+            ("pl", "Własny ogranicznik klatek gry. 120 i Bez limitu przekraczają 60, gdy komputer daje radę; tempo gry się nie zmienia."),
+            ("ru", "Собственный ограничитель кадров игры. 120 и «Без ограничений» дают больше 60, если ПК справляется; скорость игры не меняется."),
+        ],
+    ),
+    (
+        "60 FPS (the game's own)",
+        &[("zh", "60 FPS（游戏默认）"), ("pt", "60 FPS (padrão do jogo)"), ("es", "60 FPS (el del juego)"), ("pl", "60 FPS (domyślne gry)"), ("ru", "60 FPS (как в игре)")],
+    ),
     // The Graphics page (2026-11-13): display, resolution, anti-aliasing, upscaling, troubleshooting.
     ("Display", &[("pl", "Ekran"), ("ru", "Экран")]),
     (

@@ -76,6 +76,12 @@ impl Store {
                 ini.values.insert(key.to_string(), "off".to_string());
             }
         }
+        // SanctuaryPort: the old Frame rate limit's 30 becomes the Frame rate's (the game's limiter).
+        if !ini.values.contains_key("frame_rate")
+            && ini.values.get("fps_limit").map(String::as_str) == Some("30")
+        {
+            ini.values.insert("frame_rate".into(), "30".into());
+        }
         // SanctuaryPort: frame limits above 60 are gone from the list (the game runs at 60).
         if let Some(limit) = ini.values.get("fps_limit") {
             if matches!(limit.as_str(), "100" | "120" | "144" | "180" | "240") {
@@ -337,7 +343,7 @@ mod tests {
         // A parked key is not written; the upscaler and its preset are shown, so they are.
         assert!(!out.contains_key("object_motion"));
         assert!(out.contains_key("upscaler") && out.contains_key("preset"));
-        assert_eq!(out.len(), 50); // + temporal_aa, unlock_cosmetics, fxaa, - anti_aliasing (never read)
+        assert_eq!(out.len(), 51); // + temporal_aa, unlock_cosmetics, fxaa, frame_rate, - anti_aliasing (never read)
         assert_eq!(out.keys().next().unwrap(), "display_mode");
     }
 

@@ -25,8 +25,16 @@ class Diablo3PatchTests(unittest.TestCase):
                     for n in ('480p', '720p', '900p', '1440p', '1800p', '4K',
                               '2560x1080', '3440x1440', '3840x1600', '5120x1440',
                               '1280x800', '1920x1200', '2560x1600')}
+        expected |= {f'{graphics_options.LIMITER_PREFIX} - {n}' for n in ('30 FPS', '120 FPS', 'Unlimited')}
         self.assertEqual(names, expected)
         for meta in ET.parse(xml).getroot().iter('Metadata'):
+            if meta.get('Name').startswith(graphics_options.LIMITER_PREFIX):
+                # The frame limiter: one microsecond wait, 16683 (0x412b) in the pattern.
+                for line in meta.iter('Line'):
+                    pattern = line.get('Pattern').split()
+                    at = int(line.get('At'))
+                    self.assertEqual(pattern[at:at + 4], ['2b', '41', '00', '00'])
+                continue
             size = meta.get('Name').split(' - ')[1]
             width, height = graphics_options.resolution_size(size)
             # US 1.00 entries also grow the display buffers' heap (32 -> 224 MiB) above 900p.

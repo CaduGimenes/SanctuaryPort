@@ -5,6 +5,8 @@ use std::collections::BTreeSet;
 /// Resolution patches share the video arena with the texture fix: only one of them is on.
 pub const RESOLUTION_PATCH_PREFIX: &str = "Resolution Patch";
 pub const FRAME_RATE_PATCH_PREFIX: &str = "Frame Rate Patch";
+/// SanctuaryPort: Diablo III's own frame limiter (Graphics > Frame rate, run.py).
+pub const FRAME_LIMITER_PATCH_PREFIX: &str = "Frame Limiter";
 /// The fix a resolution patch replaces: both resize the video arena.
 pub const TEXTURE_FIX_PATCH: &str = "Bug Fix - Texture Corruption Fix";
 
@@ -67,6 +69,16 @@ pub static ANISOTROPY: &[Choice] = &[
 pub static FPS_LIMITS: &[Choice] = &[
     c("30", "30"),
     c("60", "60"),
+    c("0", "Unlimited"),
+];
+
+/// SanctuaryPort: Diablo III's frame rate, its own frame limiter (run.py: patches/Diablo_III.xml
+/// "Frame Limiter"); 60 is the game's own. The game's clock follows real time, so only the
+/// frame rate changes.
+pub static FRAME_RATES: &[Choice] = &[
+    c("30", "30 FPS"),
+    c("60", "60 FPS (the game's own)"),
+    c("120", "120 FPS"),
     c("0", "Unlimited"),
 ];
 
@@ -530,7 +542,8 @@ mod tests {
 
     #[test]
     fn every_table_has_unique_values() {
-        let tables: [&[Choice]; 22] = [
+        let tables: [&[Choice]; 23] = [
+            FRAME_RATES,
             FRAME_GENERATION,
             DISPLAY_MODES,
             ANISOTROPY,

@@ -3,7 +3,7 @@
 
 use crate::core::options::{
     Choice, AIM_STYLES, ANISOTROPY, AUDIO_CHANNELS, DISPLAY_MODES, DRAW_PIPE,
-    ENGINE_FPS_CHOICES, FPS_LIMITS, FRAMES_QUEUED, FRAME_GENERATION, GLYPH_STYLES,
+    ENGINE_FPS_CHOICES, FPS_LIMITS, FRAME_RATES, FRAMES_QUEUED, FRAME_GENERATION, GLYPH_STYLES,
     LANGUAGES, LIVE_RESOLUTION, MENU_CONFIRM_STYLES, NO_MSAA,
     OUTPUTS, PRESETS, READBACKS, STREAM_MEMORY, TEMPORAL_AA, UI_LANGUAGES, UI_SCALES, UPSCALERS,
     VIDEO_BACKENDS,
@@ -315,6 +315,8 @@ pub static SETTINGS: &[Setting] = &[
         6,
     ),
     ini("fps_limit", Pick(FPS_LIMITS), Text("0"), true, 8),
+    // SanctuaryPort: Graphics > Frame rate (the game's own frame limiter; fps_limit is no longer shown).
+    ini("frame_rate", Pick(FRAME_RATES), Text("60"), true, 53),
     ini(
         "engine_fps",
         Pick(ENGINE_FPS_CHOICES),
@@ -537,14 +539,14 @@ mod tests {
                 "cheat_very_hard"
             ]
         );
-        assert_eq!(keys.last(), Some(&"unlock_cosmetics"));
+        assert_eq!(keys.last(), Some(&"frame_rate"));
         let shown: Vec<_> = rows.iter().filter(|s| s.written).map(|s| s.key).collect();
         assert_eq!(shown, SHOWN_INI_KEYS.iter().copied().collect::<Vec<_>>());
     }
 
     #[test]
     fn shown_ini_keys_are_the_47_controls_of_the_window() {
-        assert_eq!(SHOWN_INI_KEYS.len(), 49); // SanctuaryPort: + fsr1, rcas, rcas_strength, temporal_aa, unlock_cosmetics, fxaa, - anti_aliasing
+        assert_eq!(SHOWN_INI_KEYS.len(), 50); // SanctuaryPort: + fsr1, rcas, rcas_strength, temporal_aa, unlock_cosmetics, fxaa, frame_rate, - anti_aliasing
         for seeded in ["monitor", "hdr", "glyph_style"] {
             assert!(SHOWN_INI_KEYS.contains(&seeded), "{seeded}");
         }

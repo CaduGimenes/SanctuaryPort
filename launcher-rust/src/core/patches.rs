@@ -9,7 +9,7 @@ use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 
 use super::game::GameProfile;
-use super::options::{FRAME_RATE_PATCH_PREFIX, RESOLUTION_PATCH_PREFIX};
+use super::options::{FRAME_LIMITER_PATCH_PREFIX, FRAME_RATE_PATCH_PREFIX, RESOLUTION_PATCH_PREFIX};
 use super::paths::Paths;
 
 /// Fixes with nothing to choose: not offered in the launcher and always applied.
@@ -172,6 +172,7 @@ pub fn selectable(metas: &[PatchMeta]) -> Vec<PatchMeta> {
         .filter(|m| {
             !(m.name.starts_with(RESOLUTION_PATCH_PREFIX)
                 || m.name.starts_with(FRAME_RATE_PATCH_PREFIX)
+                || m.name.starts_with(FRAME_LIMITER_PATCH_PREFIX)
                 || ALWAYS_ON.contains(&m.name.as_str()))
         })
         .cloned()
@@ -206,8 +207,10 @@ mod tests {
         assert!(!metas.is_empty());
         assert!(metas
             .iter()
-            .all(|meta| meta.name.starts_with(RESOLUTION_PATCH_PREFIX)));
-        // The resolution patches follow the Graphics page, so nothing is offered on its own.
+            .all(|meta| meta.name.starts_with(RESOLUTION_PATCH_PREFIX)
+                || meta.name.starts_with(FRAME_LIMITER_PATCH_PREFIX)));
+        // The resolution and frame limiter patches follow the Graphics page, so nothing is offered
+        // on its own.
         assert!(selectable(&metas).is_empty());
         assert!(game_patch_metas(&diablo_xml(), "01.00").unwrap().is_empty());
     }

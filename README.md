@@ -63,6 +63,7 @@ Then follow [Getting your game ready](#getting-your-game-ready) with your own du
 | ✅ Render resolution 480p–4K, ultrawide 21:9 / 32:9, 16:10 (Steam Deck 1280x800) | resolution patches for the 1.47 and 1.00 executables (the camera widens to the screen); FSR 1 upscaling and RCAS sharpening |
 | 🧪 FSR 3 (experimental) | temporal anti-aliasing, or upscaling to the window with the HUD at full size (Graphics > Anti-aliasing) |
 | ✅ FXAA | cheap anti-aliasing of the 3D picture before the HUD (Graphics > Anti-aliasing), when FSR 3 is off |
+| ✅ **Frame rate 30 / 60 / 120 / unlimited** | the game's own frame limiter (Graphics > Frame rate); the game's speed stays the same |
 | 🧪 Game MSAA on AMD and Intel (Windows) | off by default there (black lines); On is experimental: its depth is created without compression |
 | ✅ Updates | the 1.47 update (Eternal Collection) from its own folder; the base game is never changed |
 | ✅ Windows 10 / 11 | played by the community on real Windows PCs (NVIDIA, AMD and Intel graphics); every release is also tested under Wine |

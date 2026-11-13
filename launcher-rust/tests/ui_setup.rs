@@ -416,7 +416,7 @@ fn the_video_step_edits_the_ini_values() {
     let mut state = at_step(dir.path(), Step::Video);
     {
         let mut ui = simulator(app::view(&state));
-        for label in ["Display mode", "Aspect ratio", "Frame rate limit"] {
+        for label in ["Display mode", "Aspect ratio", "Frame rate"] {
             assert!(ui.find(label).is_ok(), "{label}");
         }
         // No Engine frame rate row: Diablo III runs at 60 FPS and has no such choice (the row
@@ -425,10 +425,13 @@ fn the_video_step_edits_the_ini_values() {
     }
     assert_eq!(state.store.text("display_mode"), "windowed");
     assert_eq!(display_mode_label(&state).as_deref(), Some("Windowed"));
+    // The Frame rate row is Diablo III's own frame limiter: 60 until the player picks another.
     assert_eq!(
-        row_shown(&state, "fps_limit"),
-        ("0".into(), Some("Unlimited".into()))
+        row_shown(&state, "frame_rate"),
+        ("60".into(), Some("60 FPS (the game's own)".into()))
     );
+    let _ = app::update(&mut state, Message::Set("frame_rate".into(), "120".into()));
+    assert_eq!(row_shown(&state, "frame_rate").0, "120");
     assert_eq!(state.store.text("engine_fps"), "120");
     for (key, value) in [
         ("fps_limit", "60"),
@@ -457,7 +460,7 @@ fn an_ini_without_settings_is_shown_and_kept() {
     assert_eq!(state.store.text("fps_limit"), "60");
     assert_eq!(row_shown(&state, "fps_limit").0, "60");
     let mut ui = simulator(app::view(&state));
-    assert!(ui.find("Frame rate limit").is_ok());
+    assert!(ui.find("Frame rate").is_ok());
     drop(ui);
     setup(&mut state, SetupMessage::Finish);
     let written = std::fs::read_to_string(&ini).unwrap();

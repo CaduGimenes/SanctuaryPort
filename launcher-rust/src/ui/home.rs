@@ -580,9 +580,10 @@ pub fn status_line(state: &State) -> String {
 /// counts from 1.
 pub fn quick_segments(state: &State) -> Vec<(String, bool)> {
     let lang = state.lang.as_str();
-    // SanctuaryPort: Diablo III runs at 60; only a lower limit changes what you get.
-    let fps = match state.store.text("fps_limit").parse::<u32>() {
-        Ok(limit) if limit > 0 && limit < 60 => format!("{limit} FPS"),
+    // SanctuaryPort: Diablo III's frame rate is its own frame limiter (Graphics > Frame rate).
+    let fps = match state.store.text("frame_rate").as_str() {
+        "0" => tr(lang, "Unlimited"),
+        rate @ ("30" | "120") => format!("{rate} FPS"),
         _ => "60 FPS".to_string(),
     };
     let _ = FPS_LIMITS;

@@ -113,6 +113,8 @@ Nome do herói: ao criar, digite no teclado e aperte Enter (ou ✕ / A no contro
 - Idiomas: os que o seu jogo traz. A versão brasileira tem português e espanhol; a americana tem
   inglês, francês e espanhol. Se o idioma escolhido não existir no jogo, o port usa o português
   (ou o primeiro disponível).
+- Taxa de quadros: 30, 60 (padrão do jogo), 120 ou ilimitada em **Gráficos › Taxa de quadros**.
+  A velocidade do jogo não muda; acima de 60 depende de o seu PC aguentar.
 - Somente offline (sem PSN e sem co-op online).
 - Testado no Linux. A versão para Windows foi conferida no Wine até abrir a janela do jogo, mas
   ainda não foi jogada num PC com Windows.

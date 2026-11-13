@@ -78,25 +78,51 @@ static ABI int32_t param_int(uint32_t id,int32_t *out) {
     return 0;
 }
 /* Add-ons: SANCTUARY_ADDCONT_DIR holds one folder per entitlement label (16 characters), as the
- * PS4 installs them. Diablo III's packs are entitlement-only (license + config, no data), so
- * listing them is enough; they are reported installed, as shadPS4 does. */
+ * PS4 installs them; run.py may give several such folders (one per title ID, ';' on Windows and
+ * ':' elsewhere, as os.pathsep), and their labels are listed once each (GitHub #21: the
+ * Necromancer under another region's title ID). Diablo III's packs are entitlement-only (license +
+ * config, no data), so listing them is enough; they are reported installed, as shadPS4 does. */
 typedef struct { char label[17]; uint8_t pad[3]; uint32_t status; } AddcontInfo;
 _Static_assert(sizeof(AddcontInfo)==24,"OrbisAppContentAddcontInfo layout");
 #define ADDCONT_INSTALLED 4
+#ifdef _WIN32
+#define ADDCONT_SEPARATOR ';'
+#else
+#define ADDCONT_SEPARATOR ':'
+#endif
 static char addon_labels[32][17];
 static uint32_t addon_count, addons_scanned;
-static void scan_addons(void) {
-    if (addons_scanned) return;
-    addons_scanned=1;
-    const char *dir=getenv("SANCTUARY_ADDCONT_DIR");
-    DIR *d=dir && *dir ? opendir(dir) : NULL;
-    for (struct dirent *e; d && (e=readdir(d)) && addon_count<32;) {
-        if (strlen(e->d_name)!=16) continue;
+static void scan_addon_dir(const char *dir) {
+    DIR *d=*dir ? opendir(dir) : NULL;
+    if (!d) { printf("Runtime: AppContent add-on folder not readable: %s\n",dir); return; }
+    for (struct dirent *e; (e=readdir(d)) && addon_count<32;) {
+        if (e->d_name[0]=='.') continue;
+        if (strlen(e->d_name)!=16) {
+            printf("Runtime: AppContent skipped %s in %s (an add-on folder is its 16-character label)\n",e->d_name,dir);
+            continue;
+        }
+        int known=0;
+        for (uint32_t i=0; i<addon_count && !known; ++i) known=!memcmp(addon_labels[i],e->d_name,16);
+        if (known) continue;
         memcpy(addon_labels[addon_count],e->d_name,16); addon_labels[addon_count][16]=0;
         printf("Runtime: AppContent add-on %s\n",addon_labels[addon_count]);
         ++addon_count;
     }
-    if (d) closedir(d);
+    closedir(d);
+}
+static void scan_addons(void) {
+    if (addons_scanned) return;
+    addons_scanned=1;
+    const char *list=getenv("SANCTUARY_ADDCONT_DIR");
+    if (!list) return;
+    char dir[4096];
+    for (const char *p=list; *p;) {
+        const char *end=strchr(p,ADDCONT_SEPARATOR);
+        size_t n=end ? (size_t)(end-p) : strlen(p);
+        if (n && n<sizeof(dir)) { memcpy(dir,p,n); dir[n]=0; scan_addon_dir(dir); }
+        if (!end) break;
+        p=end+1;
+    }
 }
 static ABI int32_t addon_list(uint32_t service,void *list,uint32_t capacity,uint32_t *hits) {
     require_initialized();

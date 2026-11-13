@@ -333,12 +333,21 @@ def main():
             titles += [t for t in game_profiles.DIABLO3_TITLES if t != title]
             for root in addcont_roots:
                 titles += sorted(p.name for p in root.iterdir() if p.is_dir() and p.name not in titles)
-        for addcont_root in addcont_roots:
-            for candidate in titles:
-                addcont = addcont_root / candidate
-                if 'SANCTUARY_ADDCONT_DIR' not in env and addcont.is_dir():
-                    env['SANCTUARY_ADDCONT_DIR'] = str(addcont)
-                    print(f'Add-ons: {addcont}', flush=True)
+        # Every such folder counts (the runtime lists the labels of all of them, os.pathsep between
+        # folders): a player's add-ons can sit under different title IDs, e.g. the Necromancer of
+        # another region beside the Celebration pack of the game's own (GitHub #21).
+        if 'SANCTUARY_ADDCONT_DIR' not in env:
+            found = []
+            for addcont_root in addcont_roots:
+                for candidate in titles:
+                    addcont = addcont_root / candidate
+                    if addcont.is_dir() and addcont.resolve() not in [f.resolve() for f in found]:
+                        found.append(addcont)
+                        print(f'Add-ons: {addcont}', flush=True)
+                if not diablo3 and found:
+                    break
+            if found:
+                env['SANCTUARY_ADDCONT_DIR'] = os.pathsep.join(str(f) for f in (found if diablo3 else found[:1]))
         # Some dumps keep the add-ons inside the game folder instead: use it when no addcont/
         # folder was found.
         if diablo3 and 'SANCTUARY_ADDCONT_DIR' not in env and game_profiles.inline_addons(base_game):
@@ -384,6 +393,12 @@ def main():
             names += [n for n in patches.default_enabled(mod_patch_files, profile[2]) if n not in names]
             # sanctuary.ini decides the resolution and frame rate patches (in-game menu, launcher).
             names = graphics_options.patch_names(names, graphics)
+            # Diablo III: the frame rate (Graphics > Frame rate) is the game's own frame limiter.
+            names = [n for n in names if not n.startswith(graphics_options.LIMITER_PREFIX)]
+            limiter = graphics_options.limiter_patch(
+                graphics_options.frame_rate(graphics_options.read_ini(env['SANCTUARY_CONFIG']))) if diablo3 else None
+            if limiter:
+                names.append(limiter)
             available = patches.available_patches(patch_xml, profile[2])
             frame_rates = any(n.startswith(graphics_options.FPS_PREFIX) for n in available)
             names = graphics_options.restrict_to_available(names, available)
@@ -400,6 +415,16 @@ def main():
             applied = (patch_status(out) or {}).get('applied', [])
             engine_fps = graphics_options.applied_engine_fps(applied)
             dmem, vblank = patch_requirements(patch_xml, applied, profile[2])
+            for key, value in (graphics_options.limiter_environment(applied) if diablo3 else {}).items():
+                if key not in env:
+                    env[key] = value
+                    derived.append(key)
+            limiter = next((n for n in applied if n.startswith(graphics_options.LIMITER_PREFIX)), None)
+            if diablo3:
+                rate = limiter.split(' - ')[1] if limiter else '60 FPS'
+                env['SANCTUARY_FRAME_RATE'] = rate + '  ·  Launcher > Graphics'
+                derived.append('SANCTUARY_FRAME_RATE')
+                print(f'Frame rate: {rate}', flush=True)
             for key, value in (('SANCTUARY_DMEM_MB', dmem), ('SANCTUARY_VBLANK_HZ', vblank)):
                 if value and key not in env:
                     env[key] = str(value)

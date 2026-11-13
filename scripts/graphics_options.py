@@ -29,6 +29,9 @@ DEFAULTS = {'render_resolution': 'native', 'engine_fps': '120', 'deferred_readba
 RESOLUTION_PREFIX = 'Resolution Patch'
 FPS_PREFIX = 'Frame Rate Patch'
 TEXTURE_FIX = 'Bug Fix - Texture Corruption Fix'
+# Diablo III: sanctuary.ini frame_rate picks the game's own frame limiter (patches/Diablo_III.xml).
+LIMITER_PREFIX = 'Frame Limiter'
+FRAME_RATES = ('30', '60', '120', '0')  # 0 = unlimited
 
 
 def read_ini(path):
@@ -177,6 +180,33 @@ def patch_names(names, options, texture_fix_available=True):
     if options['engine_fps'] != '60':
         names.append(f'{FPS_PREFIX} - {options["engine_fps"]} FPS')
     return names
+
+
+def frame_rate(ini):
+    """Diablo III's frame rate choice (sanctuary.ini frame_rate): 30, 60, 120 or 0 (unlimited)."""
+    value = ini.get('frame_rate')
+    if value is None and ini.get('fps_limit') == '30':
+        return '30'  # the old Frame rate limit row's 30
+    return value if value in FRAME_RATES else '60'
+
+
+def limiter_patch(rate):
+    """The Frame Limiter patch for a frame_rate choice; None for 60, the game's own."""
+    return {'30': f'{LIMITER_PREFIX} - 30 FPS', '120': f'{LIMITER_PREFIX} - 120 FPS',
+            '0': f'{LIMITER_PREFIX} - Unlimited'}.get(rate)
+
+
+def limiter_environment(applied):
+    """Environment for the applied Frame Limiter patch: above 60 FPS the vblank runs fast (480 Hz)
+    so a frame is shown as soon as it is done, and the present thread lets through the chosen rate
+    (0: no limit). 30 FPS and the game's own 60 keep the 60 Hz vblank. Either way the rate is this
+    choice alone: the in-game menu's frame limit (fps_limit) is not used."""
+    for name in applied:
+        if name == f'{LIMITER_PREFIX} - 120 FPS':
+            return {'SANCTUARY_VBLANK_HZ': '0', 'SANCTUARY_FPS_LIMIT': '120'}
+        if name == f'{LIMITER_PREFIX} - Unlimited':
+            return {'SANCTUARY_VBLANK_HZ': '0', 'SANCTUARY_FPS_LIMIT': '0'}
+    return {'SANCTUARY_FPS_LIMIT': '0'}
 
 
 def restrict_to_available(names, available):

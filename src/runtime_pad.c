@@ -146,10 +146,17 @@ static SDL_Gamepad *current_gamepad(void) {
  * button to join", GitHub #20). Devices that never press a button stay out: the motion-sensor
  * device a DualSense adds on Linux, whose axes always move, took player 2 before, which then
  * "moved by itself" while the real second pad went to player 3. A candidate whose pressed
- * buttons are all held on player 1's pad too at that moment is a mirror of it (a Steam Input copy
- * of the same controller) and does not join. Called under lock. */
+ * buttons are all pressed on player 1's pad too is a mirror of it (a Steam Input copy of the same
+ * controller) and does not join. The copy can lag the real pad by a few milliseconds either way
+ * (0.5.0 compared the same instant, and player 1's own physical pad still took player 2, which then
+ * "moved by itself", #20): a press only decides after MIRROR_WINDOW_US, and a button player 1
+ * pressed within that window before or after it counts as player 1's. Called under lock. */
 #define MAX_CANDIDATES 8
+#define MIRROR_WINDOW_US 250000u
 static SDL_Gamepad *candidate[MAX_CANDIDATES];
+static uint32_t pending_mask[MAX_CANDIDATES]; /* buttons pressed on the candidate since pending_since */
+static uint64_t pending_since[MAX_CANDIDATES];
+static uint64_t first_down_us[32];            /* when each button was last seen down on player 1's pad */
 static uint32_t pressed_buttons(SDL_Gamepad *g) {
     uint32_t mask=0;
     for (int b=0;b<SDL_GAMEPAD_BUTTON_COUNT && b<32;++b)
@@ -171,7 +178,7 @@ static void refresh_extra_pads(void) {
     for (int c=0;c<MAX_CANDIDATES;++c)
         if (candidate[c] && (!SDL_GamepadConnected(candidate[c]) || seated(SDL_GetGamepadID(candidate[c]),first))) {
             if (!SDL_GamepadConnected(candidate[c])) SDL_CloseGamepad(candidate[c]);
-            candidate[c]=NULL;
+            candidate[c]=NULL; pending_mask[c]=0;
         }
     if (!first) return;
     int count=0;
@@ -182,20 +189,36 @@ static void refresh_extra_pads(void) {
         for (int c=0;c<MAX_CANDIDATES && !known;++c) known=candidate[c] && SDL_GetGamepadID(candidate[c])==ids[i];
         for (int c=0;c<MAX_CANDIDATES && !known;++c)
             if (!candidate[c] && (candidate[c]=SDL_OpenGamepad(ids[i]))) {
-                printf("Runtime: gamepad found: %s (press a button on it to join)\n",SDL_GetGamepadName(candidate[c]));
-                known=1;
+                printf("Runtime: gamepad found: %s, %04x:%04x (press a button on it to join)\n",
+                       SDL_GetGamepadName(candidate[c]),SDL_GetGamepadVendor(candidate[c]),SDL_GetGamepadProduct(candidate[c]));
+                pending_mask[c]=0; known=1;
             }
     }
     SDL_free(ids);
+    const uint64_t now=now_us();
     const uint32_t first_buttons=pressed_buttons(first);
+    for (int b=0;b<32;++b) if (first_buttons & (1u<<b)) first_down_us[b]=now;
     for (int c=0;c<MAX_CANDIDATES;++c) {
         if (!candidate[c]) continue;
         const uint32_t pressed=pressed_buttons(candidate[c]);
-        if (!pressed || (pressed & ~first_buttons)==0) continue; /* idle, or player 1's mirror */
+        if (pressed & ~pending_mask[c]) {
+            if (!pending_mask[c]) pending_since[c]=now;
+            pending_mask[c]|=pressed;
+        }
+        if (!pending_mask[c] || now-pending_since[c]<MIRROR_WINDOW_US) continue;
+        /* Its own buttons: those player 1 did not press from a window before the press until now. */
+        uint32_t own=0;
+        for (int b=0;b<32;++b)
+            if ((pending_mask[c] & (1u<<b)) && first_down_us[b]+MIRROR_WINDOW_US<pending_since[c]) own|=1u<<b;
+        if (!own && pending_mask[c]) printf("Runtime: gamepad %s pressed what player 1 pressed: a copy of player 1's, not joining\n",
+                                            SDL_GetGamepadName(candidate[c]));
+        pending_mask[c]=0;
+        if (!own) continue;
         for (int u=2;u<=MAX_PLAYERS;++u) {
             if (extra_pad[u]) continue;
             extra_pad[u]=candidate[c]; candidate[c]=NULL;
-            printf("Runtime: gamepad joined as player %d: %s\n",u,SDL_GetGamepadName(extra_pad[u]));
+            printf("Runtime: gamepad joined as player %d: %s, %04x:%04x\n",u,SDL_GetGamepadName(extra_pad[u]),
+                   SDL_GetGamepadVendor(extra_pad[u]),SDL_GetGamepadProduct(extra_pad[u]));
             break;
         }
     }

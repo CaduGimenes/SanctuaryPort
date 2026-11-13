@@ -62,7 +62,7 @@ PROFILES = {
                           # The in-game menu leaves out what the profile fixes (VSync, readbacks) and
                           # the frame rate patch the game does not have; its render resolutions are
                           # those patches/Diablo_III.xml has.
-                          'SANCTUARY_MENU_HIDE': 'vsync,engine_fps,readbacks',
+                          'SANCTUARY_MENU_HIDE': 'vsync,engine_fps,readbacks,fps_limit',
                           'SANCTUARY_ALLOWED_RESOLUTIONS': 'native;480p;720p;900p;1440p;1800p;4K;'
                                                            '2560x1080;3440x1440;3840x1600;5120x1440;'
                                                            '1280x800;1920x1200;2560x1600'}},

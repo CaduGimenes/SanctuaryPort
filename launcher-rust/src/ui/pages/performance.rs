@@ -13,7 +13,7 @@ use crate::core::gpu::{no_msaa_decision, MsaaDecision};
 use crate::core::i18n::{tr, tr_fmt};
 use crate::core::options::{
     aspect_of, aspects, closest_resolution, resolution_label, resolutions_for, DRAW_PIPE,
-    FPS_LIMITS, FRAMES_QUEUED, NO_MSAA, READBACKS, RESOLUTIONS, STREAM_MEMORY,
+    FPS_LIMITS, FRAME_RATES, FRAMES_QUEUED, NO_MSAA, READBACKS, RESOLUTIONS, STREAM_MEMORY,
 };
 use crate::ui::app::{Message, State};
 use crate::ui::widgets::{choice_pairs, select_pairs};
@@ -172,6 +172,11 @@ pub fn rows(state: &State, lang: &str) -> Vec<SelectRow> {
             "fps_limit",
             choice_pairs(FPS_LIMITS, lang),
             stored("fps_limit"),
+        ),
+        row(
+            "frame_rate",
+            choice_pairs(FRAME_RATES, lang),
+            stored("frame_rate"),
         ),
         row(
             "frames_queued",

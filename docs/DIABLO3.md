@@ -51,6 +51,17 @@ Resolution Patch per 16:9 size (480p to 4K) that replaces the base PS4's 1920 an
 launcher's and the in-game menu's Render resolution pick it (`SANCTUARY_ALLOWED_RESOLUTIONS`). On a
 Radeon 760M: 1080p and 1440p hold 60 FPS, 4K about 44. `SANCTUARY_NEO=1` (a PS4 Pro) gives the same 4K.
 
+Frame rate: the game paces itself. After each frame (1.47 eboot 0xbef87) it sleeps and spins until
+`[obj+0xce0]` microseconds have passed since the last one; 0xbda8a sets it from
+`sceVideoOutGetResolutionStatus`'s refresh rate (16683 for 59.94 Hz, 41701 for 23.98, 20000 for
+50), so a faster vblank alone stays at 60. The "Frame Limiter" patches (both executables) replace
+16683 with 33367 (30), 8341 (120) or 0 (unlimited); the launcher's Graphics > Frame rate
+(`sanctuary.ini frame_rate`, run.py) picks one, and above 60 run.py sets a 480 Hz vblank and the
+present limit (`SANCTUARY_FPS_LIMIT`). The game's clock follows real time: the same 99 s route in
+the Royal Crypt gave the same `time_played` and the same walking distance at 60, ~100 and ~114 FPS,
+with no audio starvation. A Radeon 760M reaches about 85 FPS in New Tristram and 100-114 in the
+Royal Crypt (the port's recording thread is then the limit).
+
 Ultrawide: right after the size, the renderer setup stores the camera's aspect ratio, 16/9 as a
 float in `[obj+0x54]` (`movl $0x3fe38e39`, imm32 at 0x4bb218). The 2560x1080, 3440x1440,
 3840x1600 (21:9) and 5120x1440 (32:9) patches write width/height there too: the game widens its

@@ -225,6 +225,36 @@ class GraphicsOptionsTest(unittest.TestCase):
         )
 
 
+class FrameLimiterTest(unittest.TestCase):
+    """Diablo III's Graphics > Frame rate: the game's own frame limiter (patches/Diablo_III.xml)."""
+
+    def test_choice_and_patch(self):
+        self.assertEqual(g.frame_rate({}), '60')
+        self.assertEqual(g.frame_rate({'frame_rate': '120'}), '120')
+        self.assertEqual(g.frame_rate({'frame_rate': '144'}), '60')
+        self.assertEqual(g.frame_rate({'fps_limit': '30'}), '30')  # the old row's 30
+        self.assertEqual(g.frame_rate({'fps_limit': '0'}), '60')
+        self.assertEqual(g.frame_rate({'fps_limit': '30', 'frame_rate': '0'}), '0')
+        self.assertIsNone(g.limiter_patch('60'))
+        self.assertEqual(g.limiter_patch('30'), 'Frame Limiter - 30 FPS')
+        self.assertEqual(g.limiter_patch('120'), 'Frame Limiter - 120 FPS')
+        self.assertEqual(g.limiter_patch('0'), 'Frame Limiter - Unlimited')
+
+    def test_environment(self):
+        self.assertEqual(g.limiter_environment([]), {'SANCTUARY_FPS_LIMIT': '0'})
+        self.assertEqual(g.limiter_environment(['Frame Limiter - 30 FPS']), {'SANCTUARY_FPS_LIMIT': '0'})
+        self.assertEqual(g.limiter_environment(['Resolution Patch - 4K', 'Frame Limiter - 120 FPS']),
+                         {'SANCTUARY_VBLANK_HZ': '0', 'SANCTUARY_FPS_LIMIT': '120'})
+        self.assertEqual(g.limiter_environment(['Frame Limiter - Unlimited']),
+                         {'SANCTUARY_VBLANK_HZ': '0', 'SANCTUARY_FPS_LIMIT': '0'})
+
+    def test_each_choice_has_a_patch_for_both_executables(self):
+        xml = (Path(__file__).resolve().parent.parent / 'patches' / 'Diablo_III.xml').read_text(encoding='utf-8')
+        for rate in ('30', '120', '0'):
+            name = g.limiter_patch(rate)
+            self.assertEqual(xml.count(f'Name="{name}"'), 2, name)
+
+
 class WindowSizeTest(unittest.TestCase):
     def test_the_game_knows_the_launcher_sizes(self):
         """gpu/shim/sanctuary_graphics.h ResolutionSizes, which sizes the window, matches SIZES."""

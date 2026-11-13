@@ -32,6 +32,10 @@ pub const TEMPORAL_AA_HINT: &str =
 pub const FXAA_HINT: &str =
     "Cheap smoothing of the 3D picture (the HUD stays sharp), a little soft. Not used while FSR 3 is on.";
 
+/// The hint of the Frame rate row.
+pub const FRAME_RATE_HINT: &str =
+    "The game's own frame limiter. 120 and Unlimited go past 60 when your PC keeps up; the game's speed stays the same.";
+
 /// The Upscaler row's choices: (FSR 1 on, English label).
 const UPSCALERS: [(bool, &str); 2] = [(false, "Plain stretch"), (true, "AMD FSR 1")];
 
@@ -209,9 +213,9 @@ pub fn view(state: &State) -> Element<'_, Message> {
         section(state.rtl, &tr(lang, "Frame rate")),
         row(
             state.rtl,
-            &tr(lang, "Frame rate limit"),
-            select_row(state, lang, "fps_limit"),
-            Some(&hint("Diablo III runs at 60 frames per second.")),
+            &restart("Frame rate"),
+            select_row(state, lang, "frame_rate"),
+            Some(&hint(FRAME_RATE_HINT)),
         ),
         section(state.rtl, &tr(lang, "Graphics card")),
         row(

@@ -47,6 +47,12 @@ static int touch_at(const PadData *d, int x) {
     return d->touch_count==1 && d->touches[0].x==x && d->touches[0].y==471;
 }
 static void pump(void) { SDL_UpdateJoysticks(); SDL_UpdateGamepads(); }
+/* A press on a further gamepad decides after the mirror window (250 ms): seen now, judged later. */
+static unsigned users_after_press(void) {
+    pump(); runtime_pad_users();
+    usleep(270000);
+    pump(); return runtime_pad_users();
+}
 
 int main(void) {
     const char *tmp=getenv("TMPDIR") ? getenv("TMPDIR") : getenv("TEMP") ? getenv("TEMP") : "/tmp";
@@ -229,13 +235,26 @@ int main(void) {
     assert(SDL_SetJoystickVirtualAxis(joystick2,SDL_GAMEPAD_AXIS_LEFTX,0));
     assert(SDL_SetJoystickVirtualButton(joystick,SDL_GAMEPAD_BUTTON_EAST,true));
     assert(SDL_SetJoystickVirtualButton(joystick2,SDL_GAMEPAD_BUTTON_EAST,true));
-    pump();
-    assert(runtime_pad_users()==0);
+    assert(users_after_press()==0);
     assert(SDL_SetJoystickVirtualButton(joystick,SDL_GAMEPAD_BUTTON_EAST,false));
     assert(SDL_SetJoystickVirtualButton(joystick2,SDL_GAMEPAD_BUTTON_EAST,false));
+    pump(); runtime_pad_users();
+    /* A copy that is a little ahead of player 1's pad (Steam Input, #20 on 0.5.0): the copy's
+     * press first, player 1's 60 ms later, still player 1's. */
+    usleep(300000);
+    assert(SDL_SetJoystickVirtualButton(joystick2,SDL_GAMEPAD_BUTTON_WEST,true));
+    pump(); assert(runtime_pad_users()==0);
+    usleep(60000);
+    assert(SDL_SetJoystickVirtualButton(joystick,SDL_GAMEPAD_BUTTON_WEST,true));
+    assert(users_after_press()==0);
+    assert(SDL_SetJoystickVirtualButton(joystick,SDL_GAMEPAD_BUTTON_WEST,false));
+    assert(SDL_SetJoystickVirtualButton(joystick2,SDL_GAMEPAD_BUTTON_WEST,false));
+    pump(); runtime_pad_users();
+    usleep(300000);
     assert(SDL_SetJoystickVirtualButton(joystick2,SDL_GAMEPAD_BUTTON_START,true));
     pump();
-    assert(runtime_pad_users()==(1u<<2));
+    assert(runtime_pad_users()==0);  /* not before the window */
+    assert(users_after_press()==(1u<<2));
     assert(SDL_SetJoystickVirtualButton(joystick2,SDL_GAMEPAD_BUTTON_START,false));
     pump();
     assert(runtime_pad_users()==(1u<<2));  /* it keeps its seat */
@@ -261,12 +280,10 @@ int main(void) {
     assert(runtime_pad_users()==(1u<<2));
     /* Seats in the order the buttons are pressed: controller 3 first, then controller 4. */
     assert(SDL_SetJoystickVirtualButton(joystick3,SDL_GAMEPAD_BUTTON_SOUTH,true));
-    pump();
-    assert(runtime_pad_users()==((1u<<2)|(1u<<3)));
+    assert(users_after_press()==((1u<<2)|(1u<<3)));
     assert(SDL_SetJoystickVirtualButton(joystick3,SDL_GAMEPAD_BUTTON_SOUTH,false));
     assert(SDL_SetJoystickVirtualButton(joystick4,SDL_GAMEPAD_BUTTON_SOUTH,true));
-    pump();
-    assert(runtime_pad_users()==((1u<<2)|(1u<<3)|(1u<<4)));
+    assert(users_after_press()==((1u<<2)|(1u<<3)|(1u<<4)));
     assert(SDL_SetJoystickVirtualButton(joystick4,SDL_GAMEPAD_BUTTON_SOUTH,false));
     assert(pad_open(3,0,0,NULL)==3 && pad_open(4,0,0,NULL)==4 && pad_open(5,0,0,NULL)==ERR_INVALID_ARG);
     assert(SDL_SetJoystickVirtualButton(joystick4,SDL_GAMEPAD_BUTTON_NORTH,true));

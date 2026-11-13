@@ -367,9 +367,9 @@ fn video_body(state: &State) -> Element<'_, Message> {
         ),
         labeled_row(
             state.rtl,
-            &tr(lang, "Frame rate limit"),
-            select_row(state, lang, "fps_limit"),
-            Some(&hint("Diablo III runs at 60 frames per second.")),
+            &tr(lang, "Frame rate"),
+            select_row(state, lang, "frame_rate"),
+            Some(&hint(crate::ui::pages::graphics::FRAME_RATE_HINT)),
         ),
     ]
     .spacing(8)

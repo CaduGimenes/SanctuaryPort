@@ -15,7 +15,11 @@
      but the PS4 build only ships the 1080p and 2160p sets, so below 1080 lines no text was drawn
      (PR #15: the UI "disappears" at 720p/800p). The sizes below 1080 turn the ja after cmp $1079
      into jmp: the 1080p fonts, which the game scales to the screen. The 16:10 sizes write the
-     camera's aspect ratio like the ultrawide ones. -->
+     camera's aspect ratio like the ultrawide ones.
+     Frame Limiter: after each frame the game waits until [obj+0xce0] microseconds have passed
+     (1.47 eboot 0xbef87, set at 0xbda8a from the video output's refresh rate: 16683 for 59.94 Hz,
+     41701 for 23.98, 20000 for 50; 1.00: [r14+0xba8] at 0x37c3b2). Its game logic follows the
+     clock, not the frame count, so another wait changes only the frame rate. -->
 <Patch>
     <TitleID>
         <ID>CUSA00243</ID>
@@ -248,6 +252,36 @@
             <Line Type="bytes" Address="0x00d2d43f" Value="0000000e" Pattern="ba 00 00 00 02 b9 00 00 01 00 41 b8 03 00 00 00 49 89 d9" At="1"/>
             <Line Type="bytes" Address="0x00d2d461" Value="0000000e" Pattern="be 00 00 00 02 ba 33 00 00 00 31 c9" At="1"/>
             <Line Type="bytes" Address="0x00d2d49d" Value="0000000e" Pattern="b9 00 00 00 02 41 b8 00 10 00 00 45 31 c9" At="1"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="Frame Limiter - 30 FPS" Note="The game's frame limiter waits 33367 us (30 FPS) instead of 16683 us per frame." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x004bda91" Value="57820000" Pattern="49 c7 87 e0 0c 00 00 2b 41 00 00 eb 18 49 c7 87 e0 0c 00 00 e5 a2 00 00" At="7"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="Frame Limiter - 30 FPS" Note="The game's frame limiter waits 33367 us (30 FPS) instead of 16683 us per frame." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x0077c3b9" Value="57820000" Pattern="49 c7 86 a8 0b 00 00 2b 41 00 00 41 c7 86 f8 0b" At="7"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="Frame Limiter - 120 FPS" Note="The game's frame limiter waits 8341 us (120 FPS) instead of 16683 us per frame." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x004bda91" Value="95200000" Pattern="49 c7 87 e0 0c 00 00 2b 41 00 00 eb 18 49 c7 87 e0 0c 00 00 e5 a2 00 00" At="7"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="Frame Limiter - 120 FPS" Note="The game's frame limiter waits 8341 us (120 FPS) instead of 16683 us per frame." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x0077c3b9" Value="95200000" Pattern="49 c7 86 a8 0b 00 00 2b 41 00 00 41 c7 86 f8 0b" At="7"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="Frame Limiter - Unlimited" Note="The game's frame limiter waits no wait instead of 16683 us per frame." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x004bda91" Value="00000000" Pattern="49 c7 87 e0 0c 00 00 2b 41 00 00 eb 18 49 c7 87 e0 0c 00 00 e5 a2 00 00" At="7"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="Frame Limiter - Unlimited" Note="The game's frame limiter waits no wait instead of 16683 us per frame." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x0077c3b9" Value="00000000" Pattern="49 c7 86 a8 0b 00 00 2b 41 00 00 41 c7 86 f8 0b" At="7"/>
         </PatchList>
     </Metadata>
 </Patch>
