@@ -347,7 +347,10 @@ state.
 - Everything else stage A does on stage B's state first waits for it to run dry
   (`Rasterizer::DrainDrawPipe`): every public rasterizer entry point on the GPU thread, PM4
   packets other than register writes/draws/dispatches/fences (`PipelinedOpcode`), pending
-  commands (`ProcessCommands`), compute queue packets, `DumpConstRam`.
+  commands (`ProcessCommands`, before each one: a single check at the top missed a command queued
+  right after it, e.g. a flip from another thread, which then recorded while stage B did: host
+  fault at 0x20000, a null `Scheduler::record_chunk`), compute queue packets, `DumpConstRam`.
+  `SANCTUARY_RECORD_THREADS=1` reports scheduler use that breaks this rule, with a backtrace.
 - End-of-pipe/-shader events run in order on stage B (`Rasterizer::RunInOrder`). A
   `WaitRegMem` on a fence value handed to stage B counts as met (`Liverpool::pending_fences`):
   stage B runs everything in stream order anyway. Unmet waits drain stage B, then yield.

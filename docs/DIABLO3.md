@@ -178,6 +178,9 @@ America) whose pack is missing with the first one the dump has, Portuguese first
 | `SANCTUARY_LAUNCH_PREFIX="gdb --args"` | start the loader under a wrapper |
 | `SANCTUARY_IME_TEXT=Name` | answer the name dialog without typing |
 | `SANCTUARY_PAD_FILE=<file>` | scripted input (button names, `lx=`..`ry=`, `shot`, `p2`/`p3`/`p4` for other players) |
+| `SANCTUARY_VIRTUAL_PAD=1` | attach an SDL virtual gamepad (scripted runs that need a connected controller) |
+| `SANCTUARY_DEBUGGABLE=1` | let other processes read the game's memory (`/proc/PID/mem`, gdb without root) |
+| `SANCTUARY_RECORD_THREADS=1` | report (with a backtrace) any use of the Vulkan command recording from a thread that does not own it at that moment |
 
 The guest image base is `0x800000000`; shadPS4 loads at `0x400000`, so its addresses are image
 offsets + `0x400000`.
