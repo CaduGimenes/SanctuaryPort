@@ -100,3 +100,29 @@ class GameUpdateTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class LeftoverViewTests(unittest.TestCase):
+    """GitHub #22: views of earlier starts that were stopped from outside are removed at the next
+    start, without following their links into the dumps."""
+
+    def test_leftovers_go_and_the_dump_stays(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            dump = root / 'dump'
+            (dump / 'CPKs').mkdir(parents=True)
+            (dump / 'CPKs' / 'a.cpk').write_text('data')
+            out = root / 'out'
+            stale = out / 'game-update-old'
+            stale.mkdir(parents=True)
+            (stale / 'CPKs').symlink_to(dump / 'CPKs', target_is_directory=True)
+            (stale / 'copied.bin').write_text('a copy')
+            (out / 'mod-game-old').mkdir()
+            kept = out / 'logs'
+            kept.mkdir()
+            with contextlib.redirect_stdout(None):
+                game_update.remove_leftovers(out)
+            self.assertFalse(stale.exists())
+            self.assertFalse((out / 'mod-game-old').exists())
+            self.assertTrue(kept.exists())
+            self.assertEqual((dump / 'CPKs' / 'a.cpk').read_text(), 'data')

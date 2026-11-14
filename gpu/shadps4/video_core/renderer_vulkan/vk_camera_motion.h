@@ -80,8 +80,11 @@ public:
     }
     /// Records the motion vector pass: `depth_view` (depth aspect, General layout) into
     /// `motion_view` (RG16F storage, General), pixels, previous minus current.
+    /// `same_scale`: the consumer reads the frames in their own viewports' coordinates (FSR 3
+    /// upscaling the viewport itself), so a vector is a viewport-relative position change; else
+    /// the previous position is taken in the previous frame's viewport of the same target.
     void RecordMotion(vk::CommandBuffer cmdbuf, vk::ImageView depth_view, vk::ImageView motion_view,
-                      u32 width, u32 height);
+                      u32 width, u32 height, bool same_scale = false);
 
     /// A bound constant buffer of 864 bytes: checks the scene constant signature.
     void OnConstants(const float* data);
@@ -138,6 +141,7 @@ private:
 
     ObjectMotion* object_motion = nullptr;
     std::array<u32, 2> scene_viewport{};
+    std::array<u32, 2> previous_rect{}; ///< the scene viewport of the last RecordMotion
     Camera current, previous;
     bool frame_has_camera = false;
     std::array<float, 2> jitter{}, previous_jitter{};
@@ -153,6 +157,7 @@ private:
     };
     std::unordered_map<u64, ObjectMatrix> object_matrices, previous_object_matrices;
     std::array<double, 3> camera_position{}; ///< tracked camera, in the first frame's space
+    u64 reference_key = 0; ///< the object whose axes and projection give the camera (kept while it agrees)
     std::array<u32, 2> frame_size{}; ///< largest render size in this frame's blocks
     bool camera_resolved = false;    ///< this frame's camera is known (scene depth copy)
     bool trace_objects = false;

@@ -31,6 +31,8 @@ struct PushConstants {
     std::array<float, 2> jitter;
     std::array<float, 2> previous_jitter;
     u32 mode;
+    u32 pad;
+    std::array<float, 2> prev_size; ///< the previous frame's scene viewport (dynamic resolution)
 };
 
 /// a * b for 3x4 affine matrices (rows [R | t]).
@@ -250,12 +252,18 @@ vk::Image CameraMotion::ObjectMotionImage(u32 width, u32 height) const noexcept 
 }
 
 void CameraMotion::RecordMotion(vk::CommandBuffer cmdbuf, vk::ImageView depth_view,
-                                vk::ImageView motion_view, u32 width, u32 height) {
+                                vk::ImageView motion_view, u32 width, u32 height,
+                                bool same_scale) {
     bool object_valid = false;
     const vk::ImageView object_view = object_motion && object_motion->Enabled()
         ? object_motion->PrepareRead(cmdbuf, width, height, object_valid) : depth_view;
-    // Dynamic resolution: the scene's projection covers only its viewport.
+    // Dynamic resolution: the scene's projection covers only its viewport, and the previous
+    // frame's covered its own: a vector points to where the pixel was in that frame's viewport
+    // (the game changes the size about twice a second under FSR 3 on a small GPU; with the
+    // current size for both frames each change smeared the whole picture for a frame).
     const auto rect = SceneRect(width, height);
+    const auto prev_rect = previous_rect[0] && !same_scale ? previous_rect : rect;
+    previous_rect = rect;
     width = rect[0];
     height = rect[1];
     const PushConstants push{
@@ -266,6 +274,7 @@ void CameraMotion::RecordMotion(vk::CommandBuffer cmdbuf, vk::ImageView depth_vi
         .jitter = jitter,
         .previous_jitter = previous_jitter,
         .mode = object_valid ? 1u : 0u,
+        .prev_size = {float(prev_rect[0]), float(prev_rect[1])},
     };
     const vk::DescriptorImageInfo depth_info{.imageView = depth_view,
                                              .imageLayout = vk::ImageLayout::eGeneral};
@@ -383,6 +392,7 @@ void CameraMotion::ResolveObjectCamera() {
         std::array<double, 3> delta;
         const ObjectMatrix* current;
         std::array<double, 3> camera; ///< in the object's space, this frame
+        u64 key;
     };
     std::vector<Vote> votes;
     votes.reserve(object_matrices.size());
@@ -398,7 +408,7 @@ void CameraMotion::ResolveObjectCamera() {
         if (!SolveCamera(entry.m, c) || !SolveCamera(prev->second.m, p)) {
             continue;
         }
-        votes.push_back({{c[0] - p[0], c[1] - p[1], c[2] - p[2]}, &entry, c});
+        votes.push_back({{c[0] - p[0], c[1] - p[1], c[2] - p[2]}, &entry, c, key});
     }
     size_t best = votes.size(), best_count = 0;
     for (size_t i = 0; i < votes.size(); ++i) {
@@ -421,16 +431,61 @@ void CameraMotion::ResolveObjectCamera() {
         return env && env[0] == '1';
     }();
     if (tracked) {
-        for (int k = 0; k < 3 && !frozen; ++k) {
-            camera_position[k] += votes[best].delta[k];
+        // The objects that agree on the displacement still differ a little in orientation (up to
+        // a degree or two passes the vote), and the camera's axes and projection come from the
+        // one used as reference: a different one every frame rolled the camera by about half a
+        // degree back and forth, and those frames' motion vectors were off by 10-30 pixels
+        // (FSR 3 ghosting). Keep the same reference while it agrees; else take the one whose
+        // axes are closest to the last camera's.
+        const auto agrees = [&](const Vote& v) {
+            const double dx = v.delta[0] - votes[best].delta[0], dy = v.delta[1] - votes[best].delta[1],
+                         dz = v.delta[2] - votes[best].delta[2];
+            return dx * dx + dy * dy + dz * dz < 1e-4;
+        };
+        const auto axis_distance = [&](const Vote& v) {
+            if (!current.valid) {
+                return 0.0;
+            }
+            const auto& m = v.current->m;
+            double d = 0.0;
+            const int rows[3] = {0, 1, 3};
+            for (int r = 0; r < 3; ++r) {
+                const double len = std::sqrt(m[rows[r] * 4] * m[rows[r] * 4] +
+                                             m[rows[r] * 4 + 1] * m[rows[r] * 4 + 1] +
+                                             m[rows[r] * 4 + 2] * m[rows[r] * 4 + 2]);
+                for (int k = 0; k < 3; ++k) {
+                    d += std::abs(m[rows[r] * 4 + k] / len - current.view[r * 4 + k]);
+                }
+            }
+            return d;
+        };
+        size_t chosen = best;
+        double chosen_distance = 1e30;
+        for (size_t i = 0; i < votes.size(); ++i) {
+            if (!agrees(votes[i])) {
+                continue;
+            }
+            if (votes[i].key == reference_key) {
+                chosen = i;
+                break;
+            }
+            if (const double d = axis_distance(votes[i]); d < chosen_distance) {
+                chosen_distance = d;
+                chosen = i;
+            }
         }
-        reference = votes[best].current;
-        reference_camera = votes[best].camera;
+        for (int k = 0; k < 3 && !frozen; ++k) {
+            camera_position[k] += votes[chosen].delta[k];
+        }
+        reference = votes[chosen].current;
+        reference_camera = votes[chosen].camera;
+        reference_key = votes[chosen].key;
     } else {
         // No history (first frame, a load, a cut): restart from any object of this frame.
         for (const auto& [key, entry] : object_matrices) {
             if (!entry.ambiguous && SolveCamera(entry.m, reference_camera)) {
                 reference = &entry;
+                reference_key = key;
                 camera_position = reference_camera;
                 break;
             }
@@ -558,6 +613,7 @@ void CameraMotion::Overlay(VideoCore::ImageId frame) {
                 : SanctuaryToggle::Disabled(1u << 22) ? 3u
                 : SanctuaryToggle::Disabled(1u << 23) ? 4u
                                                : 0u,
+        .prev_size = {float(color.info.size.width), float(color.info.size.height)},
     };
     static u32 log_counter = 0;
     if (++log_counter % 200 == 0) {

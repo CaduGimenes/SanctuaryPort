@@ -217,7 +217,17 @@ struct StageSpecialization {
         // bindings still may change as they depend on previously processed FS. The check below
         // handles this case and prevents generation of redundant permutations. This is also safe
         // for other types of shaders with no bindings.
-        if (bitset.none() && other.bitset.none()) {
+        // sanctuary: only when the shader binds nothing at all. The bitset leaves out the port's
+        // own buffers (user clip planes, flat user data...), whose binding numbers the module
+        // bakes in: Diablo III's full-screen VS 0x4cb0b09f was compiled behind a fragment shader
+        // with one resource (clip planes at binding 1) and reused behind an empty one, whose
+        // layout has it at 0. RADV ignored the mismatch; AMD's Windows driver refused the
+        // pipeline right after a save loaded (GitHub #19, #22).
+        const auto binds_nothing = [](const Info* i) {
+            return !i || (i->buffers.empty() && i->images.empty() && i->samplers.empty());
+        };
+        if (bitset.none() && other.bitset.none() && binds_nothing(info) &&
+            binds_nothing(other.info)) {
             return true;
         }
 

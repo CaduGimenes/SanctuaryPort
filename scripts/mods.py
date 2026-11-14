@@ -319,6 +319,8 @@ def apply_preset(preset, available):
 # mirrored instead (real directories, files hard-linked), which is not a link and so is not
 # recorded here - expand()/remove() treat it as the ordinary directory it has become.
 LINKED = {}
+# Files make_link had to copy (count, bytes): the drive supports no links.
+COPIED = [0, 0]
 
 
 def make_link(link, target):
@@ -349,6 +351,10 @@ def make_link(link, target):
             os.link(target, link)
         except OSError:
             shutil.copy2(target, link)
+            # Neither a symlink nor a hard link here (exFAT or FAT32, e.g. a microSD card, or
+            # another drive): counted so the caller can say the game was copied (GitHub #22).
+            COPIED[0] += 1
+            COPIED[1] += target.stat().st_size
     LINKED[str(link)] = target
 
 

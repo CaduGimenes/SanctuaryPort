@@ -339,6 +339,9 @@ bool TemporalUpscaler::OnFrameStart() {
     ++frame_count;
     display_redirect = ui_phase;
     ui_phase = false;
+    viewport_redirect = viewport_phase;
+    viewport_phase = false;
+    viewport_sampled = false;
     ui_read_barrier = false;
     done_this_frame = false;
     ldr_target = {};
@@ -471,6 +474,54 @@ bool TemporalUpscaler::RecordD3Reactive(VideoCore::ImageId color_id, u32 mode) {
     return true;
 }
 
+TemporalUpscaler::ViewportTarget* TemporalUpscaler::EnsureViewportTarget(u32 width, u32 height,
+                                                                         vk::Format format) {
+    for (auto& target : viewport_targets) {
+        if (target->width == width && target->height == height && target->image) {
+            target->used = frame_count;
+            return target.get();
+        }
+    }
+    constexpr size_t MaxTargets = 8;
+    if (viewport_targets.size() >= MaxTargets) {
+        // The least recently used one goes once the GPU is past this point.
+        auto oldest = std::min_element(viewport_targets.begin(), viewport_targets.end(),
+                                       [](const auto& a, const auto& b) { return a->used < b->used; });
+        std::shared_ptr<ViewportTarget> dropped{std::move(*oldest)};
+        viewport_targets.erase(oldest);
+        scheduler.DeferOperation([dropped] {});
+    }
+    auto target = std::make_unique<ViewportTarget>();
+    target->width = width;
+    target->height = height;
+    target->used = frame_count;
+    target->image = VideoCore::UniqueImage(instance.GetDevice(), instance.GetAllocator());
+    target->image.Create(vk::ImageCreateInfo{
+        .flags = vk::ImageCreateFlagBits::eMutableFormat | vk::ImageCreateFlagBits::eExtendedUsage,
+        .imageType = vk::ImageType::e2D,
+        .format = format,
+        .extent = {width, height, 1},
+        .mipLevels = 1, .arrayLayers = 1, .samples = vk::SampleCountFlagBits::e1,
+        .tiling = vk::ImageTiling::eOptimal,
+        .usage = vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled |
+                 vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferDst,
+        .initialLayout = vk::ImageLayout::eUndefined,
+    });
+    target->storage = Check(instance.GetDevice().createImageViewUnique({
+        .image = vk::Image(target->image),
+        .viewType = vk::ImageViewType::e2D,
+        .format = format,
+        .subresourceRange = {vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1},
+    }));
+    static int told = 0;
+    if (told < 8) {
+        ++told;
+        std::printf("Upscaler: FSR 3 viewport target %ux%u\n", width, height);
+    }
+    viewport_targets.push_back(std::move(target));
+    return viewport_targets.back().get();
+}
+
 bool TemporalUpscaler::DisplayUpscaleSize(u32 w, u32 h, u32& ow, u32& oh) const {
     const auto& settings = SanctuarySettings::Get();
     if (settings.upscaler != SanctuarySettings::UpscalerFsr3) {
@@ -498,8 +549,20 @@ void TemporalUpscaler::RunDisplayUpscale(VideoCore::ImageId frame) {
         opaque_valid = false;
     }
     u32 ow, oh;
-    if (!DisplayUpscaleSize(w, h, ow, oh)) {
-        // The window is the render size: FSR 3 as anti-aliasing, written back into the frame.
+    // The window is the render size. FSR 3 upscales the scene's viewport (dynamic resolution:
+    // the top left part of the frame) to the frame size for the display copy; with
+    // SANCTUARY_FSR_VIEWPORT=0 it runs on the whole frame as anti-aliasing and writes back into
+    // it, and the display copy stretches the viewport part as the game does.
+    static const bool viewport_off = [] {
+        const char* env = std::getenv("SANCTUARY_FSR_VIEWPORT");
+        return env && env[0] == '0';
+    }();
+    const bool viewport = !DisplayUpscaleSize(w, h, ow, oh) && !viewport_off;
+    if (viewport) {
+        ow = w;
+        oh = h;
+    } else if (!DisplayUpscaleSize(w, h, ow, oh)) {
+        // FSR 3 as anti-aliasing, written back into the frame.
         if (camera_motion.Ready()) {
             done_this_frame = true;
             scene_color = frame;
@@ -527,7 +590,15 @@ void TemporalUpscaler::RunDisplayUpscale(VideoCore::ImageId frame) {
         failed = true;
         return;
     }
-    EnsureUiResources(ow, oh, color.info.pixel_format, depth.info.pixel_format);
+    const auto rect = camera_motion.SceneRect(w, h);
+    if (viewport) {
+        // As much larger than the frame as the frame is than the viewport.
+        viewport_target = EnsureViewportTarget((w * w + rect[0] / 2) / rect[0],
+                                               (h * h + rect[1] / 2) / rect[1],
+                                               color.info.pixel_format);
+    } else {
+        EnsureUiResources(ow, oh, color.info.pixel_format, depth.info.pixel_format);
+    }
     const auto depth_format = depth.info.pixel_format;
     const auto depth_view = CachedView(depth, depth_format, vk::ImageAspectFlagBits::eDepth);
     // Barriers go outside a render pass: end the one the previous draw left open first.
@@ -559,7 +630,7 @@ void TemporalUpscaler::RunDisplayUpscale(VideoCore::ImageId frame) {
     const auto rw = vk::AccessFlagBits2::eShaderRead | vk::AccessFlagBits2::eShaderWrite;
     const auto blit = vk::PipelineStageFlagBits2::eBlit;
     // The HUD clears its depth itself; the old contents are not needed.
-    barrier(vk::Image(ui_depth_image),
+    if (!viewport) barrier(vk::Image(ui_depth_image),
             vk::ImageAspectFlagBits::eDepth |
                 (depth_format == vk::Format::eD32SfloatS8Uint ? vk::ImageAspectFlagBits::eStencil
                                                              : vk::ImageAspectFlags{}),
@@ -570,7 +641,7 @@ void TemporalUpscaler::RunDisplayUpscale(VideoCore::ImageId frame) {
     barrier(vk::Image(motion_image), vk::ImageAspectFlagBits::eColor, vk::ImageLayout::eUndefined,
             all, vk::AccessFlagBits2::eNone, vk::ImageLayout::eGeneral,
             vk::PipelineStageFlagBits2::eComputeShader, vk::AccessFlagBits2::eShaderWrite);
-    camera_motion.RecordMotion(cmdbuf, depth_view, *motion_view, w, h);
+    camera_motion.RecordMotion(cmdbuf, depth_view, *motion_view, w, h, viewport);
     barrier(vk::Image(motion_image), vk::ImageAspectFlagBits::eColor, vk::ImageLayout::eGeneral,
             vk::PipelineStageFlagBits2::eComputeShader, vk::AccessFlagBits2::eShaderWrite,
             vk::ImageLayout::eGeneral, all, vk::AccessFlagBits2::eShaderRead);
@@ -634,7 +705,7 @@ void TemporalUpscaler::RunDisplayUpscale(VideoCore::ImageId frame) {
     const float sign = SanctuaryToggle::Disabled(1u << 26) ? -1.0f : 1.0f;
     info.jitterOffset = {sign * jitter[0], sign * jitter[1]};
     info.motionVectorScale = {1.0f, 1.0f};
-    info.renderSize = {w, h};
+    info.renderSize = viewport ? FfxVkPortableExtent2D{rect[0], rect[1]} : FfxVkPortableExtent2D{w, h};
     info.outputSize = {ow, oh};
     info.frameTimeMilliseconds = frame_ms;
     info.preExposure = 1.0f;
@@ -680,18 +751,41 @@ void TemporalUpscaler::RunDisplayUpscale(VideoCore::ImageId frame) {
                         {vk::Image(opaque_image), w, h, 8, "opaque", "rgba16f"}});
         }
     }
+    if (viewport) {
+        // The menu's sharpening above AMD's RCAS range, as the 1:1 path (Run).
+        ExtraSharpen(cmdbuf, vk::Image(output_image), false, ow, oh);
+    }
     // Into the output-size frame the display copy samples (16-bit float -> the frame's 10-bit
     // format), with the merge shader as the 1:1 path: it reads FSR's output as a storage image.
+    const vk::Image merge_target = viewport ? vk::Image(viewport_target->image) : vk::Image(ui_image);
     barrier(vk::Image(output_image), vk::ImageAspectFlagBits::eColor, vk::ImageLayout::eGeneral,
             all, rw, vk::ImageLayout::eGeneral, vk::PipelineStageFlagBits2::eComputeShader,
             vk::AccessFlagBits2::eShaderRead);
-    barrier(vk::Image(ui_image), vk::ImageAspectFlagBits::eColor, vk::ImageLayout::eUndefined, all,
-            vk::AccessFlagBits2::eNone, vk::ImageLayout::eGeneral,
-            vk::PipelineStageFlagBits2::eComputeShader, rw);
+    if (viewport) {
+        // The frame's alpha carries data the display copy reads: the viewport part of the frame,
+        // enlarged, goes in first; the merge then replaces its RGB with FSR's.
+        barrier(merge_target, vk::ImageAspectFlagBits::eColor, vk::ImageLayout::eUndefined, all,
+                vk::AccessFlagBits2::eNone, vk::ImageLayout::eTransferDstOptimal, blit,
+                vk::AccessFlagBits2::eTransferWrite);
+        cmdbuf.blitImage(color.GetImage(), vk::ImageLayout::eGeneral, merge_target,
+                         vk::ImageLayout::eTransferDstOptimal,
+                         vk::ImageBlit{.srcSubresource = {vk::ImageAspectFlagBits::eColor, 0, 0, 1},
+                                       .srcOffsets = full(rect[0], rect[1]),
+                                       .dstSubresource = {vk::ImageAspectFlagBits::eColor, 0, 0, 1},
+                                       .dstOffsets = full(w, h)},
+                         vk::Filter::eLinear);
+        barrier(merge_target, vk::ImageAspectFlagBits::eColor, vk::ImageLayout::eTransferDstOptimal,
+                blit, vk::AccessFlagBits2::eTransferWrite, vk::ImageLayout::eGeneral,
+                vk::PipelineStageFlagBits2::eComputeShader, rw);
+    } else {
+        barrier(merge_target, vk::ImageAspectFlagBits::eColor, vk::ImageLayout::eUndefined, all,
+                vk::AccessFlagBits2::eNone, vk::ImageLayout::eGeneral,
+                vk::PipelineStageFlagBits2::eComputeShader, rw);
+    }
     {
         const vk::DescriptorImageInfo out_info{.imageView = *output_view,
                                                .imageLayout = vk::ImageLayout::eGeneral};
-        if (!display_frame_view || display_frame_image != vk::Image(ui_image)) {
+        if (!viewport && (!display_frame_view || display_frame_image != vk::Image(ui_image))) {
             display_frame_image = vk::Image(ui_image);
             display_frame_view = Check(instance.GetDevice().createImageViewUnique({
                 .image = display_frame_image,
@@ -700,8 +794,9 @@ void TemporalUpscaler::RunDisplayUpscale(VideoCore::ImageId frame) {
                 .subresourceRange = {vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1},
             }));
         }
-        const vk::DescriptorImageInfo ui_info{.imageView = *display_frame_view,
-                                              .imageLayout = vk::ImageLayout::eGeneral};
+        const vk::DescriptorImageInfo ui_info{
+            .imageView = viewport ? *viewport_target->storage : *display_frame_view,
+            .imageLayout = vk::ImageLayout::eGeneral};
         const vk::DescriptorImageInfo mask_info{.imageView = *reactive_view,
                                                 .imageLayout = vk::ImageLayout::eGeneral};
         const vk::DescriptorImageInfo motion_info{.imageView = *motion_view,
@@ -725,6 +820,21 @@ void TemporalUpscaler::RunDisplayUpscale(VideoCore::ImageId frame) {
         cmdbuf.pushConstants(*merge_pipeline_layout, vk::ShaderStageFlagBits::eCompute, 0,
                              sizeof(mode), &mode);
         cmdbuf.dispatch((ow + 7) / 8, (oh + 7) / 8, 1);
+    }
+    if (viewport) {
+        // The display copy samples it next.
+        barrier(merge_target, vk::ImageAspectFlagBits::eColor, vk::ImageLayout::eGeneral,
+                vk::PipelineStageFlagBits2::eComputeShader, vk::AccessFlagBits2::eShaderWrite,
+                vk::ImageLayout::eGeneral, all, vk::AccessFlagBits2::eShaderRead);
+        viewport_phase = true;
+        ui_color = frame;
+        d3_jitter_sizes = {rect[0], w};
+        static int told = 0;
+        if (told < 2 && std::getenv("SANCTUARY_CAMERA_TRACE")) {
+            ++told;
+            std::printf("Upscaler: viewport upscale %ux%u -> %ux%u\n", rect[0], rect[1], w, h);
+        }
+        return;
     }
     barrier(vk::Image(ui_image), vk::ImageAspectFlagBits::eColor, vk::ImageLayout::eGeneral,
             vk::PipelineStageFlagBits2::eComputeShader, vk::AccessFlagBits2::eShaderWrite,
@@ -2272,6 +2382,12 @@ vk::ImageView TemporalUpscaler::Mirror(vk::Image image, std::vector<MirrorView>&
 
 bool TemporalUpscaler::RedirectColor(VideoCore::ImageId color,
                                      const VideoCore::ImageViewInfo& view_info, Target& target) {
+    // The viewport upscale is for the display copy only: once a draw goes anywhere but a display
+    // buffer (the next frame's scene reuses the frame image), the frame is read as it is again.
+    if (viewport_redirect && viewport_sampled &&
+        !FrameCapture::IsDisplayBuffer(texture_cache.GetImage(color).info.guest_address)) {
+        viewport_redirect = false;
+    }
     if (ui_phase && color == ui_color) {
         target = {Mirror(vk::Image(ui_image), ui_views, view_info.format, {}),
                   vk::ImageLayout::eGeneral, ui_width, ui_height, true};
@@ -2371,6 +2487,14 @@ bool TemporalUpscaler::RedirectDepth(VideoCore::ImageId depth, Target& target) {
 bool TemporalUpscaler::RedirectSampled(VideoCore::ImageId image,
                                        const VideoCore::ImageViewInfo& info, vk::ImageView& view,
                                        vk::ImageLayout& layout) {
+    if (viewport_redirect && image == ui_color && viewport_target) {
+        // Written by the merge pass, with a barrier to shader reads (RunDisplayUpscale).
+        view = Mirror(vk::Image(viewport_target->image), viewport_target->views, info.format,
+                      info.mapping);
+        layout = vk::ImageLayout::eGeneral;
+        viewport_sampled = true;
+        return true;
+    }
     if (!display_redirect || image != ui_color) {
         return false;
     }

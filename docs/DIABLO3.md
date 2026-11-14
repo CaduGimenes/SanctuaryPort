@@ -91,9 +91,27 @@ anti-aliasing, in-game Image) runs on the finished frame at its copy to the disp
   so a running hero used to lose the camera on ~40% of the frames); the
   camera displacement most objects agree on between two frames (static scenery) moves the tracked
   camera (`CameraMotion::OnObjectBlock`, `ResolveObjectCamera`). Near about 1, far about 6000.
+  The axes and projection come from one of the agreeing objects, which still differ by up to a
+  degree or two: a different one each frame rolled the camera about half a degree back and forth,
+  and a quarter of the frames got vectors 10-30 px off while walking (the "ghosting" of FSR 3).
+  The same reference is kept while it agrees (`reference_key`), else the one closest in axes to
+  the last camera. Measured on dumped inputs (frame k-1 warped by frame k's vectors against frame
+  k, New Tristram walk): mean error 0.019 -> 0.007, worst frame 0.047 -> 0.009.
+- Dynamic resolution changes the scene's viewport about twice a second under FSR 3 on a small GPU;
+  each frame's vectors point into the previous frame's own viewport (`previous_rect`, `prev_size`
+  in camera_motion.comp, the object vectors rescaled the same way): on a size change the error
+  was 0.0196 against 0.0032 now (the same as frames without a change).
 - Depth: the single-sample copy of the 2-sample scene depth the game draws after its opaque pass;
   the camera is resolved there. Geometry drawn with the scene depth is jittered (Halton). The scene depth is the last perspective draw's depth before the scene depth copy, fixed there for the next frame: the pause menu draws the hero on a pedestal with its own camera and depth at the start of the frame, and jittering part of it (its colour draws, not its depth pre-pass) made the pedestal flicker (GitHub #18).
-- Window = render size: FSR 3 as anti-aliasing, written back into the frame (alpha kept).
+- Window = render size: FSR 3 upscales the scene's viewport (dynamic resolution keeps it at 70-100%
+  of the frame, top left) to the frame size. The result goes into an image as much larger than the
+  frame as the frame is than the viewport (one per viewport size, `ViewportTarget`), with the
+  frame's alpha (the display copy reads it) blitted in first, and the display copy samples that
+  image instead of the frame (`RedirectSampled`, until the next draw that is not to a display
+  buffer). Vectors are then viewport-relative (`RecordMotion` `same_scale`). On the 760M at 1080p
+  the picture has about 12% more detail than FSR 3 on the whole frame stretched afterwards (mean
+  gradient 4.35 against 3.89; the banner in New Tristram is visibly sharper), at the same 60 FPS.
+  `SANCTUARY_FSR_VIEWPORT=0`: the old way (FSR on the whole frame, written back, alpha kept).
 - Render size below the window: FSR 3 upscales to the window; the display copy samples the result,
   the display buffer and the HUD's own depth are redirected to window-size host images (the HUD is
   drawn at full size) and the presenter shows that buffer (`RunDisplayUpscale`).

@@ -95,6 +95,7 @@ public:
     /// draw's render state (Rasterizer::BeginRendering).
     [[nodiscard]] u64 RedirectState() const noexcept {
         return u64(ui_phase) | u64(display_redirect) << 1 | u64(done_this_frame) << 2 |
+               u64(viewport_redirect) << 3 |
                u64(ui_color.index) << 8 | u64(ui_depth.index) << 36;
     }
 
@@ -133,7 +134,7 @@ public:
                          vk::ImageView& view, vk::ImageLayout& layout);
     /// Whether RedirectSampled would replace `image` (it may record a barrier then).
     [[nodiscard]] bool RedirectsSampled(VideoCore::ImageId image) const {
-        return display_redirect && image == ui_color;
+        return (display_redirect || viewport_redirect) && image == ui_color;
     }
 
     /// Presenter: the output-size display buffer standing in for the guest one at `address`.
@@ -291,6 +292,24 @@ private:
     vk::ImageView Mirror(vk::Image image, std::vector<MirrorView>& views, vk::Format format,
                          vk::ComponentMapping mapping);
     std::vector<MirrorView> ui_views;
+    /// sanctuary: Diablo III at the window size with dynamic resolution: FSR 3 upscales the
+    /// scene's viewport (top left of the frame) to the frame size, into an image as much larger
+    /// than the frame as the frame is than the viewport, so the display copy, which stretches the
+    /// viewport's part of the frame, reads FSR's output pixel for pixel. One per viewport size
+    /// (the game changes it about twice a second): no reallocation, no wait.
+    struct ViewportTarget {
+        VideoCore::UniqueImage image;
+        std::vector<MirrorView> views;
+        vk::UniqueImageView storage;
+        u32 width = 0, height = 0;
+        u64 used = 0;
+    };
+    std::vector<std::unique_ptr<ViewportTarget>> viewport_targets;
+    ViewportTarget* viewport_target = nullptr;
+    bool viewport_phase = false;    ///< this frame's display copy reads viewport_target
+    bool viewport_redirect = false; ///< the display pass of such a frame
+    bool viewport_sampled = false;  ///< the display copy has read viewport_target
+    ViewportTarget* EnsureViewportTarget(u32 width, u32 height, vk::Format format);
     struct DisplayImage {
         VideoCore::UniqueImage image;
         std::vector<MirrorView> views;

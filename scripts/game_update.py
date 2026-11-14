@@ -9,6 +9,7 @@ from pathlib import Path
 import shutil
 import tempfile
 
+import mods
 from mods import is_link, make_link, remove_link
 
 
@@ -59,7 +60,9 @@ def create_view(base, update, out):
     if not (update / 'eboot.bin').is_file():
         raise ValueError('The update folder needs eboot.bin and sce_sys/param.sfo')
     Path(out).mkdir(parents=True, exist_ok=True)
+    remove_leftovers(out)
     target = Path(tempfile.mkdtemp(prefix='game-update-', dir=out))
+    copied_before = list(mods.COPIED)
     try:
         for entry in base.iterdir():
             make_link(target / entry.name, entry)
@@ -67,7 +70,29 @@ def create_view(base, update, out):
     except BaseException:
         remove_view(target)
         raise
+    files, size = mods.COPIED[0] - copied_before[0], mods.COPIED[1] - copied_before[1]
+    if files:
+        # GitHub #22: on a drive without links (exFAT/FAT32, often a microSD card) the
+        # combined view is a copy, made at every start and deleted at the end.
+        print(f'Game and update: {files} files ({size / 2**30:.1f} GB) had to be copied: the drive of '
+              f'{out} supports no links (exFAT or FAT32?). Put the port and the game on an NTFS '
+              'drive, or install the update into the game folder, to start without copying.', flush=True)
     return target
+
+
+def remove_leftovers(out):
+    """Removes the views of earlier starts that were not cleaned up (the port was stopped from
+    outside, e.g. Task Manager). On a drive without links each is a full copy of the game, so
+    they piled up (GitHub #22). Links are removed without following them into the dumps."""
+    for prefix in ('game-update-', 'mod-game-'):
+        for stale in Path(out).glob(prefix + '*'):
+            if stale.is_dir() and not is_link(stale):
+                try:
+                    remove_view(stale)
+                    print(f'Removed a combined game folder left by an earlier start: {stale.name}',
+                          flush=True)
+                except OSError as error:
+                    print(f'Could not remove {stale}: {error}', flush=True)
 
 
 def remove_view(path):
