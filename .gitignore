@@ -23,7 +23,7 @@ perf.data
 mods.json
 patches.json
 !launcher/sanctuary.png
-!scripts/controller_diagrams/xbox.png
-!scripts/controller_diagrams/nintendo.png
 launcher-rust/target/
 /settings.json
+# Launcher UI test references: made on the Windows VM, kept on disk only (not published).
+launcher-rust/snapshots/
