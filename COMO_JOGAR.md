@@ -4,9 +4,10 @@
 
 [![Me pague um café](https://img.shields.io/badge/Buy%20me%20a%20coffee-FFDD00?style=for-the-badge&logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/cadugimenek)
 
-Port nativo da versão de PS4 de **Diablo III**: a versão brasileira (CUSA00243) com a
-atualização 1.47, que é a **Eternal Collection** (com o Necromante), e a americana *Reaper of
-Souls – Ultimate Evil Edition* 1.00 (CUSA00242). O código original do jogo roda direto no seu processador, um runtime substitui as
+Port nativo da versão de PS4 de **Diablo III**: as versões brasileira (CUSA00243), americana
+(CUSA00242) e europeia (CUSA00433/CUSA00434) de *Reaper of Souls – Ultimate Evil Edition*, com a
+última atualização de cada uma (1.47 na brasileira e na americana, 1.46 na europeia), que é a
+**Eternal Collection** (com o Necromante). O código original do jogo roda direto no seu processador, um runtime substitui as
 bibliotecas do sistema do PS4, e os gráficos do PS4 são traduzidos para Vulkan. Não há emulação
 de CPU.
 
@@ -58,6 +59,11 @@ cargo build --release --manifest-path launcher-rust/Cargo.toml
 
 Se você já tem o jogo extraído, é só apontar o launcher para a pasta que tem o `eboot.bin`.
 
+- **Deixe o jogo e a atualização em pastas separadas.** O port lê a atualização por cima do jogo
+  sem copiar nada, em qualquer disco, inclusive cartão microSD (exFAT) no ROG Ally ou no Steam Deck.
+- **As DLCs (o Necromante) precisam da atualização 1.46 ou mais nova.** A versão 1.00 não tem o
+  Necromante. A tela inicial e o instalador de PKG avisam quando faltar a atualização.
+
 ## Jogar
 
 Clique em **JOGAR** no launcher, ou pelo terminal:
@@ -67,7 +73,9 @@ SANCTUARY_GAME_DIR=~/Games/PS4/CUSA00243 SANCTUARY_PATCH_DIR=~/Games/PS4/CUSA002
 ```
 
 Os saves ficam em `user/savedata/`, com uma cópia de segurança em `user/savedata_backups/` a cada
-início.
+início. Para levar os saves para outro aparelho (PC, Ally, Deck), copie a pasta `user/savedata/`.
+
+O launcher também funciona só com o controle: **LB / RB** trocam de aba, como as setas do teclado.
 
 ## Co-op local (até 4 jogadores)
 
@@ -106,20 +114,35 @@ mudar no launcher, em **Controles**):
 
 Nome do herói: ao criar, digite no teclado e aperte Enter (ou ✕ / A no controle).
 
+Nome do jogador (o que o jogo mostra para você, como o nome de usuário do PS4): no launcher, em
+**Jogo → Jogador → Nome do jogador**.
+
 ## Situação
 
 - Funciona: tela de título, criação de herói, cinemáticas, Ato I, mundo a 60 FPS, salvar e
-  continuar, DLCs, áudio, co-op local, sessões de mais de 20 minutos sem travar.
+  continuar, DLCs, áudio, co-op local, troféus, sessões de mais de 20 minutos sem travar. Os atos
+  seguintes ainda precisam de relatos: veja **Rumo à 1.0** abaixo.
 - Idiomas: os que o seu jogo traz. A versão brasileira tem português e espanhol; a americana tem
   inglês, francês e espanhol. Se o idioma escolhido não existir no jogo, o port usa o português
   (ou o primeiro disponível).
 - Taxa de quadros: 30, 60 (padrão do jogo), 120 ou ilimitada em **Gráficos › Taxa de quadros**.
-  A velocidade do jogo não muda; acima de 60 depende de o seu PC aguentar.
+  A velocidade do jogo não muda; acima de 60 depende de o seu PC aguentar. Em 60 e 120, cada
+  quadro vai para a tela assim que fica pronto, o que combina com telas VRR e com o gamescope.
 - Somente offline (sem PSN e sem co-op online).
-- Testado no Linux. A versão para Windows foi conferida no Wine até abrir a janela do jogo, mas
-  ainda não foi jogada num PC com Windows.
+- Windows 10/11 e Linux (inclusive SteamOS e Steam Deck): jogado pela comunidade em placas NVIDIA,
+  AMD e Intel. Cada versão também é testada no Wine antes de sair.
 - Tela ultrawide: em Desempenho, escolha a proporção 21:9 ou 32:9 e a resolução (2560x1080, 3440x1440,
   3840x1600 ou 5120x1440); o jogo amplia a visão para os lados.
 - Em 720p ou menos, alguns nomes de teclas no HUD somem.
+
+## Rumo à 1.0 e como relatar problemas
+
+A 1.0 sai quando a campanha inteira puder ser jogada no hardware comum sem ajuda. Conte até onde
+você jogou, e em qual aparelho, na issue fixada
+[Road to 1.0](https://github.com/CaduGimenes/SanctuaryPort/issues/30).
+
+Para um problema, abra uma issue com o modelo de bug e anexe o `user/last_run.log`. Se for
+engasgo ou queda de FPS, antes ligue em **Avançado → Estatísticas de quadro no log** e jogue no
+mesmo lugar: o log passa a registrar o ritmo dos quadros e cada quadro lento.
 
 Detalhes técnicos: [docs/DIABLO3.md](docs/DIABLO3.md).

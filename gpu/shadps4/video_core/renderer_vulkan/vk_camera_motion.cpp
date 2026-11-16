@@ -369,7 +369,7 @@ void CameraMotion::OnSceneDepthCopy(VideoCore::ImageId depth, u32 width, u32 hei
     // The opaque pass is done: every scene camera block of this frame has been seen (the
     // upscaler runs before the frame ends, so the camera is resolved here).
     if (!camera_resolved && !object_matrices.empty()) {
-        ResolveObjectCamera();
+        ResolveObjectCamera(true);
         camera_resolved = true;
     }
     if (render_size[0] && width == render_size[0] && height >= render_size[1] &&
@@ -378,8 +378,12 @@ void CameraMotion::OnSceneDepthCopy(VideoCore::ImageId depth, u32 width, u32 hei
     }
 }
 
-void CameraMotion::ResolveObjectCamera() {
-    if (frame_size[0] >= 320 && frame_size[1] >= 180 && frame_size != render_size) {
+void CameraMotion::ResolveObjectCamera(bool after_scene) {
+    // Only the scene's blocks give its size. Resolved at the display pass instead (no scene depth
+    // copy seen), the blocks left are the post passes' (bloom at a quarter or eighth of it): the
+    // size flipped to 320x180 and back every such frame, hundreds of times a minute, and the
+    // scene depth was not matched to the frame (GitHub #24's log: 384 flips).
+    if (after_scene && frame_size[0] >= 320 && frame_size[1] >= 180 && frame_size != render_size) {
         std::printf("Camera motion: scene render size %ux%u\n", frame_size[0], frame_size[1]);
         render_size = frame_size;
     }
@@ -545,7 +549,7 @@ void CameraMotion::ResolveObjectCamera() {
 
 void CameraMotion::OnDisplayPass(VideoCore::ImageId frame) {
     if (!camera_resolved) {
-        ResolveObjectCamera();
+        ResolveObjectCamera(false);
     }
     camera_resolved = false;
     if (trace_objects && (trace_frames % 30) == 1) {

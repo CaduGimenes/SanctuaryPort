@@ -346,11 +346,16 @@ void VideoOutDriver::Flip(const Request& req) {
         static u64 last_proc_flt, last_copy_ns, last_copy_bytes, last_rf, last_trf, last_twf;
         const u64 rf = SanctuaryStats::read_faults.load(), trf = SanctuaryStats::t_read_faults.load(),
                   twf = SanctuaryStats::t_write_faults.load();
-        // sanctuary: every frame over 40 ms (SANCTUARY_STALL_MS) after the first, at most 10 per 5 s window.
+        // sanctuary: every frame over 2.5 frame periods of the frame limit (40 ms without one;
+        // SANCTUARY_STALL_MS sets it) after the first, at most 10 per 5 s window. At 120 FPS a
+        // hitch of two or three frames (17-25 ms, GitHub #24) went unreported under a fixed 40 ms.
         static const double stall_ms = [] {
             const char* value = std::getenv("SANCTUARY_STALL_MS");
-            return value ? std::atof(value) : 40.0;
+            if (value) return std::atof(value);
+            const u32 limit = EmulatorSettings.GetFrameLimit();
+            return limit >= 30 ? std::min(40.0, 2500.0 / limit) : 40.0;
         }();
+        static const Clock::time_point stats_start = Clock::now();
         static bool primed = false;
         static u32 stalls_shown = 0;
         const bool stall = primed && frame_ms > stall_ms && stalls_shown < 10;
@@ -364,9 +369,10 @@ void VideoOutDriver::Flip(const Request& req) {
                                  u64(Vulkan::g_sanctuary_compile_ns.load()), u64(Vulkan::g_sanctuary_compiles.load()),
                                  SanctuaryStats::t_gc.load()};
         if (stall) {
-            std::printf("Stall: %.1f ms frame; waits: readback %.1f ms, GPU ticks %.1f ms, "
+            std::printf("Stall: %.1f ms frame at %.1f s; waits: readback %.1f ms, GPU ticks %.1f ms, "
                         "recorder %.1f ms, host copies %.1f ms; %llu compiles %.1f ms; GC %.1f ms\n",
-                        frame_ms, (wait_now[0] - last_wait[0]) / 1e6, (wait_now[1] - last_wait[1]) / 1e6,
+                        frame_ms,
+                        std::chrono::duration<double>(Clock::now() - stats_start).count(), (wait_now[0] - last_wait[0]) / 1e6, (wait_now[1] - last_wait[1]) / 1e6,
                         (wait_now[2] - last_wait[2]) / 1e6, (wait_now[3] - last_wait[3]) / 1e6,
                         static_cast<unsigned long long>(wait_now[5] - last_wait[5]),
                         (wait_now[4] - last_wait[4]) / 1e6, (wait_now[6] - last_wait[6]) / 1e6);

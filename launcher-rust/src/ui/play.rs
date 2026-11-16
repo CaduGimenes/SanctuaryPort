@@ -322,6 +322,10 @@ pub fn missing_port_files(paths: &Paths) -> Vec<String> {
     missing
 }
 
+/// SanctuaryPort: the question after a start that ended in an error; the translation tables key
+/// on this text.
+pub const CRASH_QUESTION: &str = "The game closed with an error (code {}). Its log was kept as user/last_crash.log. Report it on GitHub? A pre-filled issue opens in your browser (user names in paths are removed); attach last_crash.log to it before you send it.";
+
 /// The text of a failed start, as Python prints the `OSError`.
 fn launch_error_text(error: &LaunchError) -> String {
     match error {
@@ -404,6 +408,7 @@ fn spawn(state: &mut State) -> Task<Message> {
 pub fn stop(state: &mut State) {
     if let GameState::Preparing { handle, .. } | GameState::Running { handle, .. } = &mut state.game
     {
+        handle.stop_requested = true;
         handle.terminate();
     }
 }
@@ -538,6 +543,8 @@ fn exited(state: &mut State, Exit { code, hint }: Exit) -> Task<Message> {
             return Task::none();
         }
     };
+    // An exit with advice (a restart for new settings, a missing file...) is explained, not a crash.
+    let crashed = code != 0 && !handle.stop_requested && hint.is_none();
     handle.close();
     let lang = state.lang.clone();
     state.log.push_text(&tr_fmt(
@@ -549,16 +556,30 @@ fn exited(state: &mut State, Exit { code, hint }: Exit) -> Task<Message> {
         state.log.push_text(&(tr(&lang, hint.text_en()) + "\n"));
     }
     state.status.clear();
-    if exit && hint.is_none() {
+    // SanctuaryPort: a start that ended in an error keeps its log (the next start overwrites
+    // last_run.log) and offers a pre-filled bug report.
+    if crashed {
+        let run_log = state.paths.run_log_path(&state.store.text("user_dir"));
+        if crate::core::crash_report::keep_crash_log(&run_log).is_ok() {
+            state.crash_code = Some(code);
+            if state.modal.is_none() {
+                state.modal = Some(Modal::confirm(
+                    tr_fmt(&lang, CRASH_QUESTION, &[&code.to_string()]),
+                    Message::ReportCrash,
+                ));
+            }
+        }
+    }
+    if exit && hint.is_none() && !crashed {
         return iced::exit();
     }
     // The game wrote the saves, the trophies and the patch report, and the runner backed the saves
     // up before the start: every view of the saves folder follows.
     let saves = follow(state, Cause::Keys(&["user_dir"]));
     let mut tasks = vec![log::scroll_to_end(), saves];
-    if hint.is_some() {
+    if hint.is_some() || crashed {
         // The advice is read on the Log page (the Python's `show_log`), and a window hidden for
-        // the game comes back to show it instead of closing.
+        // the game comes back to show it (or the crash report question) instead of closing.
         tasks.push(show_page(state, Page::Log));
         if exit {
             state.visible = true;

@@ -18,8 +18,9 @@
 ---
 
 SanctuaryPort runs the PlayStation 4 version of **Diablo III** natively on a PC: the Brazilian
-release (CUSA00243) with its 1.47 update, which is the **Eternal Collection** (2.7.7, with the
-Necromancer), and the US *Reaper of Souls – Ultimate Evil Edition* 1.00 (CUSA00242). The game's original x86-64 code runs directly on your
+(CUSA00243), US (CUSA00242) and European (CUSA00433/CUSA00434) releases of *Reaper of Souls –
+Ultimate Evil Edition*, with each one's last update (1.47 for the Brazilian and US ones, 1.46 for
+the European one), which is the **Eternal Collection** (2.7.7, with the Necromancer). The game's original x86-64 code runs directly on your
 processor, a runtime replaces the PS4 system libraries, and the PS4 GPU commands are translated to
 Vulkan by a video core derived from [shadPS4](https://github.com/shadps4-emu/shadPS4). There is no
 CPU emulator.
@@ -48,7 +49,7 @@ Then follow [Getting your game ready](#getting-your-game-ready) with your own du
 
 ## Status
 
-**Playable.** Tested on Linux (AMD Radeon 780M, Mesa) with the Brazilian 1.47 and US 1.00 dumps:
+**Playable.** Developed on Linux (AMD Radeon 780M / 760M, Mesa) with the Brazilian 1.47 and US 1.00 dumps, and played by the community on the hardware below:
 
 | | |
 |---|---|
@@ -56,17 +57,17 @@ Then follow [Getting your game ready](#getting-your-game-ready) with your own du
 | ✅ Saving and *Continue* | saves live in `user/savedata/` (backed up on every start) |
 | ✅ **Local co-op for up to 4 players** | every extra gamepad is one more player |
 | ✅ **Xbox button icons** in the game's prompts and HUD | optional, drawn over the game's own icons |
-| ✅ DLC entitlements | from your own add-on packages |
+| ✅ DLC entitlements | from your own add-on packages; they need the game's update 1.46 or later (the launcher warns otherwise) |
 | ✅ Install straight from your PKG files | in the launcher, no external tools |
 | ✅ Languages | whatever your dump ships, in any region's release (English, French, Spanish, Portuguese, German, Italian, Polish, Russian...) |
 | ✅ **Trophies** | an on-screen notice with the trophy's name as you earn it, the platinum by itself, and a Trophies page in the launcher |
 | ✅ Render resolution 480p–4K, ultrawide 21:9 / 32:9, 16:10 (Steam Deck 1280x800) | resolution patches for the 1.47 and 1.00 executables (the camera widens to the screen); FSR 1 upscaling and RCAS sharpening |
 | 🧪 FSR 3 (experimental) | temporal anti-aliasing, or upscaling to the window with the HUD at full size (Graphics > Anti-aliasing) |
 | ✅ FXAA | cheap anti-aliasing of the 3D picture before the HUD (Graphics > Anti-aliasing), when FSR 3 is off |
-| ✅ **Frame rate 30 / 60 / 120 / unlimited** | the game's own frame limiter (Graphics > Frame rate); the game's speed stays the same |
+| ✅ **Frame rate 30 / 60 / 120 / unlimited** | the game's own frame limiter (Graphics > Frame rate); the game's speed stays the same; at 60 and 120 each frame is shown as soon as it is done (VRR and gamescope friendly) |
 | 🧪 Game MSAA on AMD and Intel (Windows) | off by default there (black lines); On is experimental: its depth is created without compression |
-| ✅ Updates | the 1.47 update (Eternal Collection) from its own folder; the base game is never changed |
-| ✅ Windows 10 / 11 | played by the community on real Windows PCs (NVIDIA, AMD and Intel graphics); every release is also tested under Wine |
+| ✅ Updates | from their own folder, read over the game in place: nothing is copied, on any drive (microSD cards on the ROG Ally / Steam Deck included); the base game is never changed |
+| ✅ Windows 10 / 11, Linux, SteamOS | played by the community on NVIDIA, AMD and Intel graphics, Steam Deck / Steam Machine and ROG Ally; every release is also tested under Wine |
 | ❌ Online play / PSN | offline only |
 
 ## The launcher
@@ -76,13 +77,14 @@ Then follow [Getting your game ready](#getting-your-game-ready) with your own du
 
 - **Home** with your game's own key art (`sce_sys/pic1.png`, read from your dump; nothing is shipped);
 - **Graphics**: window mode, render resolution, anti-aliasing (the game's MSAA, FSR 3), upscaling (FSR 1) and sharpening, frame limit, graphics card;
-- **Game**: game folder, language, saves, and **installation from PKG** (base game and add-ons);
+- **Game**: game folder, language, player name, saves, and **installation from PKG** (base game, update and add-ons);
 - **Trophies**: every trophy with its icon (from your dump), name and description, and which ones you
   have earned with the port;
 - **Controls** (keyboard, mouse and gamepad mapping, button icon style) and **Advanced** (launcher
   options, shortcuts and the log of the last start).
 
-Its interface follows your system language (English, Portuguese and many more).
+Its interface follows your system language (English, Portuguese and many more), and it works
+with a gamepad alone: **LB / RB** change tab, like the arrow keys.
 
 ## Building from source (Linux)
 
@@ -121,6 +123,10 @@ with MSYS2.
    ```
 
    An already extracted dump works too: point the launcher at the folder that holds `eboot.bin`.
+
+   Keep the game and its update in separate folders: the port reads the update over the game in
+   place, without copying anything. Add-ons (the Necromancer) need the update (1.46 or later):
+   1.00 has no Necromancer.
 
 ## Playing
 
@@ -163,6 +169,16 @@ SANCTUARY_GAME_DIR=~/Games/PS4/CUSA00243 SANCTUARY_PATCH_DIR=~/Games/PS4/CUSA002
 - Ultrawide: 21:9 (2560x1080, 3440x1440, 3840x1600) and 32:9 (5120x1440) render resolutions, with
   the camera widened to them (Graphics > Aspect ratio); 2560x1080 checked in game, the others
   use the same patch. 16:10: 1280x800 (Steam Deck), 1920x1200 and 2560x1600; 1280x800 checked in game.
+
+## Road to 1.0 and reporting problems
+
+1.0 ships when the whole campaign can be played on common hardware without help. Tell how far you
+got, and on which device, in the pinned issue
+[Road to 1.0](https://github.com/CaduGimenes/SanctuaryPort/issues/30).
+
+For a problem, open an issue with the bug template and attach `user/last_run.log`. For stutter or
+frame drops, first turn on **Advanced → Frame statistics in the log** and play the same spot: the
+log then records the frame pacing and every long frame.
 
 ## How it works
 

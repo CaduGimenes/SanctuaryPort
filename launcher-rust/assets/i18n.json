@@ -2677,7 +2677,8 @@
    "Settings": "Ajustes",
    "The second box of a row is an alternative input for the same button, and a third box appears once it is filled: keep Square on the left mouse button for combat and add J and Keypad 4 for the minigames, for example. The × next to a box empties it, and the arrow puts the row back on its default with no alternatives.": "A segunda caixa de uma linha é uma entrada alternativa para o mesmo botão, e uma terceira caixa aparece quando ela é preenchida: por exemplo, deixe o Quadrado no botão esquerdo do mouse para o combate e acrescente o J e o Keypad 4 para os minigames. O × ao lado de uma caixa a esvazia, e a seta devolve a linha ao padrão, sem alternativas.",
    "add-ons need update {}+": "DLCs precisam do update {}+",
-   "Add-ons need the game's update {} or later (this game is {}): install the update PKG too.": "As DLCs precisam do update {} ou mais novo do jogo (este jogo está na {}): instale também o PKG do update."
+   "Add-ons need the game's update {} or later (this game is {}): install the update PKG too.": "As DLCs precisam do update {} ou mais novo do jogo (este jogo está na {}): instale também o PKG do update.",
+   "The game closed with an error (code {}). Its log was kept as user/last_crash.log. Report it on GitHub? A pre-filled issue opens in your browser (user names in paths are removed); attach last_crash.log to it before you send it.": "O jogo fechou com um erro (código {}). O log foi guardado como user/last_crash.log. Relatar no GitHub? Uma issue já preenchida abre no navegador (os nomes de usuário nos caminhos são removidos); anexe o last_crash.log antes de enviar."
   },
   "es": {
    "The launcher cannot write to {}, so it cannot replace itself there. Open the releases page to download the new version by hand?": "El launcher no puede escribir en {}, así que no puede reemplazarse ahí. ¿Abrir la página de releases para descargar la versión nueva a mano?",
@@ -3154,7 +3155,8 @@
    "Settings": "Ajustes",
    "The second box of a row is an alternative input for the same button, and a third box appears once it is filled: keep Square on the left mouse button for combat and add J and Keypad 4 for the minigames, for example. The × next to a box empties it, and the arrow puts the row back on its default with no alternatives.": "La segunda casilla de una fila es una entrada alternativa para el mismo botón, y aparece una tercera cuando se rellena: por ejemplo, deja el Cuadrado en el botón izquierdo del ratón para el combate y añade la J y el Keypad 4 para los minijuegos. La × junto a una casilla la vacía, y la flecha devuelve la fila a su valor por defecto, sin alternativas.",
    "add-ons need update {}+": "los DLC necesitan la actualización {}+",
-   "Add-ons need the game's update {} or later (this game is {}): install the update PKG too.": "Los DLC necesitan la actualización {} o posterior del juego (este juego está en la {}): instala también el PKG de la actualización."
+   "Add-ons need the game's update {} or later (this game is {}): install the update PKG too.": "Los DLC necesitan la actualización {} o posterior del juego (este juego está en la {}): instala también el PKG de la actualización.",
+   "The game closed with an error (code {}). Its log was kept as user/last_crash.log. Report it on GitHub? A pre-filled issue opens in your browser (user names in paths are removed); attach last_crash.log to it before you send it.": "El juego se cerró con un error (código {}). Su registro se guardó como user/last_crash.log. ¿Informarlo en GitHub? Se abrirá en el navegador una incidencia ya rellenada (se quitan los nombres de usuario de las rutas); adjunta last_crash.log antes de enviarla."
   },
   "pl": {
    "Polish": "Polski",
@@ -3484,7 +3486,8 @@
    "Settings": "Ustawienia",
    "The second box of a row is an alternative input for the same button, and a third box appears once it is filled: keep Square on the left mouse button for combat and add J and Keypad 4 for the minigames, for example. The × next to a box empties it, and the arrow puts the row back on its default with no alternatives.": "Drugie pole w wierszu to alternatywne wejście dla tego samego przycisku, a trzecie pole pojawia się, gdy drugie zostanie wypełnione: na przykład zostaw Kwadrat na lewym przycisku myszy do walki i dodaj J oraz Klawiaturę numeryczną 4 do minigier. × obok pola je czyści, a strzałka przywraca wiersz do domyślnego, bez alternatyw.",
    "add-ons need update {}+": "DLC wymagają aktualizacji {}+",
-   "Add-ons need the game's update {} or later (this game is {}): install the update PKG too.": "DLC wymagają aktualizacji gry {} lub nowszej (ta gra ma wersję {}): zainstaluj też PKG aktualizacji."
+   "Add-ons need the game's update {} or later (this game is {}): install the update PKG too.": "DLC wymagają aktualizacji gry {} lub nowszej (ta gra ma wersję {}): zainstaluj też PKG aktualizacji.",
+   "The game closed with an error (code {}). Its log was kept as user/last_crash.log. Report it on GitHub? A pre-filled issue opens in your browser (user names in paths are removed); attach last_crash.log to it before you send it.": "Gra zamknęła się z błędem (kod {}). Jej log zachowano jako user/last_crash.log. Zgłosić to na GitHubie? W przeglądarce otworzy się wypełnione zgłoszenie (nazwy użytkowników w ścieżkach są usuwane); dołącz last_crash.log przed wysłaniem."
   },
   "fr": {
    "Polish": "Polonais",
@@ -3559,7 +3562,8 @@
    "Settings": "Réglages",
    "The second box of a row is an alternative input for the same button, and a third box appears once it is filled: keep Square on the left mouse button for combat and add J and Keypad 4 for the minigames, for example. The × next to a box empties it, and the arrow puts the row back on its default with no alternatives.": "La deuxième case d'une ligne est une entrée alternative pour le même bouton, et une troisième case apparaît dès qu'elle est remplie : par exemple, gardez Carré sur le clic gauche pour le combat et ajoutez J et Pavé num. 4 pour les mini-jeux. Le × à côté d'une case la vide, et la flèche remet la ligne par défaut, sans alternatives.",
    "add-ons need update {}+": "les DLC demandent la mise à jour {}+",
-   "Add-ons need the game's update {} or later (this game is {}): install the update PKG too.": "Les DLC demandent la mise à jour {} ou plus récente du jeu (ce jeu est en {}) : installez aussi le PKG de la mise à jour."
+   "Add-ons need the game's update {} or later (this game is {}): install the update PKG too.": "Les DLC demandent la mise à jour {} ou plus récente du jeu (ce jeu est en {}) : installez aussi le PKG de la mise à jour.",
+   "The game closed with an error (code {}). Its log was kept as user/last_crash.log. Report it on GitHub? A pre-filled issue opens in your browser (user names in paths are removed); attach last_crash.log to it before you send it.": "Le jeu s'est fermé sur une erreur (code {}). Son journal a été gardé sous user/last_crash.log. Le signaler sur GitHub ? Un ticket prérempli s'ouvre dans votre navigateur (les noms d'utilisateur des chemins sont retirés) ; joignez-y last_crash.log avant de l'envoyer."
   },
   "de": {
    "Polish": "Polnisch",
@@ -3625,7 +3629,8 @@
    "Settings": "Einstellungen",
    "The second box of a row is an alternative input for the same button, and a third box appears once it is filled: keep Square on the left mouse button for combat and add J and Keypad 4 for the minigames, for example. The × next to a box empties it, and the arrow puts the row back on its default with no alternatives.": "Das zweite Feld einer Zeile ist eine alternative Eingabe für dieselbe Taste, und ein drittes Feld erscheint, sobald es belegt ist: Lass zum Beispiel Quadrat für den Kampf auf der linken Maustaste und füge J und Ziffernblock 4 für die Minispiele hinzu. Das × neben einem Feld leert es, und der Pfeil setzt die Zeile ohne Alternativen auf den Standard zurück.",
    "add-ons need update {}+": "DLCs brauchen Update {}+",
-   "Add-ons need the game's update {} or later (this game is {}): install the update PKG too.": "DLCs brauchen das Spiel-Update {} oder neuer (dieses Spiel ist auf {}): Installiere auch das PKG des Updates."
+   "Add-ons need the game's update {} or later (this game is {}): install the update PKG too.": "DLCs brauchen das Spiel-Update {} oder neuer (dieses Spiel ist auf {}): Installiere auch das PKG des Updates.",
+   "The game closed with an error (code {}). Its log was kept as user/last_crash.log. Report it on GitHub? A pre-filled issue opens in your browser (user names in paths are removed); attach last_crash.log to it before you send it.": "Das Spiel wurde mit einem Fehler beendet (Code {}). Sein Log wurde als user/last_crash.log aufbewahrt. Auf GitHub melden? Ein vorausgefülltes Issue öffnet sich im Browser (Benutzernamen in Pfaden werden entfernt); hänge last_crash.log an, bevor du es absendest."
   },
   "it": {
    "Polish": "Polacco",
@@ -3689,7 +3694,8 @@
    "Settings": "Impostazioni",
    "The second box of a row is an alternative input for the same button, and a third box appears once it is filled: keep Square on the left mouse button for combat and add J and Keypad 4 for the minigames, for example. The × next to a box empties it, and the arrow puts the row back on its default with no alternatives.": "La seconda casella di una riga è un input alternativo per lo stesso tasto, e una terza casella compare quando viene riempita: per esempio, lascia il Quadrato sul tasto sinistro del mouse per il combattimento e aggiungi J e Tastierino 4 per i minigiochi. La × accanto a una casella la svuota, e la freccia riporta la riga al valore predefinito, senza alternative.",
    "add-ons need update {}+": "i DLC richiedono l'aggiornamento {}+",
-   "Add-ons need the game's update {} or later (this game is {}): install the update PKG too.": "I DLC richiedono l'aggiornamento {} o successivo del gioco (questo gioco è alla {}): installa anche il PKG dell'aggiornamento."
+   "Add-ons need the game's update {} or later (this game is {}): install the update PKG too.": "I DLC richiedono l'aggiornamento {} o successivo del gioco (questo gioco è alla {}): installa anche il PKG dell'aggiornamento.",
+   "The game closed with an error (code {}). Its log was kept as user/last_crash.log. Report it on GitHub? A pre-filled issue opens in your browser (user names in paths are removed); attach last_crash.log to it before you send it.": "Il gioco si è chiuso con un errore (codice {}). Il suo log è stato conservato come user/last_crash.log. Segnalarlo su GitHub? Si apre nel browser una segnalazione già compilata (i nomi utente nei percorsi vengono rimossi); allega last_crash.log prima di inviarla."
   },
   "tr": {
    "Polish": "Lehçe",
@@ -3751,7 +3757,8 @@
    "Settings": "Ayarlar",
    "The second box of a row is an alternative input for the same button, and a third box appears once it is filled: keep Square on the left mouse button for combat and add J and Keypad 4 for the minigames, for example. The × next to a box empties it, and the arrow puts the row back on its default with no alternatives.": "Bir satırın ikinci kutusu aynı tuş için alternatif bir giriştir ve dolduğunda üçüncü bir kutu belirir: örneğin savaş için Kare'yi farenin sol tuşunda bırakın, mini oyunlar için J ve Tuş Takımı 4'ü ekleyin. Bir kutunun yanındaki × onu boşaltır, ok ise satırı alternatifler olmadan varsayılana döndürür.",
    "add-ons need update {}+": "DLC için {}+ güncellemesi gerekir",
-   "Add-ons need the game's update {} or later (this game is {}): install the update PKG too.": "DLC'ler oyunun {} veya daha yeni güncellemesini gerektirir (bu oyun {} sürümünde): güncellemenin PKG dosyasını da yükleyin."
+   "Add-ons need the game's update {} or later (this game is {}): install the update PKG too.": "DLC'ler oyunun {} veya daha yeni güncellemesini gerektirir (bu oyun {} sürümünde): güncellemenin PKG dosyasını da yükleyin.",
+   "The game closed with an error (code {}). Its log was kept as user/last_crash.log. Report it on GitHub? A pre-filled issue opens in your browser (user names in paths are removed); attach last_crash.log to it before you send it.": "Oyun bir hatayla kapandı (kod {}). Günlüğü user/last_crash.log olarak saklandı. GitHub'da bildirilsin mi? Tarayıcınızda önceden doldurulmuş bir kayıt açılır (yollardaki kullanıcı adları kaldırılır); göndermeden önce last_crash.log dosyasını ekleyin."
   },
   "ar": {
    "Polish": "البولندية",
@@ -3812,7 +3819,8 @@
    "Settings": "الإعدادات",
    "The second box of a row is an alternative input for the same button, and a third box appears once it is filled: keep Square on the left mouse button for combat and add J and Keypad 4 for the minigames, for example. The × next to a box empties it, and the arrow puts the row back on its default with no alternatives.": "المربع الثاني في الصف إدخال بديل للزر نفسه، ويظهر مربع ثالث عند ملئه: مثلاً أبقِ المربع على زر الفأرة الأيسر للقتال وأضف J ولوحة الأرقام 4 للألعاب المصغّرة. علامة × بجانب المربع تفرغه، والسهم يعيد الصف إلى الافتراضي من دون بدائل.",
    "add-ons need update {}+": "تحتاج الإضافات إلى التحديث {}+",
-   "Add-ons need the game's update {} or later (this game is {}): install the update PKG too.": "تحتاج الإضافات إلى تحديث اللعبة {} أو أحدث (هذه اللعبة على {}): ثبّت أيضاً حزمة PKG للتحديث."
+   "Add-ons need the game's update {} or later (this game is {}): install the update PKG too.": "تحتاج الإضافات إلى تحديث اللعبة {} أو أحدث (هذه اللعبة على {}): ثبّت أيضاً حزمة PKG للتحديث.",
+   "The game closed with an error (code {}). Its log was kept as user/last_crash.log. Report it on GitHub? A pre-filled issue opens in your browser (user names in paths are removed); attach last_crash.log to it before you send it.": "أُغلقت اللعبة بخطأ (الرمز {}). حُفظ سجلها باسم user/last_crash.log. الإبلاغ عنه على GitHub؟ ستُفتح في المتصفح مشكلة معبأة مسبقاً (تُزال أسماء المستخدمين من المسارات)؛ أرفق last_crash.log قبل الإرسال."
   },
   "zh": {
    "Polish": "波兰语",
@@ -4264,7 +4272,8 @@
    "Settings": "设置",
    "The second box of a row is an alternative input for the same button, and a third box appears once it is filled: keep Square on the left mouse button for combat and add J and Keypad 4 for the minigames, for example. The × next to a box empties it, and the arrow puts the row back on its default with no alternatives.": "每行的第二个输入框是同一按键的备用输入，填写后会出现第三个输入框：例如，战斗时将方块保留在鼠标左键，并为小游戏添加 J 和小键盘 4。输入框旁的 × 会清空它，箭头会将该行恢复为默认绑定并移除所有备用输入。",
    "add-ons need update {}+": "追加内容需要 {}+ 更新",
-   "Add-ons need the game's update {} or later (this game is {}): install the update PKG too.": "追加内容需要游戏 {} 或更高版本的更新（此游戏为 {}）：请同时安装更新的 PKG。"
+   "Add-ons need the game's update {} or later (this game is {}): install the update PKG too.": "追加内容需要游戏 {} 或更高版本的更新（此游戏为 {}）：请同时安装更新的 PKG。",
+   "The game closed with an error (code {}). Its log was kept as user/last_crash.log. Report it on GitHub? A pre-filled issue opens in your browser (user names in paths are removed); attach last_crash.log to it before you send it.": "游戏因错误而关闭（代码 {}）。其日志已保存为 user/last_crash.log。要在 GitHub 上报告吗？浏览器将打开一个预先填写的问题（路径中的用户名会被移除）；发送前请附上 last_crash.log。"
   },
   "ja": {
    "Polish": "ポーランド語",
@@ -4326,7 +4335,8 @@
    "Settings": "設定",
    "The second box of a row is an alternative input for the same button, and a third box appears once it is filled: keep Square on the left mouse button for combat and add J and Keypad 4 for the minigames, for example. The × next to a box empties it, and the arrow puts the row back on its default with no alternatives.": "各行の2つ目の欄は同じボタンの代替入力で、入力すると3つ目の欄が現れます。たとえば、戦闘用に□をマウスの左ボタンに残し、ミニゲーム用に J とテンキー4 を追加できます。欄の横の × でその欄を空にし、矢印で行を代替入力なしの初期設定に戻します。",
    "add-ons need update {}+": "追加コンテンツには {}+ のアップデートが必要",
-   "Add-ons need the game's update {} or later (this game is {}): install the update PKG too.": "追加コンテンツにはゲームのアップデート {} 以降が必要です（このゲームは {}）：アップデートの PKG もインストールしてください。"
+   "Add-ons need the game's update {} or later (this game is {}): install the update PKG too.": "追加コンテンツにはゲームのアップデート {} 以降が必要です（このゲームは {}）：アップデートの PKG もインストールしてください。",
+   "The game closed with an error (code {}). Its log was kept as user/last_crash.log. Report it on GitHub? A pre-filled issue opens in your browser (user names in paths are removed); attach last_crash.log to it before you send it.": "ゲームがエラーで終了しました（コード {}）。ログは user/last_crash.log として保存されました。GitHub に報告しますか？入力済みの Issue がブラウザで開きます（パス中のユーザー名は削除されます）。送信前に last_crash.log を添付してください。"
   },
   "ko": {
    "Polish": "폴란드어",
@@ -4388,7 +4398,8 @@
    "Settings": "설정",
    "The second box of a row is an alternative input for the same button, and a third box appears once it is filled: keep Square on the left mouse button for combat and add J and Keypad 4 for the minigames, for example. The × next to a box empties it, and the arrow puts the row back on its default with no alternatives.": "각 줄의 두 번째 칸은 같은 버튼의 대체 입력이며, 채우면 세 번째 칸이 나타납니다. 예를 들어 전투용으로 네모를 마우스 왼쪽 버튼에 두고 미니게임용으로 J와 키패드 4를 추가할 수 있습니다. 칸 옆의 ×는 그 칸을 비우고, 화살표는 대체 입력 없이 줄을 기본값으로 되돌립니다.",
    "add-ons need update {}+": "추가 콘텐츠에는 {}+ 업데이트 필요",
-   "Add-ons need the game's update {} or later (this game is {}): install the update PKG too.": "추가 콘텐츠에는 게임 업데이트 {} 이상이 필요합니다(이 게임은 {}): 업데이트 PKG도 설치하세요."
+   "Add-ons need the game's update {} or later (this game is {}): install the update PKG too.": "추가 콘텐츠에는 게임 업데이트 {} 이상이 필요합니다(이 게임은 {}): 업데이트 PKG도 설치하세요.",
+   "The game closed with an error (code {}). Its log was kept as user/last_crash.log. Report it on GitHub? A pre-filled issue opens in your browser (user names in paths are removed); attach last_crash.log to it before you send it.": "게임이 오류로 종료되었습니다(코드 {}). 로그는 user/last_crash.log로 보관되었습니다. GitHub에 보고할까요? 미리 채워진 이슈가 브라우저에서 열립니다(경로의 사용자 이름은 제거됨). 보내기 전에 last_crash.log를 첨부하세요."
   },
   "id": {
    "Polish": "Polandia",
@@ -4752,7 +4763,8 @@
    "Settings": "Pengaturan",
    "The second box of a row is an alternative input for the same button, and a third box appears once it is filled: keep Square on the left mouse button for combat and add J and Keypad 4 for the minigames, for example. The × next to a box empties it, and the arrow puts the row back on its default with no alternatives.": "Kotak kedua pada satu baris adalah input alternatif untuk tombol yang sama, dan kotak ketiga muncul setelah kotak itu diisi: misalnya, biarkan Kotak di tombol kiri mouse untuk bertarung dan tambahkan J serta Keypad 4 untuk minigame. Tanda × di samping kotak mengosongkannya, dan panah mengembalikan baris ke bawaan tanpa alternatif.",
    "add-ons need update {}+": "add-on butuh pembaruan {}+",
-   "Add-ons need the game's update {} or later (this game is {}): install the update PKG too.": "Add-on membutuhkan pembaruan game {} atau lebih baru (game ini versi {}): pasang juga PKG pembaruannya."
+   "Add-ons need the game's update {} or later (this game is {}): install the update PKG too.": "Add-on membutuhkan pembaruan game {} atau lebih baru (game ini versi {}): pasang juga PKG pembaruannya.",
+   "The game closed with an error (code {}). Its log was kept as user/last_crash.log. Report it on GitHub? A pre-filled issue opens in your browser (user names in paths are removed); attach last_crash.log to it before you send it.": "Game ditutup karena galat (kode {}). Log-nya disimpan sebagai user/last_crash.log. Laporkan di GitHub? Isu yang sudah terisi akan terbuka di peramban (nama pengguna di jalur dihapus); lampirkan last_crash.log sebelum mengirim."
   },
   "cs": {
    "Trophies": "Trofeje",
@@ -5175,7 +5187,8 @@
    "Settings": "Nastavení",
    "The second box of a row is an alternative input for the same button, and a third box appears once it is filled: keep Square on the left mouse button for combat and add J and Keypad 4 for the minigames, for example. The × next to a box empties it, and the arrow puts the row back on its default with no alternatives.": "Druhé pole řádku je alternativní vstup pro stejné tlačítko a po jeho vyplnění se objeví třetí pole: například nechte Čtverec na levém tlačítku myši pro boj a přidejte J a Numerickou 4 pro minihry. × vedle pole ho vyprázdní a šipka vrátí řádek na výchozí hodnotu bez alternativ.",
    "add-ons need update {}+": "doplňky vyžadují aktualizaci {}+",
-   "Add-ons need the game's update {} or later (this game is {}): install the update PKG too.": "Doplňky vyžadují aktualizaci hry {} nebo novější (tato hra je ve verzi {}): nainstalujte také PKG aktualizace."
+   "Add-ons need the game's update {} or later (this game is {}): install the update PKG too.": "Doplňky vyžadují aktualizaci hry {} nebo novější (tato hra je ve verzi {}): nainstalujte také PKG aktualizace.",
+   "The game closed with an error (code {}). Its log was kept as user/last_crash.log. Report it on GitHub? A pre-filled issue opens in your browser (user names in paths are removed); attach last_crash.log to it before you send it.": "Hra se zavřela s chybou (kód {}). Její log byl uložen jako user/last_crash.log. Nahlásit to na GitHubu? V prohlížeči se otevře předvyplněné hlášení (uživatelská jména v cestách se odstraní); před odesláním přiložte last_crash.log."
   }
  },
  "ru": {
@@ -5610,7 +5623,8 @@
   "Settings": "Настройки",
   "The second box of a row is an alternative input for the same button, and a third box appears once it is filled: keep Square on the left mouse button for combat and add J and Keypad 4 for the minigames, for example. The × next to a box empties it, and the arrow puts the row back on its default with no alternatives.": "Второе поле строки — альтернативный ввод для той же кнопки, а третье поле появляется, когда оно заполнено: например, оставьте Квадрат на левой кнопке мыши для боя и добавьте J и Цифровую 4 для мини-игр. × рядом с полем очищает его, а стрелка возвращает строку к значению по умолчанию без альтернатив.",
   "add-ons need update {}+": "дополнениям нужно обновление {}+",
-  "Add-ons need the game's update {} or later (this game is {}): install the update PKG too.": "Дополнениям нужно обновление игры {} или новее (у этой игры {}): установите также PKG обновления."
+  "Add-ons need the game's update {} or later (this game is {}): install the update PKG too.": "Дополнениям нужно обновление игры {} или новее (у этой игры {}): установите также PKG обновления.",
+  "The game closed with an error (code {}). Its log was kept as user/last_crash.log. Report it on GitHub? A pre-filled issue opens in your browser (user names in paths are removed); attach last_crash.log to it before you send it.": "Игра закрылась с ошибкой (код {}). Её журнал сохранён как user/last_crash.log. Сообщить об этом на GitHub? В браузере откроется заполненный отчёт (имена пользователей в путях удаляются); перед отправкой приложите last_crash.log."
  },
  "windows_languages": {
   "25": "ru",

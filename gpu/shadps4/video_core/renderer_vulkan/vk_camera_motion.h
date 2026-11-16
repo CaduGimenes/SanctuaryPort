@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "common/types.h"
+#include "sanctuary_settings.h"
 #include "video_core/renderer_vulkan/vk_common.h"
 #include "video_core/buffer_cache/buffer.h"
 #include "video_core/texture_cache/image.h"
@@ -43,8 +44,13 @@ public:
         jitter = value;
     }
 
+    /// While a temporal upscaler is on: FSR 3 can be switched on from the in-game menu at any
+    /// time, but with it off the camera was still resolved from every object block (CPU on the
+    /// draw recording thread for nothing, GitHub #29's log).
     [[nodiscard]] bool Enabled() const noexcept {
-        return debug_overlay || for_upscaler;
+        return debug_overlay ||
+               (for_upscaler &&
+                SanctuarySettings::Get().upscaler.load(std::memory_order_relaxed) != SanctuarySettings::UpscalerOff);
     }
 
     /// Both cameras and the scene depth of the current frame are known.
@@ -127,7 +133,7 @@ private:
     void Overlay(VideoCore::ImageId frame);
     /// Diablo III: matches this frame's object matrices with the previous frame's; the camera
     /// displacement most of them agree on (static scenery) moves the tracked camera.
-    void ResolveObjectCamera();
+    void ResolveObjectCamera(bool after_scene);
 
     const Instance& instance;
     Scheduler& scheduler;

@@ -139,6 +139,8 @@ pub struct State {
     /// it, to keep the reference images small.
     pub art_override: Option<home::Art>,
     pub modal: Option<Modal>,
+    /// SanctuaryPort: the exit code of the last start that ended in an error (crash report).
+    pub crash_code: Option<i32>,
     /// Whether `settings.json` or the ini could not be read at start and nothing was saved since:
     /// only Save and PLAY write then (spec §6), not closing, opening the ini or Add to Steam.
     pub settings_unreadable: bool,
@@ -256,6 +258,7 @@ impl State {
             home: Default::default(),
             art_override: None,
             modal: None,
+            crash_code: None,
             settings_unreadable: !unreadable.is_empty(),
             settings_file,
             setup: None,
@@ -359,6 +362,8 @@ pub enum Message {
     ShaderCacheCleared(Result<(), String>),
     /// One read of `nav_pad`.
     NavPoll,
+    /// Yes to the crash report question: the pre-filled issue and the log's folder open.
+    ReportCrash,
     Noop,
 }
 
@@ -641,6 +646,21 @@ pub fn update(state: &mut State, message: Message) -> Task<Message> {
                 control_center::close_live(state);
                 return window::close(id);
             }
+        }
+        Message::ReportCrash => {
+            state.modal = None;
+            let user = state.paths.user_dir(&state.store.text("user_dir"));
+            let log = std::fs::read_to_string(user.join(crate::core::crash_report::CRASH_LOG))
+                .unwrap_or_default();
+            let home = std::env::var("HOME").or_else(|_| std::env::var("USERPROFILE")).ok();
+            let url = crate::core::crash_report::issue_url(
+                env!("CARGO_PKG_VERSION"),
+                state.crash_code.unwrap_or(-1),
+                &log,
+                home.as_deref(),
+            );
+            let _ = crate::core::desktop::open_url(&url);
+            let _ = crate::core::desktop::open_path(&user);
         }
         Message::NavPoll => {
             if let Some(step) = control_center::nav_poll(state) {

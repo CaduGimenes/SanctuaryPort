@@ -11,6 +11,7 @@
 #include <shared_mutex>
 #include <thread>
 #include <unordered_map>
+#include <unordered_set>
 #include <fstream>
 #include <map>
 #ifdef _WIN32
@@ -1082,9 +1083,67 @@ struct PipelineCache::BackgroundWarmup {
 };
 
 namespace {
-// Present while a background warm-up runs; left behind when the process dies during it.
+// Present while a background warm-up runs; left behind when the process dies during it. It is
+// also the warm-up's journal: "s <key>" when a pipeline build starts, "d <key>" when it is done.
 std::filesystem::path WarmupMarkerPath() {
     return Common::FS::GetUserPath(Common::FS::PathType::CacheDir) / "warmup_running";
+}
+// GitHub #25: pipelines that were being built when a start died in the driver. The warm-up skips
+// them from then on and the game builds them when it needs them (that path did not crash). One
+// key per line, the newest last, at most WarmupSkipLimit.
+std::filesystem::path WarmupSkipPath() {
+    return Common::FS::GetUserPath(Common::FS::PathType::CacheDir) / "warmup_skip.txt";
+}
+constexpr size_t WarmupSkipLimit = 64;
+
+struct WarmupJournal {
+    std::mutex mutex;
+    FILE* file = nullptr;
+    void Note(char kind, u64 key) {
+        std::scoped_lock lock{mutex};
+        if (file) {
+            std::fprintf(file, "%c %016llx\n", kind, static_cast<unsigned long long>(key));
+            std::fflush(file); // on disk before the driver call that may kill the process
+        }
+    }
+    void Close() {
+        std::scoped_lock lock{mutex};
+        if (file) {
+            std::fclose(file);
+            file = nullptr;
+        }
+    }
+};
+WarmupJournal warmup_journal;
+std::unordered_set<u64> warmup_skip;
+
+u64 WarmupKey(bool compute, const ComputePipelineKey& compute_key,
+              const GraphicsPipelineKey& graphics_key) {
+    return compute ? static_cast<u64>(compute_key.value)
+                   : static_cast<u64>(std::hash<GraphicsPipelineKey>{}(graphics_key));
+}
+
+std::vector<u64> ReadKeys(const std::filesystem::path& path, bool journal) {
+    std::vector<u64> keys;
+    std::ifstream in(path);
+    std::string line;
+    std::unordered_set<u64> done;
+    std::vector<u64> started;
+    while (std::getline(in, line)) {
+        if (journal) {
+            if (line.size() < 3 || (line[0] != 's' && line[0] != 'd')) continue;
+            const u64 key = std::strtoull(line.c_str() + 2, nullptr, 16);
+            (line[0] == 's' ? started.push_back(key) : (void)done.insert(key));
+        } else if (!line.empty() && line[0] != '#') {
+            keys.push_back(std::strtoull(line.c_str(), nullptr, 16));
+        }
+    }
+    if (journal) {
+        for (const u64 key : started) {
+            if (!done.contains(key)) keys.push_back(key);
+        }
+    }
+    return keys;
 }
 }
 
@@ -1095,20 +1154,46 @@ bool PipelineCache::StartBackgroundWarmUp() {
     if (!CheckCacheProfile()) {
         return true; // nothing cached yet
     }
-    // GitHub #25: the previous start died during the warm-up (a driver crash). This start skips
-    // it, as with background_warmup=false; the next one tries again.
+    // GitHub #25: the previous start died during the warm-up (a driver crash). The pipelines it
+    // was building go to the skip list and the warm-up runs without them; with none known (it
+    // died elsewhere) this start skips the warm-up, as with background_warmup=false.
     std::error_code ec;
     const auto marker = WarmupMarkerPath();
+    std::vector<u64> skip = ReadKeys(WarmupSkipPath(), false);
     if (std::filesystem::exists(marker, ec)) {
+        const std::vector<u64> suspects = ReadKeys(marker, true);
         std::filesystem::remove(marker, ec);
-        std::printf("Pipeline warm-up: skipped this start (the previous one stopped during it); "
-                    "pipelines are built when the game needs them\n");
-        return true;
+        if (suspects.empty()) {
+            std::printf("Pipeline warm-up: skipped this start (the previous one stopped during "
+                        "it); pipelines are built when the game needs them\n");
+            return true;
+        }
+        for (const u64 key : suspects) {
+            if (std::find(skip.begin(), skip.end(), key) == skip.end()) skip.push_back(key);
+        }
+        if (skip.size() > WarmupSkipLimit) {
+            skip.erase(skip.begin(), skip.end() - WarmupSkipLimit);
+        }
+        if (FILE* f = std::fopen(WarmupSkipPath().string().c_str(), "wb")) {
+            std::fputs("# Pipelines the warm-up leaves to the game (they were being built when a "
+                       "start stopped).\n", f);
+            for (const u64 key : skip) {
+                std::fprintf(f, "%016llx\n", static_cast<unsigned long long>(key));
+            }
+            std::fclose(f);
+        }
+        std::printf("Pipeline warm-up: the previous start stopped while building %zu pipeline(s); "
+                    "the warm-up leaves them to the game from now on (%zu in all)\n",
+                    suspects.size(), skip.size());
     }
+    warmup_skip = std::unordered_set<u64>(skip.begin(), skip.end());
     std::filesystem::create_directories(marker.parent_path(), ec);
-    if (FILE* f = std::fopen(marker.string().c_str(), "wb")) {
-        std::fputs("A background shader warm-up is running (removed when it ends).\n", f);
-        std::fclose(f);
+    warmup_journal.Close();
+    warmup_journal.file = std::fopen(marker.string().c_str(), "wb");
+    if (warmup_journal.file) {
+        std::fputs("# A background shader warm-up is running (removed when it ends).\n",
+                   warmup_journal.file);
+        std::fflush(warmup_journal.file);
     }
     background = new BackgroundWarmup;
     auto& warm = *background;
@@ -1315,7 +1400,8 @@ void PipelineCache::PumpWarmUp() {
                 fetch = stage.fetch; // the blocking load keeps the last stage's too
             }
         }
-        if (!usable) {
+        if (!usable ||
+            warmup_skip.contains(WarmupKey(entry.compute, entry.compute_key, entry.graphics_key))) {
             warm.done.fetch_add(1, std::memory_order_relaxed);
             continue;
         }
@@ -1328,6 +1414,9 @@ void PipelineCache::PumpWarmUp() {
             warm.build_queue_ns += ElapsedNs(queued);
             SCOPE_EXIT { warm.build_ns += ElapsedNs(build_started); ++warm.completed; };
             const vk::PipelineCache cache = *warm.caches[WarmupPool::index];
+            const u64 journal_key = WarmupKey(compute, compute_key, graphics_key);
+            warmup_journal.Note('s', journal_key);
+            SCOPE_EXIT { warmup_journal.Note('d', journal_key); };
             BackgroundWarmup::Built built{graphics_key, compute_key};
             if (compute) {
                 ComputePipeline::SerializationSupport compute_data{};
@@ -1398,6 +1487,7 @@ void PipelineCache::PumpWarmUp() {
     }
     {
         std::error_code ec;
+        warmup_journal.Close();
         std::filesystem::remove(WarmupMarkerPath(), ec);
     }
     // The idle threads stay parked (StopWarmUp).
@@ -1414,6 +1504,7 @@ void PipelineCache::StopWarmUp() {
     background->pool->Drain();
     {
         std::error_code ec; // a normal exit during the warm-up is not a crash
+        warmup_journal.Close();
         std::filesystem::remove(WarmupMarkerPath(), ec);
     }
     // ponytail: leaked with its parked threads (this runs at exit only): a thread that ended

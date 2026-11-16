@@ -1162,3 +1162,43 @@ fn play_runs_the_ports_run_sh() {
     let bare = tempfile::tempdir().unwrap();
     assert_eq!(state_in(bare.path()).launch_command, None);
 }
+
+#[test]
+fn a_start_that_ends_in_an_error_keeps_its_log_and_offers_a_report() {
+    let dir = tempfile::tempdir().unwrap();
+    // An error exit: last_crash.log beside last_run.log, and the report question.
+    let mut state = ready(dir.path(), &["--lines", "3", "--exit", "5"]);
+    send(&mut state, Message::Play);
+    pump(&mut state, BOUND, idle);
+    let user = state.paths.user_dir(&state.store.text("user_dir"));
+    let kept = user.join("last_crash.log");
+    assert!(kept.is_file(), "{kept:?}");
+    assert_eq!(
+        std::fs::read_to_string(&kept).unwrap(),
+        std::fs::read_to_string(user.join("last_run.log")).unwrap()
+    );
+    assert_eq!(state.crash_code, Some(5));
+    let modal = state.modal.take().expect("the report question");
+    assert!(modal.text.contains("code 5"), "{}", modal.text);
+    assert!(matches!(modal.kind, ModalKind::YesNo { yes: Message::ReportCrash, .. }));
+
+    // STOP is not a crash: no question, the kept log stays the earlier one.
+    std::fs::remove_file(&kept).unwrap();
+    fake_game(
+        &mut state,
+        &["--lines", "1000", "--delay-ms", "50", "--exit", "0"],
+    );
+    send(&mut state, Message::Play);
+    pump(&mut state, BOUND, |state| !state.log.is_empty());
+    send(&mut state, Message::Stop);
+    pump(&mut state, BOUND, idle);
+    assert!(state.modal.is_none());
+    assert!(!kept.exists());
+
+    // A clean exit: nothing either.
+    fake_game(&mut state, &["--lines", "1", "--exit", "0"]);
+    send(&mut state, Message::Play);
+    pump(&mut state, BOUND, idle);
+    assert!(state.modal.is_none());
+    assert!(!kept.exists());
+}

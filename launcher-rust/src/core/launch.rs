@@ -81,6 +81,8 @@ pub struct GameHandle {
     pub pid: u32,
     pub events: Receiver<GameEvent>,
     job: platform::Job,
+    /// STOP was pressed: its non-zero exit is not a crash.
+    pub stop_requested: bool,
 }
 
 impl GameHandle {
@@ -189,7 +191,12 @@ pub fn spawn_game(launch: Launch<'_>) -> Result<GameHandle, LaunchError> {
         run_log.finish(status_code, advice.as_deref());
         let _ = tx.send(GameEvent::Exited(Exit { code, hint }));
     });
-    Ok(GameHandle { pid, events, job })
+    Ok(GameHandle {
+        pid,
+        events,
+        job,
+        stop_requested: false,
+    })
 }
 
 #[cfg(test)]
