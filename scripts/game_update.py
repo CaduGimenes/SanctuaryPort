@@ -48,8 +48,8 @@ def remove(path):
         path.unlink()
 
 
-def create_view(base, update, out):
-    """The folder holding base with update over it, made in out; the caller removes it."""
+def check_pair(base, update):
+    """The resolved game and update folders, or ValueError when they do not belong together."""
     from patches import game_title_id
     base, update = Path(base).resolve(), Path(update).resolve()
     base_id, update_id = game_title_id(base), game_title_id(update)
@@ -59,6 +59,30 @@ def create_view(base, update, out):
         raise ValueError('Choose two separate folders for the game and its update')
     if not (update / 'eboot.bin').is_file():
         raise ValueError('The update folder needs eboot.bin and sce_sys/param.sfo')
+    return base, update
+
+
+def layered(base, update, out):
+    """The update folder, read in place over the game by the runtime (SANCTUARY_APP0_LOWER): no
+    combined folder, nothing copied or linked (GitHub #22). Views of older starts are removed."""
+    base, update = check_pair(base, update)
+    Path(out).mkdir(parents=True, exist_ok=True)
+    remove_leftovers(out)
+    return update
+
+
+def game_file(layers, relative):
+    """The first of `layers` (folders, the update first) that has `relative`, else the first one's."""
+    for layer in layers:
+        candidate = Path(layer) / relative
+        if candidate.exists():
+            return candidate
+    return Path(layers[0]) / relative
+
+
+def create_view(base, update, out):
+    """The folder holding base with update over it, made in out; the caller removes it."""
+    base, update = check_pair(base, update)
     Path(out).mkdir(parents=True, exist_ok=True)
     remove_leftovers(out)
     target = Path(tempfile.mkdtemp(prefix='game-update-', dir=out))

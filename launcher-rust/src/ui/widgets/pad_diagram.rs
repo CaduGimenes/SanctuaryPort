@@ -747,6 +747,12 @@ pub fn picture_width(picture: Picture, height: f32) -> f32 {
     (height - CAPTION) * size.width / size.height
 }
 
+/// The height at which the picture is `width` wide (`picture_width` the other way round).
+pub fn picture_height_for_width(picture: Picture, width: f32) -> f32 {
+    let size = design_size(picture);
+    width * size.height / size.width + CAPTION
+}
+
 /// The icon beside a key or mouse input in the key table.
 pub fn input_glyph<'a>(input: &str) -> Option<Element<'a, Message>> {
     let icon = input_icon(input)?;

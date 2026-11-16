@@ -353,10 +353,17 @@ void Scheduler::RecorderThread(std::stop_token stoken) {
     Common::SetCurrentThreadName("sanctuary:VkRecorder");
     while (true) {
         // Spin briefly before sleeping: the next chunk usually follows within microseconds,
-        // and a sleeping recorder costs the GPU thread a wake-up syscall per kick. With few
-        // hardware threads (Steam Deck: 8) the spin would take time from guest threads.
-        static const auto spin_time = std::chrono::microseconds(
-            SanctuaryThreads::Available() >= 12 ? 200 : 20);
+        // and a sleeping recorder costs the GPU thread a wake-up syscall per kick.
+        // 20 us everywhere (was 200 with 12+ hardware threads): Diablo III walking in New
+        // Tristram at 60 FPS, the whole game 121% of a core instead of 128-129% (this thread 14%
+        // instead of 22%), and the same 129-142 FPS uncapped (2026-11-16, two runs each).
+        // SANCTUARY_RECORDER_SPIN_US sets it.
+        static const auto spin_time = std::chrono::microseconds([] {
+            if (const char* env = std::getenv("SANCTUARY_RECORDER_SPIN_US")) {
+                return std::strtol(env, nullptr, 10);
+            }
+            return 20L;
+        }());
         const auto spin_until = std::chrono::steady_clock::now() + spin_time;
         for (u32 spins = 1; queued_chunks.load(std::memory_order_acquire) == 0; ++spins) {
             __builtin_ia32_pause();

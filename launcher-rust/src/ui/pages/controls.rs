@@ -94,7 +94,7 @@ const BOX_WIDTH: f32 = 144.0;
 /// What an empty alternative box says.
 const ALTERNATIVE_EMPTY: &str = "(alternative)";
 const SECOND_ALTERNATIVE_EMPTY: &str = "(2nd alternative)";
-const ALTERNATIVE_NOTE: &str = "The second and third boxes of a row are alternative inputs for the same button: keep Square on the left mouse button for combat and add J and Keypad 4 for the minigames, for example. \"Clear input\" empties the main box, the × button next to a box empties that alternative, and the arrow puts the row back on its default with no alternatives.";
+const ALTERNATIVE_NOTE: &str = "The second box of a row is an alternative input for the same button, and a third box appears once it is filled: keep Square on the left mouse button for combat and add J and Keypad 4 for the minigames, for example. The × next to a box empties it, and the arrow puts the row back on its default with no alternatives.";
 
 /// The device whose table the page shows; both keep working in the game.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -352,7 +352,11 @@ pub fn update(state: &mut State, message: ControlsMessage) -> Task<Message> {
             return apply_set(state, "pad_style_auto", Value::Bool(true));
         }
         ControlsMessage::PartPressed(part) => return control_center::part_pressed(state, &part),
-        ControlsMessage::LivePoll => control_center::poll(state),
+        ControlsMessage::LivePoll => {
+            if let Some(step) = control_center::poll(state) {
+                return Task::done(step);
+            }
+        }
         ControlsMessage::Held(input, down) => {
             state.controls.held.retain(|known| *known != input);
             if down {
@@ -721,6 +725,8 @@ pub struct KeyRow {
     pub title: String,
     /// What the key box shows: the input, `(none)`, or the countdown while it waits.
     pub input: String,
+    /// Whether the main box holds an input to empty.
+    pub has_input: bool,
     /// What the alternative box shows: the input, a hint when there is none, or the countdown.
     pub alternative: String,
     /// Whether the row has an alternative to drop.
@@ -742,6 +748,10 @@ pub fn key_rows(state: &State, lang: &str) -> Vec<KeyRow> {
                 button: row.button,
                 title: tr(lang, button_name(row.button)),
                 input: key_box_text(state, lang, row.button, Slot::Main),
+                has_input: !matches!(
+                    state.controls.key.get(row.button).map(String::as_str),
+                    None | Some("" | "None")
+                ),
                 alternative: key_box_text(state, lang, row.button, Slot::Alternative),
                 has_alternative: state.controls.key_alt.contains_key(row.button),
                 second_alternative: key_box_text(state, lang, row.button, Slot::SecondAlternative),
@@ -909,7 +919,7 @@ fn reset_button<'a>(state: &State, label: String, kind: Kind) -> Element<'a, Mes
     .into()
 }
 
-fn key_line<'a>(row: KeyRow, lang: &str) -> Element<'a, Message> {
+fn key_line<'a>(row: KeyRow) -> Element<'a, Message> {
     let (icon, style) = game_icon(row.button);
     let glyph = input_glyph(&row.input);
     let alternative_glyph = input_glyph(&row.alternative);
@@ -918,7 +928,7 @@ fn key_line<'a>(row: KeyRow, lang: &str) -> Element<'a, Message> {
         .width(BOX_WIDTH)
         .style(theme::button_flat);
     let mut reset = button(text("\u{21a9}")).style(theme::button_flat);
-    let mut clear = button(text(tr(lang, "Clear input"))).style(theme::button_flat);
+    let mut clear = button(text("\u{00d7}")).style(theme::button_flat);
     let mut alternative_label = text(row.alternative);
     if !row.has_alternative {
         alternative_label = alternative_label.style(theme::text_muted);
@@ -966,29 +976,50 @@ fn key_line<'a>(row: KeyRow, lang: &str) -> Element<'a, Message> {
             )));
         }
     }
+    // Each box is followed by its ×, shown only while there is something to empty; the third box
+    // appears once the second is filled. Empty slots keep their width so the columns line up.
+    let slot_x = |shown: bool, clear: Element<'a, Message>, id: iced::widget::Id| -> Element<'a, Message> {
+        if shown {
+            container(clear).id(id).width(CLEAR_WIDTH).into()
+        } else {
+            space().width(CLEAR_WIDTH).into()
+        }
+    };
+    let glyph_or_gap = |glyph: Option<Element<'a, Message>>| -> Element<'a, Message> {
+        glyph.unwrap_or_else(|| space().width(28).into())
+    };
+    let has_main = row.has_input;
     let mut line = layout![
         button_icon(icon, style, ICON_SIZE),
         text(row.title).width(Fill),
-        glyph.unwrap_or_else(|| space().width(28).into()),
+        glyph_or_gap(glyph),
         input,
+        slot_x(has_main, clear.into(), clear_id(row.button)),
+        glyph_or_gap(alternative_glyph),
+        alternative,
+        slot_x(
+            row.has_alternative,
+            clear_alternative.into(),
+            clear_alternative_id(row.button)
+        ),
     ];
-    if let Some(glyph) = alternative_glyph {
-        line = line.push(glyph);
+    if row.has_alternative || row.has_second_alternative {
+        line = line
+            .push(glyph_or_gap(second_glyph))
+            .push(second)
+            .push(slot_x(
+                row.has_second_alternative,
+                clear_second.into(),
+                clear_second_alternative_id(row.button),
+            ));
+    } else {
+        line = line.push(space().width(28.0 + BOX_WIDTH + CLEAR_WIDTH + 12.0));
     }
-    line = line
-        .push(alternative)
-        .push(container(clear_alternative).id(clear_alternative_id(row.button)));
-    if let Some(glyph) = second_glyph {
-        line = line.push(glyph);
-    }
-    line.push(second)
-        .push(container(clear_second).id(clear_second_alternative_id(row.button)))
-        .push(reset)
-        .push(container(clear).id(clear_id(row.button)))
-        .spacing(6)
-        .align_y(Center)
-        .into()
+    line.push(reset).spacing(6).align_y(Center).into()
 }
+
+/// The width of a box's × (and of the gap left when there is nothing to empty).
+const CLEAR_WIDTH: f32 = 30.0;
 
 fn pad_line<'a>(row: PadRow, pad_style: &str) -> Element<'a, Message> {
     let (icon, style) = game_icon(row.button);
@@ -1023,14 +1054,24 @@ fn keyboard_section<'a>(state: &State, lang: &str) -> Element<'a, Message> {
     let hint = |english: &str| tr(lang, english);
     let mut lines = column![].spacing(6);
     for key_row in key_rows(state, lang) {
-        lines = lines.push(key_line(key_row, lang));
+        lines = lines.push(key_line(key_row));
     }
     column![
+        section(state.rtl, &tr(lang, "Settings")),
+        glyph_row(state, lang),
+        checkbox(
+            state.rtl,
+            "mouse_lock",
+            &tr(lang, "Keep the mouse in the game window"),
+            state.store.flag("mouse_lock"),
+            Some(&hint(MOUSE_LOCK_HINT)),
+        ),
         section(state.rtl, &tr(lang, "Keyboard & Mouse Mapping")),
         note(tr(
             lang,
             "Which key or mouse input presses each button of the game."
         )),
+        control_center::picture_panel(state, lang),
         container(lines).padding(Padding::ZERO.top(12)),
         note(tr_fmt(lang, KEY_NOTE, &[&CAPTURE_SECONDS.to_string()])),
         note(tr(lang, ALTERNATIVE_NOTE)),
@@ -1038,13 +1079,6 @@ fn keyboard_section<'a>(state: &State, lang: &str) -> Element<'a, Message> {
             state,
             tr(lang, "Reset keyboard & mouse to defaults"),
             Kind::Key
-        ),
-        checkbox(
-            state.rtl,
-            "mouse_lock",
-            &tr(lang, "Keep the mouse in the game window"),
-            state.store.flag("mouse_lock"),
-            Some(&hint(MOUSE_LOCK_HINT)),
         ),
     ]
     .spacing(2)
@@ -1054,22 +1088,29 @@ fn keyboard_section<'a>(state: &State, lang: &str) -> Element<'a, Message> {
 /// Which controller the page draws: the one found, or the one the player picks.
 fn pad_type_row<'a>(state: &State, lang: &str) -> Element<'a, Message> {
     let auto = state.store.flag("pad_style_auto");
-    let styles = PadModel::ALL.into_iter().fold(
-        layout![radio(
-            tr(lang, "Automatic"),
-            auto,
-            Message::Controls(ControlsMessage::PadStyleAuto),
-        )]
-        .spacing(10),
-        |radios, model| {
-            radios.push(radio(
-                model.name().to_string(),
-                !auto && state.controls.pad_model == model,
-                Message::Controls(ControlsMessage::PadModel(model)),
-            ))
-        },
-    );
-    row(state.rtl, &tr(lang, "Controller type"), styles.into(), None)
+    let automatic = tr(lang, "Automatic");
+    let options: Vec<String> = std::iter::once(automatic.clone())
+        .chain(PadModel::ALL.into_iter().map(|model| model.name().to_string()))
+        .collect();
+    let chosen = if auto {
+        automatic.clone()
+    } else {
+        state.controls.pad_model.name().to_string()
+    };
+    let picker = pick_list(options, Some(chosen), move |picked: String| {
+        match PadModel::ALL.into_iter().find(|model| model.name() == picked) {
+            Some(model) => Message::Controls(ControlsMessage::PadModel(model)),
+            None => Message::Controls(ControlsMessage::PadStyleAuto),
+        }
+    })
+    .text_size(SELECT_TEXT)
+    .style(theme::pick_list_dark);
+    row(
+        state.rtl,
+        &tr(lang, "Controller type"),
+        min_width(SELECT_MIN, picker).into(),
+        None,
+    )
 }
 
 fn gamepad_section<'a>(state: &State, lang: &str) -> Element<'a, Message> {
@@ -1079,15 +1120,19 @@ fn gamepad_section<'a>(state: &State, lang: &str) -> Element<'a, Message> {
             lines.push(pad_line(pad_row, &state.controls.pad_style))
         });
     column![
-        section(state.rtl, &tr(lang, "Gamepad Mapping")),
-        note(tr(
-            lang,
-            "Which gamepad button presses each button of the game."
-        )),
-        container(lines).padding(Padding::ZERO.top(12)),
-        note(tr(lang, PAD_NOTE)),
-        reset_button(state, tr(lang, "Reset gamepad to defaults"), Kind::Pad),
-        control_center::pad_tools(state, lang),
+        section(state.rtl, &tr(lang, "Gamepad")),
+        pad_type_row(state, lang),
+        control_center::picture_panel(state, lang),
+        note(tr(lang, DEADZONE_HINT)),
+        layout![
+            button(text(tr(lang, "Set up a controller")))
+                .style(theme::button_flat)
+                .on_press(Message::Mapper(MapperMessage::Open)),
+            control_center::pad_tools(state, lang),
+        ]
+        .spacing(8)
+        .align_y(Center),
+        section(state.rtl, &tr(lang, "Settings")),
         row(
             state.rtl,
             &tr(lang, "Vibration"),
@@ -1105,7 +1150,15 @@ fn gamepad_section<'a>(state: &State, lang: &str) -> Element<'a, Message> {
             ),
             Some(&tr(lang, CONFIRM_HINT)),
         ),
-        note(tr(lang, DEADZONE_HINT)),
+        glyph_row(state, lang),
+        section(state.rtl, &tr(lang, "Gamepad Mapping")),
+        note(tr(
+            lang,
+            "Which gamepad button presses each button of the game."
+        )),
+        container(lines).padding(Padding::ZERO.top(12)),
+        note(tr(lang, PAD_NOTE)),
+        reset_button(state, tr(lang, "Reset gamepad to defaults"), Kind::Pad),
     ]
     .spacing(2)
     .into()
@@ -1127,38 +1180,23 @@ pub fn view(state: &State) -> Element<'_, Message> {
         Device::Keyboard => keyboard_section(state, lang),
         Device::Gamepad => gamepad_section(state, lang),
     };
-    // The generic controller mapper belongs to the gamepad only.
-    let devices: Element<'_, Message> = match state.controls.device {
-        Device::Keyboard => devices.into(),
-        Device::Gamepad => layout![
-            button(text(tr(lang, "Set up a controller")))
-                .style(theme::button_flat)
-                .on_press(Message::Mapper(MapperMessage::Open)),
-            devices
-        ]
-        .spacing(18)
-        .align_y(Center)
-        .into(),
-    };
-    let pad_type = match state.controls.device {
-        Device::Keyboard => space().height(0).into(),
-        Device::Gamepad => pad_type_row(state, lang),
-    };
     column![
-        row(state.rtl, &tr(lang, "Device"), devices, None),
-        pad_type,
-        row(
-            state.rtl,
-            &tr(lang, "In-game button icons"),
-            select("glyph_style", D3_GLYPH_STYLES, &d3_glyph_style(state), lang),
-            Some(&tr(lang, D3_GLYPHS_HINT)),
-        ),
-        control_center::picture_panel(state, lang),
-        device_section,
+        row(state.rtl, &tr(lang, "Device"), devices.into(), None),
         control_center::profile_section(state, lang),
+        device_section,
     ]
     .spacing(2)
     .into()
+}
+
+/// In-game button icons: on both devices' Settings.
+fn glyph_row<'a>(state: &State, lang: &str) -> Element<'a, Message> {
+    row(
+        state.rtl,
+        &tr(lang, "In-game button icons"),
+        select("glyph_style", D3_GLYPH_STYLES, &d3_glyph_style(state), lang),
+        Some(&tr(lang, D3_GLYPHS_HINT)),
+    )
 }
 
 /// SanctuaryPort: what the in-game icons show in Diablo III. Older settings may hold a style the

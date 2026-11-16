@@ -227,7 +227,7 @@ fn mapper_is_not_opened_over_a_running_game() {
     assert!(state.game.is_live());
     common::open(&mut state, Page::Controls);
     state.controls.device = sanctuaryport_launcher::ui::pages::controls::Device::Gamepad;
-    let sent = common::messages(&state, "Set up a controller");
+    let sent = clicked(&state, "Set up a controller"); // under the controller picture
     assert!(
         matches!(sent.as_slice(), [Message::Mapper(MapperMessage::Open)]),
         "{sent:?}"

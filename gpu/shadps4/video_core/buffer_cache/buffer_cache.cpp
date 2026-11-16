@@ -134,10 +134,14 @@ void BufferCache::SmallGuestCopy(const SanctuaryCopy::Item& item) {
     SanctuaryCopy::QueueCopy(item);
 }
 
+// Window size: 64 KiB. Each page the window unprotects counts as CPU-modified, so every binding
+// over it re-uploads it and stage B re-protects it (mprotect, TLB shootdown). Uncapped 480p walk
+// in New Tristram (2026-11-16): 64 KiB 136-137 FPS, 32 KiB 133, 128 KiB 131, 256 KiB 118-123:
+// more faults (~23k/s vs ~18k/s) but far less re-upload and re-protect work on stage B.
 void BufferCache::ExtendWriteFault(VAddr device_addr) {
     static const u64 window = [] {
         const char* env = std::getenv("SANCTUARY_FAULT_WINDOW");
-        const u64 kib = env ? std::strtoull(env, nullptr, 10) : 256;
+        const u64 kib = env ? std::strtoull(env, nullptr, 10) : 64;
         return std::bit_ceil(std::clamp<u64>(kib, 4, 1024)) * 1024;
     }();
     if (window <= TRACKER_BYTES_PER_PAGE || SanctuaryToggle::Disabled(SanctuaryToggle::FaultWindow)) {

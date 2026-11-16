@@ -1156,7 +1156,8 @@ fn nintendo_names_follow_the_button_positions() {
     let mut state = controls_state(dir.path());
     click(&mut state, "Gamepad");
     assert_eq!(state.controls.pad_style, "playstation");
-    click_tall(&mut state, "Switch Pro");
+    // The Controller type list picks it.
+    controls_update(&mut state, ControlsMessage::PadModel(PadModel::SwitchPro));
     assert_eq!(state.controls.pad_style, "nintendo");
     assert_eq!(state.store.text("pad_style"), "nintendo");
     // The table relabels its boxes, the triggers too; Touchpad left stays on its combination.
@@ -1778,10 +1779,8 @@ fn a_gamepad_found_while_a_box_waits_ends_the_capture() {
     assert_eq!(state.controls.key, before);
     // No hidden box takes the next click: it reaches the gamepad section.
     assert!(matches!(
-        tall_messages(&state, "Switch Pro").as_slice(),
-        [Message::Controls(ControlsMessage::PadModel(
-            PadModel::SwitchPro
-        ))]
+        tall_messages(&state, "Set up a controller").as_slice(),
+        [Message::Mapper(_)]
     ));
 }
 

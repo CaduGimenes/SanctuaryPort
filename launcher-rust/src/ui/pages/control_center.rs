@@ -34,7 +34,7 @@ use crate::ui::pages::controls::{self, ini_number, ControlsMessage, Device as Sh
 use crate::ui::pages::Page;
 use crate::ui::theme::{self, palette};
 use crate::ui::widgets::pad_diagram::{
-    game_icon, input_icon, pad_diagram, pad_icon, parts, picture_width, Live, Picture,
+    game_icon, input_icon, pad_diagram, pad_icon, parts, picture_height_for_width, picture_width, Live, Picture,
     Shown as ShownInput,
 };
 use crate::ui::widgets::SELECT_TEXT;
@@ -229,6 +229,8 @@ pub fn open_live(state: &mut State) {
     {
         return;
     }
+    // One SDL at a time: the tab pad goes while this one is open.
+    close_nav(state);
     state.controls.live_error = None;
     let (opener, paths) = (state.joystick_opener, state.paths.clone());
     state.open_live_pad_with(Box::new(JoystickThread::spawn(move || opener(&paths))));
@@ -284,21 +286,24 @@ pub fn tick(state: &mut State, at: Instant) {
 
 /// One read of the pad: the live view, a waiting remap, a drift measure, and a controller that came
 /// or went.
-pub fn poll(state: &mut State) {
+pub fn poll(state: &mut State) -> Option<Message> {
     if state.game.is_live() {
         close_live(state);
-        return;
+        return None;
     }
     let mappings = mappings_file(state);
-    let Some(mut live) = state.live_pad.take() else {
-        return;
-    };
+    let mut live = state.live_pad.take()?;
     if let Some(error) = live.joysticks.failure() {
         state.controls.live_error = Some(error);
-        return;
+        return None;
     }
+    let mut step = None;
     if live.device.is_some() {
         let fresh = live.read();
+        // No tab change while a remap waits (the press is its input) or the drift is measured.
+        if live.drift.is_none() {
+            step = shoulder_step(state, &fresh);
+        }
         live.measure();
         if let (Some(button), Some(name)) = (state.controls.pad_capturing.clone(), fresh.first()) {
             bind_pad(&mut state.controls.pad, &button, name);
@@ -318,6 +323,90 @@ pub fn poll(state: &mut State) {
     }
     state.live_pad = Some(live);
     follow_model(state);
+    step
+}
+
+// SanctuaryPort: LB and RB change tab, as the arrow keys do, so the launcher works with a controller
+// alone (handhelds). The pad is opened for that while the window has the focus and nothing else
+// holds a pad: the Controls page's own (it changes tab too), the controller mapper, a running game.
+
+impl State {
+    /// Starts the tab pad on `joysticks` (the tests pass a scripted one).
+    #[doc(hidden)]
+    pub fn open_nav_pad_with(&mut self, joysticks: Box<dyn Joysticks>) {
+        let mut nav = LivePad::new(joysticks);
+        let _ = nav.connect(&mappings_file(self));
+        self.nav_pad = Some(nav);
+    }
+}
+
+fn nav_wanted(state: &State) -> bool {
+    state.focused
+        && state.visible
+        && state.splash.done
+        && state.setup.is_none()
+        && state.mapper.is_none()
+        && state.live_pad.is_none()
+        && !state.game.is_live()
+        && !state.nav_failed
+}
+
+/// Opens or closes the tab pad as `nav_wanted` changes.
+pub fn nav_tick(state: &mut State) {
+    if !nav_wanted(state) {
+        close_nav(state);
+    } else if state.nav_pad.is_none() {
+        let (opener, paths) = (state.joystick_opener, state.paths.clone());
+        state.open_nav_pad_with(Box::new(JoystickThread::spawn(move || opener(&paths))));
+    }
+}
+
+pub fn close_nav(state: &mut State) {
+    if let Some(mut nav) = state.nav_pad.take() {
+        nav.disconnect();
+    }
+}
+
+/// The tab LB or RB asks for, if the launcher can change tab now.
+fn shoulder_step(state: &State, fresh: &[String]) -> Option<Message> {
+    let free = state.modal.is_none()
+        && state.setup.is_none()
+        && state.mapper.is_none()
+        && state.controls.capturing.is_none()
+        && state.controls.pad_capturing.is_none();
+    if !free || !state.focused {
+        return None;
+    }
+    fresh.iter().find_map(|name| match name.as_str() {
+        "leftshoulder" => Some(Message::PreviousPage),
+        "rightshoulder" => Some(Message::NextPage),
+        _ => None,
+    })
+}
+
+/// One read of the tab pad: a tab change, or a controller that came or went.
+pub fn nav_poll(state: &mut State) -> Option<Message> {
+    let mut nav = state.nav_pad.take()?;
+    if nav.joysticks.failure().is_some() {
+        state.nav_failed = true;
+        return None;
+    }
+    let mut step = None;
+    if nav.device.is_some() {
+        let fresh = nav.read();
+        step = shoulder_step(state, &fresh);
+    } else {
+        nav.scan += 1;
+        if nav.scan >= SCAN_POLLS {
+            nav.scan = 0;
+            if nav.connect(&mappings_file(state)).is_err() {
+                state.nav_failed = true;
+                return None;
+            }
+        }
+    }
+    state.nav_pad = Some(nav);
+    step
 }
 
 /// A click on the picture: the game button on that input waits for a new one.
@@ -815,8 +904,22 @@ fn picture_height(state: &State, picture: Picture) -> Length {
         Picture::Pad(_) => 0.46,
         Picture::Keyboard => 0.34,
     };
-    Length::Fixed((state.window_size.height * share).clamp(240.0, 460.0))
+    let height = (state.window_size.height * share).clamp(240.0, 460.0);
+    // A controller drawn beside its two side columns is held by the drawer's width: no taller
+    // than it is drawn, or empty space opens above and under it.
+    let height = match picture {
+        Picture::Pad(_) => {
+            let room = crate::ui::drawer::drawer_width(state) - DRAWER_MARGINS
+                - 2.0 * (SIDE_WIDTH + SIDE_GAP);
+            height.min(picture_height_for_width(picture, room.max(120.0)))
+        }
+        Picture::Keyboard => height,
+    };
+    Length::Fixed(height)
 }
+
+/// The drawer's padding on both sides and its scrollbar lane.
+const DRAWER_MARGINS: f32 = 2.0 * 28.0 + 20.0;
 
 fn flat<'a>(label: String, message: Option<Message>) -> Element<'a, Message> {
     button(text(label))
@@ -988,7 +1091,7 @@ pub fn profile_section<'a>(state: &State, lang: &str) -> Element<'a, Message> {
     } else {
         ControlsMessage::ProfileNaming
     };
-    let mut actions = layout![
+    let mut chooser = layout![
         text(tr(lang, "Control Profiles"))
             .size(13)
             .color(palette::MUTED),
@@ -997,7 +1100,7 @@ pub fn profile_section<'a>(state: &State, lang: &str) -> Element<'a, Message> {
     .spacing(8)
     .align_y(Center);
     if naming {
-        actions = actions.push(
+        chooser = chooser.push(
             text_input(&tr(lang, "New profile name"), &view.profile_name)
                 .on_input(|name| Message::Controls(ControlsMessage::ProfileName(name)))
                 .on_submit(Message::Controls(ControlsMessage::ProfileSave))
@@ -1005,7 +1108,10 @@ pub fn profile_section<'a>(state: &State, lang: &str) -> Element<'a, Message> {
                 .size(SELECT_TEXT),
         );
     }
-    let actions = actions
+    // The buttons go on their own line: beside the list they ran off a narrow page.
+    let actions = layout![]
+        .spacing(8)
+        .align_y(Center)
         .push(flat(
             tr(lang, "Save"),
             can_save.then_some(Message::Controls(save)),
@@ -1022,7 +1128,9 @@ pub fn profile_section<'a>(state: &State, lang: &str) -> Element<'a, Message> {
             tr(lang, "Export"),
             Some(Message::Controls(ControlsMessage::ProfileExport)),
         ));
-    container(actions).padding(Padding::ZERO.top(18)).into()
+    container(column![chooser, actions].spacing(8))
+        .padding(Padding::ZERO.top(10).bottom(6))
+        .into()
 }
 
 #[cfg(test)]

@@ -518,3 +518,81 @@ fn the_view_draws_every_model_and_the_keyboard() {
         let _ = controls::view(&state);
     }
 }
+
+/// The tab pad on Home, reading `fake` (the launcher opens it on its own outside the tests).
+fn with_nav_pad(dir: &std::path::Path, fake: &FakeJoysticks) -> State {
+    fake.script().mapping = Some(MAPPING.to_string());
+    let mut state = state(dir);
+    state.lang = "en".into();
+    state.open_nav_pad_with(Box::new(fake.clone()));
+    state
+}
+
+/// One press of `button` on the tab pad, then its release.
+fn tap(state: &mut State, fake: &FakeJoysticks, button: &'static str) {
+    fake.script().pressed = vec![button];
+    let _ = app::update(state, Message::NavPoll);
+    fake.script().pressed = Vec::new();
+    let _ = app::update(state, Message::NavPoll);
+}
+
+#[test]
+fn lb_and_rb_change_tab_like_the_arrow_keys() {
+    let dir = tempfile::tempdir().unwrap();
+    let fake = FakeJoysticks::new("Windows", vec![sony()]);
+    let mut state = with_nav_pad(dir.path(), &fake);
+    assert_eq!(state.page, Page::Home);
+    tap(&mut state, &fake, "R1 / RB");
+    assert_eq!(state.page, Page::Graphics);
+    tap(&mut state, &fake, "R1 / RB");
+    assert_eq!(state.page, Page::Game);
+    tap(&mut state, &fake, "L1 / LB");
+    assert_eq!(state.page, Page::Graphics);
+    // Held, it changes tab once.
+    fake.script().pressed = vec!["R1 / RB"];
+    for _ in 0..5 {
+        let _ = app::update(&mut state, Message::NavPoll);
+    }
+    assert_eq!(state.page, Page::Game);
+    // Another button changes nothing.
+    fake.script().pressed = Vec::new();
+    tap(&mut state, &fake, "Cross / A");
+    assert_eq!(state.page, Page::Game);
+}
+
+#[test]
+fn no_tab_change_under_a_dialog_or_without_the_focus() {
+    let dir = tempfile::tempdir().unwrap();
+    let fake = FakeJoysticks::new("Windows", vec![sony()]);
+    let mut state = with_nav_pad(dir.path(), &fake);
+    state.focused = false;
+    tap(&mut state, &fake, "R1 / RB");
+    assert_eq!(state.page, Page::Home);
+    state.focused = true;
+    state.modal = Some(sanctuaryport_launcher::ui::widgets::Modal::info("x".to_string()));
+    tap(&mut state, &fake, "R1 / RB");
+    assert_eq!(state.page, Page::Home);
+}
+
+#[test]
+fn the_controls_page_pad_takes_over_from_the_tab_pad() {
+    let dir = tempfile::tempdir().unwrap();
+    let nav = FakeJoysticks::new("Windows", vec![sony()]);
+    let mut state = with_nav_pad(dir.path(), &nav);
+    assert!(state.nav_pad.is_some());
+    let page_pad = FakeJoysticks::new("Windows", vec![sony()]);
+    page_pad.script().mapping = Some(MAPPING.to_string());
+    open(&mut state, Page::Controls);
+    send(&mut state, ControlsMessage::Device(Shown::Gamepad));
+    state.controls.live_error = None;
+    control_center::close_nav(&mut state);
+    state.open_live_pad_with(Box::new(page_pad.clone()));
+    // With the page's pad open, the tab pad stays closed.
+    control_center::nav_tick(&mut state);
+    assert!(state.nav_pad.is_none());
+    // The page's pad changes tab too, but not while a remap waits for a press.
+    state.controls.pad_capturing = Some("cross".into());
+    page_pad.script().pressed = vec!["R1 / RB"];
+    send(&mut state, ControlsMessage::LivePoll);
+    assert_eq!(state.page, Page::Controls);
+}

@@ -536,6 +536,7 @@ pub fn start_pkg_install(state: &mut State, files: Vec<std::path::PathBuf>) {
         s.text = tr(&state.lang, "Reading the PKG files…");
     }
     let lang = state.lang.clone();
+    let current_version = state.installation.info().map(|info| info.version.clone());
     std::thread::spawn(move || {
         let games = pkg_games_dir();
         let mut jobs: Vec<_> = files
@@ -548,6 +549,7 @@ pub fn start_pkg_install(state: &mut State, files: Vec<std::path::PathBuf>) {
         let mut result = Vec::new();
         let mut game_dir = None;
         let mut update_dir = None;
+        let mut addons = false;
         for (n, (file, info)) in jobs.into_iter().enumerate() {
             let target = pkg_install::target_dir(&info, &games);
             let name = info.content_id.clone();
@@ -565,6 +567,8 @@ pub fn start_pkg_install(state: &mut State, files: Vec<std::path::PathBuf>) {
                         update_dir = Some(target.clone());
                     } else if info.is_game() {
                         game_dir = Some(target.clone());
+                    } else {
+                        addons = true;
                     }
                     result.push(format!("✓ {name}"));
                 }
@@ -573,9 +577,24 @@ pub fn start_pkg_install(state: &mut State, files: Vec<std::path::PathBuf>) {
         }
         if let Ok(mut s) = status.lock() {
             s.running = false;
-            s.installed_game = game_dir;
-            s.installed_update = update_dir;
+            s.installed_game = game_dir.clone();
+            s.installed_update = update_dir.clone();
             s.text = format!("{} {}", tr(&lang, "Install finished:"), result.join("  "));
+            // GitHub #28: add-ons on a game below the update that mounts them.
+            let version = update_dir
+                .as_ref()
+                .or(game_dir.as_ref())
+                .and_then(|dir| crate::core::game::GameFolder::read(dir).app_version().map(str::to_string))
+                .or(current_version);
+            if let Some(version) = version.filter(|v| addons && crate::core::game::addons_need_update(v)) {
+                let need = crate::core::game::ADDON_MIN_VERSION.trim_start_matches('0');
+                s.text.push('\n');
+                s.text.push_str(&tr_fmt(
+                    &lang,
+                    "Add-ons need the game's update {} or later (this game is {}): install the update PKG too.",
+                    &[need, &version],
+                ));
+            }
         }
     });
 }

@@ -140,6 +140,8 @@ pub struct HomeFacts {
     pub saves: bool,
     /// Patches the last start left out (`patch_status.json`).
     pub skipped: usize,
+    /// Add-ons are installed where the game looks for them.
+    pub addons: bool,
 }
 
 /// Re-reads the saves folder and the last start's patch report; the game is `State::installation`.
@@ -149,6 +151,10 @@ pub(crate) fn read_facts(state: &mut State) {
         saves: has_files(&savedata),
         skipped: patch_status(&state.paths.data_dir.join("out"))
             .map_or(0, |status| status.skipped.len()),
+        addons: crate::core::game::has_addons(
+            state.installation.game_folder(),
+            &state.paths.port_dir,
+        ),
     };
 }
 
@@ -535,7 +541,17 @@ pub fn chips(state: &State) -> [String; 3] {
     let game = match state.installation.info() {
         Some(info) => {
             let id = state.installation.title_id().unwrap_or(&info.title);
-            format!("✓ {id} · v{}", info.version)
+            // GitHub #28: add-ons installed on a game below the update that mounts them.
+            if state.home.addons && crate::core::game::addons_need_update(&info.version) {
+                let need = crate::core::game::ADDON_MIN_VERSION.trim_start_matches('0');
+                format!(
+                    "⚠ {id} · v{} · {}",
+                    info.version,
+                    tr_fmt(lang, "add-ons need update {}+", &[need])
+                )
+            } else {
+                format!("✓ {id} · v{}", info.version)
+            }
         }
         None => tr(lang, "✗ No eboot.bin in the game folder"),
     };

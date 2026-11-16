@@ -92,6 +92,9 @@ Findings, in the order they were fixed:
    staging pool freed blocks after 3 s idle, between streaming bursts. It now keeps 512 MiB
    (`SANCTUARY_STAGING_KEEP_MB`), frees the rest after 30 s and populates 128 MiB at startup.
 3. Write faults: a 256 KiB unprotect window (`SANCTUARY_FAULT_WINDOW`) halves them again.
+   (2026-11-16, with the draw pipeline: the default is now 64 KiB. Every page the window opens is
+   re-uploaded and re-protected by stage B; uncapped 480p walk 136-137 FPS vs 118-123 at 256 KiB,
+   32 KiB 133, 128 KiB 131; ~23k vs ~18k faults/s, same load stalls.)
    `SANCTUARY_UFFD=1` tracks writes with userfaultfd write-protection instead of mprotect (no
    address-space write lock, no mapping splits); read protection for readbacks still uses
    mprotect. It removes the mprotect time but did not change the stalls measurably; opt-in.

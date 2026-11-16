@@ -75,11 +75,19 @@ void runtime_file_unmount(const char *guest) {
     }
     pthread_mutex_unlock(&lock);
 }
+/* SANCTUARY_APP0_LOWER: the game folder under an update folder mounted at /app0. A game path the
+ * update lacks resolves there, and directory listings hold both: the update is read in place over
+ * the dump, without a combined copy of the game (GitHub #22: on exFAT/FAT32 or across drives that
+ * copy was ~27 GB at every start). */
+static char app0_lower[512];
 static char user_root[512]="user";
 const char *runtime_file_user_dir(void) { return user_root; }
 void runtime_file_configure(const char *app0,const char *user) {
     char path[600];
     snprintf(user_root,sizeof(user_root),"%s",user);
+    const char *lower=getenv("SANCTUARY_APP0_LOWER");
+    snprintf(app0_lower,sizeof(app0_lower),"%s",lower ? lower : "");
+    if (app0_lower[0]) printf("Runtime: /app0 reads the update, then %s\n",app0_lower);
     runtime_file_mount("/app0",app0);
     runtime_file_mount("/hostapp",app0);
     const char *writable[]={"temp0","download0","data"};
@@ -106,11 +114,34 @@ static int translate(const char *guest,char *out,size_t size) {
         if (!strncmp(buffer,mounts[i].guest,n) && (buffer[n]=='/' || !buffer[n]) && n>best) { best=n; m=&mounts[i]; }
     }
     int result=0;
+    /* Only the folder mounts of the game have a lower layer, not an exact-file mount under them. */
+    int layered=m && app0_lower[0] && (!strcmp(m->guest,"/app0") || !strcmp(m->guest,"/hostapp"));
+    char rest[1024]="";
     if (!m) result=ENOENT;
     else if ((size_t)snprintf(out,size,"%s%s",m->host,buffer+best)>=size) result=ENAMETOOLONG;
+    else if (layered) snprintf(rest,sizeof(rest),"%s",buffer+best);
     pthread_mutex_unlock(&lock);
     if (result==ENOENT) fprintf(stderr,"Runtime: no mount for guest path %s\n",guest);
+    if (!result && layered) {
+        HostStat s;
+        char lower[1024];
+        size_t n=(size_t)snprintf(lower,sizeof(lower),"%s%s",app0_lower,rest);
+        if (host_stat(out,&s) && n<sizeof(lower) && n<size && !host_stat(lower,&s))
+            snprintf(out,size,"%s",lower);
+    }
     return result;
+}
+/* The lower layer's copy of guest directory `guest` (also when the update has it), or 0. */
+static int lower_directory(const char *guest,char *out,size_t size) {
+    if (!app0_lower[0] || !guest) return 0;
+    const char *rest=NULL;
+    if (guest[0]!='/') rest=guest;
+    else if (!strncmp(guest,"/app0",5) && (!guest[5] || guest[5]=='/')) rest=guest+5;
+    else if (!strncmp(guest,"/hostapp",8) && (!guest[8] || guest[8]=='/')) rest=guest+8;
+    if (!rest) return 0;
+    if ((size_t)snprintf(out,size,"%s%s%s",app0_lower,rest[0] && rest[0]!='/' ? "/" : "",rest)>=size) return 0;
+    HostStat s;
+    return !host_stat(out,&s) && S_ISDIR(s.st_mode);
 }
 static int host_flags(int flags) {
     int r;
@@ -164,6 +195,37 @@ static Listing *list_directory(const char *path) {
     closedir(d);
     return l;
 }
+/* Adds the names of `lower` that `upper` lacks (the update's files win). */
+static void merge_listing(Listing *upper,const Listing *lower) {
+    if (!upper || !lower) return;
+    for (size_t i=0;i<lower->count;++i) {
+        const char *name=lower->names+lower->offsets[i];
+        int present=0;
+        for (size_t j=0;j<upper->count && !present;++j) present=!strcmp(upper->names+upper->offsets[j],name);
+        if (present) continue;
+        size_t bytes=upper->count ? upper->offsets[upper->count-1]+strlen(upper->names+upper->offsets[upper->count-1])+1 : 0;
+        size_t n=strlen(name)+1;
+        upper->names=realloc(upper->names,bytes+n);
+        upper->offsets=realloc(upper->offsets,(upper->count+1)*sizeof(size_t));
+        upper->types=realloc(upper->types,upper->count+1);
+        if (!upper->names || !upper->offsets || !upper->types) { fputs("Out of memory listing directory\n",stderr); exit(1); }
+        memcpy(upper->names+bytes,name,n);
+        upper->offsets[upper->count]=bytes;
+        upper->types[upper->count]=lower->types[i];
+        ++upper->count;
+    }
+}
+/* The listing of guest directory `guest` at host `path`, with the lower layer's names added. */
+static Listing *list_guest_directory(const char *guest,const char *path) {
+    Listing *l=list_directory(path);
+    char lower[1024];
+    if (l && lower_directory(guest,lower,sizeof(lower)) && strcmp(lower,path)) {
+        Listing *more=list_directory(lower);
+        merge_listing(l,more);
+        free_listing(more);
+    }
+    return l;
+}
 static void convert_stat(const HostStat *s,GuestStat *g) {
     memset(g,0,sizeof(*g));
     g->dev=(uint32_t)s->st_dev; g->ino=(uint32_t)s->st_ino;
@@ -214,7 +276,7 @@ static int64_t do_open(const char *guest,int flags,int mode) {
     int host=-1;
     if (!host_stat(path,&s) && S_ISDIR(s.st_mode)) {
         if (flags&3) return -EISDIR;
-        if (!(dir=list_directory(path))) return -EACCES;
+        if (!(dir=list_guest_directory(guest,path))) return -EACCES;
     } else if (flags&0x20000) {
         e=errno==ENOENT ? ENOENT : ENOTDIR;
         if (e==ENOENT) { ++missing; printf("Runtime: open(%s) -> not found\n",guest); }
@@ -237,7 +299,7 @@ static int64_t do_open(const char *guest,int flags,int mode) {
     }
     struct stat s;
     Listing *dir=NULL;
-    if (!fstat(host,&s) && S_ISDIR(s.st_mode)) dir=list_directory(path);
+    if (!fstat(host,&s) && S_ISDIR(s.st_mode)) dir=list_guest_directory(guest,path);
 #endif
     pthread_mutex_lock(&lock);
     int fd=-1;

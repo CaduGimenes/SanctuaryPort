@@ -198,6 +198,47 @@ fn profile_for(values: &IndexMap<String, SfoValue>) -> Option<&'static GameProfi
     })
 }
 
+/// Diablo III: the first update the port mounts add-ons with (GitHub #28). 1.00 has no
+/// Necromancer, and some 1.00 eboots (CUSA00433) load a DLC loader of their own the port lacks.
+/// 1.46 is the last European update, 1.47 the American and Brazilian one.
+pub const ADDON_MIN_VERSION: &str = "01.46";
+
+/// Whether add-ons need a newer update than `version` ("01.00"); an unreadable version says no.
+pub fn addons_need_update(version: &str) -> bool {
+    let number = |text: &str| -> Option<u32> {
+        let (major, minor) = text.trim().split_once('.')?;
+        Some(major.parse::<u32>().ok()? * 100 + minor.parse::<u32>().ok()?)
+    };
+    match (number(version), number(ADDON_MIN_VERSION)) {
+        (Some(have), Some(need)) => have < need,
+        _ => false,
+    }
+}
+
+/// Whether add-ons are installed where the game looks for them (run.py: `addcont` beside the game
+/// folder, and `Games/PS4/addcont` in the home and port folders): any folder inside.
+pub fn has_addons(game_folder: &Path, port_dir: &Path) -> bool {
+    let mut roots = vec![port_dir.join("Games").join("PS4").join("addcont")];
+    if let Some(parent) = game_folder.parent() {
+        roots.push(parent.join("addcont"));
+    }
+    if let Some(home) = std::env::var_os("HOME").or_else(|| std::env::var_os("USERPROFILE")) {
+        roots.push(PathBuf::from(home).join("Games").join("PS4").join("addcont"));
+    }
+    any_addon(&roots)
+}
+
+/// Whether any of `roots` (`addcont` folders) holds a non-empty title folder.
+fn any_addon(roots: &[PathBuf]) -> bool {
+    roots.iter().any(|root| {
+        std::fs::read_dir(root).is_ok_and(|entries| {
+            entries.flatten().any(|title| {
+                std::fs::read_dir(title.path()).is_ok_and(|mut inside| inside.next().is_some())
+            })
+        })
+    })
+}
+
 /// A game the built-in patches know: its title IDs, patch file, metadata app version, and the
 /// title that also recognises a release under an ID not listed.
 #[derive(Debug, PartialEq, Eq)]
@@ -595,5 +636,31 @@ mod tests {
         fs::create_dir(game.join("sce_sys/pic1.png")).unwrap();
         assert!(adopt_system_files(&source, &game).is_err());
         assert!(adopt_system_files(&root.path().join("nope"), &game).is_err());
+    }
+}
+
+#[cfg(test)]
+mod addon_tests {
+    use super::*;
+
+    #[test]
+    fn add_ons_need_1_46_or_later() {
+        assert!(addons_need_update("01.00"));
+        assert!(addons_need_update("01.45"));
+        assert!(!addons_need_update("01.46"));
+        assert!(!addons_need_update("01.47"));
+        assert!(!addons_need_update("?"));
+    }
+
+    #[test]
+    fn add_ons_are_found_beside_the_game() {
+        let dir = tempfile::tempdir().unwrap();
+        let roots = [dir.path().join("addcont")];
+        assert!(!any_addon(&roots));
+        std::fs::create_dir_all(dir.path().join("addcont").join("CUSA00433")).unwrap();
+        assert!(!any_addon(&roots), "an empty title folder holds no add-on");
+        let label = dir.path().join("addcont").join("CUSA00433").join("NECROMANCERPACK0");
+        std::fs::create_dir_all(&label).unwrap();
+        assert!(any_addon(&roots));
     }
 }

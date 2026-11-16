@@ -112,6 +112,10 @@ pub struct State {
     pub mapper: Option<MapperState>,
     /// The pad the Controls page reads while it shows the gamepad.
     pub live_pad: Option<LivePad>,
+    /// SanctuaryPort: the pad that changes tab with LB/RB while the Controls page has none open.
+    pub nav_pad: Option<LivePad>,
+    /// SDL could not be opened for `nav_pad`: no more tries this run.
+    pub nav_failed: bool,
     /// What opens that pad; the tests hand in a scripted one.
     pub joystick_opener: fn(&Paths) -> Result<Box<dyn Joysticks>, JoyError>,
     pub patches: PatchesView,
@@ -237,6 +241,8 @@ impl State {
             controls,
             mapper: None,
             live_pad: None,
+            nav_pad: None,
+            nav_failed: false,
             joystick_opener: control_center::open_sdl,
             patches: Default::default(),
             backups: Vec::new(),
@@ -351,6 +357,8 @@ pub enum Message {
     ClearShaderCacheConfirmed,
     /// Done, or the cache folder that would not go.
     ShaderCacheCleared(Result<(), String>),
+    /// One read of `nav_pad`.
+    NavPoll,
     Noop,
 }
 
@@ -507,6 +515,7 @@ pub fn update(state: &mut State, message: Message) -> Task<Message> {
             }
             controls::tick(state, at);
             control_center::tick(state, at);
+            control_center::nav_tick(state);
             update::drain(state);
             // The game's output arrives with the clock.
             return Task::batch([check, play::drain(state)]);
@@ -631,6 +640,11 @@ pub fn update(state: &mut State, message: Message) -> Task<Message> {
                 mapper::close(state);
                 control_center::close_live(state);
                 return window::close(id);
+            }
+        }
+        Message::NavPoll => {
+            if let Some(step) = control_center::nav_poll(state) {
+                return update(state, step);
             }
         }
         Message::Noop => {}
@@ -928,6 +942,11 @@ pub fn subscription(state: &State) -> Subscription<Message> {
         Clock::Idle => iced::time::every(IDLE_CLOCK).map(Message::Tick),
         Clock::Off => Subscription::none(),
     };
+    let nav_pad = if state.nav_pad.is_some() {
+        iced::time::every(control_center::POLL).map(|_| Message::NavPoll)
+    } else {
+        Subscription::none()
+    };
     Subscription::batch([
         keys,
         window_events,
@@ -936,6 +955,7 @@ pub fn subscription(state: &State) -> Subscription<Message> {
         clock,
         controls::subscription(state),
         mapper::subscription(state),
+        nav_pad,
     ])
 }
 

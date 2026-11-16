@@ -1846,13 +1846,17 @@ void TextureCache::GarbageCollectImages() {
             const char* env = std::getenv("SANCTUARY_GC_BUDGET_MB");
             return env ? std::strtoull(env, nullptr, 10) << 20 : 0;
         }();
-        if (instance.IsIntegrated() || forced_budget) {
-            const u64 budget = forced_budget ? forced_budget : instance.GetDeviceMemoryBudgetNow();
-            if (budget != 0) {
-                trigger_gc_memory = budget / 10 * 7;
-                pressure_gc_memory = budget / 100 * 85;
-                critical_gc_memory = budget / 100 * 95;
-            }
+        // Discrete GPUs too (GitHub #29): the startup formula pressed at 40% of the budget (2.4 of
+        // ~5.9 GB on an 8 GB RX 7600M). At 4K the game holds ~2.9 GB of images, so the cache
+        // evicted 20-80 images every few seconds and created them again, a sawtooth of frame
+        // times at the same places. Their memory cannot spill as freely as an integrated GPU's,
+        // so the marks are lower: 65 / 80 / 90%.
+        const u64 budget = forced_budget ? forced_budget : instance.GetDeviceMemoryBudgetNow();
+        if (budget != 0) {
+            const bool shared = instance.IsIntegrated() || forced_budget;
+            trigger_gc_memory = budget / 100 * (shared ? 70 : 65);
+            pressure_gc_memory = budget / 100 * (shared ? 85 : 80);
+            critical_gc_memory = budget / 100 * (shared ? 95 : 90);
         }
     }
     if (total_used_memory < trigger_gc_memory) {

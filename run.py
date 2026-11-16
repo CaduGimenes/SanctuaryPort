@@ -122,12 +122,13 @@ D3_LANGUAGE_PACKS = {'17': 'ptBR', '1': 'enUS', '20': 'esMX', '2': 'frFR', '16':
                      '3': 'esES', '4': 'deDE', '5': 'itIT', '18': 'enGB'}  # system language -> CPK prefix
 
 
-def d3_language(env, game):
+def d3_language(env, layers):
     """Diablo III shows the text of the language packs it finds in CPKs/ (the US release: enUS,
     frFR, esMX; the Brazilian one: ptBR, esMX). A language whose pack is missing becomes the first
     one the dump has (Portuguese first), rather than a game without text."""
-    cpks = Path(game) / 'CPKs'
-    have = {code for code, pack in D3_LANGUAGE_PACKS.items() if (cpks / f'{pack}_Common.cpk').exists()}
+    # layers: the game folders the runtime reads, the update first (an update can add packs).
+    have = {code for code, pack in D3_LANGUAGE_PACKS.items()
+            if any((Path(folder) / 'CPKs' / f'{pack}_Common.cpk').exists() for folder in layers)}
     wanted = env.get('SANCTUARY_LANGUAGE', '1')
     if not have or wanted in have:
         return
@@ -276,20 +277,48 @@ def main():
         fail(f'No eboot.bin in {game} (set SANCTUARY_GAME_DIR).')
     base_game = game  # the dump itself, also when an update is laid over it below
     update_view = None
-    if env.get('SANCTUARY_PATCH_DIR'):
-        import game_update
+    layers = [game]  # where game files are looked up, the update first
+
+    def run_mods(folder):
+        return Path(run_script('mods.py', folder, '--out', out,
+                               '--mods-dir', env.get('SANCTUARY_MODS_DIR', data / 'mods'),
+                               '--config', env.get('SANCTUARY_MODS_CONFIG', data / 'mods.json'),
+                               '--enabled', env.get('SANCTUARY_MODS_ENABLED', '1'), capture=True).strip())
+
+    def combined_view():
+        nonlocal game, update_view, layers
         try:
-            update_view = game_update.create_view(game, env['SANCTUARY_PATCH_DIR'], out)
+            update_view = game_update.create_view(base_game, env['SANCTUARY_PATCH_DIR'], out)
         except (ValueError, OSError) as error:
             fail(str(error))
-        game = update_view
+        game, layers = update_view, [update_view]
+        env.pop('SANCTUARY_APP0_LOWER', None)
         print(f'Game and update combined from {env["SANCTUARY_PATCH_DIR"]}', flush=True)
+
+    if env.get('SANCTUARY_PATCH_DIR'):
+        import game_update
+        if env.get('SANCTUARY_UPDATE_VIEW') == '1':
+            combined_view()
+        else:
+            # GitHub #22: the runtime reads the update over the game, so nothing is copied, on any
+            # drive (exFAT/FAT32 copied ~27 GB per start) or across drives.
+            try:
+                game = game_update.layered(base_game, env['SANCTUARY_PATCH_DIR'], out)
+            except (ValueError, OSError) as error:
+                fail(str(error))
+            layers = [game, Path(base_game).resolve()]
+            env['SANCTUARY_APP0_LOWER'] = str(layers[1])
+            print(f'Game and update read in place from {env["SANCTUARY_PATCH_DIR"]}', flush=True)
     original_game = game.resolve()
-    game = Path(run_script('mods.py', game, '--out', out,
-                           '--mods-dir', env.get('SANCTUARY_MODS_DIR', data / 'mods'),
-                           '--config', env.get('SANCTUARY_MODS_CONFIG', data / 'mods.json'),
-                           '--enabled', env.get('SANCTUARY_MODS_ENABLED', '1'), capture=True).strip())
+    game = run_mods(game)
     mod_view = game if game.resolve() != original_game else None
+    if mod_view and update_view is None and env.get('SANCTUARY_APP0_LOWER'):
+        # Mods build one folder from one source: they get the combined game and update.
+        shutil.rmtree(mod_view, ignore_errors=True)
+        combined_view()
+        original_game = game.resolve()
+        game = run_mods(game)
+        mod_view = game if game.resolve() != original_game else None
     try:
         run_script('prepare.py', game, '--out', out)
         run_script('link_libc.py', game, '--out', out)
@@ -358,7 +387,7 @@ def main():
         profile = game_profile_for(game)
         engine_fps, frame_rates = 60, False
         if diablo3:
-            d3_language(env, game)
+            d3_language(env, layers if mod_view is None else [game])
             d3_trophies(env, out)
         # The window shows the game's icon (BMP: the format SDL loads without extra libraries); on
         # Linux the launcher's own icon (the AppImage ships the one chosen when it was built) and
@@ -442,7 +471,7 @@ def main():
         print(f'Engine frame rate: {engine_fps} FPS'
               + ('' if engine_fps > 60 or graphics['engine_fps'] == '60' or not frame_rates else
                  ' (the frame rate patch was not found in this eboot.bin)'), flush=True)
-        glyph_style = d3_glyph_atlas(env, probe, game, out)
+        glyph_style = d3_glyph_atlas(env, probe, layers if mod_view is None else [game], out)
         if glyph_style:  # the in-game menu names the buttons the same way
             env['SANCTUARY_GLYPHS'] = glyph_style
             derived.append('SANCTUARY_GLYPHS')

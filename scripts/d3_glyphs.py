@@ -377,8 +377,13 @@ def spg(width, height, fmt, guest, cells):
 
 
 def find_archive(game):
-    path = Path(game) / 'CPKs' / ARCHIVE
-    return path if path.is_file() else None
+    """The archive in `game`, a folder or a list of them (an update first, then the game)."""
+    folders = game if isinstance(game, (list, tuple)) else [game]
+    for folder in folders:
+        path = Path(folder) / 'CPKs' / ARCHIVE
+        if path.is_file():
+            return path
+    return None
 
 
 def build(game, out_dir, controller=True):
