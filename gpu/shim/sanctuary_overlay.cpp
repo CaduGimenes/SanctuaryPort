@@ -608,7 +608,18 @@ void Menu() {
         ImGui::NewLine();
     }
     const float close_width = ImGui::CalcTextSize("Close").x + ImGui::GetStyle().FramePadding.x * 2;
-    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - close_width);
+    // local change: a "Quit game" button, the same as closing the window (no need to go back to the
+    // game's main menu first).
+    const float quit_width = ImGui::CalcTextSize("Quit game").x + ImGui::GetStyle().FramePadding.x * 2;
+    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - close_width -
+                         quit_width - ImGui::GetStyle().ItemSpacing.x);
+    if (ImGui::Button("Quit game")) {
+        SDL_Event quit{};
+        quit.type = SDL_EVENT_QUIT;
+        SDL_PushEvent(&quit);
+        keep_open = false;
+    }
+    ImGui::SameLine();
     if (ImGui::Button("Close")) {
         keep_open = false;
     }

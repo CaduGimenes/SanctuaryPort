@@ -304,6 +304,8 @@ pub enum Message {
     InstallPicked(Vec<PathBuf>),
     /// A game patch check box of the Game page.
     PatchToggled(String, bool),
+    /// Local addition: the Offline season drop-down of the Game page ("Off" or "Season N").
+    SeasonPicked(String),
     /// Turn off all cheats (Game page): every cheat off, every multiplier 1x (#1135).
     Backup(BackupMessage),
     /// The monitors the probe listed, in the background.
@@ -570,6 +572,7 @@ pub fn update(state: &mut State, message: Message) -> Task<Message> {
         }
         Message::InstallPicked(files) => game::start_pkg_install(state, files),
         Message::PatchToggled(name, on) => game::patch_toggled(state, &name, on),
+        Message::SeasonPicked(label) => game::season_picked(state, &label),
         Message::Backup(message) => return game::backup_update(state, message),
         Message::WindowFocused(focused) => {
             state.focused = focused;

@@ -22,8 +22,8 @@ use crate::ui::follow::{follow, Cause};
 use crate::ui::play::{refuse_while_live, LiveAction};
 use crate::ui::theme;
 use crate::ui::widgets::{
-    checkbox, choice_pairs, folder, min_width, row, section, select_pairs, Modal, SELECT_MIN,
-    SELECT_TEXT,
+    checkbox, choice_pairs, folder, min_width, row, section, select_pairs, toggle_row, Modal,
+    SELECT_MIN, SELECT_TEXT,
 };
 
 /// The note under the Game language row; the translation tables key on this text.
@@ -370,7 +370,7 @@ pub fn view(state: &State) -> Element<'_, Message> {
     let default_saves = state.paths.user_dir("").display().to_string();
     // The Python marks a row that needs a new start of the game with a small `restart` note.
 
-    column![
+    let mut page = column![
         install_section(state),
         section(state.rtl, &tr(lang, "Folders")),
         folder_row(
@@ -431,9 +431,83 @@ pub fn view(state: &State) -> Element<'_, Message> {
         ),
         // No patches or audio settings here: Diablo III keeps its volume in its own options, and
         // its render resolution patches follow the Graphics page.
-    ]
-    .spacing(2)
-    .into()
+    ];
+    // Local addition: the offline season, when the patch file has "Offline Seasons - Season N" entries.
+    if state.patches.selectable.iter().any(|m| m.name.starts_with(SEASON_PREFIX)) {
+        page = page
+            .push(section(state.rtl, "Offline seasons"))
+            .push(season_row(state));
+    }
+    // Local addition: the offline community events ("Event: ..." patches), one check box each.
+    let events: Vec<&PatchMeta> = state
+        .patches
+        .selectable
+        .iter()
+        .filter(|m| m.name.starts_with(EVENT_PREFIX))
+        .collect();
+    if !events.is_empty() {
+        page = page.push(section(state.rtl, "Offline events"));
+        for (i, meta) in events.iter().enumerate() {
+            let name = meta.name.clone();
+            let label = name.strip_prefix(EVENT_PREFIX).unwrap_or(&name).to_string();
+            let checked = state.patches.chosen.contains(&name);
+            let hint = (i == 0).then_some(
+                "On top of the season's theme, for the next start. They need an offline season; the Altar of Rites and Visions of Enmity are always on with one.",
+            );
+            page = page.push(toggle_row(
+                state.rtl,
+                &label,
+                checked,
+                Some(move |on| Message::PatchToggled(name.clone(), on)),
+                hint,
+            ));
+        }
+    }
+    page.spacing(2).into()
+}
+
+/// Local addition: the name prefix of the offline community event patches.
+const EVENT_PREFIX: &str = "Event: ";
+
+/// Local addition: the name prefix of the offline season patches (patches/Diablo_III.xml).
+const SEASON_PREFIX: &str = "Offline Seasons - Season ";
+
+/// The Offline season drop-down: Off, or one of the season patches (at most one is ticked).
+fn season_row(state: &State) -> Element<'_, Message> {
+    let mut labels = vec!["Off".to_string()];
+    labels.extend(
+        state
+            .patches
+            .selectable
+            .iter()
+            .filter_map(|m| m.name.strip_prefix(SEASON_PREFIX))
+            .map(|n| format!("Season {n}")),
+    );
+    let current = state
+        .patches
+        .chosen
+        .iter()
+        .find_map(|n| n.strip_prefix(SEASON_PREFIX))
+        .map(|n| format!("Season {n}"))
+        .unwrap_or_else(|| "Off".to_string());
+    let list = pick_list(labels, Some(current), Message::SeasonPicked)
+        .text_size(SELECT_TEXT)
+        .style(theme::pick_list_dark);
+    row(
+        state.rtl,
+        "Offline season",
+        min_width(SELECT_MIN, list).into(),
+        Some("Seasonal heroes offline (local patch): the season the game runs. Takes effect on the next start. Off: no season."),
+    )
+}
+
+/// Picks the offline season: unticks every season patch, then ticks the chosen one ("Off" ticks none).
+pub fn season_picked(state: &mut State, label: &str) {
+    state.patches.chosen.retain(|n| !n.starts_with(SEASON_PREFIX));
+    if let Some(n) = label.strip_prefix("Season ") {
+        state.patches.chosen.insert(format!("{SEASON_PREFIX}{n}"));
+    }
+    store_game_patches(state);
 }
 
 /// Whether a backup holding the saves of `titles` belongs to another game than `current`. The

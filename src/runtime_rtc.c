@@ -166,14 +166,19 @@ static ABI int32_t rtc_add_seconds(uint64_t *out, const uint64_t *tick, int64_t 
 
 /* Win32 FILETIME: 100 ns intervals since 1601-01-01; the tick of 1601-01-01 is 584388 days. */
 #define FILETIME_EPOCH_TICKS (UINT64_C(584388)*TICKS_PER_DAY)
-static ABI int32_t rtc_set_win32_filetime(uint64_t *tick, uint64_t filetime) {
-    if (!tick) return ERR_INVALID_POINTER;
-    *tick=filetime/10+FILETIME_EPOCH_TICKS; return 0;
+/* local fix: the SDK's sceRtcSetWin32FileTime/sceRtcGetWin32FileTime take a SceRtcDateTime, not a tick
+ * (Diablo III converts dates with them; a tick here made every time invalid). */
+static ABI int32_t rtc_set_win32_filetime(DateTime *t, uint64_t filetime) {
+    if (!t) return ERR_INVALID_POINTER;
+    from_tick(filetime/10+FILETIME_EPOCH_TICKS,t); return 0;
 }
-static ABI int32_t rtc_get_win32_filetime(const uint64_t *tick, uint64_t *filetime) {
-    if (!tick || !filetime) return ERR_INVALID_POINTER;
-    if (*tick<FILETIME_EPOCH_TICKS) return ERR_INVALID_YEAR;
-    *filetime=(*tick-FILETIME_EPOCH_TICKS)*10; return 0;
+static ABI int32_t rtc_get_win32_filetime(const DateTime *t, uint64_t *filetime) {
+    if (!t || !filetime) return ERR_INVALID_POINTER;
+    int32_t e=validate(t);
+    if (e) return e;
+    uint64_t tick=to_tick(t);
+    if (tick<FILETIME_EPOCH_TICKS) return ERR_INVALID_YEAR;
+    *filetime=(tick-FILETIME_EPOCH_TICKS)*10; return 0;
 }
 /* sceRtcParseDateTime(tick*, text): "YYYY-MM-DD[T ]hh:mm:ss[.frac][Z|+hh:mm]" (UTC result). */
 static ABI int32_t rtc_parse_date_time(uint64_t *tick, const char *text) {
