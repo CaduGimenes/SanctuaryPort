@@ -25,6 +25,7 @@
 #include "core/emulator_settings.h"
 #include "shader_recompiler/frontend/fetch_shader.h"
 #include "shader_recompiler/info.h"
+#include "common/path_util.h"
 #include "video_core/cache_storage.h"
 #include "video_core/renderer_vulkan/vk_amd_paths.h"
 #include "video_core/renderer_vulkan/vk_instance.h"
@@ -470,7 +471,8 @@ vk::ResultValue<vk::UniquePipeline> CreateCachedGraphicsPipeline(
 struct PipelineCache::WarmupPool {
     explicit WarmupPool(u32 count, bool low_priority = false) {
         for (u32 i = 0; i < count; ++i) {
-            threads.emplace_back([this, low_priority] {
+            threads.emplace_back([this, low_priority, i] {
+                index = i;
                 if (low_priority) {
                     Common::SetCurrentThreadName("GoW3:ShaderWarmup");
                     Common::SetCurrentThreadPriority(Common::ThreadPriority::Low);
@@ -528,6 +530,8 @@ struct PipelineCache::WarmupPool {
 
     std::atomic<u32> built{0};
     std::atomic<u32> failed{0};
+    /// This pool thread's number (0 on other threads).
+    inline static thread_local u32 index = 0;
 
 private:
     void Run() {
@@ -1068,10 +1072,21 @@ struct PipelineCache::BackgroundWarmup {
     u32 batches = 0;
     bool finished = false;
     u32 loaded = 0, threads = 0;
+    /// One driver pipeline cache per pool thread, shared with no other thread until the warm-up
+    /// ends (GitHub #25: AMD's and NVIDIA's Windows drivers sometimes crashed inside pipeline
+    /// creation while the warm-up shared the main cache with the game's own builds).
+    std::vector<vk::UniquePipelineCache> caches;
     std::chrono::steady_clock::time_point started, last_batch;
     std::chrono::steady_clock::time_point last_pump{}, last_report{};
     std::unique_ptr<WarmupPool> pool; ///< last: its jobs use the members above
 };
+
+namespace {
+// Present while a background warm-up runs; left behind when the process dies during it.
+std::filesystem::path WarmupMarkerPath() {
+    return Common::FS::GetUserPath(Common::FS::PathType::CacheDir) / "warmup_running";
+}
+}
 
 bool PipelineCache::StartBackgroundWarmUp() {
     if (!Storage::DataBase::Instance().ConcurrentReads()) {
@@ -1080,10 +1095,30 @@ bool PipelineCache::StartBackgroundWarmUp() {
     if (!CheckCacheProfile()) {
         return true; // nothing cached yet
     }
+    // GitHub #25: the previous start died during the warm-up (a driver crash). This start skips
+    // it, as with background_warmup=false; the next one tries again.
+    std::error_code ec;
+    const auto marker = WarmupMarkerPath();
+    if (std::filesystem::exists(marker, ec)) {
+        std::filesystem::remove(marker, ec);
+        std::printf("Pipeline warm-up: skipped this start (the previous one stopped during it); "
+                    "pipelines are built when the game needs them\n");
+        return true;
+    }
+    std::filesystem::create_directories(marker.parent_path(), ec);
+    if (FILE* f = std::fopen(marker.string().c_str(), "wb")) {
+        std::fputs("A background shader warm-up is running (removed when it ends).\n", f);
+        std::fclose(f);
+    }
     background = new BackgroundWarmup;
     auto& warm = *background;
     warm.started = std::chrono::steady_clock::now();
     warm.threads = WarmupThreadCount(std::max(1u, std::thread::hardware_concurrency()));
+    for (u32 i = 0; i < warm.threads; ++i) {
+        auto [result, cache] = instance.GetDevice().createPipelineCacheUnique({});
+        ASSERT_MSG(result == vk::Result::eSuccess, "Failed to create warm-up pipeline cache");
+        warm.caches.push_back(std::move(cache));
+    }
     warm.pool = std::make_unique<WarmupPool>(warm.threads, true);
     // The first job reads the whole store; with one thread the builds queue behind it.
     warm.pool->Push([this, &warm] {
@@ -1292,15 +1327,16 @@ void PipelineCache::PumpWarmUp() {
             const auto build_started = std::chrono::steady_clock::now();
             warm.build_queue_ns += ElapsedNs(queued);
             SCOPE_EXIT { warm.build_ns += ElapsedNs(build_started); ++warm.completed; };
+            const vk::PipelineCache cache = *warm.caches[WarmupPool::index];
             BackgroundWarmup::Built built{graphics_key, compute_key};
             if (compute) {
                 ComputePipeline::SerializationSupport compute_data{};
                 built.compute = std::make_unique<ComputePipeline>(
-                    instance, scheduler, desc_heap, profile, *pipeline_cache, compute_key,
+                    instance, scheduler, desc_heap, profile, cache, compute_key,
                     *infos[0], modules[0], compute_data, true);
             } else {
                 built.graphics = std::make_unique<GraphicsPipeline>(
-                    instance, scheduler, desc_heap, profile, graphics_key, *pipeline_cache, infos,
+                    instance, scheduler, desc_heap, profile, graphics_key, cache, infos,
                     no_runtime_infos, fetch, modules, sdata, true);
             }
             warm.built.Push(std::move(built));
@@ -1348,6 +1384,22 @@ void PipelineCache::PumpWarmUp() {
                 built, g_sanctuary_pipeline_total_ns / 1e6 / built, g_sanctuary_pipeline_driver_ns / 1e6 / built,
                 (g_sanctuary_pipeline_total_ns - g_sanctuary_pipeline_driver_ns) / 1e6 / built,
                 g_sanctuary_pipeline_total_ns / 1e9);
+    // The pool is idle: the GPU thread (the only one using pipeline_cache outside the compiler
+    // workers' own caches) takes what the warm-up caches learned.
+    {
+        std::vector<vk::PipelineCache> sources;
+        for (const auto& cache : warm.caches) {
+            sources.push_back(*cache);
+        }
+        const auto result = instance.GetDevice().mergePipelineCaches(*pipeline_cache, sources);
+        if (result != vk::Result::eSuccess) {
+            LOG_WARNING(Render_Vulkan, "Warm-up cache merge failed: {}", vk::to_string(result));
+        }
+    }
+    {
+        std::error_code ec;
+        std::filesystem::remove(WarmupMarkerPath(), ec);
+    }
     // The idle threads stay parked (StopWarmUp).
     warm.finished = true;
     SanctuaryOverlay::SetBackgroundLoading(0, 0);
@@ -1360,6 +1412,10 @@ void PipelineCache::StopWarmUp() {
     }
     background->stopping = true;
     background->pool->Drain();
+    {
+        std::error_code ec; // a normal exit during the warm-up is not a crash
+        std::filesystem::remove(WarmupMarkerPath(), ec);
+    }
     // ponytail: leaked with its parked threads (this runs at exit only): a thread that ended
     // while the game ran crashed in ntdll (RtlWakeAllConditionVariable). Join them once the
     // cause is known.

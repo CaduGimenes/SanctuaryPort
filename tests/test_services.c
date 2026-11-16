@@ -145,6 +145,9 @@ int main(void) {
     assert(user_event(event)==USER_NO_EVENT);
     assert(user_list(ids)==0 && ids[1]==2 && ids[2]==-1);
     assert(user_name(2,name,sizeof name)==0 && !strcmp(name,"Player 2"));
+    /* #23: player 1's name from the launcher, 16 bytes at most, cut between characters. */
+    setenv("SANCTUARY_PLAYER_NAME","  Ação Bárbaro Supremo",1);
+    assert(user_name(USER_ID,name,sizeof name)==0 && !strcmp(name,"Ação Bárbaro"));
     pad_users|=(1u<<3)|(1u<<4); /* two more at once: one event each, lowest first */
     assert(user_event(event)==0 && event[0]==0 && event[1]==3);
     assert(user_event(event)==0 && event[0]==0 && event[1]==4);

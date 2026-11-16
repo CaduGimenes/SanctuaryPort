@@ -106,10 +106,28 @@ void runtime_user_events(void) {
         callback(event,arg);
     }
 }
+/* Player 1's name: SANCTUARY_PLAYER_NAME (the launcher's Game > Player name, GitHub #23), at most
+ * 16 bytes of UTF-8 as a PS4 user name, cut at a character boundary; "Player" when empty. */
+static const char *player_name(void) {
+    static char name[17]; static int ready;
+    if (!ready) {
+        const char *env=getenv("SANCTUARY_PLAYER_NAME");
+        if (!env) env="";
+        while (*env==' ') ++env;
+        size_t n=0;
+        while (env[n] && n<16) ++n;
+        while (n>0 && env[n] && ((unsigned char)env[n]&0xc0)==0x80) --n;
+        memcpy(name,env,n); name[n]=0;
+        while (n>0 && name[n-1]==' ') name[--n]=0;
+        if (!n) strcpy(name,USER_NAME);
+        ready=1;
+    }
+    return name;
+}
 static ABI int32_t user_name(int32_t id,char *name,uint64_t size) {
     if (id<USER_ID || id>MAX_USER_ID || !name) return USER_INVALID_ARGUMENT;
-    char text[16];
-    if (id==USER_ID) strcpy(text,USER_NAME); else snprintf(text,sizeof text,"Player %d",id);
+    char text[17];
+    if (id==USER_ID) strcpy(text,player_name()); else snprintf(text,sizeof text,"Player %d",id);
     if (strlen(text)+1>size) return (int32_t)0x8096000a; /* BUFFER_TOO_SHORT */
     strcpy(name,text); return 0;
 }
@@ -487,7 +505,7 @@ static ABI int32_t ime_init(const ImeParam *param, const void *extended) {
     if (preset) { ime_complete(0,preset); return 0; }
     /* An empty field starts with the user name: a controller alone can accept it (the port
      * has no on-screen keyboard). */
-    const char *start=initial[0] ? initial : USER_NAME;
+    const char *start=initial[0] ? initial : player_name();
     if (!sanctuarygpu_text_input_begin(start,prompt[0] ? prompt : "Text")) ime_complete(0,start);
     else printf("Runtime: ImeDialog opened: shown on screen; keyboard Enter or Cross accepts, Esc or Circle cancels\n");
     return 0;

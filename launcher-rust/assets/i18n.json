@@ -2670,7 +2670,10 @@
    "Frame rate, render resolution and graphics card. Applied when the game starts.": "Taxa de quadros, resolução de renderização e placa de vídeo. Aplicado ao iniciar o jogo.",
    "Your screen's shape: 21:9 and 32:9 are ultrawide monitors. Lists the render resolutions of that shape; the game widens its view to it.": "O formato da sua tela: 21:9 e 32:9 são monitores ultrawide. Mostra as resoluções de renderização desse formato; o jogo amplia a visão para ele.",
    "Unlock all cosmetics and transmogs": "Desbloquear todos os cosméticos e transmogs",
-   "Every wing, pet, pennant and portrait frame of the game, season rewards included, and every legendary and set item look at the Mystic, in the account saves when the game starts (a backup is kept next to each). Some wings have no icon in the menus but show in game.": "Todas as asas, mascotes, pendões e molduras de retrato do jogo, recompensas de temporada incluídas, e todas as aparências de itens lendários e de conjunto na Mística, nos saves da conta quando o jogo inicia (uma cópia de segurança fica ao lado de cada um). Algumas asas não têm ícone nos menus, mas aparecem no jogo."
+   "Every wing, pet, pennant and portrait frame of the game, season rewards included, and every legendary and set item look at the Mystic, in the account saves when the game starts (a backup is kept next to each). Some wings have no icon in the menus but show in game.": "Todas as asas, mascotes, pendões e molduras de retrato do jogo, recompensas de temporada incluídas, e todas as aparências de itens lendários e de conjunto na Mística, nos saves da conta quando o jogo inicia (uma cópia de segurança fica ao lado de cada um). Algumas asas não têm ícone nos menus, mas aparecem no jogo.",
+   "Player": "Jogador",
+   "Player name": "Nome do jogador",
+   "The name the game shows for you, as a PS4 user name: up to 16 characters, read when the game starts. Empty: Player.": "O nome que o jogo mostra para você, como um nome de usuário do PS4: até 16 caracteres, lido quando o jogo abre. Vazio: Player."
   },
   "es": {
    "The launcher cannot write to {}, so it cannot replace itself there. Open the releases page to download the new version by hand?": "El launcher no puede escribir en {}, así que no puede reemplazarse ahí. ¿Abrir la página de releases para descargar la versión nueva a mano?",
@@ -3140,7 +3143,10 @@
    "Frame rate, render resolution and graphics card. Applied when the game starts.": "Frecuencia de fotogramas, resolución de renderizado y tarjeta gráfica. Se aplica al iniciar el juego.",
    "Your screen's shape: 21:9 and 32:9 are ultrawide monitors. Lists the render resolutions of that shape; the game widens its view to it.": "La forma de tu pantalla: 21:9 y 32:9 son monitores ultrapanorámicos. Muestra las resoluciones de renderizado de esa forma; el juego amplía su vista a ella.",
    "Unlock all cosmetics and transmogs": "Desbloquear todos los cosméticos y transfiguraciones",
-   "Every wing, pet, pennant and portrait frame of the game, season rewards included, and every legendary and set item look at the Mystic, in the account saves when the game starts (a backup is kept next to each). Some wings have no icon in the menus but show in game.": "Todas las alas, mascotas, banderines y marcos de retrato del juego, recompensas de temporada incluidas, y todas las apariencias de objetos legendarios y de conjunto en la Mística, en las partidas de la cuenta al iniciar el juego (se guarda una copia junto a cada una). Algunas alas no tienen icono en los menús, pero se ven en el juego."
+   "Every wing, pet, pennant and portrait frame of the game, season rewards included, and every legendary and set item look at the Mystic, in the account saves when the game starts (a backup is kept next to each). Some wings have no icon in the menus but show in game.": "Todas las alas, mascotas, banderines y marcos de retrato del juego, recompensas de temporada incluidas, y todas las apariencias de objetos legendarios y de conjunto en la Mística, en las partidas de la cuenta al iniciar el juego (se guarda una copia junto a cada una). Algunas alas no tienen icono en los menús, pero se ven en el juego.",
+   "Player": "Jugador",
+   "Player name": "Nombre del jugador",
+   "The name the game shows for you, as a PS4 user name: up to 16 characters, read when the game starts. Empty: Player.": "El nombre que el juego muestra para ti, como un nombre de usuario de PS4: hasta 16 caracteres, se lee al iniciar el juego. Vacío: Player."
   },
   "pl": {
    "Polish": "Polski",
@@ -3464,7 +3470,10 @@
    "Your screen's shape: 21:9 and 32:9 are ultrawide monitors. Lists the render resolutions of that shape; the game widens its view to it.": "Proporcje Twojego ekranu: 21:9 i 32:9 to monitory ultraszerokie. Pokazuje rozdzielczości renderowania o tych proporcjach; gra poszerza do nich widok.",
    "Unlock all cosmetics and transmogs": "Odblokuj wszystkie elementy kosmetyczne i transmogryfikacje",
    "Every wing, pet, pennant and portrait frame of the game, season rewards included, and every legendary and set item look at the Mystic, in the account saves when the game starts (a backup is kept next to each). Some wings have no icon in the menus but show in game.": "Wszystkie skrzydła, zwierzaki, proporce i ramki portretu z gry, w tym nagrody sezonowe, oraz wszystkie wyglądy przedmiotów legendarnych i z zestawów u Mistyczki, w zapisach konta przy uruchomieniu gry (obok każdego zostaje kopia zapasowa). Niektóre skrzydła nie mają ikony w menu, ale są widoczne w grze.",
-   "Resolution": "Rozdzielczość"
+   "Resolution": "Rozdzielczość",
+   "Player": "Gracz",
+   "Player name": "Nazwa gracza",
+   "The name the game shows for you, as a PS4 user name: up to 16 characters, read when the game starts. Empty: Player.": "Nazwa, którą gra pokazuje dla ciebie, jak nazwa użytkownika PS4: do 16 znaków, odczytywana przy starcie gry. Puste: Player."
   },
   "fr": {
    "Polish": "Polonais",
@@ -3532,7 +3541,10 @@
    "English (UK)": "Anglais (Royaume-Uni)",
    "The language of the game's text and speech, on every start. Only the languages your dump ships are listed: each release has its own.": "La langue des textes et des voix du jeu, à chaque lancement. Seules les langues de votre dump sont proposées : chaque version a les siennes.",
    "Unlock all cosmetics and transmogs": "Débloquer tous les cosmétiques et transmogrifications",
-   "Every wing, pet, pennant and portrait frame of the game, season rewards included, and every legendary and set item look at the Mystic, in the account saves when the game starts (a backup is kept next to each). Some wings have no icon in the menus but show in game.": "Toutes les ailes, mascottes, fanions et cadres de portrait du jeu, récompenses de saison comprises, et toutes les apparences d'objets légendaires et d'ensemble chez la Mystique, dans les sauvegardes du compte au lancement du jeu (une copie est gardée à côté de chacune). Certaines ailes n'ont pas d'icône dans les menus mais s'affichent en jeu."
+   "Every wing, pet, pennant and portrait frame of the game, season rewards included, and every legendary and set item look at the Mystic, in the account saves when the game starts (a backup is kept next to each). Some wings have no icon in the menus but show in game.": "Toutes les ailes, mascottes, fanions et cadres de portrait du jeu, récompenses de saison comprises, et toutes les apparences d'objets légendaires et d'ensemble chez la Mystique, dans les sauvegardes du compte au lancement du jeu (une copie est gardée à côté de chacune). Certaines ailes n'ont pas d'icône dans les menus mais s'affichent en jeu.",
+   "Player": "Joueur",
+   "Player name": "Nom du joueur",
+   "The name the game shows for you, as a PS4 user name: up to 16 characters, read when the game starts. Empty: Player.": "Le nom que le jeu affiche pour vous, comme un nom d'utilisateur PS4 : 16 caractères au plus, lu au lancement du jeu. Vide : Player."
   },
   "de": {
    "Polish": "Polnisch",
@@ -3591,7 +3603,10 @@
    "English (UK)": "Englisch (Vereinigtes Königreich)",
    "The language of the game's text and speech, on every start. Only the languages your dump ships are listed: each release has its own.": "Die Sprache von Text und Sprachausgabe des Spiels, bei jedem Start. Nur die Sprachen deines Dumps werden angezeigt: jede Version hat ihre eigenen.",
    "Unlock all cosmetics and transmogs": "Alle kosmetischen Gegenstände und Transmogrifikationen freischalten",
-   "Every wing, pet, pennant and portrait frame of the game, season rewards included, and every legendary and set item look at the Mystic, in the account saves when the game starts (a backup is kept next to each). Some wings have no icon in the menus but show in game.": "Alle Flügel, Begleiter, Wimpel und Porträtrahmen des Spiels, Saisonbelohnungen eingeschlossen, und alle Aussehen legendärer und Set-Gegenstände bei der Mystikerin, in den Kontospielständen beim Spielstart (neben jedem bleibt eine Sicherung). Manche Flügel haben in den Menüs kein Symbol, sind im Spiel aber zu sehen."
+   "Every wing, pet, pennant and portrait frame of the game, season rewards included, and every legendary and set item look at the Mystic, in the account saves when the game starts (a backup is kept next to each). Some wings have no icon in the menus but show in game.": "Alle Flügel, Begleiter, Wimpel und Porträtrahmen des Spiels, Saisonbelohnungen eingeschlossen, und alle Aussehen legendärer und Set-Gegenstände bei der Mystikerin, in den Kontospielständen beim Spielstart (neben jedem bleibt eine Sicherung). Manche Flügel haben in den Menüs kein Symbol, sind im Spiel aber zu sehen.",
+   "Player": "Spieler",
+   "Player name": "Spielername",
+   "The name the game shows for you, as a PS4 user name: up to 16 characters, read when the game starts. Empty: Player.": "Der Name, den das Spiel für dich anzeigt, wie ein PS4-Benutzername: bis zu 16 Zeichen, beim Spielstart gelesen. Leer: Player."
   },
   "it": {
    "Polish": "Polacco",
@@ -3648,7 +3663,10 @@
    "Spanish (Latin America)": "Spagnolo (America Latina)",
    "Spanish (Spain)": "Spagnolo (Spagna)",
    "English (UK)": "Inglese (Regno Unito)",
-   "The language of the game's text and speech, on every start. Only the languages your dump ships are listed: each release has its own.": "La lingua di testi e voci del gioco, a ogni avvio. Compaiono solo le lingue presenti nel tuo dump: ogni versione ha le sue."
+   "The language of the game's text and speech, on every start. Only the languages your dump ships are listed: each release has its own.": "La lingua di testi e voci del gioco, a ogni avvio. Compaiono solo le lingue presenti nel tuo dump: ogni versione ha le sue.",
+   "Player": "Giocatore",
+   "Player name": "Nome del giocatore",
+   "The name the game shows for you, as a PS4 user name: up to 16 characters, read when the game starts. Empty: Player.": "Il nome che il gioco mostra per te, come un nome utente PS4: fino a 16 caratteri, letto all'avvio del gioco. Vuoto: Player."
   },
   "tr": {
    "Polish": "Lehçe",
@@ -3703,7 +3721,10 @@
    "restart": "yeniden başlatma",
    "High Frame Rate Physics Fix": "Yüksek FPS fizik düzeltmesi",
    "Spanish (Spain)": "İspanyolca (İspanya)",
-   "English (UK)": "İngilizce (Birleşik Krallık)"
+   "English (UK)": "İngilizce (Birleşik Krallık)",
+   "Player": "Oyuncu",
+   "Player name": "Oyuncu adı",
+   "The name the game shows for you, as a PS4 user name: up to 16 characters, read when the game starts. Empty: Player.": "Oyunun senin için gösterdiği ad, PS4 kullanıcı adı gibi: en fazla 16 karakter, oyun başlarken okunur. Boş: Player."
   },
   "ar": {
    "Polish": "البولندية",
@@ -3757,7 +3778,10 @@
    "restart": "إعادة التشغيل",
    "High Frame Rate Physics Fix": "إصلاح الفيزياء عند معدل إطارات مرتفع",
    "Spanish (Spain)": "الإسبانية (إسبانيا)",
-   "English (UK)": "الإنجليزية (المملكة المتحدة)"
+   "English (UK)": "الإنجليزية (المملكة المتحدة)",
+   "Player": "اللاعب",
+   "Player name": "اسم اللاعب",
+   "The name the game shows for you, as a PS4 user name: up to 16 characters, read when the game starts. Empty: Player.": "الاسم الذي تعرضه اللعبة لك، كاسم مستخدم PS4: حتى 16 حرفًا، يُقرأ عند بدء اللعبة. فارغ: Player."
   },
   "zh": {
    "Polish": "波兰语",
@@ -4202,7 +4226,10 @@
    "Skip Any Video With X Button": "使用叉键跳过过场动画",
    "Bug Fix - Startup Black Screen": "启动黑屏修复",
    "Spanish (Spain)": "西班牙语（西班牙）",
-   "English (UK)": "英语（英国）"
+   "English (UK)": "英语（英国）",
+   "Player": "玩家",
+   "Player name": "玩家名称",
+   "The name the game shows for you, as a PS4 user name: up to 16 characters, read when the game starts. Empty: Player.": "游戏为你显示的名称，相当于 PS4 用户名：最多 16 个字符，在游戏启动时读取。留空：Player。"
   },
   "ja": {
    "Polish": "ポーランド語",
@@ -4257,7 +4284,10 @@
    "restart": "再起動",
    "High Frame Rate Physics Fix": "高フレームレート物理修正",
    "Spanish (Spain)": "スペイン語（スペイン）",
-   "English (UK)": "英語（イギリス）"
+   "English (UK)": "英語（イギリス）",
+   "Player": "プレイヤー",
+   "Player name": "プレイヤー名",
+   "The name the game shows for you, as a PS4 user name: up to 16 characters, read when the game starts. Empty: Player.": "ゲームがあなたに表示する名前（PS4 のユーザー名）：最大 16 文字、ゲーム起動時に読み込まれます。空欄：Player。"
   },
   "ko": {
    "Polish": "폴란드어",
@@ -4312,7 +4342,10 @@
    "restart": "재시작",
    "High Frame Rate Physics Fix": "고프레임 물리 수정",
    "Spanish (Spain)": "스페인어(스페인)",
-   "English (UK)": "영어(영국)"
+   "English (UK)": "영어(영국)",
+   "Player": "플레이어",
+   "Player name": "플레이어 이름",
+   "The name the game shows for you, as a PS4 user name: up to 16 characters, read when the game starts. Empty: Player.": "게임이 당신에게 표시하는 이름(PS4 사용자 이름): 최대 16자, 게임 시작 시 읽습니다. 비어 있음: Player."
   },
   "id": {
    "Polish": "Polandia",
@@ -4669,7 +4702,10 @@
    "A generated frame between game frames: up to twice the frames on screen. Needs an upscaler. AMD FSR: any graphics card.": "Frame buatan di antara frame game: hingga dua kali frame di layar. Memerlukan upscaler. AMD FSR: semua kartu grafis.",
    "Off (default): no temporal upscaling. On: the selected upscaler and preset. Animated characters can still show some ghosting.": "Mati (bawaan): tanpa upscaling temporal. Nyala: memakai upscaler dan preset pilihan. Karakter yang bergerak masih dapat berbayang.",
    "Spanish (Spain)": "Spanyol (Spanyol)",
-   "English (UK)": "Inggris (Britania Raya)"
+   "English (UK)": "Inggris (Britania Raya)",
+   "Player": "Pemain",
+   "Player name": "Nama pemain",
+   "The name the game shows for you, as a PS4 user name: up to 16 characters, read when the game starts. Empty: Player.": "Nama yang ditampilkan game untukmu, seperti nama pengguna PS4: hingga 16 karakter, dibaca saat game dimulai. Kosong: Player."
   },
   "cs": {
    "Trophies": "Trofeje",
@@ -5085,7 +5121,10 @@
    "A generated frame between game frames: up to twice the frames on screen. Needs an upscaler. AMD FSR: any graphics card.": "Generovaný snímek mezi snímky hry: až dvojnásobek snímků na obrazovce. Vyžaduje upscaler. AMD FSR: libovolná grafická karta.",
    "Off (default): no temporal upscaling. On: the selected upscaler and preset. Animated characters can still show some ghosting.": "Vypnuto (výchozí): bez časového upscalingu. Zapnuto: vybraný upscaler a předvolba. Animované postavy mohou stále vykazovat určité duchy.",
    "Spanish (Spain)": "Španělština (Španělsko)",
-   "English (UK)": "Angličtina (Spojené království)"
+   "English (UK)": "Angličtina (Spojené království)",
+   "Player": "Hráč",
+   "Player name": "Jméno hráče",
+   "The name the game shows for you, as a PS4 user name: up to 16 characters, read when the game starts. Empty: Player.": "Jméno, které hra zobrazuje pro vás, jako uživatelské jméno PS4: nejvýše 16 znaků, načte se při spuštění hry. Prázdné: Player."
   }
  },
  "ru": {
@@ -5514,7 +5553,10 @@
   "Unlock all cosmetics and transmogs": "Открыть все косметические предметы и трансмогрификации",
   "Every wing, pet, pennant and portrait frame of the game, season rewards included, and every legendary and set item look at the Mystic, in the account saves when the game starts (a backup is kept next to each). Some wings have no icon in the menus but show in game.": "Все крылья, питомцы, вымпелы и рамки портрета из игры, включая сезонные награды, и все облики легендарных и комплектных предметов у Мистика, в сохранениях учётной записи при запуске игры (рядом с каждым остаётся резервная копия). У некоторых крыльев нет значка в меню, но в игре они видны.",
   "Off": "Выкл.",
-  "Resolution": "Разрешение"
+  "Resolution": "Разрешение",
+  "Player": "Игрок",
+  "Player name": "Имя игрока",
+  "The name the game shows for you, as a PS4 user name: up to 16 characters, read when the game starts. Empty: Player.": "Имя, которое игра показывает для вас, как имя пользователя PS4: до 16 символов, читается при запуске игры. Пусто: Player."
  },
  "windows_languages": {
   "25": "ru",

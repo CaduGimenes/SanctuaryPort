@@ -476,7 +476,13 @@ static int replay_armed;      /* 1 while a SANCTUARY_PAD_REPLAY recording plays,
 static uint64_t replay_start; /* 0: (re)start at the next sample */
 static void read_inject(void) {
     static const char *path; static int checked; static uint64_t last_check; static struct timespec mtime;
-    if (!checked) { path=getenv("SANCTUARY_PAD_FILE"); checked=1; }
+    if (!checked) {
+        /* No stick override for players 2..4 until the pad file sets one. Zero-initialized they
+         * held both sticks of a real further gamepad at 0 (up-left) without a pad file:
+         * player 2 walked off on their own and ignored their stick (GitHub #20). */
+        for (int u=2;u<=MAX_PLAYERS;++u) injected_user[u]=injected;
+        path=getenv("SANCTUARY_PAD_FILE"); checked=1;
+    }
     if (!path || !*path) return;
     uint64_t now=now_us();
     if (now-last_check<20000) return;

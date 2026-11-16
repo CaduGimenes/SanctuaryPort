@@ -233,16 +233,19 @@ bool PipelineBinaryCacheRequested() {
     return !setting || *setting != '0';
 }
 
-// On Windows the NVIDIA driver (RTX 5080) crashes the process right after vkGetPipelineKeyKHR
-// returns, in InitializePipelineBinaryCache. The pipelines are built normally there instead.
+// The NVIDIA driver crashes the process right after vkGetPipelineKeyKHR returns, in
+// InitializePipelineBinaryCache: on Windows (RTX 5080) and on Linux (RTX 4070, GitHub #26, read
+// of address 0x10). The pipelines are built normally there instead.
 // AMD's Windows driver (Radeon 890M, RX 7800 XT; GitHub #12, #3): the first session works, the
 // next one (pipelines restored from the binaries it saved) fails to create a pipeline with
 // ErrorInitializationFailed while loading the world.
 bool PipelineBinariesUnsafe(vk::DriverId driver) {
+    if (driver == vk::DriverId::eNvidiaProprietary) {
+        return true;
+    }
 #ifdef _WIN32
-    return driver == vk::DriverId::eNvidiaProprietary || driver == vk::DriverId::eAmdProprietary;
+    return driver == vk::DriverId::eAmdProprietary;
 #else
-    (void)driver;
     return false;
 #endif
 }

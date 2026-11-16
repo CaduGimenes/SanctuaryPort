@@ -6,7 +6,7 @@
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
-use iced::widget::{button, column, pick_list, row as layout, text};
+use iced::widget::{button, column, pick_list, row as layout, text, text_input};
 use iced::{Center, Element, Left, Right, Task};
 use serde_json::{Map, Value};
 
@@ -28,6 +28,9 @@ use crate::ui::widgets::{
 
 /// The note under the Game language row; the translation tables key on this text.
 pub const LANGUAGE_NOTE: &str = "The language of the game's text and speech, on every start. Only the languages your dump ships are listed: each release has its own.";
+
+/// The note under the Player name row; the translation tables key on this text.
+pub const PLAYER_NAME_NOTE: &str = "The name the game shows for you, as a PS4 user name: up to 16 characters, read when the game starts. Empty: Player.";
 
 /// Game patches of the current dump.
 #[derive(Debug, Clone, Default)]
@@ -406,6 +409,18 @@ pub fn view(state: &State) -> Element<'_, Message> {
             Some(&hint(
                 "Every wing, pet, pennant and portrait frame of the game, season rewards included, and every legendary and set item look at the Mystic, in the account saves when the game starts (a backup is kept next to each). Some wings have no icon in the menus but show in game."
             )),
+        ),
+        section(state.rtl, &tr(lang, "Player")),
+        row(
+            state.rtl,
+            &tr(lang, "Player name"),
+            text_input("Player", &state.store.text("player_name"))
+                .on_input(|name| Message::Set("player_name".to_string(), Value::String(name)))
+                .padding([6, 10])
+                .width(SELECT_MIN)
+                .style(theme::text_input_dark)
+                .into(),
+            Some(&hint(PLAYER_NAME_NOTE)),
         ),
         section(state.rtl, &tr(lang, "Language")),
         row(

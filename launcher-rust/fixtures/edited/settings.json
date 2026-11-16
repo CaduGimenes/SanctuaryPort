@@ -34,6 +34,7 @@
   "close_on_play": true,
   "discord_rpc": false,
   "check_updates": false,
+  "player_name": "",
   "game_patches": {
     "CUSA00243": [
       "Skip Intro"
