@@ -197,16 +197,21 @@ def limiter_patch(rate):
 
 
 def limiter_environment(applied):
-    """Environment for the applied Frame Limiter patch: above 60 FPS the vblank runs fast (480 Hz)
-    so a frame is shown as soon as it is done, and the present thread lets through the chosen rate
-    (0: no limit). 30 FPS and the game's own 60 keep the 60 Hz vblank. Either way the rate is this
-    choice alone: the in-game menu's frame limit (fps_limit) is not used."""
+    """Environment for the applied Frame Limiter patch: the vblank runs fast (480 Hz) so a frame is
+    shown as soon as it is done, and the present thread lets through the chosen rate (0: no limit).
+    That holds for the game's own 60 too (GitHub #29): its limiter waits 16683 us (59.94 Hz) while a
+    60 Hz vblank ticks every 16667 us, so a frame waited a whole extra tick about every 12-17 s
+    (6 repeated frames in 75 s, none with immediate flips), and frames were held to the tick instead
+    of the display's (VRR, gamescope at 116 Hz). Only 30 FPS keeps the 60 Hz vblank. Either way the
+    rate is this choice alone: the in-game menu's frame limit (fps_limit) is not used."""
     for name in applied:
         if name == f'{LIMITER_PREFIX} - 120 FPS':
             return {'SANCTUARY_VBLANK_HZ': '0', 'SANCTUARY_FPS_LIMIT': '120'}
         if name == f'{LIMITER_PREFIX} - Unlimited':
             return {'SANCTUARY_VBLANK_HZ': '0', 'SANCTUARY_FPS_LIMIT': '0'}
-    return {'SANCTUARY_FPS_LIMIT': '0'}
+        if name == f'{LIMITER_PREFIX} - 30 FPS':
+            return {'SANCTUARY_FPS_LIMIT': '0'}
+    return {'SANCTUARY_VBLANK_HZ': '0', 'SANCTUARY_FPS_LIMIT': '60'}
 
 
 def restrict_to_available(names, available):

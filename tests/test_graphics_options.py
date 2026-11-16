@@ -241,7 +241,8 @@ class FrameLimiterTest(unittest.TestCase):
         self.assertEqual(g.limiter_patch('0'), 'Frame Limiter - Unlimited')
 
     def test_environment(self):
-        self.assertEqual(g.limiter_environment([]), {'SANCTUARY_FPS_LIMIT': '0'})
+        # The game's own 60: immediate flips held to 60, not the 60 Hz vblank tick (GitHub #29).
+        self.assertEqual(g.limiter_environment([]), {'SANCTUARY_VBLANK_HZ': '0', 'SANCTUARY_FPS_LIMIT': '60'})
         self.assertEqual(g.limiter_environment(['Frame Limiter - 30 FPS']), {'SANCTUARY_FPS_LIMIT': '0'})
         self.assertEqual(g.limiter_environment(['Resolution Patch - 4K', 'Frame Limiter - 120 FPS']),
                          {'SANCTUARY_VBLANK_HZ': '0', 'SANCTUARY_FPS_LIMIT': '120'})
