@@ -608,7 +608,7 @@ void Menu() {
         ImGui::NewLine();
     }
     const float close_width = ImGui::CalcTextSize("Close").x + ImGui::GetStyle().FramePadding.x * 2;
-    // local change: a "Quit game" button, the same as closing the window (no need to go back to the
+    // A "Quit game" button, the same as closing the window (no need to go back to the
     // game's main menu first).
     const float quit_width = ImGui::CalcTextSize("Quit game").x + ImGui::GetStyle().FramePadding.x * 2;
     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - close_width -

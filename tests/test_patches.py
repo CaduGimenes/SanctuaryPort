@@ -80,6 +80,16 @@ class SignatureTests(unittest.TestCase):
       <Line Type="bytes" Address="0x401020" Value="90" Pattern="de ad be ef" At="0"/>
     </PatchList>
   </Metadata>
+  <Metadata Name="Base" AppVer="01.47">
+    <PatchList><Line Type="bytes" Address="0x401000" Value="9090" Pattern="de ad be ef" At="1"/></PatchList>
+    <Target Name="spot" Address="0x401020" Pattern="de ad be ef" At="2"/>
+  </Metadata>
+  <Metadata Name="Season" AppVer="01.47" Base="Base">
+    <PatchList><Line Type="bytes" Address="0x401020" Value="31" Target="spot"/></PatchList>
+  </Metadata>
+  <Metadata Name="Orphan" AppVer="01.47" Base="Nothing">
+    <PatchList><Line Type="bytes" Address="0x401020" Value="31"/></PatchList>
+  </Metadata>
   <Metadata Name="Data" AppVer="01.47">
     <PatchList><Line Type="bytes32" Address="0x402000" Target="variable" Value="0x2"/></PatchList>
     <Target Name="variable" Address="0x402000" Pattern="44 89 35 ?? ?? ?? ?? c6" At="3" Ref="1"/>
@@ -106,6 +116,15 @@ class SignatureTests(unittest.TestCase):
         self.assertEqual(writes, [(0x41, b'\x90\x90'), (0x80, b'\xe8' + call)])
         # One site of the patch is missing: the whole patch is left out, with the reason.
         self.assertEqual(skipped, {'Missing': 'signature not found'})
+
+    def test_a_patch_with_a_base_is_the_base_plus_its_own_lines(self):
+        # Season = Base's Lines and Targets, then its own: one set of hooks for many small entries.
+        image = bytearray(self.image)
+        image[0x300:0x304] = bytes.fromhex('deadbeef')
+        writes = compile_patches(self.xml, ['Season'], None, [(0, 0x400)], bytes(image))
+        self.assertEqual(writes, [(0x301, b'\x90\x90'), (0x302, b'1')])
+        with self.assertRaises(ValueError):
+            compile_patches(self.xml, ['Orphan'], None, [(0, 0x400)], bytes(image))
 
     def test_ambiguous_signature_is_skipped(self):
         image = bytearray(self.image)

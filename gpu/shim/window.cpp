@@ -236,8 +236,7 @@ bool WindowSDL::PollEvents() {
         if (lock) SDL_WarpMouseInWindow(window, width / 2.0f, height / 2.0f);
         if (SDL_SetWindowRelativeMouseMode(window, lock)) mouse_locked = lock;
     }
-    // local change: never show the system cursor (the pause button toggled it on every menu open)
-    if (const bool show = false; show != cursor_shown) {
+    if (const bool show = paused && !mouse_locked; show != cursor_shown) {
         show ? SDL_ShowCursor() : SDL_HideCursor();
         cursor_shown = show;
     }

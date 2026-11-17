@@ -123,6 +123,21 @@ def encode(line):
     raise ValueError(f'unsupported patch type {kind!r}')
 
 
+def with_base(meta, every):
+    """meta with its Base's Lines and Targets in front: a patch that is a shared base plus a few
+    values (Diablo III's offline seasons: one season entry per number on top of one set of hooks).
+    The base is the Metadata of that Name for the same build; its Lines come first, so a Line of the
+    patch overwrites them and a Target's Line index counts from the base's first Line."""
+    name=meta.get('Base')
+    if not name: return meta
+    parents=[m for m in every if m.get('Name')==name and m.get('AppVer')==meta.get('AppVer')]
+    if not parents: raise ValueError(f"{meta.get('Name')}: its base patch {name!r} is missing")
+    merged=ET.Element('Metadata',meta.attrib)
+    for source in (with_base(parents[0],every),meta):
+        merged.extend(list(source))
+    return merged
+
+
 def compile_patches(xml, names, app_version, segments, image=None, skipped=None):
     """Writes of the named patches. With the game's image, each site is found by its signature
     (any build); without it, at the reference build's Address. A Line with a Target writes at that
@@ -131,9 +146,11 @@ def compile_patches(xml, names, app_version, segments, image=None, skipped=None)
     A patch may have several Metadata of the same Name, one per build of the game (Diablo III
     1.00 and 1.47): the first whose sites are all found is used. app_version None: any version."""
     found={}
-    for meta in ET.parse(xml).getroot().iter('Metadata'):
-        if meta.get('Name') in names and app_version in (None,meta.get('AppVer')) and meta.get('AppElf','eboot.bin')=='eboot.bin':
-            found.setdefault(meta.get('Name'),[]).append(meta)
+    every=[m for m in ET.parse(xml).getroot().iter('Metadata')
+           if app_version in (None,m.get('AppVer')) and m.get('AppElf','eboot.bin')=='eboot.bin']
+    for meta in every:
+        if meta.get('Name') in names:
+            found.setdefault(meta.get('Name'),[]).append(with_base(meta,every))
     missing=[n for n in names if n not in found]
     if missing: raise ValueError(f'patches not found for app version {app_version}: {missing}')
     writes=[]
