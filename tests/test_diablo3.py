@@ -18,6 +18,52 @@ class Diablo3PatchTests(unittest.TestCase):
     """patches/Diablo_III.xml: one resolution patch per size: width and height, and for the wider
     sizes the camera's aspect ratio (float width / height)."""
 
+    SEASONS = [f'Offline Seasons - Season {n}' for n in range(14, 41)]
+    EVENTS = [f'Event: {n}' for n in (
+        'Double Treasure Goblins', 'Double Bounty Bags', 'Royal Grandeur', 'Legacy of Nightmares', "Triune's Will",
+        'Pandemonium', 'Kanai Powers', 'Trials of Tempests', 'Shadow Clones', "Fourth Kanai's Cube Slot",
+        'Ethereal Items', 'Soul Shards', 'Swarm Rifts', 'Sanctified Items', 'Whimsyshire (Easter Egg World)',
+        'Also in non-seasonal games', 'Challenge Rifts')]
+    OFFLINE_NAMES = {'Offline Seasons', 'Offline: no sign-in warning', *SEASONS, *EVENTS}
+
+    def test_offline_patches_find_every_site_by_signature(self):
+        # A different eboot is skipped, never overwritten: every Line has a signature, or writes at a
+        # Target that has one; the season entries are the shared base plus their own values.
+        root = ET.parse(ROOT / 'patches' / 'Diablo_III.xml').getroot()
+        metas = {m.get('Name'): m for m in root.iter('Metadata') if m.get('Name') in self.OFFLINE_NAMES}
+        self.assertEqual(set(metas), self.OFFLINE_NAMES)
+        for name, meta in metas.items():
+            own = patches.with_base(meta, list(root.iter('Metadata')))
+            targets = {t.get('Name') for t in own.iter('Target')}
+            for target in own.iter('Target'):
+                self.assertTrue(target.get('Pattern'), (name, target.get('Name')))
+            for line in own.iter('Line'):
+                self.assertTrue(line.get('Pattern') or line.get('Target') in targets, (name, line.get('Address')))
+            self.assertNotIn('Claude', meta.get('Author'))
+            self.assertNotIn('Local mod', meta.get('Note'))
+        base = metas['Offline Seasons']
+        for name in self.SEASONS:
+            self.assertEqual(metas[name].get('Base'), 'Offline Seasons')
+            self.assertLess(len(ET.tostring(metas[name])), len(ET.tostring(base)) // 4, name)
+
+    def test_a_season_is_the_base_with_its_number_and_theme(self):
+        xml = ROOT / 'patches' / 'Diablo_III.xml'
+        # A tiny image whose zero padding is found through the base's anchor (the 24 bytes before it).
+        base = ET.parse(xml).getroot().find("Metadata[@Name='Offline Seasons']")
+        anchor = bytes.fromhex(next(base.iter('Target')).get('Pattern').replace(' ', '').replace('??', '00'))
+        self.assertEqual(anchor[24:], bytes(32))
+        merged = patches.with_base(
+            ET.parse(xml).getroot().find("Metadata[@Name='Offline Seasons - Season 22']"),
+            list(ET.parse(xml).getroot().iter('Metadata')))
+        lines = list(merged.iter('Line'))
+        base_lines = list(base.iter('Line'))
+        self.assertEqual(len(lines), len(base_lines) + 2)
+        self.assertEqual([ET.tostring(l) for l in lines[:len(base_lines)]], [ET.tostring(l) for l in base_lines])
+        number, theme = lines[-2:]
+        self.assertEqual(bytes.fromhex(number.get('Value')), b'22')
+        # Season 22: Shadow Clones (8) and Fourth Kanai's Cube Slot (9).
+        self.assertEqual([i for i, b in enumerate(bytes.fromhex(theme.get('Value'))) if b], [8, 9])
+
     def test_a_patch_per_built_in_size(self):
         xml = ROOT / 'patches' / 'Diablo_III.xml'
         names = patches.available_patches(xml, '01.47')
@@ -26,8 +72,11 @@ class Diablo3PatchTests(unittest.TestCase):
                               '2560x1080', '3440x1440', '3840x1600', '5120x1440',
                               '1280x800', '1920x1200', '2560x1600')}
         expected |= {f'{graphics_options.LIMITER_PREFIX} - {n}' for n in ('30 FPS', '120 FPS', 'Unlimited')}
+        expected |= self.OFFLINE_NAMES
         self.assertEqual(names, expected)
         for meta in ET.parse(xml).getroot().iter('Metadata'):
+            if meta.get('Name') in self.OFFLINE_NAMES:
+                continue
             if meta.get('Name').startswith(graphics_options.LIMITER_PREFIX):
                 # The frame limiter: one microsecond wait, 16683 (0x412b) in the pattern.
                 for line in meta.iter('Line'):

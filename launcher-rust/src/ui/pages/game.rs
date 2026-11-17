@@ -22,8 +22,8 @@ use crate::ui::follow::{follow, Cause};
 use crate::ui::play::{refuse_while_live, LiveAction};
 use crate::ui::theme;
 use crate::ui::widgets::{
-    checkbox, choice_pairs, folder, min_width, row, section, select_pairs, Modal, SELECT_MIN,
-    SELECT_TEXT,
+    checkbox, choice_pairs, folder, min_width, row, section, select_pairs, toggle_row, Modal,
+    SELECT_MIN, SELECT_TEXT,
 };
 
 /// The note under the Game language row; the translation tables key on this text.
@@ -370,7 +370,7 @@ pub fn view(state: &State) -> Element<'_, Message> {
     let default_saves = state.paths.user_dir("").display().to_string();
     // The Python marks a row that needs a new start of the game with a small `restart` note.
 
-    column![
+    let mut page = column![
         install_section(state),
         section(state.rtl, &tr(lang, "Folders")),
         folder_row(
@@ -431,9 +431,119 @@ pub fn view(state: &State) -> Element<'_, Message> {
         ),
         // No patches or audio settings here: Diablo III keeps its volume in its own options, and
         // its render resolution patches follow the Graphics page.
-    ]
-    .spacing(2)
-    .into()
+    ];
+    // The offline season, when the patch file has "Offline Seasons - Season N" entries.
+    if state.patches.selectable.iter().any(|m| m.name.starts_with(SEASON_PREFIX)) {
+        page = page
+            .push(section(state.rtl, &tr(lang, "Offline seasons")))
+            .push(season_row(state));
+    }
+    // The offline community events ("Event: ..." patches), one check box each.
+    let events: Vec<&PatchMeta> = state
+        .patches
+        .selectable
+        .iter()
+        .filter(|m| m.name.starts_with(EVENT_PREFIX))
+        .collect();
+    if !events.is_empty() {
+        page = page.push(section(state.rtl, &tr(lang, "Offline events")));
+        for (i, meta) in events.iter().enumerate() {
+            let name = meta.name.clone();
+            let label = name.strip_prefix(EVENT_PREFIX).unwrap_or(&name).to_string();
+            let checked = state.patches.chosen.contains(&name);
+            let hint = (i == 0).then(|| tr(lang, OFFLINE_EVENTS_HINT));
+            page = page.push(toggle_row(
+                state.rtl,
+                &label,
+                checked,
+                Some(move |on| Message::PatchToggled(name.clone(), on)),
+                hint.as_deref(),
+            ));
+        }
+    }
+    page.spacing(2).into()
+}
+
+/// The name prefix of the offline community event patches.
+const EVENT_PREFIX: &str = "Event: ";
+
+/// The name prefix of the offline season patches (patches/Diablo_III.xml).
+const SEASON_PREFIX: &str = "Offline Seasons - Season ";
+
+/// The note under the first offline event; the translation tables key on this text.
+const OFFLINE_EVENTS_HINT: &str = "On top of the season's theme, for the next start. They need an offline season; the Altar of Rites and Visions of Enmity are always on with one.";
+
+/// The note under the offline season row; the translation tables key on this text.
+const OFFLINE_SEASON_HINT: &str = "Seasonal heroes offline: the season the game runs. Takes effect on the next start. Off: no season.";
+
+/// One entry of the offline season drop-down: a season number, or None for Off. The shown text is
+/// translated; the number is what picking it selects.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SeasonChoice {
+    pub number: Option<String>,
+    label: String,
+}
+
+impl std::fmt::Display for SeasonChoice {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.label)
+    }
+}
+
+/// The season numbers of the patch names "Offline Seasons - Season N", in file order.
+fn season_numbers<'a>(names: impl Iterator<Item = &'a str>) -> Vec<String> {
+    names
+        .filter_map(|name| name.strip_prefix(SEASON_PREFIX))
+        .map(str::to_string)
+        .collect()
+}
+
+/// The drop-down entries: Off, then one per season.
+fn season_choices(numbers: &[String], lang: &str) -> Vec<SeasonChoice> {
+    let mut choices = vec![SeasonChoice { number: None, label: tr(lang, "Off") }];
+    choices.extend(numbers.iter().map(|n| SeasonChoice {
+        number: Some(n.clone()),
+        label: format!("{} {n}", tr(lang, "Season")),
+    }));
+    choices
+}
+
+/// Ticks the season patch `number` and unticks every other one (None ticks none: at most one
+/// season is on).
+fn pick_season(chosen: &mut BTreeSet<String>, number: Option<&str>) {
+    chosen.retain(|name| !name.starts_with(SEASON_PREFIX));
+    if let Some(n) = number {
+        chosen.insert(format!("{SEASON_PREFIX}{n}"));
+    }
+}
+
+/// The Offline season drop-down: Off, or one of the season patches (at most one is ticked).
+fn season_row(state: &State) -> Element<'_, Message> {
+    let lang = state.lang.as_str();
+    let numbers = season_numbers(state.patches.selectable.iter().map(|m| m.name.as_str()));
+    let choices = season_choices(&numbers, lang);
+    let current = state
+        .patches
+        .chosen
+        .iter()
+        .find_map(|n| n.strip_prefix(SEASON_PREFIX))
+        .and_then(|n| choices.iter().find(|c| c.number.as_deref() == Some(n)).cloned())
+        .or_else(|| choices.first().cloned());
+    let list = pick_list(choices, current, Message::SeasonPicked)
+        .text_size(SELECT_TEXT)
+        .style(theme::pick_list_dark);
+    row(
+        state.rtl,
+        &tr(lang, "Offline season"),
+        min_width(SELECT_MIN, list).into(),
+        Some(&tr(lang, OFFLINE_SEASON_HINT)),
+    )
+}
+
+/// Picks the offline season: unticks every season patch, then ticks the chosen one.
+pub fn season_picked(state: &mut State, choice: &SeasonChoice) {
+    pick_season(&mut state.patches.chosen, choice.number.as_deref());
+    store_game_patches(state);
 }
 
 /// Whether a backup holding the saves of `titles` belongs to another game than `current`. The
@@ -632,4 +742,36 @@ pub fn install_row<'a>(state: &'a State, label: &str) -> Element<'a, Message> {
         text
     };
     row(state.rtl, label, button.into(), Some(&note))
+}
+
+#[cfg(test)]
+mod season_tests {
+    use super::*;
+
+    #[test]
+    fn the_drop_down_lists_off_then_the_seasons_of_the_patch_file() {
+        let names = ["Offline Seasons", "Offline Seasons - Season 14", "Event: Pandemonium", "Offline Seasons - Season 30"];
+        let numbers = season_numbers(names.into_iter());
+        assert_eq!(numbers, ["14", "30"]);
+        let choices = season_choices(&numbers, "en");
+        let shown: Vec<String> = choices.iter().map(ToString::to_string).collect();
+        assert_eq!(shown, ["Off", "Season 14", "Season 30"]);
+        assert_eq!(choices[0].number, None);
+        assert_eq!(choices[2].number.as_deref(), Some("30"));
+    }
+
+    #[test]
+    fn picking_a_season_keeps_exactly_one_season_and_leaves_the_other_patches() {
+        let mut chosen: BTreeSet<String> = ["Event: Pandemonium", "Offline Seasons - Season 14", "Offline: no sign-in warning"]
+            .into_iter()
+            .map(String::from)
+            .collect();
+        pick_season(&mut chosen, Some("30"));
+        assert!(chosen.contains("Offline Seasons - Season 30"));
+        assert!(!chosen.contains("Offline Seasons - Season 14"));
+        assert!(chosen.contains("Event: Pandemonium") && chosen.contains("Offline: no sign-in warning"));
+        pick_season(&mut chosen, None);
+        assert!(!chosen.iter().any(|n| n.starts_with(SEASON_PREFIX)));
+        assert_eq!(chosen.len(), 2);
+    }
 }
