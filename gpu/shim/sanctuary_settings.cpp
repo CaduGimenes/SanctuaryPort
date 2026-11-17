@@ -19,6 +19,27 @@ const char* Path() {
     return env && env[0] ? env : "sanctuary.ini";
 }
 
+// The launcher keeps keys here that the in-game menu has no control for (glyph_style, cheats,
+// unlock_cosmetics, hdr, ...). Save() rewrites the file, so it reads those lines first and puts them back.
+std::vector<std::string> ReadLines(const char* path) {
+    std::vector<std::string> lines;
+    if (FILE* file = std::fopen(path, "r")) {
+        char line[256];
+        while (std::fgets(line, sizeof(line), file)) {
+            std::string text{line};
+            text.erase(text.find_last_not_of(" \t\r\n") + 1);
+            if (!text.empty()) lines.push_back(text);
+        }
+        std::fclose(file);
+    }
+    return lines;
+}
+
+std::string KeyOf(const std::string& line) {
+    const auto eq = line.find('=');
+    return line[0] == '#' || eq == std::string::npos ? std::string{} : line.substr(0, eq);
+}
+
 float Clamp(float v, float lo, float hi) {
     return std::clamp(v, lo, hi);
 }
@@ -264,6 +285,7 @@ bool ResolutionNeedsRestart() {
 
 void Save() {
     const auto& v = Get();
+    const std::vector<std::string> previous = ReadLines(Path());
     FILE* file = std::fopen(Path(), "w");
     if (!file) {
         std::printf("Settings: cannot write %s\n", Path());
@@ -310,6 +332,20 @@ void Save() {
     std::fprintf(file, "live_resolution=%s\n", v.live_resolution < 0 ? "auto"
                                                   : v.live_resolution ? "1" : "0");
     std::fclose(file);
+    // Lines of keys this function does not write (the launcher's own) are kept.
+    std::vector<std::string> written;
+    for (const std::string& line : ReadLines(Path())) written.push_back(KeyOf(line));
+    std::string kept;
+    for (const std::string& line : previous) {
+        const std::string key = KeyOf(line);
+        if (!key.empty() && std::find(written.begin(), written.end(), key) == written.end()) kept += line + "\n";
+    }
+    if (!kept.empty()) {
+        if (FILE* append = std::fopen(Path(), "a")) {
+            std::fputs(kept.c_str(), append);
+            std::fclose(append);
+        }
+    }
 }
 
 float PresetScale(int preset) {
