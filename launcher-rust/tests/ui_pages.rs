@@ -149,8 +149,8 @@ fn every_row_control_ends_on_the_same_right_edge() {
         let tr = |english: &str| sanctuaryport_launcher::core::i18n::tr(lang, english);
         let labels = [
             tr("Display mode"),
-            tr("Upscaler"),
-            format!("{}  ·  {}", tr("Anisotropic filtering"), tr("restart")),
+            tr("Upscaling"),
+            format!("{}  ↻", tr("Anisotropic filtering")),
             tr("Show performance overlay"),
             tr("Screenshot key: F12"),
         ];
@@ -185,7 +185,7 @@ fn a_drop_down_keeps_the_width_of_its_longest_option() {
     state.lang = "pt".into();
     state.gpus = gpu_rows(&ARC_LAPTOP);
     let tr = |english: &str| sanctuaryport_launcher::core::i18n::tr("pt", english);
-    let restart = |english: &str| format!("{}  ·  {}", tr(english), tr("restart"));
+    let restart = |english: &str| format!("{}  ↻", tr(english));
     let rows = performance::rows(&state, "pt");
     let mut ui = settled(&mut state, Page::Graphics, 1280.0, 800.0);
     // Mockup `.sel { font-size: 12.5px }` (R98).
@@ -232,7 +232,7 @@ fn the_multisampling_name_keeps_clear_of_its_drop_down() {
     state.lang = "pt".into();
     state.gpus = gpu_rows(&ARC_LAPTOP);
     let tr = |english: &str| sanctuaryport_launcher::core::i18n::tr("pt", english);
-    let name = format!("{}  ·  {}", tr("Game MSAA (2x)"), tr("restart"));
+    let name = format!("{}  ↻", tr("Game MSAA (2x)"));
     let mut ui = settled(&mut state, Page::Graphics, 1280.0, 800.0);
     let control = control(&mut ui, &name);
     let label = ui.find(name.as_str()).unwrap().bounds();
@@ -457,9 +457,9 @@ fn graphics_page_offers_the_multisampling_choice() {
     page_has(
         &state,
         &[
-            "Game MSAA (2x)  ·  restart",
+            "Game MSAA (2x)  ↻",
             performance::NO_MSAA_HINT,
-            "Graphics card  ·  restart",
+            "Graphics card  ↻",
         ],
     );
     // iced_test cannot open a pick_list: the page builds its drop-downs from `rows`, so those
@@ -503,7 +503,7 @@ fn graphics_page_offers_the_multisampling_choice() {
     state.lang = "pt".into();
     let hint = sanctuaryport_launcher::core::i18n::tr("pt", performance::NO_MSAA_HINT);
     assert_ne!(hint, performance::NO_MSAA_HINT);
-    page_has(&state, &["MSAA do jogo (2x)  ·  reiniciar", &hint]);
+    page_has(&state, &["MSAA do jogo (2x)  ↻", &hint]);
     let boxes = performance::rows(&state, "pt")
         .into_iter()
         .find(|row| row.key == "no_msaa")
@@ -524,32 +524,34 @@ fn anti_aliasing_section_says_what_the_choices_do() {
     open(&mut state, Page::Graphics);
     // NVIDIA chosen automatically: its MSAA stays on.
     state.store.set("gpu_id", "1".into());
-    assert_eq!(graphics::anti_aliasing_now(&state), "Now: only the game's MSAA smooths edges.");
+    assert_eq!(graphics::anti_aliasing_now(&state), "Now: only MSAA smooths edges.");
     state.store.set("no_msaa", "1".into());
-    assert_eq!(
-        graphics::anti_aliasing_now(&state),
-        "Now: no edge smoothing. Turn FSR 3 or FXAA on to smooth jagged edges."
-    );
+    assert_eq!(graphics::anti_aliasing_now(&state), "Now: no edge smoothing.");
     state.store.set("fxaa", true.into());
     assert_eq!(graphics::anti_aliasing_now(&state), "Now: FXAA smooths edges.");
     state.store.set("no_msaa", "0".into());
-    assert_eq!(graphics::anti_aliasing_now(&state), "Now: the game's MSAA and FXAA smooth edges.");
-    state.store.set("temporal_aa", "fsr3".into());
-    state.store.set("display_mode", "borderless".into());
-    assert!(graphics::anti_aliasing_now(&state).contains("enlarges the picture"));
-    state.store.set("display_mode", "windowed".into());
-    assert!(graphics::anti_aliasing_now(&state).contains("in a window"));
-    // With FSR 3 on, the Upscaler row says FSR 3 enlarges; with Sharpening off, its strength
-    // says so instead of a slider.
+    assert_eq!(graphics::anti_aliasing_now(&state), "Now: MSAA and FXAA smooth edges.");
+    assert_eq!(graphics::upscaling_now(&state), "off");
+    // One Upscaling choice sets both settings; FSR 3 turns the FXAA box off.
+    let _ = app::update(&mut state, Message::Upscaling("fsr1".into()));
+    assert!(state.store.flag("fsr1"));
+    assert_eq!(graphics::upscaling_now(&state), "fsr1");
+    let _ = app::update(&mut state, Message::Upscaling("fsr3".into()));
+    assert_eq!(state.store.text("temporal_aa"), "fsr3");
+    assert_eq!(graphics::upscaling_now(&state), "fsr3");
+    assert_eq!(graphics::anti_aliasing_now(&state), "Now: FSR 3 smooths edges.");
     state.store.set("rcas", false.into());
     page_has(
         &state,
         &[
-            "Now: FSR 3 smooths edges (in a window the window is the render size).",
-            "FSR 3 (set in Anti-aliasing)",
+            "Now: FSR 3 smooths edges.",
+            graphics::FXAA_OFF_HINT,
             "Turn Sharpening on to use this.",
         ],
     );
+    let _ = app::update(&mut state, Message::Upscaling("off".into()));
+    assert_eq!(state.store.text("temporal_aa"), "off");
+    assert!(!state.store.flag("fsr1"));
 }
 
 // --- Game page (Task 26) ---

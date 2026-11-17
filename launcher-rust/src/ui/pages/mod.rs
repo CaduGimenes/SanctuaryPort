@@ -63,7 +63,7 @@ impl Page {
         match self {
             Page::Home => "",
             Page::Graphics => {
-                "Rows marked restart apply when the game starts; the in-game menu (Insert or R3+L2) changes the others while you play."
+                "↻ applies on the next start. The others also change in game (Insert or R3+L2)."
             }
             Page::Game => "Your game dump, saves and language.",
             Page::Trophies => "The trophies this port recorded while you played.",

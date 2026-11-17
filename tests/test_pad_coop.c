@@ -82,7 +82,38 @@ int main(void) {
     assert(pad_read_state(1,&d)==0);
     assert(d.left_x==128 && d.right_y==128);
 
-    (void)first;
+    assert(SDL_SetJoystickVirtualAxis(second,SDL_GAMEPAD_AXIS_LEFTX,0));
+    assert(SDL_SetJoystickVirtualAxis(second,SDL_GAMEPAD_AXIS_RIGHTY,0));
+    pump();
+
+    /* Player 1's controller drops (Bluetooth): player 2's must not drive player 1 too. */
+    const SDL_JoystickID first_id=SDL_GetJoystickID(first);
+    SDL_CloseJoystick(first);
+    assert(SDL_DetachVirtualJoystick(first_id));
+    pump();
+    assert(SDL_SetJoystickVirtualButton(second,SDL_GAMEPAD_BUTTON_SOUTH,true));
+    pump();
+    assert(pad_read_state(1,&d)==0);
+    assert(!(d.buttons & BTN_CROSS));          /* player 1: keyboard only, not player 2's pad */
+    assert(pad_read_state(2,&d)==0);
+    assert(d.buttons & BTN_CROSS);             /* player 2 keeps its own */
+    assert(SDL_SetJoystickVirtualButton(second,SDL_GAMEPAD_BUTTON_SOUTH,false));
+    pump();
+
+    /* It comes back: player 1 again, not a new player 3. */
+    SDL_Joystick *back=attach(&desc,"sanctuary co-op controller 1 again");
+    pump();
+    assert(pad_read_state(1,&d)==0);
+    assert(SDL_SetJoystickVirtualButton(back,SDL_GAMEPAD_BUTTON_SOUTH,true));
+    pump(); runtime_pad_users();
+    usleep(270000);
+    pump();
+    assert(pad_read_state(1,&d)==0);
+    assert(d.buttons & BTN_CROSS);
+    assert(runtime_pad_users()==(1u<<2));     /* still players 1 and 2 only */
+    assert(pad_read_state(2,&d)==0);
+    assert(!(d.buttons & BTN_CROSS));
+
     SDL_Quit();
     puts("pad co-op test: ok");
     return 0;

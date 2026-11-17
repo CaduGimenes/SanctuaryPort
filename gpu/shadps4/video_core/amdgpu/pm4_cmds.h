@@ -10,6 +10,7 @@
 #include "common/uint128.h"
 #include "core/libraries/gnmdriver/gnmdriver.h"
 #include "core/libraries/kernel/time.h"
+#include "video_core/amdgpu/guest_clock_scale.h"
 #include "video_core/amdgpu/pm4_opcodes.h"
 
 namespace AmdGpu {
@@ -344,7 +345,7 @@ static u64 GetGpuClock64() {
     auto now = std::chrono::high_resolution_clock::now();
     auto duration = now.time_since_epoch();
     auto ticks = std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count();
-    return static_cast<u64>(ticks) / 10;
+    return GuestClock(static_cast<u64>(ticks) / 10);
 }
 
 static u64 GetGpuPerfCounter() {

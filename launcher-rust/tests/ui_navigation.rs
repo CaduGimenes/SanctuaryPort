@@ -404,7 +404,7 @@ fn a_red_hairline_tops_the_bar_and_edges_the_drawer() {
 const SUBTITLES: [(Page, &str); 6] = [
     (
         Page::Graphics,
-        "Rows marked restart apply when the game starts; the in-game menu (Insert or R3+L2) changes the others while you play.",
+        "↻ applies on the next start. The others also change in game (Insert or R3+L2).",
     ),
     (Page::Game, "Your game dump, saves and language."),
     (

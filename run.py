@@ -444,6 +444,15 @@ def main():
             applied = (patch_status(out) or {}).get('applied', [])
             engine_fps = graphics_options.applied_engine_fps(applied)
             dmem, vblank = patch_requirements(patch_xml, applied, profile[2])
+            # Graphics > V-Sync (sanctuary.ini vertical_sync): the profile keeps it off otherwise.
+            if diablo3 and 'SANCTUARY_VSYNC' not in caller_env:
+                vsync = graphics_options.read_ini(env['SANCTUARY_CONFIG']).get('vertical_sync') == '1'
+                env['SANCTUARY_VSYNC'] = '1' if vsync else '0'
+            # Graphics > Dynamic resolution off: the scene stays at 100% (guest_clock_scale.h).
+            if diablo3 and 'SANCTUARY_DYNRES' not in caller_env and \
+                    graphics_options.read_ini(env['SANCTUARY_CONFIG']).get('dynamic_resolution') == '0':
+                env['SANCTUARY_DYNRES'] = 'fixed'
+                print('Dynamic resolution: off (the scene stays at 100%)', flush=True)
             for key, value in (graphics_options.limiter_environment(applied) if diablo3 else {}).items():
                 if key not in env:
                     env[key] = value

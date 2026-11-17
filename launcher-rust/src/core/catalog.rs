@@ -319,6 +319,11 @@ pub static SETTINGS: &[Setting] = &[
     ini("fps_limit", Pick(FPS_LIMITS), Text("0"), true, 8),
     // SanctuaryPort: Graphics > Frame rate (the game's own frame limiter; fps_limit is no longer shown).
     ini("frame_rate", Pick(FRAME_RATES), Text("60"), true, 53),
+    // SanctuaryPort: Graphics > V-Sync. A key of its own: `vsync` was saved as 1 by every build while
+    // Diablo's profile kept it off, so reading it would turn V-Sync on for almost everyone.
+    ini("vertical_sync", Flag, Bool(false), true, 54),
+    // SanctuaryPort: Graphics > Dynamic resolution; off keeps the scene at 100% (SANCTUARY_DYNRES).
+    ini("dynamic_resolution", Flag, Bool(true), true, 55),
     ini(
         "engine_fps",
         Pick(ENGINE_FPS_CHOICES),
@@ -541,14 +546,14 @@ mod tests {
                 "cheat_very_hard"
             ]
         );
-        assert_eq!(keys.last(), Some(&"frame_rate"));
+        assert_eq!(keys.last(), Some(&"dynamic_resolution"));
         let shown: Vec<_> = rows.iter().filter(|s| s.written).map(|s| s.key).collect();
         assert_eq!(shown, SHOWN_INI_KEYS.iter().copied().collect::<Vec<_>>());
     }
 
     #[test]
     fn shown_ini_keys_are_the_47_controls_of_the_window() {
-        assert_eq!(SHOWN_INI_KEYS.len(), 50); // SanctuaryPort: + fsr1, rcas, rcas_strength, temporal_aa, unlock_cosmetics, fxaa, frame_rate, - anti_aliasing
+        assert_eq!(SHOWN_INI_KEYS.len(), 52); // SanctuaryPort: + fsr1, rcas, rcas_strength, temporal_aa, unlock_cosmetics, fxaa, frame_rate, vertical_sync, dynamic_resolution, - anti_aliasing
         for seeded in ["monitor", "hdr", "glyph_style"] {
             assert!(SHOWN_INI_KEYS.contains(&seeded), "{seeded}");
         }

@@ -21,7 +21,7 @@ use crate::ui::widgets::{choice_pairs, select_pairs};
 /// Suffix of the labels of the sizes a mod adds.
 const MOD_SUFFIX: &str = " (mod)";
 
-pub const NO_MSAA_HINT: &str = "The game's own edge smoothing. Automatic turns it off on AMD and Intel cards on Windows, where it can draw black lines; On is experimental there.";
+pub const NO_MSAA_HINT: &str = "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.";
 
 
 /// A built-in render resolution's label in `lang`, as the Python's `_()` of it: the whole label

@@ -6,6 +6,7 @@
 
 #include "core/memory.h"
 #include "sanctuary_write_log.h"
+#include "video_core/amdgpu/guest_clock_scale.h"
 #include "video_core/renderer_vulkan/vk_guest_clock.h"
 #include "video_core/renderer_vulkan/vk_instance.h"
 #include "video_core/renderer_vulkan/vk_scheduler.h"
@@ -86,7 +87,8 @@ bool GuestGpuClock::Stamp(u64* address) {
                 offset = s64(RecordClock()) - ticks;
                 have_offset = true;
             }
-            value = result == vk::Result::eSuccess ? u64(ticks + offset) : RecordClock();
+            value = AmdGpu::GuestClock(result == vk::Result::eSuccess ? u64(ticks + offset)
+                                                                      : RecordClock());
         }
         SanctuaryWriteLog::Note(reinterpret_cast<u64>(address), &value, sizeof(value),
                                 SanctuaryWriteLog::Fence);

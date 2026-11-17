@@ -1,43 +1,56 @@
-//! The Graphics page: display, resolution, anti-aliasing, upscaling, textures, frame rate,
-//! graphics card, overlay, screenshots and troubleshooting.
+//! The Graphics page, in four sections: display and frame rate, resolution and sharpness, edge
+//! smoothing, and tools (overlay, screenshots, shader cache).
 //!
-//! Everything about the picture lives here (the Performance page it shared this with is gone):
-//! a player looking for anti-aliasing finds the game's MSAA and FSR 3 in one section, with a line
-//! saying what they do with the current choices. FSR 1 and FSR 3 both enlarge a picture rendered
-//! below the window; FSR 3 wins, so the Upscaler row shows it and lets FSR 1 be chosen only when
-//! FSR 3 is off. `output_res`, `live_resolution` and `object_motion` stay parked.
+//! Every hint is one short line. Rows that need a new start of the game end with `↻`, which the
+//! drawer subtitle explains once. FSR 1 and FSR 3 both enlarge a picture rendered below the
+//! window, so one Upscaling choice (Off / FSR 1 / FSR 3) sets both `fsr1` and `temporal_aa`.
+//! `output_res`, `live_resolution` and `object_motion` stay parked.
 
 use iced::widget::{button, column, pick_list, text};
 use iced::Element;
-use serde_json::Value;
 
 use crate::core::gpu::{no_msaa_decision, MsaaDecision};
 use crate::core::i18n::tr;
-use crate::core::options::{ANISOTROPY, DISPLAY_MODES, TEMPORAL_AA};
+use crate::core::options::{ANISOTROPY, DISPLAY_MODES};
 use crate::ui::app::{Message, State};
 use crate::ui::pages::controls::ini_number;
 use crate::ui::pages::performance::{aspect_options, select_row, NO_MSAA_HINT};
 use crate::ui::theme;
-use crate::ui::widgets::{checkbox, min_width, row, section, select, slider, SELECT_MIN, SELECT_TEXT};
+use crate::ui::widgets::{
+    checkbox, min_width, row, section, select, slider, toggle_row, SELECT_MIN, SELECT_TEXT,
+};
 
-/// The hint of the Upscaler row.
-pub const UPSCALER_HINT: &str =
-    "Used when the Render resolution is below the window or screen: AMD FSR 1 enlarges it sharper than a plain stretch.";
-
-/// The hint of the temporal anti-aliasing choice (SanctuaryPort).
-pub const TEMPORAL_AA_HINT: &str =
-    "Smooths edges using the previous frames: the best quality. Costs about 3-6 ms on integrated graphics.";
+/// The marker after the name of a row that applies when the game starts.
+pub const RESTART_MARK: &str = "↻";
 
 /// The hint of the FXAA switch.
-pub const FXAA_HINT: &str =
-    "Cheap smoothing of the 3D picture (the HUD stays sharp), a little soft. Not used while FSR 3 is on.";
+pub const FXAA_HINT: &str = "Smooths edges at almost no cost.";
+/// The FXAA hint while FSR 3 is on (FSR 3 replaces it).
+pub const FXAA_OFF_HINT: &str = "Not used with FSR 3, which smooths edges itself.";
+/// The note under Dynamic resolution; the translation tables key on this text.
+pub const DYNRES_HINT: &str = "Lowers the scene in heavy fights to keep the FPS.";
+/// The note under V-Sync.
+pub const VSYNC_HINT: &str = "Removes tearing; on a 60 Hz screen it caps at 60.";
+/// The note under the frame rate limit (also on the first-start page).
+pub const FRAME_RATE_HINT: &str = "120 and Unlimited are smoother if your PC keeps up.";
 
-/// The hint of the Frame rate row.
-pub const FRAME_RATE_HINT: &str =
-    "The game's own frame limiter. 120 and Unlimited go past 60 when your PC keeps up; the game's speed stays the same.";
+/// The Upscaling choices: (id, English label, hint).
+pub const UPSCALING: [(&str, &str, &str); 3] = [
+    ("off", "Off", "A plain stretch when the resolution is below the screen."),
+    ("fsr1", "FSR 1", "Enlarges with more detail than a plain stretch."),
+    ("fsr3", "FSR 3 (experimental)", "Also smooths edges; heavy on handhelds."),
+];
 
-/// The Upscaler row's choices: (FSR 1 on, English label).
-const UPSCALERS: [(bool, &str); 2] = [(false, "Plain stretch"), (true, "AMD FSR 1")];
+/// The stored Upscaling choice: FSR 3 wins over FSR 1, as in the game.
+pub fn upscaling_now(state: &State) -> &'static str {
+    if state.store.text("temporal_aa") == "fsr3" {
+        "fsr3"
+    } else if state.store.flag("fsr1") {
+        "fsr1"
+    } else {
+        "off"
+    }
+}
 
 /// Whether the game's multisampling ends up on with the stored choice and the chosen card.
 fn msaa_on(state: &State) -> bool {
@@ -51,43 +64,32 @@ fn msaa_on(state: &State) -> bool {
     }
 }
 
-/// What the anti-aliasing choices do now, in one line (English, the translation key).
+/// What the edge smoothing choices do now, in one line (English, the translation key).
 pub fn anti_aliasing_now(state: &State) -> &'static str {
     let fsr3 = state.store.text("temporal_aa") == "fsr3";
-    let window = state.store.text("display_mode") == "windowed";
-    let fxaa = state.store.flag("fxaa");
-    match (fsr3, window, msaa_on(state), fxaa) {
-        (true, true, _, _) => "Now: FSR 3 smooths edges (in a window the window is the render size).",
-        (true, false, _, _) => {
-            "Now: FSR 3 smooths edges and enlarges the picture when the Render resolution is below your screen."
-        }
-        (false, _, true, true) => "Now: the game's MSAA and FXAA smooth edges.",
-        (false, _, false, true) => "Now: FXAA smooths edges.",
-        (false, _, true, false) => "Now: only the game's MSAA smooths edges.",
-        (false, _, false, false) => "Now: no edge smoothing. Turn FSR 3 or FXAA on to smooth jagged edges.",
+    match (fsr3, msaa_on(state), state.store.flag("fxaa")) {
+        (true, _, _) => "Now: FSR 3 smooths edges.",
+        (false, true, true) => "Now: MSAA and FXAA smooth edges.",
+        (false, false, true) => "Now: FXAA smooths edges.",
+        (false, true, false) => "Now: only MSAA smooths edges.",
+        (false, false, false) => "Now: no edge smoothing.",
     }
 }
 
-/// The Upscaler row: FSR 3 when it is on (set in Anti-aliasing), else plain stretch or FSR 1.
-fn upscaler<'a>(state: &State, lang: &str) -> Element<'a, Message> {
-    if state.store.text("temporal_aa") == "fsr3" {
-        return text(tr(lang, "FSR 3 (set in Anti-aliasing)"))
-            .size(SELECT_TEXT)
-            .color(theme::palette::MUTED)
-            .into();
-    }
-    let labels: Vec<String> = UPSCALERS.iter().map(|(_, en)| tr(lang, en)).collect();
-    let fsr1 = state.store.flag("fsr1");
-    let selected = UPSCALERS
+/// The Upscaling drop-down.
+fn upscaling<'a>(state: &State, lang: &str) -> Element<'a, Message> {
+    let labels: Vec<String> = UPSCALING.iter().map(|(_, en, _)| tr(lang, en)).collect();
+    let now = upscaling_now(state);
+    let selected = UPSCALING
         .iter()
-        .find(|(on, _)| *on == fsr1)
-        .map(|(_, en)| tr(lang, en));
+        .find(|(id, _, _)| *id == now)
+        .map(|(_, en, _)| tr(lang, en));
     let lang = lang.to_string();
     let list = pick_list(labels, selected, move |chosen: String| {
-        UPSCALERS
+        UPSCALING
             .iter()
-            .find(|(_, en)| tr(&lang, en) == chosen)
-            .map(|(on, _)| Message::Set("fsr1".to_string(), Value::Bool(*on)))
+            .find(|(_, en, _)| tr(&lang, en) == chosen)
+            .map(|(id, _, _)| Message::Upscaling(id.to_string()))
             .unwrap_or(Message::Noop)
     })
     .text_size(SELECT_TEXT)
@@ -106,16 +108,15 @@ fn delete_cache_button<'a>(state: &State, lang: &str) -> Element<'a, Message> {
 }
 
 /// SanctuaryPort: Diablo III shows only what its runtime reads. Not here: the monitor (the game
-/// opens on the primary one), VSync (the profile keeps it off: FIFO presents capped the engine at
-/// 20 FPS), frame generation (not calibrated for this game), the pipeline paths, readbacks, stream
-/// memory and frames queued (their defaults; the in-game menu has the live ones) and screen effects
-/// the game does not have.
+/// opens on the primary one), frame generation (not calibrated for this game), the pipeline paths,
+/// readbacks, stream memory and frames queued (their defaults; the in-game menu has the live ones)
+/// and screen effects the game does not have.
 pub fn view(state: &State) -> Element<'_, Message> {
     let lang = state.lang.as_str();
     let hint = |english: &str| tr(lang, english);
     let ini = |key: &str| state.store.text(key);
-    // A row that needs a new start of the game carries a small `restart` note.
-    let restart = |english: &str| format!("{}  ·  {}", tr(lang, english), tr(lang, "restart"));
+    let restart = |english: &str| format!("{}  {RESTART_MARK}", tr(lang, english));
+    let fsr3 = upscaling_now(state) == "fsr3";
 
     let aspect = min_width(
         SELECT_MIN,
@@ -131,6 +132,21 @@ pub fn view(state: &State) -> Element<'_, Message> {
             .color(theme::palette::MUTED)
             .into()
     };
+    let upscaling_hint = UPSCALING
+        .iter()
+        .find(|(id, _, _)| *id == upscaling_now(state))
+        .map_or("", |(_, _, hint)| *hint);
+    let fxaa: Element<'_, Message> = if fsr3 {
+        toggle_row(
+            state.rtl,
+            "FXAA",
+            false,
+            None::<fn(bool) -> Message>,
+            Some(&hint(FXAA_OFF_HINT)),
+        )
+    } else {
+        checkbox(state.rtl, "fxaa", "FXAA", state.store.flag("fxaa"), Some(&hint(FXAA_HINT)))
+    };
     let shots = button(text(tr(lang, "Open the screenshots folder")))
         .style(theme::button_flat)
         .on_press(Message::OpenFolder(
@@ -141,116 +157,102 @@ pub fn view(state: &State) -> Element<'_, Message> {
         ));
 
     column![
-        section(state.rtl, &tr(lang, "Display")),
+        section(state.rtl, &tr(lang, "Display and frame rate")),
         row(
             state.rtl,
             &tr(lang, "Display mode"),
             select("display_mode", DISPLAY_MODES, &ini("display_mode"), lang),
-            Some(&hint("Borderless covers the screen without changing the display mode.")),
+            Some(&hint("Borderless: full screen with quick window switching.")),
         ),
-        section(state.rtl, &tr(lang, "Resolution")),
-        row(
-            state.rtl,
-            &tr(lang, "Aspect ratio"),
-            aspect.into(),
-            Some(&hint("Your screen's shape: 21:9 and 32:9 are ultrawide monitors. Lists the render resolutions of that shape; the game widens its view to it.")),
-        ),
-        row(
-            state.rtl,
-            &restart("Render resolution"),
-            select_row(state, lang, "render_resolution"),
-            Some(&hint(
-                "Native is the sharpest; lower gives more FPS and is enlarged to the window."
-            )),
-        ),
-        section(state.rtl, &tr(lang, "Anti-aliasing")),
-        row(
-            state.rtl,
-            &restart("Game MSAA (2x)"),
-            select_row(state, lang, "no_msaa"),
-            Some(&hint(NO_MSAA_HINT)),
-        ),
-        checkbox(
-            state.rtl,
-            "fxaa",
-            "FXAA",
-            state.store.flag("fxaa"),
-            Some(&hint(FXAA_HINT)),
-        ),
-        row(
-            state.rtl,
-            &tr(lang, "Temporal anti-aliasing (FSR 3)"),
-            select("temporal_aa", TEMPORAL_AA, &ini("temporal_aa"), lang),
-            Some(&hint(TEMPORAL_AA_HINT)),
-        ),
-        text(tr(lang, anti_aliasing_now(state)))
-            .size(12)
-            .color(theme::palette::GOLD),
-        section(state.rtl, &tr(lang, "Upscaling")),
-        row(
-            state.rtl,
-            &tr(lang, "Upscaler"),
-            upscaler(state, lang),
-            Some(&hint(UPSCALER_HINT)),
-        ),
-        checkbox(
-            state.rtl,
-            "rcas",
-            &tr(lang, "Sharpening (RCAS)"),
-            state.store.flag("rcas"),
-            Some(&hint("Adds back detail after smoothing or enlarging. Also in the in-game menu.")),
-        ),
-        row(state.rtl, &tr(lang, "Sharpening strength"), strength, None),
-        section(state.rtl, &tr(lang, "Textures")),
-        row(
-            state.rtl,
-            &restart("Anisotropic filtering"),
-            select("anisotropy", ANISOTROPY, &ini("anisotropy"), lang),
-            Some(&hint(
-                "Sharper floors and walls seen at an angle, at little cost on most graphics cards."
-            )),
-        ),
-        section(state.rtl, &tr(lang, "Frame rate")),
         row(
             state.rtl,
             &restart("Frame rate"),
             select_row(state, lang, "frame_rate"),
             Some(&hint(FRAME_RATE_HINT)),
         ),
-        section(state.rtl, &tr(lang, "Graphics card")),
+        checkbox(
+            state.rtl,
+            "vertical_sync",
+            &restart("V-Sync"),
+            state.store.flag("vertical_sync"),
+            Some(&hint(VSYNC_HINT)),
+        ),
         row(
             state.rtl,
             &restart("Graphics card"),
             select_row(state, lang, "gpu_id"),
-            Some(&hint(
-                "The GPU the game runs on. Choose your dedicated card if the game uses the integrated one."
-            )),
+            Some(&hint("On laptops with two cards, choose the dedicated one.")),
         ),
-        section(state.rtl, &tr(lang, "Overlay")),
+        section(state.rtl, &tr(lang, "Resolution and sharpness")),
+        row(
+            state.rtl,
+            &tr(lang, "Aspect ratio"),
+            aspect.into(),
+            Some(&hint("21:9 and 32:9 show more of the sides.")),
+        ),
+        row(
+            state.rtl,
+            &restart("Render resolution"),
+            select_row(state, lang, "render_resolution"),
+            Some(&hint("Lower runs faster; Native is the sharpest.")),
+        ),
+        checkbox(
+            state.rtl,
+            "dynamic_resolution",
+            &restart("Dynamic resolution"),
+            state.store.flag("dynamic_resolution"),
+            Some(&hint(DYNRES_HINT)),
+        ),
+        row(
+            state.rtl,
+            &tr(lang, "Upscaling"),
+            upscaling(state, lang),
+            Some(&hint(upscaling_hint)),
+        ),
+        checkbox(
+            state.rtl,
+            "rcas",
+            &tr(lang, "Sharpening (RCAS)"),
+            state.store.flag("rcas"),
+            Some(&hint("Makes the picture crisper.")),
+        ),
+        row(state.rtl, &tr(lang, "Sharpening strength"), strength, None),
+        section(state.rtl, &tr(lang, "Edge smoothing")),
+        text(tr(lang, anti_aliasing_now(state)))
+            .size(12)
+            .color(theme::palette::GOLD),
+        row(
+            state.rtl,
+            &restart("Game MSAA (2x)"),
+            select_row(state, lang, "no_msaa"),
+            Some(&hint(NO_MSAA_HINT)),
+        ),
+        fxaa,
+        row(
+            state.rtl,
+            &restart("Anisotropic filtering"),
+            select("anisotropy", ANISOTROPY, &ini("anisotropy"), lang),
+            Some(&hint("Floors and walls stay sharp in the distance.")),
+        ),
+        section(state.rtl, &tr(lang, "Tools")),
         checkbox(
             state.rtl,
             "show_fps",
             &tr(lang, "Show performance overlay"),
             state.store.flag("show_fps"),
-            Some(&hint("Items, size and corner: in-game menu (Insert / R3+L2) > Overlay.")),
+            Some(&hint("Items and corner: in-game menu > Overlay.")),
         ),
-        section(state.rtl, &tr(lang, "Screenshots")),
         row(
             state.rtl,
             &tr(lang, "Screenshot key: F12"),
             shots.into(),
-            Some(&hint(
-                "Saves the game's image, without the overlay, as a PNG in the screenshots folder of the saves."
-            )),
+            Some(&hint("Saved as PNG in the screenshots folder.")),
         ),
-        section(state.rtl, &tr(lang, "Troubleshooting")),
         row(
             state.rtl,
             &tr(lang, "Shader cache"),
             delete_cache_button(state, lang),
-            Some(&hint(
-                "Deletes the saved shaders and pipelines of this saves folder. Use it if graphics look wrong after an update or the cache grew too big; the next start compiles everything again."
-            )),
+            Some(&hint("Use it if graphics look wrong after an update.")),
         ),
     ]
     .spacing(2)

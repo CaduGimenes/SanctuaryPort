@@ -296,6 +296,9 @@ pub enum Message {
     NextPage,
     PreviousPage,
     Set(String, Value),
+    /// The Upscaling choice of the Graphics page (`off`, `fsr1` or `fsr3`): sets `fsr1` and
+    /// `temporal_aa` together.
+    Upscaling(String),
     /// The Aspect ratio box of the Graphics page.
     Aspect(String),
     Browse(String),
@@ -530,6 +533,15 @@ pub fn update(state: &mut State, message: Message) -> Task<Message> {
         Message::Save => return persist::save(state),
         // Save persists what `Set` stored.
         Message::Set(key, value) => return apply_set(state, &key, value),
+        Message::Upscaling(choice) => {
+            let temporal = if choice == "fsr3" { "fsr3" } else { "off" };
+            let fsr1 = choice == "fsr1" || (choice == "fsr3" && state.store.flag("fsr1"));
+            let a = state.store.set("temporal_aa", Value::String(temporal.into()));
+            let b = state.store.set("fsr1", Value::Bool(fsr1));
+            if a || b {
+                return follow(state, Cause::Keys(&["temporal_aa", "fsr1"]));
+            }
+        }
         Message::Aspect(aspect) => performance::choose_aspect(state, &aspect),
         Message::MonitorsListed(displays) => {
             let saved = state.store.text("monitor");

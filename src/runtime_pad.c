@@ -66,6 +66,13 @@ _Static_assert(sizeof(ControllerInfo)==28,"OrbisPadControllerInformation layout"
 static pthread_mutex_t lock=PTHREAD_MUTEX_INITIALIZER;
 static int initialized, opened_user[MAX_PLAYERS+1], sdl_ready;
 static SDL_Gamepad *gamepad, *extra_pad[MAX_PLAYERS+1]; /* [2..MAX_PLAYERS] */
+/* Further gamepads waiting for a button press to join (refresh_extra_pads). */
+#define MAX_CANDIDATES 8
+#define MIRROR_WINDOW_US 250000u
+static SDL_Gamepad *candidate[MAX_CANDIDATES];
+static uint32_t pending_mask[MAX_CANDIDATES]; /* buttons pressed on the candidate since pending_since */
+static uint64_t pending_since[MAX_CANDIDATES];
+static uint64_t first_down_us[32];            /* when each button was last seen down on player 1's pad */
 static size_t reads;
 static uint8_t connected_count;
 
@@ -129,12 +136,25 @@ static SDL_Gamepad *current_gamepad(void) {
             printf("Runtime: virtual gamepad %s\n", virtual_pad>0 ? "attached" : SDL_GetError());
         }
     }
-    if (gamepad && !SDL_GamepadConnected(gamepad)) { SDL_CloseGamepad(gamepad); gamepad=NULL; }
+    if (gamepad && !SDL_GamepadConnected(gamepad)) {
+        printf("Runtime: gamepad of player 1 disconnected\n");
+        SDL_CloseGamepad(gamepad); gamepad=NULL;
+    }
     if (!gamepad) {
+        /* Player 1 takes the first gamepad no other player holds. Taking any gamepad, a player 1
+         * whose controller dropped (Bluetooth) took player 2's: one controller then drove both
+         * players, and player 1's own controller came back as player 3. Now player 1 waits on the
+         * keyboard and its controller, once back, is player 1's again. */
         int count=0;
         SDL_JoystickID *ids=SDL_GetGamepads(&count);
-        if (ids && count>0) {
-            gamepad=SDL_OpenGamepad(ids[0]);
+        for (int i=0;ids && i<count && !gamepad;++i) {
+            int held=0;
+            for (int u=2;u<=MAX_PLAYERS && !held;++u) held=extra_pad[u] && SDL_GetGamepadID(extra_pad[u])==ids[i];
+            for (int c=0;c<MAX_CANDIDATES && !held;++c) held=candidate[c] && SDL_GetGamepadID(candidate[c])==ids[i] && pending_mask[c];
+            if (held) continue;
+            for (int c=0;c<MAX_CANDIDATES;++c)
+                if (candidate[c] && SDL_GetGamepadID(candidate[c])==ids[i]) { SDL_CloseGamepad(candidate[c]); candidate[c]=NULL; pending_mask[c]=0; }
+            gamepad=SDL_OpenGamepad(ids[i]);
             if (gamepad) { ++connected_count; printf("Runtime: gamepad connected: %s\n",SDL_GetGamepadName(gamepad)); }
         }
         SDL_free(ids);
@@ -151,12 +171,6 @@ static SDL_Gamepad *current_gamepad(void) {
  * (0.5.0 compared the same instant, and player 1's own physical pad still took player 2, which then
  * "moved by itself", #20): a press only decides after MIRROR_WINDOW_US, and a button player 1
  * pressed within that window before or after it counts as player 1's. Called under lock. */
-#define MAX_CANDIDATES 8
-#define MIRROR_WINDOW_US 250000u
-static SDL_Gamepad *candidate[MAX_CANDIDATES];
-static uint32_t pending_mask[MAX_CANDIDATES]; /* buttons pressed on the candidate since pending_since */
-static uint64_t pending_since[MAX_CANDIDATES];
-static uint64_t first_down_us[32];            /* when each button was last seen down on player 1's pad */
 static uint32_t pressed_buttons(SDL_Gamepad *g) {
     uint32_t mask=0;
     for (int b=0;b<SDL_GAMEPAD_BUTTON_COUNT && b<32;++b)
