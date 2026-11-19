@@ -28,6 +28,7 @@ pub mod python;
 pub mod release;
 pub mod save_backup;
 pub mod save_restore;
+pub mod seasons;
 pub mod settings;
 pub mod sfo;
 pub mod steam;

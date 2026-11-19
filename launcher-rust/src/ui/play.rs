@@ -212,6 +212,8 @@ pub fn play(state: &mut State) -> Task<Message> {
     if !matches!(state.game, GameState::Idle) {
         return Task::none();
     }
+    // The 15 day rotation and the season's events, for today.
+    crate::ui::pages::game::apply_season_rules(state);
     if !persist::collect_or_report(state) {
         return Task::none();
     }

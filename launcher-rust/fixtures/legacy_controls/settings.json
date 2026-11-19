@@ -36,6 +36,9 @@
   "check_updates": false,
   "player_name": "",
   "game_patches": {},
+  "season_mode": "manual",
+  "season_rotate": false,
+  "season_rotate_start": "",
   "controls": {
     "key": {
       "cross": "Space"

@@ -312,6 +312,10 @@ pub enum Message {
     PatchToggled(String, bool),
     /// The Offline season drop-down of the Game page.
     SeasonPicked(game::SeasonChoice),
+    /// The Season events drop-down of the Game page.
+    SeasonModePicked(game::ModeChoice),
+    /// The 15 day rotation check box of the Game page.
+    SeasonRotateToggled(bool),
     /// Turn off all cheats (Game page): every cheat off, every multiplier 1x (#1135).
     Backup(BackupMessage),
     /// The monitors the probe listed, in the background.
@@ -590,6 +594,8 @@ pub fn update(state: &mut State, message: Message) -> Task<Message> {
         Message::InstallPicked(files) => game::start_pkg_install(state, files),
         Message::PatchToggled(name, on) => game::patch_toggled(state, &name, on),
         Message::SeasonPicked(choice) => game::season_picked(state, &choice),
+        Message::SeasonModePicked(choice) => game::season_mode_picked(state, &choice),
+        Message::SeasonRotateToggled(on) => game::season_rotate_toggled(state, on),
         Message::Backup(message) => return game::backup_update(state, message),
         Message::WindowFocused(focused) => {
             state.focused = focused;

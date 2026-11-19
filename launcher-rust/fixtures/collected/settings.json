@@ -41,6 +41,9 @@
       "High FPS Wall Seam Fix"
     ]
   },
+  "season_mode": "manual",
+  "season_rotate": false,
+  "season_rotate_start": "",
   "controls": {
     "key": {
       "square": "F"
