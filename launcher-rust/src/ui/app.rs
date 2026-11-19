@@ -697,6 +697,9 @@ pub fn update(state: &mut State, message: Message) -> Task<Message> {
 /// (`follow`).
 pub fn apply_set(state: &mut State, key: &str, value: Value) -> Task<Message> {
     if state.store.set(key, value) {
+        if key.starts_with("tristram_") {
+            game::apply_season_rules(state);
+        }
         return follow(state, Cause::Keys(&[key]));
     }
     Task::none()

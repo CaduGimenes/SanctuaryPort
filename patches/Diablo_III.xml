@@ -585,6 +585,11 @@
         <Target Name="newobj" Address="0xfacd50" Pattern="bf 02 01 00 00 e8 ?? ?? ?? ?? bf 00 00 20 00 e8 ?? ?? ?? ??" At="16" Ref="1" Tail="0"/>
         <Target Name="orig_next" Address="0x448596" Pattern="ff 60 18 90 90 90 90 90 90 90 90 90 90 90 90 55 48 89 e5 41 57 41 56 41 55 41 54 53" At="21"/>
     </Metadata>
+    <Metadata Title="Diablo III" Name="Event: The Darkening of Tristram" Note="Offline anniversary event: the portal to the Diablo 1 dungeon in the Old Ruins of Tristram is open (Adventure Mode). The game decides the event from the date; this makes it answer &quot;open&quot; (status 1) for the three places that ask. Works in any game, season or not. Experimental." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x54cb40" Value="b801000000c3" Pattern="55 48 89 e5 41 57 41 56 41 54 53 48 83 ec 60 4c 8b 25 ?? ?? ?? ?? 49 8b 04 24 48 89 45 d8 e8" At="0"/>
+        </PatchList>
+    </Metadata>
     <Metadata Title="Diablo III" Name="Offline: no sign-in warning" Note="Makes the online-state check (eboot 0x668c0) report OK and skips the sign-in checks, so the &#x27;not signed in / ineligible for leaderboards&#x27; dialog does not show before a season or a Challenge Rift." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x4668c0" Value="31c0c3" Pattern="0f 95 c0 0f b6 c0 c3 90 90 90 90 55 48 89 e5 41 57 41 56 41 54 53 41 89 fe" At="11"/>
