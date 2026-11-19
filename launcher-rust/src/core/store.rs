@@ -343,7 +343,7 @@ mod tests {
         // A parked key is not written; the upscaler and its preset are shown, so they are.
         assert!(!out.contains_key("object_motion"));
         assert!(out.contains_key("upscaler") && out.contains_key("preset"));
-        assert_eq!(out.len(), 53); // + temporal_aa, unlock_cosmetics, fxaa, frame_rate, vertical_sync, dynamic_resolution, - anti_aliasing (never read)
+        assert_eq!(out.len(), 54); // Includes the optional GTAO control.
         assert_eq!(out.keys().next().unwrap(), "display_mode");
     }
 

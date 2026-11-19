@@ -350,6 +350,16 @@ void ImageTab() {
         ImGui::EndDisabled();
         ImGui::EndTable();
     }
+    ImGui::SeparatorText("Ambient occlusion");
+    if (BeginRows("##occlusion")) {
+        static const char* const gtao_labels[] = {"Off (game SSAO)", "Low", "High"};
+        static const int gtao_values[] = {SanctuarySettings::GtaoOff, SanctuarySettings::GtaoLow,
+                                          SanctuarySettings::GtaoHigh};
+        ChoiceRow("GTAO (experimental)", s.gtao, gtao_labels, gtao_values, 3,
+                  "Improves contact shadows in the 3D scene. Low is lighter for integrated GPUs; "
+                  "Off restores the game's SSAO.");
+        ImGui::EndTable();
+    }
     ImGui::SeparatorText("Upscaling");
     if (BeginRows("##scaling")) {
         ImGui::BeginDisabled(fsr3);

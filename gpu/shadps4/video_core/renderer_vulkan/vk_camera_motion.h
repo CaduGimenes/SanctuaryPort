@@ -49,6 +49,7 @@ public:
     /// draw recording thread for nothing, GitHub #29's log).
     [[nodiscard]] bool Enabled() const noexcept {
         return debug_overlay ||
+               SanctuarySettings::Get().gtao.load(std::memory_order_relaxed) != SanctuarySettings::GtaoOff ||
                (for_upscaler &&
                 SanctuarySettings::Get().upscaler.load(std::memory_order_relaxed) != SanctuarySettings::UpscalerOff);
     }
@@ -112,6 +113,10 @@ public:
     void NoteGeometryDepth(VideoCore::ImageId depth) noexcept {
         geometry_depth_candidate = depth;
     }
+    /// Projection from a current-frame, depth-writing object for the earlier SSAO pass.
+    void NoteGtaoDepth(VideoCore::ImageId depth, const float* block) noexcept;
+    [[nodiscard]] bool GtaoProjectionFor(VideoCore::ImageId depth,
+                                         std::array<float, 4>& projection) const noexcept;
     [[nodiscard]] VideoCore::ImageId GeometryDepth() const noexcept {
         return geometry_depth;
     }
@@ -155,6 +160,12 @@ private:
     VideoCore::ImageId depth_id{};
     VideoCore::ImageId geometry_depth{};
     VideoCore::ImageId geometry_depth_candidate{};
+    struct DepthProjection {
+        u64 image_uid = 0;
+        std::array<float, 4> projection{};
+        bool consistent = true;
+    };
+    std::vector<DepthProjection> gtao_projections;
 
     // Diablo III object-to-clip matrices of this frame and the previous one, by object key.
     struct ObjectMatrix {

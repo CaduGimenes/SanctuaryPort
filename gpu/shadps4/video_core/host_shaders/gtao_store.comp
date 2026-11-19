@@ -1,0 +1,22 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+// Writes GTAO visibility to the stock full-resolution R8 SSAO texture.
+#version 450
+layout(local_size_x = 8, local_size_y = 8) in;
+
+layout(push_constant) uniform Params {
+    vec4 projection;
+    vec4 dims;
+    vec4 p0;
+    vec4 p1;
+    vec4 p2;
+} pc;
+layout(binding = 0) uniform sampler2D aoIn;
+layout(binding = 1) uniform sampler2D vignette;
+layout(binding = 2, r8) uniform writeonly image2D stockAo;
+void main() {
+    ivec2 p = ivec2(gl_GlobalInvocationID.xy);
+    if (any(greaterThanEqual(p, ivec2(pc.dims.xy)))) return;
+    float visibility = texelFetch(aoIn, p, 0).r;
+    float fade = texture(vignette, (vec2(p) + 0.5) / vec2(imageSize(stockAo))).a;
+    imageStore(stockAo, p, vec4(clamp(1.0 + fade * (visibility - 1.0), 0.0, 1.0)));
+}

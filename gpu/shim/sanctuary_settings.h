@@ -18,6 +18,7 @@ inline bool IsFsr4(int upscaler) {
     return upscaler == UpscalerFsr4 || upscaler == UpscalerFsr411;
 }
 enum Preset : int { NativeAA = 0, Quality, Balanced, Performance, UltraPerformance, PresetCount };
+enum GtaoQuality : int { GtaoOff = 0, GtaoLow = 1, GtaoHigh = 2, GtaoCount };
 enum DebugView : int { DebugNone = 0, DebugReactive = 1, DebugMotion = 2, DebugViewCount };
 
 /// Live output resolutions: the upscaler's output and the UI host targets.
@@ -57,6 +58,9 @@ struct Values {
     std::atomic<bool> rcas{true};
     /// FXAA of the finished frame while FSR 3 is off (vk_fxaa.cpp), sanctuary.ini `fxaa`.
     std::atomic<bool> fxaa{false};
+    /// Ground-truth ambient occlusion replacing Diablo III's SSAO upscale output (vk_gtao.cpp),
+    /// sanctuary.ini `gtao` (off, low, high). Live, opt-in, falls back to stock SSAO.
+    std::atomic<int> gtao{GtaoOff};
     std::atomic<int> rcas_strength{75};
     /// Set by the presenter: sharpening ran on the last frame (it needs FSR 1 when the game's
     /// image is smaller than the window).

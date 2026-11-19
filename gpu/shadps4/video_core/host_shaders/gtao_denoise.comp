@@ -1,0 +1,50 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+// Plane-aware a-trous denoiser for GTAO visibility (3x3 for Low, 5x5 for High).
+#version 450
+layout(local_size_x = 8, local_size_y = 8) in;
+
+layout(push_constant) uniform Params {
+    vec4 projection;
+    vec4 dims;
+    vec4 p0;
+    vec4 p1;
+    vec4 p2;
+} pc;
+layout(binding = 0) uniform sampler2D aoIn;
+layout(binding = 1) uniform sampler2D viewDist;
+layout(binding = 2, r16f) uniform writeonly image2D aoOut;
+
+float load_dist(ivec2 p) {
+    return texelFetch(viewDist, clamp(p, ivec2(0), ivec2(pc.dims.xy) - 1), 0).r;
+}
+void main() {
+    ivec2 pix = ivec2(gl_GlobalInvocationID.xy);
+    if (any(greaterThanEqual(pix, ivec2(pc.dims.xy)))) return;
+    int stride = int(pc.p2.w);
+    int radius = clamp(int(pc.p1.w), 1, 2);
+    float zc = load_dist(pix);
+    float zl = load_dist(pix - ivec2(1, 0));
+    float zr = load_dist(pix + ivec2(1, 0));
+    float zu = load_dist(pix - ivec2(0, 1));
+    float zd = load_dist(pix + ivec2(0, 1));
+    float dzdx = abs(zr - zc) < abs(zc - zl) ? zr - zc : zc - zl;
+    float dzdy = abs(zd - zc) < abs(zc - zu) ? zd - zc : zc - zu;
+    float tol = 1.0 / max(zc * pc.p1.z, 1e-4);
+    const float k5[5] = float[5](1.0/16.0, 4.0/16.0, 6.0/16.0, 4.0/16.0, 1.0/16.0);
+    const float k3[3] = float[3](1.0/4.0, 2.0/4.0, 1.0/4.0);
+    float sum = 0.0, wsum = 0.0;
+    for (int y = -radius; y <= radius; ++y) {
+        float wy = radius == 1 ? k3[y + 1] : k5[y + 2];
+        for (int x = -radius; x <= radius; ++x) {
+            float wx = radius == 1 ? k3[x + 1] : k5[x + 2];
+            ivec2 o = ivec2(x, y) * stride;
+            ivec2 p = clamp(pix + o, ivec2(0), ivec2(pc.dims.xy) - 1);
+            float z = texelFetch(viewDist, p, 0).r;
+            float rel = (z - (zc + dzdx * float(o.x) + dzdy * float(o.y))) * tol;
+            float weight = wx * wy * exp(-rel * rel);
+            sum += texelFetch(aoIn, p, 0).r * weight;
+            wsum += weight;
+        }
+    }
+    imageStore(aoOut, pix, vec4(sum / max(wsum, 1e-6)));
+}
