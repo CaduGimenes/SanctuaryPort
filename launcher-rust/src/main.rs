@@ -25,6 +25,22 @@ fn main() {
     if args.first().is_some_and(|a| a == "--install-pkg") && args.len() == 3 {
         std::process::exit(install_pkg_cli(Path::new(&args[1]), Path::new(&args[2])));
     }
+    if args.iter().any(|a| a == "--help" || a == "-h") {
+        println!("{}", startup::USAGE);
+        return;
+    }
+    // SanctuaryPort: `--data-dir DIR` before the folders are derived from the environment.
+    if let Some(dir) = startup::cli_data_dir(&args) {
+        let _ = std::fs::create_dir_all(&dir);
+        std::env::set_var("SANCTUARY_DATA_DIR", &dir);
+    }
+    let ini_edits = match startup::cli_ini_edits(&args) {
+        Ok(edits) => edits,
+        Err(error) => {
+            eprintln!("{error}\n\n{}", startup::USAGE);
+            std::process::exit(2);
+        }
+    };
     let exe_dir = std::env::current_exe()
         .ok()
         .and_then(|exe| exe.parent().map(Path::to_path_buf))
@@ -32,6 +48,9 @@ fn main() {
     // The environment and the folders derived once, for every route; a packaged port, or the
     // checkout a cargo build sits in (`launcher-rust/target/...`).
     let (route, context) = startup::start(&args, &exe_dir, std::env::vars_os(), cfg!(windows));
+    if let Err(error) = startup::apply_ini_edits(&context.paths.ini_path(), &ini_edits) {
+        eprintln!("{}: {error}", context.paths.ini_path().display());
+    }
     match route {
         Route::Version => println!("{APP_NAME} {}", ReleaseId::this().plain()),
         Route::Play => {
@@ -61,12 +80,16 @@ fn main() {
                         &environment_of(std::env::vars_os()),
                         cfg!(windows),
                     );
-                    let status = std::process::Command::new(&command[0])
-                        .args(&command[1..])
+                    let mut game = std::process::Command::new(&command[0]);
+                    game.args(&command[1..])
                         .current_dir(&paths.port_dir)
                         .env_clear()
-                        .envs(&env)
-                        .status();
+                        .envs(&env);
+                    // Started by "Play SanctuaryPort.exe", Steam or a shortcut there is no
+                    // console: the runner (python.exe) would open a console window of its own
+                    // (GitHub #35). From a terminal it keeps printing there.
+                    platform::hide_console_window(&mut game);
+                    let status = game.status();
                     std::process::exit(status.ok().and_then(|s| s.code()).unwrap_or(1));
                 }
                 eprintln!("No runner next to the launcher (run.sh, or run.py on Windows).");

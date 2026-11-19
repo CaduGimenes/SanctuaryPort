@@ -417,7 +417,10 @@ static void key_axis(uint8_t *axis, bool negative, bool positive) {
 }
 static void neutral(PadData *d);
 static void read_gamepad(SDL_Gamepad *g, PadData *d);
+/* The buttons of the last sample_host that only the keyboard or the mouse pressed. */
+static uint32_t host_keyboard_buttons;
 static void sample_host(PadData *d) {
+    host_keyboard_buttons=0;
     neutral(d);
     SDL_Gamepad *g=current_gamepad();
     watch_wheel();
@@ -435,6 +438,7 @@ static void sample_host(PadData *d) {
         if (source_down(key_map.entries[i].source,k,mouse,wheel)) d->buttons|=key_map.entries[i].ps;
     /* A keyboard key mapped to L2/R2 is a binary press; the gamepad trigger stays analog. */
     const uint32_t from_keyboard=d->buttons & ~pad_buttons;
+    host_keyboard_buttons=from_keyboard;
     if (from_keyboard & BTN_L2) d->l2=255;
     if (from_keyboard & BTN_R2) d->r2=255;
     key_axis(&d->left_x,k[SDL_SCANCODE_A],k[SDL_SCANCODE_D]);
@@ -643,10 +647,12 @@ static void apply_mouse_aim(PadData *d) {
 }
 
 /* The pause key (touchpad right without L1, which is photo mode) lets go of the window's mouse
- * lock while the game's pause menu is up, and takes it back (gpu/shim/window.cpp). */
-static void note_pause_key(const PadData *d) {
+ * lock while the game's pause menu is up, and takes it back (gpu/shim/window.cpp). Only when it
+ * comes from the keyboard or the mouse (`keyboard`): a gamepad's Select opens the same menu, and
+ * showing the system cursor to a gamepad player only gets in the way (GitHub #36). */
+static void note_pause_key(const PadData *d, uint32_t keyboard) {
     static bool held;
-    const bool pause=(d->buttons & CLICK_RIGHT) && !(d->buttons & BTN_L1);
+    const bool pause=(keyboard & CLICK_RIGHT) && !(d->buttons & BTN_L1);
     if (pause && !held) sanctuarygpu_mouse_pause_key();
     held=pause;
 }
@@ -666,7 +672,7 @@ static void sample(PadData *d) {
     uint8_t *axes[4]={&d->left_x,&d->left_y,&d->right_x,&d->right_y};
     for (int i=0;i<4;++i) if (injected.stick[i]>=0) *axes[i]=(uint8_t)injected.stick[i];
     apply_mouse_aim(d);
-    note_pause_key(d);
+    note_pause_key(d,host_keyboard_buttons);
     play_click(d);
     if (hold_after_capture) {
         if (d->buttons) d->buttons=0;
@@ -763,7 +769,16 @@ static ABI int32_t pad_vibration(int32_t handle, const uint8_t *param) {
     SDL_Gamepad *g=handle==PAD_HANDLE ? current_gamepad() : extra_gamepad(handle);
     /* The menu's vibration strength scales the game's motors (0: off). */
     const unsigned percent=(unsigned)sanctuarygpu_vibration_percent();
-    if (g) SDL_RumbleGamepad(g,(uint16_t)(param[0]*257u*percent/100u),(uint16_t)(param[1]*257u*percent/100u),1000);
+    bool rumbled=false;
+    if (g) rumbled=SDL_RumbleGamepad(g,(uint16_t)(param[0]*257u*percent/100u),(uint16_t)(param[1]*257u*percent/100u),1000);
+    /* The first request with the motors on, in the log: whether the game asks and the pad takes it. */
+    static bool logged;
+    if (!logged && (param[0] || param[1])) {
+        logged=true;
+        printf("Runtime: vibration %u/%u at %u%% -> %s\n",param[0],param[1],percent,
+               !g ? "no gamepad" : rumbled ? "sent" : SDL_GetError());
+        fflush(stdout);
+    }
     pthread_mutex_unlock(&lock);
     return 0;
 }

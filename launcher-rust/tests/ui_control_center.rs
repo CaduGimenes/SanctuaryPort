@@ -596,3 +596,20 @@ fn the_controls_page_pad_takes_over_from_the_tab_pad() {
     send(&mut state, ControlsMessage::LivePoll);
     assert_eq!(state.page, Page::Controls);
 }
+
+#[test]
+fn a_plays_on_home_and_b_closes_a_page() {
+    let dir = tempfile::tempdir().unwrap();
+    let fake = FakeJoysticks::new("Windows", vec![sony()]);
+    let mut state = with_nav_pad(dir.path(), &fake);
+    tap(&mut state, &fake, "R1 / RB");
+    assert_eq!(state.page, Page::Graphics);
+    // A on a page does nothing; B goes back to Home.
+    tap(&mut state, &fake, "Cross / A");
+    assert!(state.modal.is_none());
+    tap(&mut state, &fake, "Circle / B");
+    assert_eq!(state.page, Page::Home);
+    // A on Home is PLAY: without a game folder, PLAY says what is missing (GitHub #33).
+    tap(&mut state, &fake, "Cross / A");
+    assert!(state.modal.is_some(), "A on Home should press PLAY");
+}

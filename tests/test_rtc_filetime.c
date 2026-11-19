@@ -1,7 +1,9 @@
 /* sceRtcSetWin32FileTime / sceRtcGetWin32FileTime (src/runtime_rtc.c): they convert between a
  * SceRtcDateTime and a Win32 FILETIME (100 ns since 1601-01-01). Diablo III reads its season dates
  * through them; a conversion that fails makes every season "end in 1 minute". */
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
 #include <assert.h>
 #include <stdio.h>
 #include "../src/runtime_rtc.c"

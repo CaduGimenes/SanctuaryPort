@@ -611,11 +611,9 @@ void TextureCache::InvalidateAlias(Image& image) {
 }
 
 void TextureCache::MarkAsMaybeDirty(ImageId image_id, Image& image) {
-    if (image.hash == 0) {
-        // Initialize hash
-        const u8* addr = std::bit_cast<u8*>(image.info.guest_address);
-        image.hash = XXH3_64bits(addr, image.info.guest_size);
-    }
+    // sanctuary (GitHub #41): image.hash holds the guest bytes as of the last RefreshImage, not
+    // as of now: on the two-page path the image's own bytes on the already unprotected head
+    // page may have changed before this fault.
     image.flags |= ImageFlagBits::MaybeCpuDirty;
     UntrackImage(image_id);
 }
@@ -1566,30 +1564,33 @@ void TextureCache::RefreshImage(Image& image) {
     RENDERER_TRACE;
     TRACE_HINT(fmt::format("{:x}:{:x}", image.info.guest_address, image.info.guest_size));
 
+    // sanctuary (GitHub #41, black squares on the minimap): only images within one or two pages
+    // become MaybeCpuDirty (a write elsewhere on their page). Upstream compared the first 8x8
+    // texels only, against a hash taken at a different time and over a different length: a
+    // small texture rewritten with the same top-left corner (an empty corner of a map tile,
+    // over a slot that held zeros or another tile) was never uploaded again. Compare the whole
+    // image (at most 8 KiB here) with the guest bytes as of the last refresh.
+    const u8* guest = std::bit_cast<const u8*>(image.info.guest_address);
+    constexpr u64 MaxMaybeDirtySize = 8_KB;
+    const bool hashable = image.info.guest_size != 0 && image.info.guest_size <= MaxMaybeDirtySize;
+    u64 content_hash = 0;
+    if (hashable) {
+        content_hash = XXH3_64bits(guest, image.info.guest_size);
+    }
     if (True(image.flags & ImageFlagBits::MaybeCpuDirty) &&
         False(image.flags & ImageFlagBits::CpuDirty)) {
-        // The image size should be less than page size to be considered MaybeCpuDirty
-        // So this calculation should be very uncommon and reasonably fast
-        // For now we'll just check up to 64 first pixels
-        const auto addr = std::bit_cast<u8*>(image.info.guest_address);
-        const u32 w = std::min(image.info.size.width, u32(8));
-        const u32 h = std::min(image.info.size.height, u32(8));
-
-        const u32 s_w = image.info.props.is_block ? Common::DivCeil(w, 4u) : w;
-        const u32 s_h = image.info.props.is_block ? Common::DivCeil(h, 4u) : h;
-        const u32 size = s_w * s_h * (image.info.num_bits / 8);
-        const u64 hash = XXH3_64bits(addr, size);
-        if (image.hash == hash) {
+        if (hashable && image.hash != 0 && image.hash == content_hash) {
             image.flags &= ~ImageFlagBits::MaybeCpuDirty;
             return;
         }
-        image.hash = hash;
     }
 
     const u32 num_layers = image.info.resources.layers;
     const u32 num_mips = image.info.resources.levels;
     const bool is_gpu_modified = True(image.flags & ImageFlagBits::GpuModified);
     const bool is_gpu_dirty = True(image.flags & ImageFlagBits::GpuDirty);
+    // The guest bytes as of this refresh (0 = unknown): a later MaybeCpuDirty compares with it.
+    image.hash = content_hash;
 
     SanctuaryStats::image_upload_bytes.fetch_add(image.info.guest_size, std::memory_order_relaxed);
     boost::container::small_vector<vk::BufferImageCopy, 14> image_copies;

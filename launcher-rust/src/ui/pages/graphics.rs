@@ -32,7 +32,7 @@ pub const DYNRES_HINT: &str = "Lowers the scene in heavy fights to keep the FPS.
 /// The note under V-Sync.
 pub const VSYNC_HINT: &str = "Removes tearing; on a 60 Hz screen it caps at 60.";
 /// The note under the frame rate limit (also on the first-start page).
-pub const FRAME_RATE_HINT: &str = "120 and Unlimited are smoother if your PC keeps up.";
+pub const FRAME_RATE_HINT: &str = "Above 60 the camera is smoother, but characters may judder.";
 
 /// The Upscaling choices: (id, English label, hint).
 pub const UPSCALING: [(&str, &str, &str); 3] = [

@@ -43,7 +43,11 @@ jobs:
         run: |
           # The Windows job can create the draft at the same time: the second create fails, the view then passes.
           gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --draft --title "$TAG" --notes "" || gh release view "$TAG" >/dev/null
-          gh release upload "$TAG" dist/SanctuaryPort-linux-x86_64.AppImage --clobber
+          # The launcher's updater checks the download against this file (an AppImage update needs it).
+          (cd dist && sha256sum SanctuaryPort-linux-x86_64.AppImage > SanctuaryPort-linux-x86_64.AppImage.sha256 \
+              && sha256sum SanctuaryPort-linux-x86_64.tar.gz > SanctuaryPort-linux-x86_64.tar.gz.sha256)
+          gh release upload "$TAG" dist/SanctuaryPort-linux-x86_64.AppImage dist/SanctuaryPort-linux-x86_64.AppImage.sha256 \
+              dist/SanctuaryPort-linux-x86_64.tar.gz dist/SanctuaryPort-linux-x86_64.tar.gz.sha256 --clobber
 
   windows:
     runs-on: ubuntu-24.04
@@ -80,4 +84,5 @@ jobs:
           TAG: ${{ github.event.inputs.tag || github.ref_name }}
         run: |
           gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --draft --title "$TAG" --notes "" || gh release view "$TAG" >/dev/null
-          gh release upload "$TAG" dist/SanctuaryPort-windows.zip --clobber
+          (cd dist && sha256sum SanctuaryPort-windows.zip > SanctuaryPort-windows.zip.sha256)
+          gh release upload "$TAG" dist/SanctuaryPort-windows.zip dist/SanctuaryPort-windows.zip.sha256 --clobber

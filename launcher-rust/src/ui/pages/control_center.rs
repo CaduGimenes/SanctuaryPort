@@ -30,6 +30,7 @@ use crate::core::pad_model::{
 };
 use crate::core::paths::Paths;
 use crate::ui::app::{apply_set, Message, State};
+use crate::ui::drawer::DrawerState;
 use crate::ui::pages::controls::{self, ini_number, ControlsMessage, Device as Shown};
 use crate::ui::pages::Page;
 use crate::ui::theme::{self, palette};
@@ -377,9 +378,13 @@ fn shoulder_step(state: &State, fresh: &[String]) -> Option<Message> {
     if !free || !state.focused {
         return None;
     }
+    let home = state.page == Page::Home && state.drawer == DrawerState::Closed;
     fresh.iter().find_map(|name| match name.as_str() {
         "leftshoulder" => Some(Message::PreviousPage),
         "rightshoulder" => Some(Message::NextPage),
+        // As Enter and Esc: A or Start on Home plays (GitHub #33), B closes a page.
+        "a" | "start" if home => Some(Message::Play),
+        "b" if !home => Some(Message::CloseDrawer),
         _ => None,
     })
 }

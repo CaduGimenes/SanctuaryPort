@@ -41,7 +41,10 @@ Get the latest build from the [Releases](https://github.com/CaduGimenes/Sanctuar
 
 - **Linux:** `SanctuaryPort-linux-x86_64.AppImage` — make it executable and run it. Needs a distro
   with glibc 2.39 or newer (SteamOS, Ubuntu 24.04+, Debian 13, Fedora 40+...), `python3`, and
-  a GPU with Vulkan 1.3. Saves and settings go to `~/.local/share/sanctuaryport`.
+  a GPU with Vulkan 1.3. Saves and settings go to `~/.local/share/sanctuaryport`, or, if you create
+  a `SanctuaryPort-data` folder next to the AppImage, into that folder (portable mode).
+  `SanctuaryPort-linux-x86_64.tar.gz` is the same thing as a plain folder: extract it and run
+  `SanctuaryPort` inside; it is portable (everything stays in its `SanctuaryPort-data`).
 - **Windows:** `SanctuaryPort-windows.zip` — extract it and open `SanctuaryPort.exe`
   (instructions in `README-Windows.txt`). Python comes inside the folder.
 
@@ -84,7 +87,28 @@ Then follow [Getting your game ready](#getting-your-game-ready) with your own du
   options, shortcuts and the log of the last start).
 
 Its interface follows your system language (English, Portuguese and many more), and it works
-with a gamepad alone: **LB / RB** change tab, like the arrow keys.
+with a gamepad alone: **LB / RB** change tab, **A / Start** on Home plays, **B** goes back.
+
+### Command line
+
+The same options on Windows (`SanctuaryPort.exe`) and Linux (the AppImage or `SanctuaryPort` in the
+tarball). `Play SanctuaryPort.exe` (Windows) is `--play` without a console window, for Steam and
+shortcuts.
+
+```
+--play                 start the game with the saved settings, without the launcher window
+--game DIR             the game folder (with eboot.bin), for this start
+--update DIR           the update folder, for this start
+--data-dir DIR         keep settings, saves and generated files in DIR
+--fullscreen | --borderless | --windowed
+                       the display mode (saved, as the Graphics page does)
+--set KEY=VALUE        any sanctuary.ini setting, e.g. --set frame_rate=120 (saved; repeatable)
+--install-pkg PKG DIR  install a game, update or add-on PKG into the games folder DIR
+--version, --help
+```
+
+For example, straight into the game in full screen at 120 FPS:
+`SanctuaryPort.exe --play --fullscreen --set frame_rate=120 --game D:\PS4\CUSA00242`.
 
 ## Building from source (Linux)
 

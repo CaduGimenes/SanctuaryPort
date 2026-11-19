@@ -205,13 +205,14 @@ mod tests {
         );
         let metas = game_patch_metas(&diablo_xml(), profile.app_version).unwrap();
         assert!(!metas.is_empty());
-        assert!(metas
-            .iter()
-            .all(|meta| meta.name.starts_with(RESOLUTION_PATCH_PREFIX)
-                || meta.name.starts_with(FRAME_LIMITER_PATCH_PREFIX)));
-        // The resolution and frame limiter patches follow the Graphics page, so nothing is offered
-        // on its own.
-        assert!(selectable(&metas).is_empty());
+        // The resolution and frame limiter patches follow the Graphics page; the offline seasons and
+        // events (GitHub PR #31) are what the Game page offers.
+        let offered = selectable(&metas);
+        assert!(!offered.is_empty());
+        assert!(offered.iter().all(|meta| !meta.name.starts_with(RESOLUTION_PATCH_PREFIX)
+            && !meta.name.starts_with(FRAME_LIMITER_PATCH_PREFIX)));
+        assert!(offered.iter().any(|meta| meta.name.starts_with("Offline Seasons - Season ")));
+        assert!(offered.iter().any(|meta| meta.name.starts_with("Event: ")));
         assert!(game_patch_metas(&diablo_xml(), "01.00").unwrap().is_empty());
     }
 

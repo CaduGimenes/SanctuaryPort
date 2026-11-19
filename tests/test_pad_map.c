@@ -109,15 +109,19 @@ int main(void) {
     drop_wheel();
     assert(SDL_GetAtomicInt(&wheel_ticks[1])==0 && !wheel_held(1,t1));
 
-    /* The pause key tells the window once per press; L1 + touchpad right (photo mode) does not. */
+    /* The pause key tells the window once per press; L1 + touchpad right (photo mode) does not,
+     * and neither does a gamepad's Select (the same button, not from the keyboard: #36). */
     PadData menu={0};
-    menu.buttons=CLICK_RIGHT; note_pause_key(&menu); note_pause_key(&menu);
+    menu.buttons=CLICK_RIGHT; note_pause_key(&menu,CLICK_RIGHT); note_pause_key(&menu,CLICK_RIGHT);
     assert(pause_keys==1);
-    menu.buttons=0; note_pause_key(&menu);
-    menu.buttons=CLICK_RIGHT|BTN_L1; note_pause_key(&menu);
+    menu.buttons=0; note_pause_key(&menu,0);
+    menu.buttons=CLICK_RIGHT|BTN_L1; note_pause_key(&menu,CLICK_RIGHT);
     assert(pause_keys==1);
-    menu.buttons=0; note_pause_key(&menu);
-    menu.buttons=CLICK_RIGHT; note_pause_key(&menu);
+    menu.buttons=0; note_pause_key(&menu,0);
+    menu.buttons=CLICK_RIGHT; note_pause_key(&menu,CLICK_RIGHT);
+    assert(pause_keys==2);
+    menu.buttons=0; note_pause_key(&menu,0);
+    menu.buttons=CLICK_RIGHT; note_pause_key(&menu,0);
     assert(pause_keys==2);
 
     /* L2 aim: the right stick follows the mouse's movement while L2 is held, then lets go. */

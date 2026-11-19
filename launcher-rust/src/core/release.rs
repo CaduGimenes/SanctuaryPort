@@ -5,8 +5,9 @@ use serde_json::Value;
 use crate::core::i18n::tr;
 use crate::core::update::{UpdateError, RELEASES_PAGE};
 
-/// The first package with the Rust launcher: nothing below it is listed, so no Python-era release is.
-pub const FIRST_RUST_VERSION: &str = "2.8.0";
+/// SanctuaryPort: the first release whose launcher reads this project's tags (`v0.6.7`); older
+/// ones never see a newer release, so they are not offered as a version to go back to.
+pub const FIRST_RUST_VERSION: &str = "0.6.7";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Channel {
@@ -22,13 +23,16 @@ pub struct ReleaseId {
 }
 
 impl ReleaseId {
-    /// `<system>-v<version>[-<build>]`; the channel is the API's `prerelease`. None for a tag
-    /// without `-v<digit>` or with text after the version that does not start with `-`.
+    /// `v<version>[-<build>]` (SanctuaryPort's tags) or `<system>-v<version>[-<build>]`; the
+    /// channel is the API's `prerelease`. None for a tag without `v<digit>` at its start or after
+    /// a `-`, or with text after the version that does not start with `-`.
     pub fn parse(tag: &str, prerelease: bool) -> Option<ReleaseId> {
-        let start = tag
-            .match_indices("-v")
-            .map(|(at, _)| at + 2)
-            .find(|&at| tag[at..].starts_with(|c: char| c.is_ascii_digit()))?;
+        let digit_at = |at: usize| tag[at..].starts_with(|c: char| c.is_ascii_digit());
+        let start = if tag.starts_with('v') && digit_at(1) {
+            1
+        } else {
+            tag.match_indices("-v").map(|(at, _)| at + 2).find(|&at| digit_at(at))?
+        };
         let rest = &tag[start..];
         let end = rest
             .find(|c: char| !(c.is_ascii_digit() || c == '.'))
@@ -305,6 +309,37 @@ mod tests {
     }
 
     #[test]
+    fn sanctuaryport_tags_parse() {
+        assert_eq!(ReleaseId::parse("v0.6.7", false), Some(id(Channel::Release, "0.6.7", None)));
+        assert_eq!(
+            ReleaseId::parse("v0.7.0-test1", true),
+            Some(id(Channel::PreRelease, "0.7.0", Some("test1")))
+        );
+    }
+
+    #[test]
+    fn the_published_list_shape_is_read() {
+        // The assets of a real SanctuaryPort release (v0.6.6, with the checksums added in 0.6.7).
+        let assets = [
+            "SanctuaryPort-linux-x86_64.AppImage",
+            "SanctuaryPort-linux-x86_64.AppImage.sha256",
+            "SanctuaryPort-windows.zip",
+            "SanctuaryPort-windows.zip.sha256",
+        ];
+        let body = json!([
+            entry("v0.6.8", false, "2026-11-20T00:00:00Z", &assets),
+            entry("v0.6.6", false, "2026-11-17T00:00:00Z", &assets),
+        ]);
+        let windows = parse_releases(&body, true).unwrap();
+        assert_eq!(windows.len(), 1, "0.6.6 is below the floor");
+        assert_eq!(windows[0].url, "https://x.test/SanctuaryPort-windows.zip");
+        let linux = parse_releases(&body, false).unwrap();
+        assert_eq!(linux[0].url, "https://x.test/SanctuaryPort-linux-x86_64.AppImage");
+        let installed = ReleaseId::parse("v0.6.7", false).unwrap();
+        assert_eq!(newer(&linux, &installed).unwrap().id.version, "0.6.8");
+    }
+
+    #[test]
     fn a_stable_under_a_build_tag_follows_the_api() {
         let parsed = ReleaseId::parse("windows-v2.6.0-hotfix1", false).unwrap();
         assert_eq!(parsed.channel, Channel::Release);
@@ -315,7 +350,8 @@ mod tests {
     #[test]
     fn bad_tags_are_none() {
         for tag in [
-            "v2.7.0",
+            "2.7.0",
+            "va2.7.0",
             "windows-2.7.0",
             "windows-v",
             "windows-v2.6.0rc",
@@ -406,7 +442,7 @@ mod tests {
             stable.push("spartanport-x86_64.AppImage.sha256");
         }
         let python_era = entry(
-            "windows-v2.7.0",
+            "v0.6.6",
             false,
             "2026-01-01T00:00:00Z",
             &["spartanport-windows.zip"],
@@ -490,12 +526,12 @@ mod tests {
         let body = json!([
             entry("windows-v2.8.0", false, "2026-10-25T00:00:00Z", &WIN),
             entry(
-                "windows-v2.7.0-rust-launcher-test1",
+                "v0.6.6-rust-launcher-test1",
                 true,
                 "2026-10-24T00:00:00Z",
                 &["spartanport-windows.zip", "release-windows.json"]
             ),
-            entry("windows-v2.7.0", false, "2026-10-22T00:00:00Z", &WIN),
+            entry("v0.6.5", false, "2026-10-22T00:00:00Z", &WIN),
         ]);
         let versions: Vec<_> = parse_releases(&body, true)
             .unwrap()
@@ -503,7 +539,9 @@ mod tests {
             .map(|r| r.id.version)
             .collect();
         assert_eq!(versions, ["2.8.0"]);
-        assert_eq!(FIRST_RUST_VERSION, "2.8.0");
+        let below = json!([entry("v0.6.6", false, "2026-11-17T00:00:00Z", &WIN)]);
+        assert!(parse_releases(&below, true).unwrap().is_empty());
+        assert_eq!(FIRST_RUST_VERSION, "0.6.7");
     }
 
     #[test]

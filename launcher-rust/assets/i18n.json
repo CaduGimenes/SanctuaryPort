@@ -2709,7 +2709,8 @@
    "Items and corner: in-game menu > Overlay.": "Itens e canto: menu do jogo > Overlay.",
    "Saved as PNG in the screenshots folder.": "Salva em PNG na pasta de capturas.",
    "Use it if graphics look wrong after an update.": "Use se os gráficos ficarem errados após uma atualização.",
-   "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "Suavização original do jogo; Automático desliga em AMD e Intel no Windows."
+   "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "Suavização original do jogo; Automático desliga em AMD e Intel no Windows.",
+   "Above 60 the camera is smoother, but characters may judder.": "Acima de 60 a câmera fica mais fluida, mas os personagens podem tremer."
   },
   "es": {
    "The launcher cannot write to {}, so it cannot replace itself there. Open the releases page to download the new version by hand?": "El launcher no puede escribir en {}, así que no puede reemplazarse ahí. ¿Abrir la página de releases para descargar la versión nueva a mano?",
@@ -3218,7 +3219,8 @@
    "Items and corner: in-game menu > Overlay.": "Elementos y esquina: menú del juego > Overlay.",
    "Saved as PNG in the screenshots folder.": "Se guarda como PNG en la carpeta de capturas.",
    "Use it if graphics look wrong after an update.": "Úsalo si los gráficos se ven mal tras una actualización.",
-   "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "El suavizado propio del juego; Automático lo apaga en AMD e Intel en Windows."
+   "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "El suavizado propio del juego; Automático lo apaga en AMD e Intel en Windows.",
+   "Above 60 the camera is smoother, but characters may judder.": "Por encima de 60 la cámara es más fluida, pero los personajes pueden temblar."
   },
   "pl": {
    "Polish": "Polski",
@@ -3580,7 +3582,8 @@
    "Items and corner: in-game menu > Overlay.": "Elementy i róg: menu gry > Overlay.",
    "Saved as PNG in the screenshots folder.": "Zapisywane jako PNG w folderze zrzutów.",
    "Use it if graphics look wrong after an update.": "Użyj, jeśli grafika wygląda źle po aktualizacji.",
-   "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "Wygładzanie gry; Automatycznie wyłącza je na AMD i Intel w Windows."
+   "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "Wygładzanie gry; Automatycznie wyłącza je na AMD i Intel w Windows.",
+   "Above 60 the camera is smoother, but characters may judder.": "Powyżej 60 kamera jest płynniejsza, ale postacie mogą drgać."
   },
   "fr": {
    "Polish": "Polonais",
@@ -3687,7 +3690,8 @@
    "Items and corner: in-game menu > Overlay.": "Éléments et coin : menu du jeu > Overlay.",
    "Saved as PNG in the screenshots folder.": "Enregistré en PNG dans le dossier des captures.",
    "Use it if graphics look wrong after an update.": "À utiliser si les graphismes sont faux après une mise à jour.",
-   "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "Le lissage du jeu ; Automatique le coupe sur AMD et Intel sous Windows."
+   "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "Le lissage du jeu ; Automatique le coupe sur AMD et Intel sous Windows.",
+   "Above 60 the camera is smoother, but characters may judder.": "Au-dessus de 60, la caméra est plus fluide, mais les personnages peuvent saccader."
   },
   "de": {
    "Polish": "Polnisch",
@@ -3785,7 +3789,8 @@
    "Items and corner: in-game menu > Overlay.": "Elemente und Ecke: Spielmenü > Overlay.",
    "Saved as PNG in the screenshots folder.": "Als PNG im Screenshot-Ordner gespeichert.",
    "Use it if graphics look wrong after an update.": "Nutzen, wenn die Grafik nach einem Update falsch aussieht.",
-   "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "Die Glättung des Spiels; Automatisch schaltet sie bei AMD und Intel unter Windows aus."
+   "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "Die Glättung des Spiels; Automatisch schaltet sie bei AMD und Intel unter Windows aus.",
+   "Above 60 the camera is smoother, but characters may judder.": "Über 60 läuft die Kamera flüssiger, aber Figuren können ruckeln."
   },
   "it": {
    "Polish": "Polacco",
@@ -3881,7 +3886,8 @@
    "Items and corner: in-game menu > Overlay.": "Elementi e angolo: menu di gioco > Overlay.",
    "Saved as PNG in the screenshots folder.": "Salvato come PNG nella cartella degli screenshot.",
    "Use it if graphics look wrong after an update.": "Usalo se la grafica appare errata dopo un aggiornamento.",
-   "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "La smussatura del gioco; Automatico la spegne su AMD e Intel in Windows."
+   "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "La smussatura del gioco; Automatico la spegne su AMD e Intel in Windows.",
+   "Above 60 the camera is smoother, but characters may judder.": "Sopra 60 la telecamera è più fluida, ma i personaggi possono tremolare."
   },
   "tr": {
    "Polish": "Lehçe",
@@ -3975,7 +3981,8 @@
    "Items and corner: in-game menu > Overlay.": "Öğeler ve köşe: oyun içi menü > Overlay.",
    "Saved as PNG in the screenshots folder.": "Ekran görüntüleri klasörüne PNG olarak kaydedilir.",
    "Use it if graphics look wrong after an update.": "Bir güncellemeden sonra grafikler bozuk görünürse kullanın.",
-   "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "Oyunun kendi yumuşatması; Otomatik, Windows'ta AMD ve Intel'de kapatır."
+   "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "Oyunun kendi yumuşatması; Otomatik, Windows'ta AMD ve Intel'de kapatır.",
+   "Above 60 the camera is smoother, but characters may judder.": "60'ın üzerinde kamera daha akıcıdır, ancak karakterler titreyebilir."
   },
   "ar": {
    "Polish": "البولندية",
@@ -4068,7 +4075,8 @@
    "Items and corner: in-game menu > Overlay.": "العناصر والزاوية: قائمة اللعبة > Overlay.",
    "Saved as PNG in the screenshots folder.": "يُحفظ بصيغة PNG في مجلد لقطات الشاشة.",
    "Use it if graphics look wrong after an update.": "استخدمه إن بدت الرسوميات خاطئة بعد تحديث.",
-   "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "التنعيم الأصلي للعبة؛ الوضع التلقائي يوقفه على AMD وIntel في Windows."
+   "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "التنعيم الأصلي للعبة؛ الوضع التلقائي يوقفه على AMD وIntel في Windows.",
+   "Above 60 the camera is smoother, but characters may judder.": "فوق 60 تصبح الكاميرا أكثر سلاسة، لكن قد ترتجف الشخصيات."
   },
   "zh": {
    "Polish": "波兰语",
@@ -4552,7 +4560,8 @@
    "Items and corner: in-game menu > Overlay.": "项目和位置：游戏内菜单 > Overlay。",
    "Saved as PNG in the screenshots folder.": "以 PNG 保存在截图文件夹。",
    "Use it if graphics look wrong after an update.": "更新后画面异常时使用。",
-   "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "游戏自带的平滑；“自动”在 Windows 的 AMD 和 Intel 上关闭它。"
+   "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "游戏自带的平滑；“自动”在 Windows 的 AMD 和 Intel 上关闭它。",
+   "Above 60 the camera is smoother, but characters may judder.": "高于 60 时镜头更流畅，但角色可能会抖动。"
   },
   "ja": {
    "Polish": "ポーランド語",
@@ -4646,7 +4655,8 @@
    "Items and corner: in-game menu > Overlay.": "項目と位置：ゲーム内メニュー > Overlay。",
    "Saved as PNG in the screenshots folder.": "スクリーンショットフォルダーに PNG で保存。",
    "Use it if graphics look wrong after an update.": "更新後に表示がおかしいときに使います。",
-   "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "ゲーム本来の平滑化。自動では Windows の AMD・Intel でオフ。"
+   "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "ゲーム本来の平滑化。自動では Windows の AMD・Intel でオフ。",
+   "Above 60 the camera is smoother, but characters may judder.": "60 を超えるとカメラは滑らかになりますが、キャラクターがカクつくことがあります。"
   },
   "ko": {
    "Polish": "폴란드어",
@@ -4740,7 +4750,8 @@
    "Items and corner: in-game menu > Overlay.": "항목과 위치: 게임 내 메뉴 > Overlay.",
    "Saved as PNG in the screenshots folder.": "스크린샷 폴더에 PNG로 저장됩니다.",
    "Use it if graphics look wrong after an update.": "업데이트 후 그래픽이 이상하면 사용하세요.",
-   "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "게임 자체 다듬기입니다. 자동은 Windows의 AMD·Intel에서 끕니다."
+   "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "게임 자체 다듬기입니다. 자동은 Windows의 AMD·Intel에서 끕니다.",
+   "Above 60 the camera is smoother, but characters may judder.": "60을 넘으면 카메라는 더 부드럽지만 캐릭터가 떨릴 수 있습니다."
   },
   "id": {
    "Polish": "Polandia",
@@ -5136,7 +5147,8 @@
    "Items and corner: in-game menu > Overlay.": "Item dan sudut: menu dalam game > Overlay.",
    "Saved as PNG in the screenshots folder.": "Disimpan sebagai PNG di folder tangkapan layar.",
    "Use it if graphics look wrong after an update.": "Gunakan jika grafis tampak salah setelah pembaruan.",
-   "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "Penghalusan bawaan game; Otomatis mematikannya di AMD dan Intel pada Windows."
+   "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "Penghalusan bawaan game; Otomatis mematikannya di AMD dan Intel pada Windows.",
+   "Above 60 the camera is smoother, but characters may judder.": "Di atas 60 kamera lebih mulus, tetapi karakter bisa tersendat."
   },
   "cs": {
    "Trophies": "Trofeje",
@@ -5591,7 +5603,8 @@
    "Items and corner: in-game menu > Overlay.": "Položky a roh: herní menu > Overlay.",
    "Saved as PNG in the screenshots folder.": "Uloží se jako PNG do složky snímků.",
    "Use it if graphics look wrong after an update.": "Použijte, pokud grafika po aktualizaci vypadá špatně.",
-   "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "Vlastní vyhlazování hry; Automaticky ho vypne na AMD a Intel ve Windows."
+   "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "Vlastní vyhlazování hry; Automaticky ho vypne na AMD a Intel ve Windows.",
+   "Above 60 the camera is smoother, but characters may judder.": "Nad 60 je kamera plynulejší, ale postavy se mohou trhat."
   }
  },
  "ru": {
@@ -6058,7 +6071,8 @@
   "Items and corner: in-game menu > Overlay.": "Элементы и угол: игровое меню > Overlay.",
   "Saved as PNG in the screenshots folder.": "Сохраняется в PNG в папку скриншотов.",
   "Use it if graphics look wrong after an update.": "Используйте, если после обновления графика выглядит неправильно.",
-  "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "Собственное сглаживание игры; «Авто» выключает его на AMD и Intel в Windows."
+  "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "Собственное сглаживание игры; «Авто» выключает его на AMD и Intel в Windows.",
+  "Above 60 the camera is smoother, but characters may judder.": "Выше 60 камера плавнее, но персонажи могут дёргаться."
  },
  "windows_languages": {
   "25": "ru",

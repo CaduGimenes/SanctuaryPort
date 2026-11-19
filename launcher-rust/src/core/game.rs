@@ -124,6 +124,19 @@ fn strip_marks(title: &str) -> String {
 pub struct GameFolder {
     values: IndexMap<String, SfoValue>,
     has_eboot: bool,
+    /// The version the `eboot.bin` itself is, when its size is a known Diablo III build.
+    eboot_version: Option<&'static str>,
+}
+
+/// SanctuaryPort: Diablo III's eboot.bin sizes and the version they are. The builds are the same in
+/// every region (1.00: sha256 2696c9a4... in CUSA00242 and CUSA00243; 1.47: 680387c8... in
+/// CUSA00243 and CUSA00434). A 1.47 update copied over the base game keeps the base's
+/// param.sfo (APP_VER 01.00), so the eboot tells the version then (GitHub #30).
+const DIABLO_EBOOT_SIZES: [(u64, &str); 2] = [(19_773_126, "01.00"), (22_646_255, "01.47")];
+
+fn eboot_version(eboot: &Path) -> Option<&'static str> {
+    let size = std::fs::metadata(eboot).ok()?.len();
+    DIABLO_EBOOT_SIZES.iter().find(|(s, _)| *s == size).map(|(_, v)| *v)
 }
 
 impl GameFolder {
@@ -138,9 +151,11 @@ impl GameFolder {
         } else {
             p
         };
+        let eboot = root.join("eboot.bin");
         GameFolder {
             values,
-            has_eboot: root.join("eboot.bin").is_file(),
+            has_eboot: eboot.is_file(),
+            eboot_version: eboot_version(&eboot),
         }
     }
 
@@ -155,9 +170,15 @@ impl GameFolder {
         self.text("TITLE_ID")
     }
 
-    /// `APP_VER` ("01.02").
+    /// `APP_VER` ("01.02"); a known eboot that is newer than it wins (an update copied over the
+    /// base game).
     pub fn app_version(&self) -> Option<&str> {
-        self.text("APP_VER")
+        let sfo = self.text("APP_VER");
+        match (sfo, self.eboot_version) {
+            (Some(sfo), Some(eboot)) if eboot > sfo => Some(eboot),
+            (None, Some(eboot)) => Some(eboot),
+            _ => sfo,
+        }
     }
 
     /// The patch profile, by the title ID or the title: any region and version of a known game.
@@ -173,7 +194,7 @@ impl GameFolder {
         let title = self.text("TITLE").unwrap_or(APP_NAME);
         Some(GameInfo {
             title: strip_marks(title).trim().to_string(),
-            version: self.text("APP_VER").unwrap_or("?").to_string(),
+            version: self.app_version().unwrap_or("?").to_string(),
         })
     }
 
@@ -487,6 +508,23 @@ mod tests {
             missing_game_files(dir.path(), REQUIRED_GAME_FILES),
             vec![("sce_sys/param.sfo".to_string(), FileState::Invalid)]
         );
+    }
+
+    #[test]
+    fn an_update_copied_over_the_base_is_its_eboots_version() {
+        // GitHub #30: the 1.47 eboot over a base whose param.sfo still says 01.00.
+        let dir = tempfile::tempdir().unwrap();
+        let eboot = fs::File::create(dir.path().join("eboot.bin")).unwrap();
+        eboot.set_len(22_646_255).unwrap();
+        put(dir.path(), "sce_sys/param.sfo", &sfo(&[("TITLE_ID", "CUSA00434"), ("APP_VER", "01.00")]));
+        let folder = GameFolder::read(dir.path());
+        assert_eq!(folder.app_version(), Some("01.47"));
+        assert_eq!(folder.info().map(|info| info.version), Some("01.47".into()));
+        // A real 1.00 eboot, or an eboot of an unknown size, keeps param.sfo's version.
+        eboot.set_len(19_773_126).unwrap();
+        assert_eq!(GameFolder::read(dir.path()).app_version(), Some("01.00"));
+        eboot.set_len(5).unwrap();
+        assert_eq!(GameFolder::read(dir.path()).app_version(), Some("01.00"));
     }
 
     #[test]

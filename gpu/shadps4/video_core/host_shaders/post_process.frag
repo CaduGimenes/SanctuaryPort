@@ -39,7 +39,22 @@ void main() {
         color = vec4(0.0, 0.0, 0.0, 1.0);
         return;
     }
-    vec4 color_linear = texture(texSampler, uv);
+    // sanctuary: a picture larger than the window (4K on a 1080p screen) is averaged over each
+    // window pixel's footprint: four bilinear taps a quarter footprint from its centre, so every
+    // source texel counts up to 4 texels per pixel and axis. One tap read only the 2x2 texels
+    // around the centre, which drops texels at any ratio but exactly 2:1 (aliasing, shimmer).
+    // At exactly 2:1 the four taps land on texel centres: the same 2x2 average as one tap.
+    const vec2 step_uv = vec2(dFdx(uv.x), dFdy(uv.y));
+    vec4 color_linear;
+    if (any(greaterThan(abs(step_uv) * vec2(textureSize(texSampler, 0)), vec2(1.01)))) {
+        const vec2 q = 0.25 * step_uv;
+        color_linear = 0.25 * (texture(texSampler, uv + vec2(-q.x, -q.y)) +
+                               texture(texSampler, uv + vec2(q.x, -q.y)) +
+                               texture(texSampler, uv + vec2(-q.x, q.y)) +
+                               texture(texSampler, uv + vec2(q.x, q.y)));
+    } else {
+        color_linear = texture(texSampler, uv);
+    }
     if (pp.hdr) {
         color = color_linear;
     } else {

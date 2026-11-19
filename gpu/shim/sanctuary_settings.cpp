@@ -6,6 +6,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <filesystem>
+#include <fstream>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -262,13 +264,59 @@ bool ResolutionNeedsRestart() {
          (v.upscaler == UpscalerTaa) != (v.startup_upscaler == UpscalerTaa));
 }
 
+// The lines of `path` that hold a key (`key=value`), whole whatever their length.
+static std::vector<std::string> KeyLines(const std::string& path) {
+    std::vector<std::string> lines;
+    std::ifstream in(path);
+    for (std::string line; std::getline(in, line);) {
+        if (!line.empty() && line.back() == '\r') line.pop_back();
+        if (!line.empty() && line[0] != '#' && line.find('=') != std::string::npos) lines.push_back(line);
+    }
+    return lines;
+}
+
+static std::string KeyOf(const std::string& line) {
+    return line.substr(0, line.find('='));
+}
+
+// sanctuary: the file holds the launcher's keys too (frame_rate, vertical_sync, dynamic_resolution,
+// glyph_style, frame_stats, unlock_cosmetics...), which this menu does not know. They are kept: the
+// menu's keys are written to a new file, the other lines of the old one follow, and the new file
+// replaces the old in one rename, so a crash midway leaves the old file whole (GitHub PR #40, by
+// thanosdk28: a save from the menu dropped them, and 120 FPS or V-Sync were gone next start).
+static void SaveOwnKeys(FILE* file);
+
 void Save() {
-    const auto& v = Get();
-    FILE* file = std::fopen(Path(), "w");
+    const std::string path = Path();
+    const std::string fresh = path + ".new";
+    const std::vector<std::string> previous = KeyLines(path);
+    FILE* file = std::fopen(fresh.c_str(), "w");
     if (!file) {
-        std::printf("Settings: cannot write %s\n", Path());
+        std::printf("Settings: cannot write %s\n", fresh.c_str());
         return;
     }
+    SaveOwnKeys(file);
+    std::fclose(file);
+    std::vector<std::string> written;
+    for (const std::string& line : KeyLines(fresh)) written.push_back(KeyOf(line));
+    if (FILE* append = std::fopen(fresh.c_str(), "a")) {
+        for (const std::string& line : previous) {
+            if (std::find(written.begin(), written.end(), KeyOf(line)) == written.end()) {
+                std::fprintf(append, "%s\n", line.c_str());
+            }
+        }
+        std::fclose(append);
+    }
+    std::error_code error;
+    std::filesystem::rename(fresh, path, error);
+    if (error) {
+        std::printf("Settings: cannot replace %s: %s\n", path.c_str(), error.message().c_str());
+        std::filesystem::remove(fresh, error);
+    }
+}
+
+static void SaveOwnKeys(FILE* file) {
+    const auto& v = Get();
     std::fprintf(file,
                  "# sanctuary settings (in-game menu: Insert / R3+L2)\n"
                  "temporal_aa=%s\npreset=%d\nsharpen=%d\nsharpness=%.2f\njitter=%d\n"
@@ -309,7 +357,6 @@ void Save() {
     // Read by run.sh at start.
     std::fprintf(file, "live_resolution=%s\n", v.live_resolution < 0 ? "auto"
                                                   : v.live_resolution ? "1" : "0");
-    std::fclose(file);
 }
 
 float PresetScale(int preset) {

@@ -1,16 +1,40 @@
 #!/usr/bin/env bash
-# AppImage entry point: starts the SanctuaryPort launcher. PLAY runs run.sh from the image with the
-# prebuilt runtime; --play starts the game with the saved settings, without the window (Steam,
-# shortcuts). Saves, settings and the prepared game go to SANCTUARY_DATA_DIR.
-# Usage: SanctuaryPort-linux-x86_64.AppImage [--play]
+# Entry point of the AppImage and of the Linux tarball: starts the SanctuaryPort launcher. PLAY runs
+# run.sh from the image with the prebuilt runtime; --play starts the game with the saved settings,
+# without the window (Steam, shortcuts). Saves, settings and the prepared game go to
+# SANCTUARY_DATA_DIR, chosen in this order:
+#   --data-dir DIR (the launcher reads it), or SANCTUARY_DATA_DIR from the environment;
+#   a SanctuaryPort-data folder next to the AppImage (portable mode: create the folder to use it);
+#   the tarball keeps everything in its own folder, in SanctuaryPort-data (portable by default);
+#   else ~/.local/share/sanctuaryport (the AppImage's default since 0.1).
+# Usage: SanctuaryPort-linux-x86_64.AppImage [--play] [--data-dir DIR] [--help for every option]
 set -euo pipefail
 here=$(dirname -- "$(readlink -f -- "$0")")
 share=$here/usr/share/sanctuary
 
 export LD_LIBRARY_PATH="$here/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
-export SANCTUARY_DATA_DIR=${SANCTUARY_DATA_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/sanctuaryport}
+if [[ -z ${SANCTUARY_DATA_DIR:-} ]]; then
+    if [[ -n ${APPIMAGE:-} ]]; then
+        beside=$(dirname -- "$APPIMAGE")/SanctuaryPort-data
+        if [[ -d $beside ]]; then
+            SANCTUARY_DATA_DIR=$beside
+        else
+            SANCTUARY_DATA_DIR=${XDG_DATA_HOME:-$HOME/.local/share}/sanctuaryport
+        fi
+    else
+        SANCTUARY_DATA_DIR=$here/SanctuaryPort-data
+    fi
+fi
+export SANCTUARY_DATA_DIR
 export SANCTUARY_PREBUILT=1
-mkdir -p "$SANCTUARY_DATA_DIR"
+# Folders on the command line are made absolute here: the launcher starts in the image's folder.
+args=() custom_dir=0 next_is_dir=0
+for arg in "$@"; do
+    if ((next_is_dir)); then arg=$(realpath -m -- "$arg"); next_is_dir=0; fi
+    case $arg in --data-dir) custom_dir=1 next_is_dir=1 ;; --game|--update) next_is_dir=1 ;; esac
+    args+=("$arg")
+done
+((custom_dir)) || mkdir -p "$SANCTUARY_DATA_DIR"
 
 cd -- "$share"
-exec "$share/sanctuaryport-launcher" "$@"
+exec "$share/sanctuaryport-launcher" "${args[@]}"

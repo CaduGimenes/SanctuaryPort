@@ -64,8 +64,10 @@ fn get(
 
 /// One GET of the list (Accept `application/vnd.github+json`, global timeout 15 s), then `parse_releases`.
 pub fn list_releases(windows: bool) -> Result<Vec<release::Release>, UpdateError> {
+    // SANCTUARY_RELEASES_API: another list (a test server), to try an update before publishing it.
+    let api = std::env::var("SANCTUARY_RELEASES_API").unwrap_or_else(|_| RELEASES_API.to_string());
     let (mut reader, _) = get(
-        RELEASES_API,
+        &api,
         Some("application/vnd.github+json"),
         Some(Duration::from_secs(15)),
     )?;
@@ -189,7 +191,7 @@ pub fn can_self_update(env: &dyn Fn(&str) -> Option<String>, windows: bool) -> b
 }
 
 pub fn update_dir() -> PathBuf {
-    std::env::temp_dir().join("spartanport-update")
+    std::env::temp_dir().join("sanctuaryport-update")
 }
 
 /// Downloads the AppImage beside `target`, checks it against the release checksum and swaps it
@@ -648,7 +650,7 @@ mod tests {
     fn the_update_folder_is_under_the_temp_folder() {
         assert_eq!(
             update_dir(),
-            std::env::temp_dir().join("spartanport-update")
+            std::env::temp_dir().join("sanctuaryport-update")
         );
     }
 

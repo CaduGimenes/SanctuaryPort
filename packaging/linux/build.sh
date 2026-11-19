@@ -105,3 +105,10 @@ mkdir -p dist
 ARCH=x86_64 "$tool" --appimage-extract-and-run "$appdir" dist/SanctuaryPort-linux-x86_64.AppImage.new
 mv -f dist/SanctuaryPort-linux-x86_64.AppImage.new dist/SanctuaryPort-linux-x86_64.AppImage
 ls -lh dist/SanctuaryPort-linux-x86_64.AppImage
+# The same folder as a tarball (RecompLauncher and Flatpak sandboxes install it without extracting
+# an AppImage). It is portable: AppRun keeps the data in SanctuaryPort-data beside itself.
+# A SanctuaryPort link to AppRun is the entry point.
+ln -sfn AppRun "$appdir/SanctuaryPort"
+tar -C "$(dirname -- "$appdir")" --transform "s,^$(basename -- "$appdir"),SanctuaryPort-linux-x86_64," \
+    -czf dist/SanctuaryPort-linux-x86_64.tar.gz "$(basename -- "$appdir")"
+ls -lh dist/SanctuaryPort-linux-x86_64.tar.gz

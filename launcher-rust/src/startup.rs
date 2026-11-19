@@ -287,3 +287,92 @@ fn runs_from_update_dir(port_dir: &Path) -> bool {
     let update = update.canonicalize().unwrap_or(update);
     port != update && port.starts_with(&update)
 }
+
+/// SanctuaryPort: the command-line options, for `--help` and the README.
+pub const USAGE: &str = "\
+Usage: SanctuaryPort [options]
+  (no option)            open the launcher
+  --play                 start the game with the saved settings, without the launcher window
+  --game DIR             the game folder (with eboot.bin), for this start
+  --update DIR           the update folder, for this start
+  --data-dir DIR         keep settings, saves and generated files in DIR
+  --fullscreen | --borderless | --windowed
+                         the display mode (saved, as the Graphics page does)
+  --set KEY=VALUE        any sanctuary.ini setting, e.g. --set frame_rate=120 (saved; repeatable)
+  --install-pkg PKG DIR  install a game, update or add-on PKG into the games folder DIR
+  --version              print the version
+  --help                 this text";
+
+/// The `sanctuary.ini` edits the command line asks for: `--set key=value` (repeatable) and the
+/// display mode switches. A key the ini does not have is an error, so a typo is not saved.
+pub fn cli_ini_edits<S: AsRef<OsStr>>(args: &[S]) -> Result<IndexMap<String, String>, String> {
+    let known = |key: &str| crate::core::ini::INI_DEFAULTS.iter().any(|(k, _)| *k == key);
+    let mut edits = IndexMap::new();
+    let mut i = 0;
+    while i < args.len() {
+        let arg = args[i].as_ref().to_string_lossy();
+        match arg.as_ref() {
+            "--fullscreen" | "--borderless" | "--windowed" => {
+                edits.insert("display_mode".to_string(), arg[2..].to_string());
+            }
+            "--set" => {
+                let pair = args
+                    .get(i + 1)
+                    .map(|a| a.as_ref().to_string_lossy().into_owned())
+                    .ok_or("--set needs KEY=VALUE")?;
+                let (key, value) = pair
+                    .split_once('=')
+                    .ok_or_else(|| format!("--set {pair}: expected KEY=VALUE"))?;
+                let key = key.trim();
+                if !known(key) {
+                    return Err(format!("--set {key}: not a sanctuary.ini setting"));
+                }
+                edits.insert(key.to_string(), value.trim().to_string());
+                i += 1;
+            }
+            _ => {}
+        }
+        i += 1;
+    }
+    Ok(edits)
+}
+
+/// Writes `edits` into the ini at `path`, keeping its other lines.
+pub fn apply_ini_edits(path: &Path, edits: &IndexMap<String, String>) -> std::io::Result<()> {
+    if edits.is_empty() {
+        return Ok(());
+    }
+    let ini = crate::core::ini::load_ini(path);
+    crate::core::ini::save_ini(path, edits, &ini.lines)
+}
+
+/// `--data-dir DIR`, made absolute.
+pub fn cli_data_dir<S: AsRef<OsStr>>(args: &[S]) -> Option<PathBuf> {
+    let dir = option_value(args, "--data-dir")?;
+    Some(std::path::absolute(&dir).unwrap_or_else(|_| PathBuf::from(dir)))
+}
+
+#[cfg(test)]
+mod cli_tests {
+    use super::*;
+
+    #[test]
+    fn the_command_line_edits_the_ini() {
+        let args = ["--play", "--fullscreen", "--set", "frame_rate=120", "--set", "vertical_sync=1"];
+        let edits = cli_ini_edits(&args).unwrap();
+        assert_eq!(edits["display_mode"], "fullscreen");
+        assert_eq!(edits["frame_rate"], "120");
+        assert_eq!(edits["vertical_sync"], "1");
+        assert!(cli_ini_edits(&["--set", "frame_rat=120"]).unwrap_err().contains("frame_rat"));
+        assert!(cli_ini_edits(&["--set"]).is_err());
+        assert!(cli_ini_edits(&["--set", "novalue"]).is_err());
+        let dir = tempfile::tempdir().unwrap();
+        let ini = dir.path().join("sanctuary.ini");
+        std::fs::write(&ini, "# mine\nframe_rate=60\nfxaa=1\n").unwrap();
+        apply_ini_edits(&ini, &edits).unwrap();
+        let text = std::fs::read_to_string(&ini).unwrap();
+        assert!(text.starts_with("# mine\nframe_rate=120\nfxaa=1\n"));
+        assert!(text.contains("display_mode=fullscreen") && text.contains("vertical_sync=1"));
+        assert_eq!(cli_data_dir(&["--data-dir", "/tmp/x"]), Some(PathBuf::from("/tmp/x")));
+    }
+}

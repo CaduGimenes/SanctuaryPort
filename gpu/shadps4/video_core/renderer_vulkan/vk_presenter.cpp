@@ -556,7 +556,14 @@ Frame* Presenter::PrepareFrame(const Libraries::VideoOut::BufferAttributeGroup& 
     // as raw 32-bit pixels (menus and movies included; the upscaler dumps scene frames only).
     static const char* frame_dump_trigger = std::getenv("SANCTUARY_FRAME_DUMP_TRIGGER");
     static int frame_dump_index = 0;
-    const bool frame_dump = frame_dump_trigger && std::remove(frame_dump_trigger) == 0;
+    // SANCTUARY_FRAME_DUMP_COUNT=<n>: a trigger dumps n frames in a row (motion studies).
+    static const int frame_dump_count = std::max(1, std::atoi(std::getenv("SANCTUARY_FRAME_DUMP_COUNT")
+                                                                  ? std::getenv("SANCTUARY_FRAME_DUMP_COUNT")
+                                                                  : "1"));
+    static int frame_dump_left = 0;
+    if (frame_dump_trigger && std::remove(frame_dump_trigger) == 0) frame_dump_left = frame_dump_count;
+    const bool frame_dump = frame_dump_left > 0;
+    if (frame_dump) --frame_dump_left;
     // sanctuary: scaled upscaler presets: the output-size display buffer drawn by the port.
     TemporalUpscaler::Display display{};
     const bool upscaled = rasterizer->GetUpscaler().DisplayOverride(cpu_address, display);
