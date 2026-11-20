@@ -1,7 +1,8 @@
 //! The offline season rules: which community events come with a season, and the season rotation.
 //!
-//! Every "Offline Seasons - Season N" patch already carries that season's own community event, the
-//! Altar of Rites, Visions of Enmity and the Season Journey. A few seasons (22, 33, 38, 39, 40) have
+//! Every "Offline Seasons - Season N" patch already carries that season's own community event and the
+//! Season Journey, plus the Altar of Rites from Season 28 and Visions of Enmity from Season 29, as
+//! Blizzard added them. A few seasons (22, 33, 38, 39, 40) have
 //! a theme the patch itself does not switch on; `THEME_GAPS` names the "Event: ..." patches that do
 //! (Maxroll "Season Theme History" and d3resource.com/seasons).
 
