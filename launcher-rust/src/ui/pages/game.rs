@@ -17,7 +17,8 @@ use crate::core::patches::{builtin_xml, game_patch_metas, selectable, PatchMeta}
 use crate::core::save_backup::{list_backups, restore, KEEP};
 use crate::core::save_restore;
 use crate::core::seasons::{
-    apply_mode, days_left, rotated_season, today, SeasonMode, EVENT_PREFIX, SEASON_PREFIX,
+    apply_mode, apply_tristram, days_left, event_window, rotated_season, today, SeasonMode, Window, EVENT_PREFIX,
+    SEASON_PREFIX, TRISTRAM_PATCH,
 };
 use crate::core::settings::mark_default_patches_offered;
 use crate::ui::app::{Message, State};
@@ -540,7 +541,7 @@ pub fn seasons_view(state: &State) -> Element<'_, Message> {
         .patches
         .selectable
         .iter()
-        .filter(|m| m.name.starts_with(EVENT_PREFIX))
+        .filter(|m| m.name.starts_with(EVENT_PREFIX) && m.name != TRISTRAM_PATCH)
         .filter(|_| manual)
         .collect();
     if !events.is_empty() {
@@ -559,7 +560,68 @@ pub fn seasons_view(state: &State) -> Element<'_, Message> {
             ));
         }
     }
+    // The anniversary event is no season's: its own check box and the days it is open.
+    if state.patches.selectable.iter().any(|m| m.name == TRISTRAM_PATCH) {
+        page = page
+            .push(section(state.rtl, &tr(lang, "The Darkening of Tristram")))
+            .push(checkbox(
+                state.rtl,
+                "tristram_on",
+                &tr(lang, "Open the portal to Old Tristram"),
+                state.store.flag("tristram_on"),
+                Some(&tr(lang, TRISTRAM_HINT)),
+            ))
+            .push(date_row(state, "tristram_start", "First day", None))
+            .push(date_row(state, "tristram_end", "Last day", Some(tristram_status(state))));
+    }
     page.spacing(2).into()
+}
+
+/// The note under the Tristram check box; the translation tables key on this text.
+const TRISTRAM_HINT: &str = "The Diablo 1 dungeon of the yearly anniversary event: a portal near the fountain of the Old Ruins of Tristram, in Adventure Mode. Checked when you press PLAY: it is on only from the first to the last day below. Leave both empty for always.";
+
+const TRISTRAM_DATE_NOTE: &str = "Year-month-day, like 2027-01-03. Empty: no limit.";
+
+/// A `YYYY-MM-DD` box of the Tristram dates.
+fn date_row<'a>(
+    state: &'a State,
+    key: &'static str,
+    label: &str,
+    status: Option<String>,
+) -> Element<'a, Message> {
+    let lang = state.lang.as_str();
+    let note = match status {
+        Some(status) => format!("{} {status}", tr(lang, TRISTRAM_DATE_NOTE)),
+        None => tr(lang, TRISTRAM_DATE_NOTE),
+    };
+    row(
+        state.rtl,
+        &tr(lang, label),
+        text_input("YYYY-MM-DD", &state.store.text(key))
+            .on_input(move |date| Message::Set(key.to_string(), Value::String(date)))
+            .padding([6, 10])
+            .width(SELECT_MIN)
+            .style(theme::text_input_dark)
+            .into(),
+        Some(&note),
+    )
+}
+
+/// What the dates say about today, in words.
+fn tristram_status(state: &State) -> String {
+    let lang = state.lang.as_str();
+    if !state.store.flag("tristram_on") {
+        return tr(lang, "The portal is off.");
+    }
+    match event_window(
+        &state.store.text("tristram_start"),
+        &state.store.text("tristram_end"),
+        today(),
+    ) {
+        Window::Open => tr(lang, "Open today."),
+        Window::Closed => tr(lang, "Closed today: it is outside these days."),
+        Window::Invalid => tr(lang, "A date is not year-month-day: the portal stays off."),
+    }
 }
 
 /// Picks the offline season: unticks every season patch, then ticks the chosen one. With the
@@ -724,6 +786,15 @@ pub fn apply_season_rules(state: &mut State) {
     let mode = SeasonMode::from_key(&state.store.text("season_mode"));
     let season = current_season(&state.patches.chosen);
     apply_mode(&mut state.patches.chosen, &available, mode, season);
+    // The Darkening of Tristram: on only while today is inside its own dates.
+    apply_tristram(
+        &mut state.patches.chosen,
+        &available,
+        state.store.flag("tristram_on"),
+        &state.store.text("tristram_start"),
+        &state.store.text("tristram_end"),
+        today(),
+    );
     store_game_patches(state);
 }
 

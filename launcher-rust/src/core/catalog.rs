@@ -302,6 +302,11 @@ pub static SETTINGS: &[Setting] = &[
     app("season_mode", Kind::Text, Text("manual"), None),
     app("season_rotate", Flag, Bool(false), None),
     app("season_rotate_start", Kind::Text, Text(""), None),
+    // SanctuaryPort: Seasons > The Darkening of Tristram: the check box and the first and last day
+    // it is open ("YYYY-MM-DD", empty = no limit on that side).
+    app("tristram_on", Flag, Bool(false), None),
+    app("tristram_start", Kind::Text, Text(""), None),
+    app("tristram_end", Kind::Text, Text(""), None),
     app("controls", Json, Object, None),
     app("pad_style", Kind::Text, Text("playstation"), None),
     app("controls_layout", Kind::Int, Int(5), None),

@@ -39,6 +39,9 @@
   "season_mode": "manual",
   "season_rotate": false,
   "season_rotate_start": "",
+  "tristram_on": false,
+  "tristram_start": "",
+  "tristram_end": "",
   "controls": {
     "key": {
       "cross": "Space"
