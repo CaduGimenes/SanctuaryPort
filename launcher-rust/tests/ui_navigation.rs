@@ -31,10 +31,11 @@ use sanctuaryport_launcher::ui::widgets;
 use sanctuaryport_launcher::ui::widgets::modal::{Modal, ModalKind, ModalMessage};
 
 /// The page order of the Global Constraints (SanctuaryPort: the log has no tab).
-const ORDER: [Page; 6] = [
+const ORDER: [Page; 7] = [
     Page::Home,
     Page::Graphics,
     Page::Game,
+    Page::Seasons,
     Page::Trophies,
     Page::Controls,
     Page::Advanced,
@@ -401,12 +402,16 @@ fn a_red_hairline_tops_the_bar_and_edges_the_drawer() {
 }
 
 /// The drawer subtitles of the mockup (`launcher-mockup-v13.html`), without its sample counts.
-const SUBTITLES: [(Page, &str); 6] = [
+const SUBTITLES: [(Page, &str); 7] = [
     (
         Page::Graphics,
         "↻ applies on the next start. The others also change in game (Insert or R3+L2).",
     ),
     (Page::Game, "Your game dump, saves and language."),
+    (
+        Page::Seasons,
+        "The offline season, its events and the 15 day rotation.",
+    ),
     (
         Page::Trophies,
         "The trophies this port recorded while you played.",

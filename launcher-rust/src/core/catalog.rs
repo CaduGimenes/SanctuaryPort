@@ -297,6 +297,11 @@ pub static SETTINGS: &[Setting] = &[
     // Derived, not 1:1: `env.rs` builds SANCTUARY_PATCHES and SANCTUARY_KEY_MAP / SANCTUARY_PAD_MAP
     // from the content of these two, so they carry no `env`.
     app("game_patches", Json, Object, None),
+    // SanctuaryPort: Game > Offline seasons: how the events follow the season ("manual", "season",
+    // "full") and the 15 day rotation ("<first season>:<day it started>", days since 1970).
+    app("season_mode", Kind::Text, Text("manual"), None),
+    app("season_rotate", Flag, Bool(false), None),
+    app("season_rotate_start", Kind::Text, Text(""), None),
     app("controls", Json, Object, None),
     app("pad_style", Kind::Text, Text("playstation"), None),
     app("controls_layout", Kind::Int, Int(5), None),

@@ -23,6 +23,7 @@ pub enum Page {
     Home,
     Graphics,
     Game,
+    Seasons,
     Trophies,
     Controls,
     Advanced,
@@ -34,10 +35,11 @@ pub enum Page {
 
 impl Page {
     /// Tab order, which is also the order of the arrow keys.
-    pub const ALL: [Page; 6] = [
+    pub const ALL: [Page; 7] = [
         Page::Home,
         Page::Graphics,
         Page::Game,
+        Page::Seasons,
         Page::Trophies,
         Page::Controls,
         Page::Advanced,
@@ -49,6 +51,7 @@ impl Page {
             Page::Home => "Home",
             Page::Graphics => "Graphics",
             Page::Game => "Game",
+            Page::Seasons => "Seasons",
             Page::Trophies => "Trophies",
             Page::Controls => "Controls",
             Page::Advanced => "Advanced",
@@ -66,6 +69,7 @@ impl Page {
                 "↻ applies on the next start. The others also change in game (Insert or R3+L2)."
             }
             Page::Game => "Your game dump, saves and language.",
+            Page::Seasons => "The offline season, its events and the 15 day rotation.",
             Page::Trophies => "The trophies this port recorded while you played.",
             Page::Controls => "Keyboard, mouse and gamepad mapping.",
             Page::Advanced => "Launcher options, system tools and the log of the last start.",
@@ -120,6 +124,7 @@ pub fn view(state: &State, page: Page) -> Element<'_, Message> {
         Page::Home => text("…").into(),
         Page::Graphics => graphics::view(state),
         Page::Game => game::view(state),
+        Page::Seasons => game::seasons_view(state),
         Page::Trophies => trophies::view(state),
         Page::Controls => controls::view(state),
         Page::Advanced => advanced::view(state),

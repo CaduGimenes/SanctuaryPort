@@ -16,6 +16,9 @@ use crate::core::options::LANGUAGES;
 use crate::core::patches::{builtin_xml, game_patch_metas, selectable, PatchMeta};
 use crate::core::save_backup::{list_backups, restore, KEEP};
 use crate::core::save_restore;
+use crate::core::seasons::{
+    apply_mode, days_left, rotated_season, today, SeasonMode, EVENT_PREFIX, SEASON_PREFIX,
+};
 use crate::core::settings::mark_default_patches_offered;
 use crate::ui::app::{Message, State};
 use crate::ui::follow::{follow, Cause};
@@ -254,6 +257,7 @@ pub(crate) fn refresh_game_patches(state: &mut State) {
             .map(|name| name.to_string_lossy().into_owned())
             .unwrap_or_default(),
     };
+    apply_season_rules(state);
 }
 
 /// Ticks or unticks a patch.
@@ -370,7 +374,7 @@ pub fn view(state: &State) -> Element<'_, Message> {
     let default_saves = state.paths.user_dir("").display().to_string();
     // The Python marks a row that needs a new start of the game with a small `restart` note.
 
-    let mut page = column![
+    let page = column![
         install_section(state),
         section(state.rtl, &tr(lang, "Folders")),
         folder_row(
@@ -432,43 +436,8 @@ pub fn view(state: &State) -> Element<'_, Message> {
         // No patches or audio settings here: Diablo III keeps its volume in its own options, and
         // its render resolution patches follow the Graphics page.
     ];
-    // The offline season, when the patch file has "Offline Seasons - Season N" entries.
-    if state.patches.selectable.iter().any(|m| m.name.starts_with(SEASON_PREFIX)) {
-        page = page
-            .push(section(state.rtl, &tr(lang, "Offline seasons")))
-            .push(season_row(state));
-    }
-    // The offline community events ("Event: ..." patches), one check box each.
-    let events: Vec<&PatchMeta> = state
-        .patches
-        .selectable
-        .iter()
-        .filter(|m| m.name.starts_with(EVENT_PREFIX))
-        .collect();
-    if !events.is_empty() {
-        page = page.push(section(state.rtl, &tr(lang, "Offline events")));
-        for (i, meta) in events.iter().enumerate() {
-            let name = meta.name.clone();
-            let label = name.strip_prefix(EVENT_PREFIX).unwrap_or(&name).to_string();
-            let checked = state.patches.chosen.contains(&name);
-            let hint = (i == 0).then(|| tr(lang, OFFLINE_EVENTS_HINT));
-            page = page.push(toggle_row(
-                state.rtl,
-                &label,
-                checked,
-                Some(move |on| Message::PatchToggled(name.clone(), on)),
-                hint.as_deref(),
-            ));
-        }
-    }
     page.spacing(2).into()
 }
-
-/// The name prefix of the offline community event patches.
-const EVENT_PREFIX: &str = "Event: ";
-
-/// The name prefix of the offline season patches (patches/Diablo_III.xml).
-const SEASON_PREFIX: &str = "Offline Seasons - Season ";
 
 /// The note under the first offline event; the translation tables key on this text.
 const OFFLINE_EVENTS_HINT: &str = "On top of the season's theme, for the next start. They need an offline season; the Altar of Rites and Visions of Enmity are always on with one.";
@@ -540,9 +509,221 @@ fn season_row(state: &State) -> Element<'_, Message> {
     )
 }
 
-/// Picks the offline season: unticks every season patch, then ticks the chosen one.
+/// The Seasons tab: the offline season, how its events follow it, the 15 day rotation and, in
+/// Manual mode, one check box per event.
+pub fn seasons_view(state: &State) -> Element<'_, Message> {
+    let lang = state.lang.as_str();
+    let any = state
+        .patches
+        .selectable
+        .iter()
+        .any(|m| m.name.starts_with(SEASON_PREFIX) || m.name.starts_with(EVENT_PREFIX));
+    if !any {
+        return text(tr(lang, "No offline seasons for this game."))
+            .style(theme::text_muted)
+            .into();
+    }
+    let mut page = column![];
+    // The offline season, when the patch file has "Offline Seasons - Season N" entries.
+    if state.patches.selectable.iter().any(|m| m.name.starts_with(SEASON_PREFIX)) {
+        page = page
+            .push(section(state.rtl, &tr(lang, "Offline seasons")))
+            .push(season_row(state))
+            .push(mode_row(state))
+            .push(rotate_row(state));
+    }
+    // The offline community events ("Event: ..." patches), one check box each, when the player
+    // picks them: the other modes choose them with the season.
+    let manual = SeasonMode::from_key(&state.store.text("season_mode")) == SeasonMode::Manual
+        || !state.patches.selectable.iter().any(|m| m.name.starts_with(SEASON_PREFIX));
+    let events: Vec<&PatchMeta> = state
+        .patches
+        .selectable
+        .iter()
+        .filter(|m| m.name.starts_with(EVENT_PREFIX))
+        .filter(|_| manual)
+        .collect();
+    if !events.is_empty() {
+        page = page.push(section(state.rtl, &tr(lang, "Offline events")));
+        for (i, meta) in events.iter().enumerate() {
+            let name = meta.name.clone();
+            let label = name.strip_prefix(EVENT_PREFIX).unwrap_or(&name).to_string();
+            let checked = state.patches.chosen.contains(&name);
+            let hint = (i == 0).then(|| tr(lang, OFFLINE_EVENTS_HINT));
+            page = page.push(toggle_row(
+                state.rtl,
+                &label,
+                checked,
+                Some(move |on| Message::PatchToggled(name.clone(), on)),
+                hint.as_deref(),
+            ));
+        }
+    }
+    page.spacing(2).into()
+}
+
+/// Picks the offline season: unticks every season patch, then ticks the chosen one. With the
+/// rotation on, the picked season is where it starts again.
 pub fn season_picked(state: &mut State, choice: &SeasonChoice) {
     pick_season(&mut state.patches.chosen, choice.number.as_deref());
+    if let Some(number) = choice.number.as_deref() {
+        if state.store.flag("season_rotate") {
+            start_rotation(state, number);
+        }
+    }
+    apply_season_rules(state);
+}
+
+/// The note under the season mode row; the translation tables key on this text.
+const SEASON_MODE_HINT: &str = "Manual: you tick the events below. With its events: the season brings its own events and no others, like Blizzard's calendar. Full: the season with every event at once.";
+
+/// The note under the rotation row; the translation tables key on this text.
+const SEASON_ROTATE_HINT: &str = "From the day you switch it on, the season moves to the next one every 15 days, with its events. Seasonal heroes of past seasons stay in your saves.";
+
+/// One entry of the season mode drop-down.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ModeChoice {
+    pub mode: SeasonMode,
+    label: String,
+}
+
+impl std::fmt::Display for ModeChoice {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.label)
+    }
+}
+
+fn mode_choices(lang: &str) -> Vec<ModeChoice> {
+    [
+        (SeasonMode::Manual, "Manual: I tick the events"),
+        (SeasonMode::WithEvents, "Season with its events"),
+        (SeasonMode::Full, "Full season: all events"),
+    ]
+    .into_iter()
+    .map(|(mode, label)| ModeChoice { mode, label: tr(lang, label) })
+    .collect()
+}
+
+/// The season mode drop-down.
+fn mode_row(state: &State) -> Element<'_, Message> {
+    let lang = state.lang.as_str();
+    let choices = mode_choices(lang);
+    let mode = SeasonMode::from_key(&state.store.text("season_mode"));
+    let current = choices.iter().find(|c| c.mode == mode).cloned();
+    let list = pick_list(choices, current, Message::SeasonModePicked)
+        .text_size(SELECT_TEXT)
+        .style(theme::pick_list_dark);
+    row(
+        state.rtl,
+        &tr(lang, "Season events"),
+        min_width(SELECT_MIN, list).into(),
+        Some(&tr(lang, SEASON_MODE_HINT)),
+    )
+}
+
+/// The rotation check box, with the day it is on under it.
+fn rotate_row(state: &State) -> Element<'_, Message> {
+    let lang = state.lang.as_str();
+    let on = state.store.flag("season_rotate");
+    let check = toggle_row(
+        state.rtl,
+        &tr(lang, "Rotate the season every 15 days"),
+        on,
+        Some(Message::SeasonRotateToggled),
+        Some(&tr(lang, SEASON_ROTATE_HINT)),
+    );
+    let started = parse_rotation(&state.store.text("season_rotate_start"));
+    match (on, started) {
+        (true, Some((_, start))) => {
+            let now = state
+                .patches
+                .chosen
+                .iter()
+                .find_map(|n| n.strip_prefix(SEASON_PREFIX))
+                .unwrap_or("?");
+            column![
+                check,
+                text(format!("{} {now}: {} {}", tr(lang, "Now: Season"), days_left(start, today()), tr(lang, "days left")))
+                    .size(13)
+                    .style(theme::text_muted)
+            ]
+            .spacing(2)
+            .into()
+        }
+        _ => check,
+    }
+}
+
+/// The saved rotation start: "<first season>:<day>".
+pub fn parse_rotation(saved: &str) -> Option<(u32, i64)> {
+    let (season, day) = saved.split_once(':')?;
+    Some((season.parse().ok()?, day.parse().ok()?))
+}
+
+/// The ticked season number.
+pub fn current_season(chosen: &BTreeSet<String>) -> Option<u32> {
+    chosen.iter().find_map(|n| n.strip_prefix(SEASON_PREFIX)).and_then(|n| n.parse().ok())
+}
+
+/// The rotation starts today at `first`.
+fn start_rotation(state: &mut State, first: &str) {
+    state
+        .store
+        .set("season_rotate_start", Value::String(format!("{first}:{}", today())));
+}
+
+/// Picks the season mode.
+pub fn season_mode_picked(state: &mut State, choice: &ModeChoice) {
+    state.store.set("season_mode", Value::String(choice.mode.key().to_string()));
+    apply_season_rules(state);
+}
+
+/// Switches the 15 day rotation on (starting today at the ticked season, or at the first one) or off.
+pub fn season_rotate_toggled(state: &mut State, on: bool) {
+    state.store.set("season_rotate", Value::Bool(on));
+    if on {
+        let numbers = sorted_season_numbers(state);
+        let first = current_season(&state.patches.chosen)
+            .or_else(|| numbers.first().copied())
+            .map(|n| n.to_string());
+        if let Some(first) = first {
+            pick_season(&mut state.patches.chosen, Some(&first));
+            start_rotation(state, &first);
+        }
+    }
+    apply_season_rules(state);
+}
+
+fn sorted_season_numbers(state: &State) -> Vec<u32> {
+    let mut numbers: Vec<u32> =
+        season_numbers(state.patches.selectable.iter().map(|m| m.name.as_str()))
+            .iter()
+            .filter_map(|n| n.parse().ok())
+            .collect();
+    numbers.sort_unstable();
+    numbers.dedup();
+    numbers
+}
+
+/// The season rules on the ticked patches: the rotation's season for today, then the events the
+/// season mode asks for. Run when the page is shown, on every season change and at PLAY.
+pub fn apply_season_rules(state: &mut State) {
+    if state.patches.title_id.is_none() {
+        return;
+    }
+    if state.store.flag("season_rotate") {
+        if let Some((first, start)) = parse_rotation(&state.store.text("season_rotate_start")) {
+            let numbers = sorted_season_numbers(state);
+            if let Some(number) = rotated_season(&numbers, first, start, today()) {
+                pick_season(&mut state.patches.chosen, Some(&number.to_string()));
+            }
+        }
+    }
+    let available: BTreeSet<String> =
+        state.patches.selectable.iter().map(|m| m.name.clone()).collect();
+    let mode = SeasonMode::from_key(&state.store.text("season_mode"));
+    let season = current_season(&state.patches.chosen);
+    apply_mode(&mut state.patches.chosen, &available, mode, season);
     store_game_patches(state);
 }
 

@@ -2232,6 +2232,8 @@
    "Deferred GPU readbacks": "Leituras da GPU adiadas",
    "Fewer waits for the GPU. Switch it off if textures or shadows look wrong.": "Menos esperas pela GPU. Desative se texturas ou sombras parecerem erradas.",
    "Your game dump, saves and language.": "Seu dump do jogo, saves e idioma.",
+   "Seasons": "Temporadas",
+   "The offline season, its events and the 15 day rotation.": "A temporada offline, seus eventos e a rotação de 15 dias.",
    "Folders": "Pastas",
    "Your own dump of the game (eboot.bin, sce_module, sce_sys); SanctuaryPort: CUSA00243, version 01.02 for the community patches.": "Seu próprio dump do jogo (eboot.bin, sce_module, sce_sys); SanctuaryPort: CUSA00243, versão 01.02 para os patches da comunidade.",
    "Update folder (optional)": "Pasta do update (opcional)",
