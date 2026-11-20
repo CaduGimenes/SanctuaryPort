@@ -11,6 +11,7 @@
 #include "video_core/host_shaders/color_to_ms_depth_fallback_frag.h"
 #include "video_core/host_shaders/color_to_ms_depth_frag.h"
 #include "video_core/host_shaders/fs_tri_vert.h"
+#include "video_core/host_shaders/ms_image_blit_average_frag.h"
 #include "video_core/host_shaders/ms_image_blit_frag.h"
 #include "video_core/host_shaders/ms_image_blit_msaa_frag.h"
 
@@ -45,6 +46,7 @@ BlitHelper::~BlitHelper() {
     device.destroy(color_to_ms_depth_frag);
     device.destroy(src_msaa_copy_frag);
     device.destroy(src_non_msaa_copy_frag);
+    device.destroy(src_msaa_average_frag);
 }
 
 void BlitHelper::ReinterpretColorAsMsDepth(u32 width, u32 height, u32 num_samples,
@@ -151,7 +153,7 @@ void BlitHelper::ReinterpretColorAsMsDepth(u32 width, u32 height, u32 num_sample
 
 void BlitHelper::CopyBetweenMsImages(u32 width, u32 height, u32 num_samples,
                                      vk::Format pixel_format, bool src_msaa, vk::Image source,
-                                     vk::Image dest) {
+                                     vk::Image dest, bool average) {
     const vk::ImageViewUsageCreateInfo src_usage_ci{.usage = vk::ImageUsageFlagBits::eSampled};
     const vk::ImageViewCreateInfo src_view_ci = {
         .pNext = &src_usage_ci,
@@ -220,7 +222,7 @@ void BlitHelper::CopyBetweenMsImages(u32 width, u32 height, u32 num_samples,
     cmdbuf.pushDescriptorSetKHR(vk::PipelineBindPoint::eGraphics, *single_texture_pl_layout, 0U,
                                 texture_write);
 
-    const MsPipelineKey key{num_samples, pixel_format, src_msaa};
+    const MsPipelineKey key{num_samples, pixel_format, src_msaa, src_msaa && average};
     auto it = std::ranges::find(ms_image_copy_pl, key, &MsPipeline::first);
     if (it == ms_image_copy_pl.end()) {
         CreateMsCopyPipeline(key);
@@ -259,6 +261,7 @@ void BlitHelper::CreateShaders() {
                                  : Vulkan::CompileSPV(COLOR_TO_MS_DEPTH_FRAG, device);
     src_msaa_copy_frag = Vulkan::CompileSPV(MS_IMAGE_BLIT_MSAA_FRAG, device);
     src_non_msaa_copy_frag = Vulkan::CompileSPV(MS_IMAGE_BLIT_FRAG, device);
+    src_msaa_average_frag = Vulkan::CompileSPV(MS_IMAGE_BLIT_AVERAGE_FRAG, device);
 }
 
 void BlitHelper::CreatePipelineLayouts() {
@@ -385,7 +388,9 @@ void BlitHelper::CreateMsCopyPipeline(const MsPipelineKey& key) {
     };
     shader_stages[1] = {
         .stage = vk::ShaderStageFlagBits::eFragment,
-        .module = key.src_msaa ? src_msaa_copy_frag : src_non_msaa_copy_frag,
+        .module = key.average    ? src_msaa_average_frag
+                  : key.src_msaa ? src_msaa_copy_frag
+                                 : src_non_msaa_copy_frag,
         .pName = "main",
     };
 

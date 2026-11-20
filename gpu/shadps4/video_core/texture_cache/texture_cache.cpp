@@ -426,6 +426,34 @@ ImageId TextureCache::FeedbackCopy(ImageId target_id, u64 epoch) {
     return entry.copy;
 }
 
+ImageId TextureCache::MsaaAverage(ImageId source_id, u64 epoch) {
+    auto& entry = msaa_averages[source_id.index];
+    if (entry.copy) {
+        const auto& info = slot_images[entry.copy].info;
+        const auto& source_info = slot_images[source_id].info;
+        if (info.pixel_format != source_info.pixel_format || info.size != source_info.size ||
+            info.resources != source_info.resources || info.num_samples != source_info.num_samples) {
+            // As FeedbackCopy: the old copy is not freed (the scene target keeps its size).
+            entry.copy = {};
+        }
+    }
+    if (!entry.copy) {
+        // Copied first: the insert may move the images.
+        const ImageInfo info = slot_images[source_id].info;
+        entry.copy = slot_images.insert(instance, runtime, slot_image_views, info);
+        entry.epoch = ~u64(0);
+    }
+    Image& source = slot_images[source_id];
+    Image& copy = slot_images[entry.copy];
+    if (entry.epoch != epoch || entry.source_uid != source.image_uid) {
+        runtime.AverageMsImage(&source, &copy);
+        entry.epoch = epoch;
+        entry.source_uid = source.image_uid;
+    }
+    copy.flags &= ~ImageFlagBits::Dirty;
+    return entry.copy;
+}
+
 void TextureCache::DiagDumpImage(ImageId image_id, const char* tag) {
     Image& image = slot_images[image_id];
     // SANCTUARY_DIAG_ADDR=<hex>: only the image at that guest address (draws: first draw only).

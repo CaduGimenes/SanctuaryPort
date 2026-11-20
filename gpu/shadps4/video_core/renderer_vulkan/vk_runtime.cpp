@@ -713,6 +713,24 @@ void Runtime::ClearImage(VideoCore::Image* dst, const VideoCore::SubresourceRang
     dst->flags &= ~VideoCore::ImageFlagBits::Dirty;
 }
 
+void Runtime::AverageMsImage(VideoCore::Image* src, VideoCore::Image* dst) {
+    scheduler.EndRendering();
+    bool needs_flush =
+        Transit(src, vk::ImageLayout::eShaderReadOnlyOptimal,
+                vk::PipelineStageFlagBits2::eFragmentShader, vk::AccessFlagBits2::eShaderRead);
+    needs_flush |= Transit(dst, vk::ImageLayout::eColorAttachmentOptimal,
+                           vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+                           vk::AccessFlagBits2::eColorAttachmentWrite);
+    if (needs_flush) {
+        FlushBarriers();
+    }
+    blit_helper->CopyBetweenMsImages(dst->info.size.width, dst->info.size.height,
+                                     dst->backing->num_samples, dst->info.pixel_format, true,
+                                     src->GetImage(), dst->GetImage(), true);
+    dst->flags |= VideoCore::ImageFlagBits::GpuModified;
+    dst->flags &= ~VideoCore::ImageFlagBits::Dirty;
+}
+
 void Runtime::SetBackingSamples(VideoCore::Image* image, u32 num_samples, bool copy_backing) {
     BeforeImageAccess();
     auto& backing = image->backing;

@@ -188,6 +188,29 @@ copy, where FSR 3 would run: Diablo III's A2B10G10R10 frame before the HUD, so t
 Two compute passes (frame to an RGBA16F copy with the filter, then back keeping the frame's alpha);
 off while FSR 3 is on. Frames in another format (menus) are left alone.
 
+## MSAA samples
+
+The game asks for MSAA level 4 in both PS4 modes (display-mode description, eboot 0xbe420 and
+0xbe4fe). Its render-target set-up (0xbf300) makes that 4 coverage samples with 2 colour and 2
+depth fragments (EQAA); the GPU core keeps the fragments, so the scene has 2 samples. The game then
+copies the scene for its post passes ("PostFX Upscale", also the distortion copy) with one texel
+fetch of sample 0, so the second sample never reaches the picture. The PC version resolves the same
+targets with `ResolveSubresource`.
+
+`msaa` in sanctuary.ini (launcher Graphics > MSAA samples; empty by default, the game's own) picks:
+
+- `2`: the game's 2 samples; `4`: patch "Game MSAA - 4x" (level 16: 4 colour and depth
+  fragments). run.py adds the patch; another executable skips it and keeps 2 samples. These are
+  the PC version's 2X and 4X; its 8X is 4 samples at the driver's highest quality level.
+- With any of them run.py sets `SANCTUARY_MSAA_RESOLVE=1`: a multisampled colour image a shader
+  samples is read from a copy whose samples all hold their mean (`TextureCache::MsaaAverage`, once
+  per pass). Depth keeps its samples: the SSAO, the depth copy and GTAO read sample 0 of it.
+- With `SANCTUARY_NO_MSAA` (the default on AMD's and Intel's Windows drivers) the images are
+  single-sampled and the choice changes nothing.
+
+There is no "Q" mode (more coverage samples than colour samples, AMD EQAA or NVIDIA CSAA):
+Vulkan has no portable way to resolve with coverage samples.
+
 ## GTAO
 
 `gtao=low` or `gtao=high` in sanctuary.ini (`SANCTUARY_GTAO=off|low|high`, launcher Graphics >

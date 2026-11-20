@@ -315,6 +315,20 @@
             <Line Type="bytes" Address="0x00426ef0" Value="9090" Pattern="89 43 20 e8 ?? ?? ?? ?? 85 c0 74 10 c7 43 18 00 00 80 3f c7 43 08 00 00 00 00 eb 61 8b 43 08" At="10"/>
         </PatchList>
     </Metadata>
+    <!-- Game MSAA (sanctuary.ini msaa, run.py). The display-mode description stores MSAA level 4 in both
+         PS4 modes (1.47 eboot 0xbe420 and 0xbe4fe, movl $4,0x30(%rbx), right after a discarded
+         sceKernelIsNeoMode call). The render-target set-up (0xbf300) turns the level into Gnm counts:
+         colour (0xbf5da) level 2-3 = 2 samples/2 fragments, 4-7 = 4/2, 8-15 = 8/2, 16+ = 16/4; depth
+         (0xbf857) 2 fragments, 4 from level 8. So the game draws 4-sample EQAA with 2 colour and depth
+         fragments; the GPU core keeps the fragments. 4x: level 16 (4 colour and 4 depth fragments).
+         The game reads its scene with one fetch of sample 0, so run.py also sets
+         SANCTUARY_MSAA_RESOLVE, which averages the samples there. -->
+    <Metadata Title="Diablo III" Name="Game MSAA - 4x" Note="The scene is drawn with 4 colour and depth samples (MSAA level 16)." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x004be420" Value="c7433010000000" Pattern="c7 43 30 04 00 00 00 41 8b 47 54 89 43 34" At="0"/>
+            <Line Type="bytes" Address="0x004be4fe" Value="c7433010000000" Pattern="c7 43 30 04 00 00 00 41 8b 46 54 89 43 34" At="0"/>
+        </PatchList>
+    </Metadata>
     <!-- Offline seasons, community events and Challenge Rifts (d3hack-style, no cheats). The game asks the
          online pubfile service for Seasons.txt and Config.txt; offline the answer never comes. The base patch
          "Offline Seasons" hooks the per-user lobby update (eboot 0x43528) and feeds both files once to the

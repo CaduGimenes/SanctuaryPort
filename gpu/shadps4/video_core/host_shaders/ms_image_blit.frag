@@ -15,7 +15,15 @@ layout (location = 0) out vec4 out_color;
 
 void main()
 {
-#if defined(SRC_MSAA)
+#if defined(SRC_MSAA) && defined(AVERAGE)
+    // sanctuary: the box resolve of all samples; without sample shading it lands in every sample.
+    const int samples = textureSamples(in_tex);
+    vec4 sum = vec4(0.0);
+    for (int i = 0; i < samples; ++i) {
+        sum += texelFetch(in_tex, ivec2(gl_FragCoord.xy), i);
+    }
+    out_color = sum / float(samples);
+#elif defined(SRC_MSAA)
     out_color = texelFetch(in_tex, ivec2(gl_FragCoord.xy), gl_SampleID);
 #else
     out_color = texelFetch(in_tex, ivec2(gl_FragCoord.xy), 0);

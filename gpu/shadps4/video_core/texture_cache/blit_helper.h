@@ -28,8 +28,10 @@ public:
                                    vk::Format src_pixel_format, vk::Format dst_pixel_format,
                                    vk::Image source, vk::Image dest);
 
+    /// `average` (with `src_msaa`): every sample of `dest` gets the mean of the source's samples.
     void CopyBetweenMsImages(u32 width, u32 height, u32 num_samples, vk::Format pixel_format,
-                             bool src_msaa, vk::Image source, vk::Image dest);
+                             bool src_msaa, vk::Image source, vk::Image dest,
+                             bool average = false);
 
 private:
     void CreateShaders();
@@ -39,6 +41,7 @@ private:
         u32 num_samples;
         vk::Format attachment_format;
         bool src_msaa;
+        bool average = false;
 
         auto operator<=>(const MsPipelineKey&) const noexcept = default;
     };
@@ -54,6 +57,7 @@ private:
     vk::ShaderModule color_to_ms_depth_frag;
     vk::ShaderModule src_msaa_copy_frag;
     vk::ShaderModule src_non_msaa_copy_frag;
+    vk::ShaderModule src_msaa_average_frag;
 
     using MsPipeline = std::pair<MsPipelineKey, vk::UniquePipeline>;
     std::vector<MsPipeline> color_to_ms_depth_pl;

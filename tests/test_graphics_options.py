@@ -269,6 +269,32 @@ class FixedScaleTest(unittest.TestCase):
         self.assertEqual(g.fixed_scale_fallback(None), 'not applied')  # no report of the start
 
 
+class GameMsaaTest(unittest.TestCase):
+    """Diablo III's Graphics > Game MSAA: the scene's sample count (patches/Diablo_III.xml) and the
+    averaging of its samples (SANCTUARY_MSAA_RESOLVE)."""
+
+    def test_choice_patch_and_environment(self):
+        self.assertEqual(g.msaa({}), '')
+        for value in ('2', '4'):
+            self.assertEqual(g.msaa({'msaa': value}), value)
+        self.assertEqual(g.msaa({'msaa': '8'}), '')
+        self.assertEqual(g.msaa({'msaa': '16'}), '')
+        self.assertEqual(g.msaa({'msaa': 'on'}), '')
+        # The game's own 2 samples need no patch; 4 does.
+        self.assertIsNone(g.msaa_patch(''))
+        self.assertIsNone(g.msaa_patch('2'))
+        self.assertEqual(g.msaa_patch('4'), 'Game MSAA - 4x')
+        # Off by default: the game's own copy of its scene stays as it is.
+        self.assertEqual(g.msaa_environment(''), {})
+        for value in ('2', '4'):
+            self.assertEqual(g.msaa_environment(value), {'SANCTUARY_MSAA_RESOLVE': '1'})
+
+    def test_each_count_has_one_patch(self):
+        xml = (Path(__file__).resolve().parent.parent / 'patches' / 'Diablo_III.xml').read_text(encoding='utf-8')
+        for value in ('4',):
+            self.assertEqual(xml.count(f'Name="{g.msaa_patch(value)}"'), 1, value)
+
+
 class WindowSizeTest(unittest.TestCase):
     def test_the_game_knows_the_launcher_sizes(self):
         """gpu/shim/sanctuary_graphics.h ResolutionSizes, which sizes the window, matches SIZES."""

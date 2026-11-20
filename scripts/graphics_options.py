@@ -34,6 +34,9 @@ LIMITER_PREFIX = 'Frame Limiter'
 FRAME_RATES = ('30', '60', '120', '0')  # 0 = unlimited
 # Diablo III: sanctuary.ini dynamic_resolution=0 picks the game's own fixed 100% scene scale.
 FIXED_SCALE_PATCH = 'Dynamic Resolution - Off'
+# Diablo III: sanctuary.ini msaa picks the scene's sample count ('' = the game's own 2, as before).
+MSAA_PREFIX = 'Game MSAA'
+MSAA_CHOICES = ('', '2', '4')
 
 
 def read_ini(path):
@@ -230,6 +233,24 @@ def fixed_scale_fallback(status):
     if FIXED_SCALE_PATCH in status.get('applied', []):
         return None
     return status.get('skipped', {}).get(FIXED_SCALE_PATCH, 'not applied')
+
+
+def msaa(ini):
+    """Diablo III's Game MSAA choice (sanctuary.ini msaa): '' (the game's own), '2' or '4'."""
+    value = ini.get('msaa', '')
+    return value if value in MSAA_CHOICES else ''
+
+
+def msaa_patch(choice):
+    """The Game MSAA patch for a choice; None for 2 samples, which the game draws by itself."""
+    return {'4': f'{MSAA_PREFIX} - 4x'}.get(choice)
+
+
+def msaa_environment(choice):
+    """The game copies its multisampled scene for the post passes by reading sample 0 alone, so the
+    samples only smooth edges when the GPU core averages them (SANCTUARY_MSAA_RESOLVE, sanctuary_msaa.h).
+    The game's own choice keeps that copy as it is."""
+    return {'SANCTUARY_MSAA_RESOLVE': '1'} if choice else {}
 
 
 def restrict_to_available(names, available):

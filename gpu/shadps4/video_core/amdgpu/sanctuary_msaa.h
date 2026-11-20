@@ -33,4 +33,20 @@ inline bool MsaaUncompressedDepth() {
     return msaa_uncompressed_depth.load(std::memory_order_relaxed);
 }
 
+/// SANCTUARY_MSAA_RESOLVE=1 (launcher Graphics > Game MSAA, any count but the game's own): a
+/// multisampled color image a shader samples is read from a copy whose every sample holds the mean
+/// of its samples. Diablo III copies its scene for the post passes with one texel fetch of sample
+/// 0, so without it the extra samples never reach the picture; its PC version resolves the same
+/// targets with ResolveSubresource. Set by vk_instance.cpp; depth images are left alone.
+inline std::atomic<bool> msaa_resolve{false};
+inline bool MsaaResolve() {
+    return msaa_resolve.load(std::memory_order_relaxed);
+}
+/// Whether a sampled image is read from its averaged copy: color only (Diablo III's SSAO and depth
+/// copy read sample 0 of the depth, which an average would move), and not while the image's
+/// storage is a stand-in of another sample count (Runtime::SetBackingSamples).
+inline bool ReadsSampleMean(bool is_depth, unsigned host_samples, unsigned image_samples) {
+    return MsaaResolve() && !is_depth && host_samples > 1 && host_samples == image_samples;
+}
+
 } // namespace AmdGpu

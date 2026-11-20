@@ -132,4 +132,5 @@ if [[ ${1:-} == --test ]]; then
     "$CC" -std=c11 -O2 -g -Wall -Wextra -Werror -mbmi -mlzcnt -I. -Isrc tests/test_isa_stub.c out/isa_rewrite.o out/isa_emulate.o -o out/isa-stub-test
     out/isa-stub-test tests/data/isa_fixture.bin
     ninja -C out/gpu settings-keep-test >> out/gpu-build.log 2>&1 && (cd out && gpu/settings-keep-test)
+    ninja -C out/gpu no-msaa-test >> out/gpu-build.log 2>&1 && out/gpu/no-msaa-test
 fi
