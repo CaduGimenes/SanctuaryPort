@@ -162,6 +162,11 @@ pub fn environment(
             ui_language
         },
     );
+    // Game > Player name (GitHub #23): the runtime reads it for player 1; empty keeps "Player".
+    let player_name = settings.text("player_name");
+    if !player_name.trim().is_empty() {
+        env.insert(var("player_name").into(), player_name);
+    }
     // On by default (R91), also in a file without the key.
     put_switch(&mut env, settings, "discord_rpc");
     // Always written (#980): the runner copies it into the ini once, as `0` too.
@@ -396,6 +401,16 @@ mod tests {
         let (off, paths, _dir) = setup(json!({"discord_rpc": false}));
         let env = game_environment(&off, &paths, "en", &IndexMap::new(), true);
         assert_eq!(env["SANCTUARY_DISCORD"], "0");
+    }
+
+    #[test]
+    fn the_player_name_reaches_the_game() {
+        let (settings, paths, _dir) = setup(json!({"player_name": "Stavros"}));
+        let env = game_environment(&settings, &paths, "en", &IndexMap::new(), true);
+        assert_eq!(env["SANCTUARY_PLAYER_NAME"], "Stavros");
+        let (empty, paths, _dir) = setup(json!({"player_name": "  "}));
+        let env = game_environment(&empty, &paths, "en", &IndexMap::new(), true);
+        assert!(!env.contains_key("SANCTUARY_PLAYER_NAME"));
     }
 
     #[test]
