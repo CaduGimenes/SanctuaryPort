@@ -9,7 +9,9 @@ use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 
 use super::game::GameProfile;
-use super::options::{FRAME_LIMITER_PATCH_PREFIX, FRAME_RATE_PATCH_PREFIX, RESOLUTION_PATCH_PREFIX};
+use super::options::{
+    FIXED_SCALE_PATCH, FRAME_LIMITER_PATCH_PREFIX, FRAME_RATE_PATCH_PREFIX, RESOLUTION_PATCH_PREFIX,
+};
 use super::paths::Paths;
 
 /// Fixes with nothing to choose: not offered in the launcher and always applied.
@@ -164,8 +166,8 @@ pub fn game_patch_metas(xml: &Path, app_version: &str) -> Result<Vec<PatchMeta>,
         .collect())
 }
 
-/// The patches the launcher offers: without the resolution and frame rate ones (they follow
-/// Performance) and the always-on fixes.
+/// The patches the launcher offers: without the resolution, frame rate and fixed scale ones (they
+/// follow Performance) and the always-on fixes.
 pub fn selectable(metas: &[PatchMeta]) -> Vec<PatchMeta> {
     metas
         .iter()
@@ -173,6 +175,7 @@ pub fn selectable(metas: &[PatchMeta]) -> Vec<PatchMeta> {
             !(m.name.starts_with(RESOLUTION_PATCH_PREFIX)
                 || m.name.starts_with(FRAME_RATE_PATCH_PREFIX)
                 || m.name.starts_with(FRAME_LIMITER_PATCH_PREFIX)
+                || m.name == FIXED_SCALE_PATCH
                 || ALWAYS_ON.contains(&m.name.as_str()))
         })
         .cloned()
@@ -205,12 +208,14 @@ mod tests {
         );
         let metas = game_patch_metas(&diablo_xml(), profile.app_version).unwrap();
         assert!(!metas.is_empty());
-        // The resolution and frame limiter patches follow the Graphics page; the offline seasons and
-        // events (GitHub PR #31) are what the Game page offers.
+        // The resolution, frame limiter and fixed scale patches follow the Graphics page; the offline
+        // seasons and events (GitHub PR #31) are what the Game page offers.
+        assert!(metas.iter().any(|meta| meta.name == FIXED_SCALE_PATCH));
         let offered = selectable(&metas);
         assert!(!offered.is_empty());
         assert!(offered.iter().all(|meta| !meta.name.starts_with(RESOLUTION_PATCH_PREFIX)
-            && !meta.name.starts_with(FRAME_LIMITER_PATCH_PREFIX)));
+            && !meta.name.starts_with(FRAME_LIMITER_PATCH_PREFIX)
+            && meta.name != FIXED_SCALE_PATCH));
         assert!(offered.iter().any(|meta| meta.name.starts_with("Offline Seasons - Season ")));
         assert!(offered.iter().any(|meta| meta.name.starts_with("Event: ")));
         assert!(game_patch_metas(&diablo_xml(), "01.00").unwrap().is_empty());

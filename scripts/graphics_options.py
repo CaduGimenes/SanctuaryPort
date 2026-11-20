@@ -32,6 +32,8 @@ TEXTURE_FIX = 'Bug Fix - Texture Corruption Fix'
 # Diablo III: sanctuary.ini frame_rate picks the game's own frame limiter (patches/Diablo_III.xml).
 LIMITER_PREFIX = 'Frame Limiter'
 FRAME_RATES = ('30', '60', '120', '0')  # 0 = unlimited
+# Diablo III: sanctuary.ini dynamic_resolution=0 picks the game's own fixed 100% scene scale.
+FIXED_SCALE_PATCH = 'Dynamic Resolution - Off'
 
 
 def read_ini(path):
@@ -218,6 +220,16 @@ def limiter_environment(applied):
         if name == f'{LIMITER_PREFIX} - 30 FPS':
             return {'SANCTUARY_FPS_LIMIT': '0'}
     return {'SANCTUARY_VBLANK_HZ': '0', 'SANCTUARY_FPS_LIMIT': '60'}
+
+
+def fixed_scale_fallback(status):
+    """None when the last start (patch_status.json) applied FIXED_SCALE_PATCH, else why it did not:
+    an eboot.bin without that code keeps its scene at 100% through the slowed GPU clock instead
+    (SANCTUARY_DYNRES=fixed, guest_clock_scale.h)."""
+    status = status or {}
+    if FIXED_SCALE_PATCH in status.get('applied', []):
+        return None
+    return status.get('skipped', {}).get(FIXED_SCALE_PATCH, 'not applied')
 
 
 def restrict_to_available(names, available):

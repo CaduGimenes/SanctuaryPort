@@ -335,7 +335,8 @@ pub static SETTINGS: &[Setting] = &[
     // SanctuaryPort: Graphics > V-Sync. A key of its own: `vsync` was saved as 1 by every build while
     // Diablo's profile kept it off, so reading it would turn V-Sync on for almost everyone.
     ini("vertical_sync", Flag, Bool(false), true, 54),
-    // SanctuaryPort: Graphics > Dynamic resolution; off keeps the scene at 100% (SANCTUARY_DYNRES).
+    // SanctuaryPort: Graphics > Dynamic resolution; off keeps the scene at 100% (run.py: the game's
+    // own fixed scale by a patch, else SANCTUARY_DYNRES).
     ini("dynamic_resolution", Flag, Bool(true), true, 55),
     ini(
         "engine_fps",

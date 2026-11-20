@@ -140,7 +140,15 @@ anti-aliasing, in-game Image) runs on the finished frame at its copy to the disp
   timestamps written by the GPU and copied to guest memory once it has passed them
   (`vk_guest_clock.cpp`): the scene stays at 70% there (32-38 FPS) and at 100% at 1080p (60 FPS).
   `SANCTUARY_GPU_CLOCK=record` brings back the old values. The game's floor is 70%; its post
-  passes always run at the full size.
+  passes always run at the full size. Graphics > Dynamic resolution off (`sanctuary.ini
+  dynamic_resolution=0`) applies the "Dynamic Resolution - Off" patch: the scaler's update (1.47
+  eboot 0x26e80) has a branch of its own that stores scale 1.0, and the patch always takes it. An
+  executable the patch's signature is not found in (the US 1.00 one was not examined) gets
+  `SANCTUARY_DYNRES=fixed` instead, as every one did before: the GPU clock the game reads runs 64
+  times slower (`guest_clock_scale.h`), so the game finds its GPU time under budget (scenes below
+  100% were still recorded that way; why is not established). Set by the caller,
+  `SANCTUARY_DYNRES=fixed` chooses the clock method without the patch, and any other value leaves
+  dynamic resolution on.
 - Frame generation (experimental, `frame_generation=1`, read at start): `vk_frame_generation.cpp`.
   Per display buffer (the guest flips on another thread, sometimes after the next frame started):
   depth (R32F copy, `depth_copy.comp`), motion vectors, and the display buffer before the HUD's

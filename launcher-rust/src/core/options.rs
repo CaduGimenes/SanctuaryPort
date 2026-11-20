@@ -7,6 +7,8 @@ pub const RESOLUTION_PATCH_PREFIX: &str = "Resolution Patch";
 pub const FRAME_RATE_PATCH_PREFIX: &str = "Frame Rate Patch";
 /// SanctuaryPort: Diablo III's own frame limiter (Graphics > Frame rate, run.py).
 pub const FRAME_LIMITER_PATCH_PREFIX: &str = "Frame Limiter";
+/// SanctuaryPort: Diablo III's own fixed scene scale (Graphics > Dynamic resolution off, run.py).
+pub const FIXED_SCALE_PATCH: &str = "Dynamic Resolution - Off";
 /// The fix a resolution patch replaces: both resize the video arena.
 pub const TEXTURE_FIX_PATCH: &str = "Bug Fix - Texture Corruption Fix";
 

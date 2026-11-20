@@ -257,6 +257,18 @@ class FrameLimiterTest(unittest.TestCase):
             self.assertEqual(xml.count(f'Name="{name}"'), 2, name)
 
 
+class FixedScaleTest(unittest.TestCase):
+    """Diablo III's Graphics > Dynamic resolution off: the game's own fixed 100% scale (patches/Diablo_III.xml)."""
+
+    def test_the_slowed_gpu_clock_is_the_fallback_for_a_skipped_patch(self):
+        self.assertIsNone(g.fixed_scale_fallback({'applied': ['Frame Limiter - 120 FPS', g.FIXED_SCALE_PATCH],
+                                                  'skipped': {}}))
+        self.assertEqual(g.fixed_scale_fallback({'applied': ['Frame Limiter - 120 FPS'],
+                                                 'skipped': {g.FIXED_SCALE_PATCH: 'signature not found'}}),
+                         'signature not found')
+        self.assertEqual(g.fixed_scale_fallback(None), 'not applied')  # no report of the start
+
+
 class WindowSizeTest(unittest.TestCase):
     def test_the_game_knows_the_launcher_sizes(self):
         """gpu/shim/sanctuary_graphics.h ResolutionSizes, which sizes the window, matches SIZES."""
