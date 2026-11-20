@@ -31,6 +31,9 @@ pub const FXAA_OFF_HINT: &str = "Not used with FSR 3, which smooths edges itself
 pub const DYNRES_HINT: &str = "Lowers the scene in heavy fights to keep the FPS.";
 /// The note under V-Sync.
 pub const VSYNC_HINT: &str = "Removes tearing; on a 60 Hz screen it caps at 60.";
+/// The shader warm-up switch under Tools (GitHub #63).
+pub const WARMUP_LABEL: &str = "Load shaders while playing";
+pub const WARMUP_HINT: &str = "Off: they all load before the first frame, so the start takes longer. Turn it off if the game closes right at start.";
 /// The note under the frame rate limit (also on the first-start page).
 pub const FRAME_RATE_HINT: &str = "Above 60 the camera is smoother, but characters may judder.";
 /// The note under the GTAO quality choice.
@@ -263,6 +266,15 @@ pub fn view(state: &State) -> Element<'_, Message> {
             &tr(lang, "Shader cache"),
             delete_cache_button(state, lang),
             Some(&hint("Use it if graphics look wrong after an update.")),
+        ),
+        // GitHub #63: loading the cached pipelines on worker threads while the game runs crashed
+        // one AMD driver at start; off, they load before the first frame (SANCTUARY_BACKGROUND_WARMUP=0).
+        checkbox(
+            state.rtl,
+            "background_warmup",
+            &tr(lang, WARMUP_LABEL),
+            state.store.flag("background_warmup"),
+            Some(&hint(WARMUP_HINT)),
         ),
     ]
     .spacing(2)

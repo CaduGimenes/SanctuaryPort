@@ -54,6 +54,36 @@ fn graphics_rows_change_the_right_keys() {
 }
 
 #[test]
+fn the_shader_warm_up_switch_reaches_the_game() {
+    // GitHub #63: the Graphics page turns the background shader warm-up off.
+    let dir = tempfile::tempdir().unwrap();
+    let mut state = state(dir.path());
+    open(&mut state, Page::Graphics);
+    assert!(state.store.flag("background_warmup"));
+    let clicked: Vec<Message> = {
+        let mut ui = iced_test::simulator::Simulator::with_size(
+            iced::Settings::default(),
+            iced::Size::new(1280.0, 4000.0),
+            app::view(&state),
+        );
+        ui.click("Load shaders while playing").unwrap();
+        ui.into_messages().collect()
+    };
+    for message in clicked {
+        let _ = app::update(&mut state, message);
+    }
+    assert!(!state.store.flag("background_warmup"));
+    let env = game_environment(
+        state.store.app(),
+        &state.paths,
+        "en",
+        &indexmap::IndexMap::new(),
+        true,
+    );
+    assert_eq!(env["SANCTUARY_BACKGROUND_WARMUP"], "0");
+}
+
+#[test]
 fn a_stored_string_zero_shows_checked_like_the_game_gets_it() {
     // Python truthiness: "0" is a non-empty string, so the game gets SANCTUARY_HDR=1, and the box
     // shows what the game gets.

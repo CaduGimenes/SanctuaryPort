@@ -2730,7 +2730,9 @@
    "15 days": "15 dias",
    "30 days": "30 dias",
    "60 days": "60 dias",
-   "90 days (about 3 months)": "90 dias (cerca de 3 meses)"
+   "90 days (about 3 months)": "90 dias (cerca de 3 meses)",
+   "Load shaders while playing": "Carregar shaders durante o jogo",
+   "Off: they all load before the first frame, so the start takes longer. Turn it off if the game closes right at start.": "Desligado: todos carregam antes do primeiro quadro, então a inicialização demora mais. Desligue se o jogo fechar logo ao iniciar."
   },
   "es": {
    "The launcher cannot write to {}, so it cannot replace itself there. Open the releases page to download the new version by hand?": "El launcher no puede escribir en {}, así que no puede reemplazarse ahí. ¿Abrir la página de releases para descargar la versión nueva a mano?",
@@ -3248,7 +3250,9 @@
    "15 days": "15 días",
    "30 days": "30 días",
    "60 days": "60 días",
-   "90 days (about 3 months)": "90 días (unos 3 meses)"
+   "90 days (about 3 months)": "90 días (unos 3 meses)",
+   "Load shaders while playing": "Cargar shaders mientras juegas",
+   "Off: they all load before the first frame, so the start takes longer. Turn it off if the game closes right at start.": "Desactivado: todos se cargan antes del primer fotograma, así que el inicio tarda más. Desactívalo si el juego se cierra justo al iniciar."
   },
   "pl": {
    "Polish": "Polski",
@@ -3619,7 +3623,9 @@
    "15 days": "15 dni",
    "30 days": "30 dni",
    "60 days": "60 dni",
-   "90 days (about 3 months)": "90 dni (około 3 miesięcy)"
+   "90 days (about 3 months)": "90 dni (około 3 miesięcy)",
+   "Load shaders while playing": "Ładuj shadery podczas gry",
+   "Off: they all load before the first frame, so the start takes longer. Turn it off if the game closes right at start.": "Wyłączone: wszystkie ładują się przed pierwszą klatką, więc start trwa dłużej. Wyłącz, jeśli gra zamyka się zaraz po uruchomieniu."
   },
   "fr": {
    "Polish": "Polonais",
@@ -3735,7 +3741,9 @@
    "15 days": "15 jours",
    "30 days": "30 jours",
    "60 days": "60 jours",
-   "90 days (about 3 months)": "90 jours (environ 3 mois)"
+   "90 days (about 3 months)": "90 jours (environ 3 mois)",
+   "Load shaders while playing": "Charger les shaders pendant le jeu",
+   "Off: they all load before the first frame, so the start takes longer. Turn it off if the game closes right at start.": "Désactivé : tous se chargent avant la première image, le démarrage est donc plus long. Désactivez-le si le jeu se ferme dès le lancement."
   },
   "de": {
    "Polish": "Polnisch",
@@ -3842,7 +3850,9 @@
    "15 days": "15 Tage",
    "30 days": "30 Tage",
    "60 days": "60 Tage",
-   "90 days (about 3 months)": "90 Tage (etwa 3 Monate)"
+   "90 days (about 3 months)": "90 Tage (etwa 3 Monate)",
+   "Load shaders while playing": "Shader während des Spielens laden",
+   "Off: they all load before the first frame, so the start takes longer. Turn it off if the game closes right at start.": "Aus: Alle werden vor dem ersten Bild geladen, der Start dauert also länger. Schalte es aus, wenn sich das Spiel direkt beim Start schließt."
   },
   "it": {
    "Polish": "Polacco",
@@ -3947,7 +3957,9 @@
    "15 days": "15 giorni",
    "30 days": "30 giorni",
    "60 days": "60 giorni",
-   "90 days (about 3 months)": "90 giorni (circa 3 mesi)"
+   "90 days (about 3 months)": "90 giorni (circa 3 mesi)",
+   "Load shaders while playing": "Carica gli shader durante il gioco",
+   "Off: they all load before the first frame, so the start takes longer. Turn it off if the game closes right at start.": "Disattivato: vengono caricati tutti prima del primo fotogramma, quindi l'avvio richiede più tempo. Disattivalo se il gioco si chiude appena avviato."
   },
   "tr": {
    "Polish": "Lehçe",
@@ -4050,7 +4062,9 @@
    "15 days": "15 gün",
    "30 days": "30 gün",
    "60 days": "60 gün",
-   "90 days (about 3 months)": "90 gün (yaklaşık 3 ay)"
+   "90 days (about 3 months)": "90 gün (yaklaşık 3 ay)",
+   "Load shaders while playing": "Gölgelendiricileri oynarken yükle",
+   "Off: they all load before the first frame, so the start takes longer. Turn it off if the game closes right at start.": "Kapalı: hepsi ilk kareden önce yüklenir, bu yüzden başlangıç daha uzun sürer. Oyun başlar başlamaz kapanıyorsa kapatın."
   },
   "ar": {
    "Polish": "البولندية",
@@ -4152,7 +4166,9 @@
    "15 days": "15 يومًا",
    "30 days": "30 يومًا",
    "60 days": "60 يومًا",
-   "90 days (about 3 months)": "90 يومًا (نحو 3 أشهر)"
+   "90 days (about 3 months)": "90 يومًا (نحو 3 أشهر)",
+   "Load shaders while playing": "تحميل المظللات أثناء اللعب",
+   "Off: they all load before the first frame, so the start takes longer. Turn it off if the game closes right at start.": "عند الإيقاف: تُحمَّل كلها قبل الإطار الأول، لذا يستغرق البدء وقتًا أطول. أوقفه إذا أُغلقت اللعبة فور بدئها."
   },
   "zh": {
    "Polish": "波兰语",
@@ -4645,7 +4661,9 @@
    "15 days": "15 天",
    "30 days": "30 天",
    "60 days": "60 天",
-   "90 days (about 3 months)": "90 天（约 3 个月）"
+   "90 days (about 3 months)": "90 天（约 3 个月）",
+   "Load shaders while playing": "游戏时加载着色器",
+   "Off: they all load before the first frame, so the start takes longer. Turn it off if the game closes right at start.": "关闭：全部在第一帧之前加载，因此启动更慢。如果游戏一启动就关闭，请将其关闭。"
   },
   "ja": {
    "Polish": "ポーランド語",
@@ -4748,7 +4766,9 @@
    "15 days": "15 日",
    "30 days": "30 日",
    "60 days": "60 日",
-   "90 days (about 3 months)": "90 日（約 3 か月）"
+   "90 days (about 3 months)": "90 日（約 3 か月）",
+   "Load shaders while playing": "プレイ中にシェーダーを読み込む",
+   "Off: they all load before the first frame, so the start takes longer. Turn it off if the game closes right at start.": "オフ：すべて最初のフレームの前に読み込むため、起動に時間がかかります。起動直後にゲームが終了する場合はオフにしてください。"
   },
   "ko": {
    "Polish": "폴란드어",
@@ -4851,7 +4871,9 @@
    "15 days": "15일",
    "30 days": "30일",
    "60 days": "60일",
-   "90 days (about 3 months)": "90일 (약 3개월)"
+   "90 days (about 3 months)": "90일 (약 3개월)",
+   "Load shaders while playing": "플레이 중 셰이더 불러오기",
+   "Off: they all load before the first frame, so the start takes longer. Turn it off if the game closes right at start.": "끄기: 첫 프레임 전에 모두 불러오므로 시작이 더 오래 걸립니다. 게임이 시작하자마자 꺼지면 끄세요."
   },
   "id": {
    "Polish": "Polandia",
@@ -5256,7 +5278,9 @@
    "15 days": "15 hari",
    "30 days": "30 hari",
    "60 days": "60 hari",
-   "90 days (about 3 months)": "90 hari (sekitar 3 bulan)"
+   "90 days (about 3 months)": "90 hari (sekitar 3 bulan)",
+   "Load shaders while playing": "Muat shader saat bermain",
+   "Off: they all load before the first frame, so the start takes longer. Turn it off if the game closes right at start.": "Mati: semuanya dimuat sebelum frame pertama, jadi permulaan lebih lama. Matikan jika game tertutup tepat saat dimulai."
   },
   "cs": {
    "Trophies": "Trofeje",
@@ -5720,7 +5744,9 @@
    "15 days": "15 dní",
    "30 days": "30 dní",
    "60 days": "60 dní",
-   "90 days (about 3 months)": "90 dní (zhruba 3 měsíce)"
+   "90 days (about 3 months)": "90 dní (zhruba 3 měsíce)",
+   "Load shaders while playing": "Načítat shadery během hraní",
+   "Off: they all load before the first frame, so the start takes longer. Turn it off if the game closes right at start.": "Vypnuto: všechny se načtou před prvním snímkem, takže spuštění trvá déle. Vypněte, pokud se hra hned po spuštění zavře."
   }
  },
  "ru": {
@@ -6196,7 +6222,9 @@
   "15 days": "15 дней",
   "30 days": "30 дней",
   "60 days": "60 дней",
-  "90 days (about 3 months)": "90 дней (около 3 месяцев)"
+  "90 days (about 3 months)": "90 дней (около 3 месяцев)",
+  "Load shaders while playing": "Загружать шейдеры во время игры",
+  "Off: they all load before the first frame, so the start takes longer. Turn it off if the game closes right at start.": "Выключено: все загружаются до первого кадра, поэтому запуск дольше. Выключите, если игра закрывается сразу после запуска."
  },
  "windows_languages": {
   "25": "ru",
