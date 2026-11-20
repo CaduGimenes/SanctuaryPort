@@ -23,7 +23,7 @@ class Diablo3PatchTests(unittest.TestCase):
         'Double Treasure Goblins', 'Double Bounty Bags', 'Royal Grandeur', 'Legacy of Nightmares', "Triune's Will",
         'Pandemonium', 'Kanai Powers', 'Trials of Tempests', 'Shadow Clones', "Fourth Kanai's Cube Slot",
         'Ethereal Items', 'Soul Shards', 'Swarm Rifts', 'Sanctified Items', 'Whimsyshire (Easter Egg World)',
-        'Also in non-seasonal games', 'Challenge Rifts')]
+        'Also in non-seasonal games', 'Challenge Rifts', 'The Darkening of Tristram')]
     OFFLINE_NAMES = {'Offline Seasons', 'Offline: no sign-in warning', *SEASONS, *EVENTS}
 
     def test_offline_patches_find_every_site_by_signature(self):
@@ -177,3 +177,20 @@ class InlineAddonTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class BundledModuleTests(unittest.TestCase):
+    """GitHub #28: a 1.00 eboot imports /app0/dlcldr.prx, at the root of the game folder."""
+
+    def test_modules_are_found_in_sce_module_then_at_the_root(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            game = Path(tmp)
+            (game / 'sce_module').mkdir()
+            (game / 'sce_module' / 'libc.prx').write_bytes(b'x')
+            (game / 'dlcldr.prx').write_bytes(b'x')
+            self.assertEqual(game_profiles.module_path(game, 'libc.prx'), game / 'sce_module' / 'libc.prx')
+            self.assertEqual(game_profiles.module_path(game, 'dlcldr.prx'), game / 'dlcldr.prx')
+            self.assertIsNone(game_profiles.module_path(game, 'libSceNpToolkit2.prx'))
+
+    def test_diablo_links_the_dlc_loader_when_the_dump_has_it(self):
+        self.assertIn('dlcldr.prx', game_profiles.DIABLO3['modules'])

@@ -1,6 +1,7 @@
 """Per-game settings, by title id in sce_sys/param.sfo (after bc160201983's MediEvil port).
 
-modules: bundled sce_module PRX files linked into the image (link_modules.py), in order.
+modules: bundled PRX files linked into the image (link_modules.py), in order; each is looked up in
+         sce_module/, then at the root of the game folder (module_path).
 env: default environment for the run (run.py); a value already set wins.
 """
 from pathlib import Path
@@ -50,7 +51,10 @@ PROFILES = {
     # Its updates (1.47) ship the game's own PSN toolkit (libSceNpToolkit2.prx, as WipEout), linked
     # when present: without it the 1.47 eboot stops at its first toolkit call (GitHub issues #1, #3).
     # Every release (any region or title ID) gets this profile: see is_diablo3.
-    'CUSA00242': {'name': 'Diablo III', 'modules': ('libc.prx', 'libSceFios2.prx', 'libSceNpToolkit2.prx'),
+    # Some 1.00 eboots (CUSA00433, GitHub #28) import the game's DLC loader, /app0/dlcldr.prx, and
+    # stop at its first call when it is not linked.
+    'CUSA00242': {'name': 'Diablo III', 'modules': ('libc.prx', 'libSceFios2.prx', 'libSceNpToolkit2.prx',
+                                                   'dlcldr.prx'),
                   # The draw-preparation workers (4096 | 8192) read resource descriptors before the
                   # game has written them, as in Knack: the world rendered as a flat grey screen.
                   'env': {'SANCTUARY_DEFERRED_READBACK': '0', 'SANCTUARY_STALE_READBACK': '0',
@@ -111,10 +115,18 @@ def inline_addons(game):
     return any(len(p.name) == 16 and (p / 'sce_sys').is_dir() for p in folders)
 
 
+def module_path(game, name):
+    """Where a bundled module is: sce_module/, or the folder's root (/app0/dlcldr.prx), or None."""
+    for path in (Path(game) / 'sce_module' / name, Path(game) / name):
+        if path.is_file():
+            return path
+    return None
+
+
 def profile(game):
     """The profile of a game folder (DEFAULT for unknown games)."""
     values = sfo_values(game)
     found = DIABLO3 if is_diablo3_sfo(values) else PROFILES.get(values.get('TITLE_ID') or '', DEFAULT)
     # Only modules the dump actually ships are linked.
-    modules = tuple(m for m in found['modules'] if (Path(game) / 'sce_module' / m).is_file())
+    modules = tuple(m for m in found['modules'] if module_path(game, m))
     return {**found, 'modules': modules}

@@ -20,6 +20,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'scripts'))
 from prepare import parse_self  # noqa: E402
 from link_modules import DEFAULT_MODULES  # noqa: E402
+import game_profiles  # noqa: E402
 
 PT_LOAD, PT_GNU_EH_FRAME = 1, 0x6474e550
 
@@ -91,7 +92,8 @@ def main():
     if len(bases) != len(args.modules):
         raise ValueError(f'{len(bases)} linked modules, expected {len(args.modules)}')
     for name, base in zip(args.modules, bases):
-        elf, _, ph, _, _ = parse_self((args.game / 'sce_module' / name).read_bytes())
+        path = game_profiles.module_path(args.game, name) or args.game / 'sce_module' / name
+        elf, _, ph, _, _ = parse_self(path.read_bytes())
         starts += function_starts(elf, ph, base)
     starts = sorted(set(starts))
     with (args.out / 'functions.bin').open('wb') as f:
