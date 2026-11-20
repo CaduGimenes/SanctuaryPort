@@ -11,6 +11,9 @@ pub const FRAME_LIMITER_PATCH_PREFIX: &str = "Frame Limiter";
 pub const FIXED_SCALE_PATCH: &str = "Dynamic Resolution - Off";
 /// The fix a resolution patch replaces: both resize the video arena.
 pub const TEXTURE_FIX_PATCH: &str = "Bug Fix - Texture Corruption Fix";
+/// SanctuaryPort: Diablo III's second frame limiter raised to its maximum, which run.py adds for
+/// Graphics > Frame rate 200 FPS.
+pub const FOREGROUND_CAP_PATCH: &str = "Max Foreground FPS - 200";
 
 /// One entry of a choice list: the stored value and its labels.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -83,12 +86,13 @@ pub static FPS_LIMITS: &[Choice] = &[
 
 /// SanctuaryPort: Diablo III's frame rate, its own frame limiter (run.py: patches/Diablo_III.xml
 /// "Frame Limiter"); 60 is the game's own. The game's clock follows real time, so only the
-/// frame rate changes.
+/// frame rate changes. 200 is the game's own maximum (its Max Foreground FPS setting) and keeps
+/// the stored value of the former Unlimited, 0, so existing sanctuary.ini files keep their choice.
 pub static FRAME_RATES: &[Choice] = &[
     c("30", "30 FPS"),
     c("60", "60 FPS (the game's own)"),
     c("120", "120 FPS"),
-    c("0", "Unlimited"),
+    c("0", "200 FPS (the game's maximum)"),
 ];
 
 /// GUI Scale: Auto by default (the desktop's scale, fitted to the screen), or the absolute zooms

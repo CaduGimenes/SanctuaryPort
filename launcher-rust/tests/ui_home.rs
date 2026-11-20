@@ -150,6 +150,23 @@ fn the_settings_line_leaves_out_the_parked_keys() {
 }
 
 #[test]
+fn the_settings_line_names_the_frame_rate_choice() {
+    // Diablo III's Graphics > Frame rate: 200 FPS keeps the former Unlimited's stored 0.
+    let dir = tempfile::tempdir().unwrap();
+    let mut state = state_in(dir.path());
+    mockup_settings(&mut state);
+    for (stored, shown) in [
+        ("30", "30 FPS"),
+        ("60", "60 FPS"),
+        ("120", "120 FPS"),
+        ("0", "200 FPS"),
+    ] {
+        state.store.set("frame_rate", json!(stored));
+        assert_eq!(home::quick_segments(&state)[2].0, shown, "{stored}");
+    }
+}
+
+#[test]
 fn the_hint_sits_under_the_settings_line_in_the_mockup_words() {
     let dir = tempfile::tempdir().unwrap();
     let mut state = state_in(dir.path());

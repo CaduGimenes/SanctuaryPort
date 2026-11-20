@@ -436,6 +436,8 @@ def main():
                 names.append(graphics_options.FIXED_SCALE_PATCH)
             available = patches.available_patches(patch_xml, profile[2])
             frame_rates = any(n.startswith(graphics_options.FPS_PREFIX) for n in available)
+            # Diablo III's 200 FPS: the game's second limiter, which follows the limiter chosen above.
+            names = graphics_options.foreground_cap_names(names)
             names = graphics_options.restrict_to_available(names, available)
             env['SANCTUARY_PATCHES'] = ';'.join(names)
             env['SANCTUARY_PATCHES_ONLY'] = '1'
@@ -470,9 +472,8 @@ def main():
                 if key not in env:
                     env[key] = value
                     derived.append(key)
-            limiter = next((n for n in applied if n.startswith(graphics_options.LIMITER_PREFIX)), None)
             if diablo3:
-                rate = limiter.split(' - ')[1] if limiter else '60 FPS'
+                rate = graphics_options.frame_rate_label(applied)
                 env['SANCTUARY_FRAME_RATE'] = rate + '  ·  Launcher > Graphics'
                 derived.append('SANCTUARY_FRAME_RATE')
                 print(f'Frame rate: {rate}', flush=True)

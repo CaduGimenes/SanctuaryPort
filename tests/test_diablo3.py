@@ -113,10 +113,12 @@ class Diablo3PatchTests(unittest.TestCase):
                               '2560x1080', '3440x1440', '3840x1600', '5120x1440',
                               '1280x800', '1920x1200', '2560x1600')}
         expected |= {f'{graphics_options.LIMITER_PREFIX} - {n}' for n in ('30 FPS', '120 FPS', 'Unlimited')}
-        expected |= self.OFFLINE_NAMES | {self.SMOOTH, graphics_options.FIXED_SCALE_PATCH}
+        expected |= self.OFFLINE_NAMES | {self.SMOOTH, graphics_options.FIXED_SCALE_PATCH,
+                                          graphics_options.FOREGROUND_CAP_PATCH}
         self.assertEqual(names, expected)
         for meta in ET.parse(xml).getroot().iter('Metadata'):
-            if meta.get('Name') in self.OFFLINE_NAMES | {self.SMOOTH, graphics_options.FIXED_SCALE_PATCH}:
+            if meta.get('Name') in self.OFFLINE_NAMES | {self.SMOOTH, graphics_options.FIXED_SCALE_PATCH,
+                                                         graphics_options.FOREGROUND_CAP_PATCH}:
                 continue
             if meta.get('Name').startswith(graphics_options.LIMITER_PREFIX):
                 # The frame limiter: one microsecond wait, 16683 (0x412b) in the pattern.
@@ -147,6 +149,45 @@ class Diablo3PatchTests(unittest.TestCase):
                 self.assertEqual(len(lines), 3, size)
                 aspect = struct.unpack('<f', bytes.fromhex(lines[2].get('Value')))[0]
                 self.assertAlmostEqual(aspect, width / height, places=5, msg=size)
+
+    def test_the_fps_cap_patch_asks_the_second_limiter_for_200(self):
+        # The game's second limiter waits (n + 2000) / (2 * n) whole ms for the setting n (150: 7 ms,
+        # about 143 FPS). The patch passes 200 in place of the setting it reads.
+        xml = ROOT / 'patches' / 'Diablo_III.xml'
+        name = graphics_options.FOREGROUND_CAP_PATCH
+        meta = ET.parse(xml).getroot().find(f"Metadata[@Name='{name}']")
+        line, = meta.iter('Line')
+        target, = meta.iter('Target')
+        value, at = bytes.fromhex(line.get('Value')), int(line.get('At'))
+        # mov eax, imm32 with the rate the entry is named after, in place of a call of the same
+        # length (the read of the setting), between the test of the limiter's switch and the call
+        # of the limiter with eax as its second argument.
+        pattern = line.get('Pattern').split()
+        self.assertEqual(pattern[at:at + len(value)], ['e8', '??', '??', '??', '??'])
+        self.assertEqual(value[0], 0xb8)
+        self.assertTrue(name.endswith(f" - {int.from_bytes(value[1:], 'little')}"))
+        self.assertEqual(pattern[at - 12:at - 8], ['85', 'c0', '74', '??'])
+        self.assertEqual(pattern[at + 12:at + 15], ['89', 'c6', 'e8'])
+        # One entry for every build checked; they differ in the je distance and in the order of the
+        # limiter's clamp of n to at least 1 (test ebx, ebx; mov ecx, 1) before the guarded arithmetic.
+        layouts = {'1.46, 1.47, 1.25': (0x1b, '85 db b9 01 00 00 00'), '1.00': (0x21, 'b9 01 00 00 00 85 db')}
+        for build, (skip, clamp) in layouts.items():
+            site = bytearray(bytes.fromhex(' '.join('5a' if b == '??' else b for b in pattern)))
+            site[at - 9] = skip
+            limiter = bytes.fromhex(clamp + ' ' + target.get('Pattern'))
+            image = bytearray(0x400)
+            image[0x100:0x100 + len(site)] = site
+            image[0x200:0x200 + len(limiter)] = limiter
+            skipped = {}
+            writes = patches.compile_patches(xml, [name], None, [(0, 0x400)], bytes(image), skipped)
+            self.assertEqual((writes, skipped), ([(0x100 + at, value)], {}), build)
+            # Another build: the call site differs, or the limiter does not compute this limit.
+            for changed in (0x100 + at - 10, 0x200 + 7 + 4):
+                other = bytearray(image)
+                other[changed] ^= 0xff
+                skipped = {}
+                self.assertEqual(patches.compile_patches(xml, [name], None, [(0, 0x400)], bytes(other), skipped), [])
+                self.assertEqual(skipped, {name: 'signature not found'}, build)
 
     def test_us_1_00_gets_its_own_sites(self):
         # GitHub #16: the 1.47 signatures are not in the US 1.00 eboot; its own entry is used.

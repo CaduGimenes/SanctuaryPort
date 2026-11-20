@@ -55,9 +55,9 @@ Frame rate: the game paces itself. After each frame (1.47 eboot 0xbef87) it slee
 `[obj+0xce0]` microseconds have passed since the last one; 0xbda8a sets it from
 `sceVideoOutGetResolutionStatus`'s refresh rate (16683 for 59.94 Hz, 41701 for 23.98, 20000 for
 50), so a faster vblank alone stays at 60. The "Frame Limiter" patches (both executables) replace
-16683 with 33367 (30), 8341 (120) or 0 (unlimited); the launcher's Graphics > Frame rate
+16683 with 33367 (30), 8341 (120) or 0 (200, below); the launcher's Graphics > Frame rate
 (`sanctuary.ini frame_rate`, run.py) picks one, and above 60 run.py sets a 480 Hz vblank and the
-present limit (`SANCTUARY_FPS_LIMIT`). Unlimited gets 480, the vblank's own rate: without a limit
+present limit (`SANCTUARY_FPS_LIMIT`). 200 FPS gets 480, the vblank's own rate: without a limit
 a frame waits for the next vblank tick, with one it is shown when it arrives, as at 60 and 120.
 That limit is not the frame rate, so the `Stall:` lines of `SANCTUARY_FRAME_STATS=1` keep the
 40 ms threshold they have without a limit (`SANCTUARY_STALL_MS` sets another). The game's clock
@@ -81,6 +81,50 @@ at 720p, 800 or 900 lines the HUD bars and icons stayed and every text (menus, t
 names) was gone, without any error (PR #15). The resolution patches under 1080 lines turn the `ja`
 after `cmp $1079` into `jmp`, so the game uses its 1080p fonts and scales them like the rest of the
 UI. Found by comparing frame captures: the font shaders (vs/ps f405edba/0ed7c8fb) were never drawn.
+
+Frame rate 200 FPS, the top choice (`frame_rate=0`, the value of the former Unlimited, so existing
+sanctuary.ini files keep it): with the "Frame Limiter - Unlimited" patch the limiter above does not
+wait, but the game then stops at about 143 FPS because it has a second limiter. Its end-of-frame
+code (eboot 0x234190) calls 0x2354f0 with the PC game's "Max Foreground FPS" setting
+(`MaxForegroundFPS`, `[settings+0x78]`, default 150, range 1..200) unless `LimitForegroundFPS`
+(`[settings+0x74]`, default 1) is off. It sleeps 1 ms at a time until `(n + 2000) / (2 * n)` whole
+milliseconds have passed since its last frame: 7 ms for 150. At 30, 60 and 120 FPS the first
+limiter has waited longer and this one returns at once (stack samples on the title screen without
+a wait in the first: the main render thread is in that sleep loop 95% of the time, and the game's
+frame is 7.000 ms). So run.py adds "Max Foreground FPS - 200" with that patch, always and only
+then: the call that reads the setting (0x2341fb) becomes `mov eax, 200`, the setting's maximum, so
+the limit is 5 ms: up to 200 FPS, 191 to 196 measured on the title screen (the limiter wakes a
+little after each whole millisecond; frame pacing median 5.2 ms). The value read is replaced, not
+the default, because a saved preference is applied after the defaults. The log and the in-game
+menu name the result "200 FPS"; `frame_rate=200` is read as 0. One signature covers every
+executable checked with `scripts/patches.py`, matching once in each: 1.47 and 1.46 (write at
+0x2341fb), CUSA00243's 1.25 update (0x22d27b) and the 1.00 disc executable of CUSA00434 and
+CUSA00243 (0x1a56e7, where the getter reads `[settings+0x64]`); the call target and the je
+distance are left open, and the limiter's arithmetic must match too. On an eboot.bin where it does
+not, the entry is skipped, the game's own 150 still holds the game, and they say `about 143 FPS
+(Max Foreground FPS - 200 not found in this eboot.bin)`. 200 is
+as far as it goes on purpose: it is the game's own maximum, and above it cloth runs faster than
+real time. What depends on the frame rate above the game's own 150, from the code (not measured
+unless it says so):
+
+| What | Where | At 200 FPS | Above 200 FPS |
+|---|---|---|---|
+| Cloth: its time step is the frame time, smoothed, with a floor of 5 ms | 0x37980 (solver 0x3bae0) | about real time (a frame the millisecond clock cuts short of 5 ms is stepped as 5: marginally fast) | **runs faster than real time**: 1.25 times at 250 FPS, 2.4 times at 480. This is why the cap is 200 |
+| Cloth damping is applied per step, not per second | 0x3bae0 | 3.3 times the damping per second of 60 FPS (2.4 times at 143 already): stiffer cloth | more |
+| Game time advances in units of 1/3000 s | frame function 0x2abc0, clock 0x54ae30 | a frame is 15 units; one unit of jitter is 7% | 8% at 240, 16% at 480; above 3000 FPS a frame's update is skipped |
+| Game time is a 32-bit float of seconds, reset per game | `[clock+0x60]`, 0x277b0 | after 2 h in one game a frame's step is known to 0.5 ms (10% of a frame, 7% at 143 FPS), after 9 h to 2 ms (39%, 28% at 143) | worse in proportion |
+| Two blends with a fixed factor per update | 0x2a4550 (`x += (0 - x) * 0.2`), 0x2a4380 (`x += (target - x) * 0.1`) | settle 3.3 times as fast as at 60 FPS; what they drive is not known | faster |
+| Dynamic resolution works on a 60 FPS budget (GPU time over 15.25 ms lowers the scale) | 0x26e80 | cannot help hold 200 FPS; it only acts below 66 | same |
+| Characters between ticks (the #24 defect) | 0x256fc0 | uneven steps without its fix, as at every rate above 60 (measured at 250 game frames per second: 0.44) | same |
+| Physics steps once per frame with the frame's time | 0x3d2700 | not known | not known |
+| Interface animation, input repeat, camera smoothing, audio | not read | not known | not known |
+| Work: 40% more frames than at 143 FPS | | more CPU and GPU load, heat and power | without any limiter the title screen alone took 3.6 CPU cores (measured) |
+
+None of these is a fault of the game's logic, which runs in 60 Hz ticks from the clock. With
+V-Sync on, the game's wait for the GPU after each frame includes the display's vsync (the note on
+`SANCTUARY_VSYNC` in `scripts/game_profiles.py`), so the display sets the pace and 200 can only
+differ from the former Unlimited on a display faster than 143 Hz; that combination has not been
+measured.
 
 Below the window, FSR 1 (`fsr1=1`, launcher Graphics > Upscaling, in-game Image) upscales the
 picture and RCAS sharpens it; a render resolution under 1080p then opens a 1080p window.

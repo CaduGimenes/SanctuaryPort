@@ -598,7 +598,8 @@ pub fn quick_segments(state: &State) -> Vec<(String, bool)> {
     let lang = state.lang.as_str();
     // SanctuaryPort: Diablo III's frame rate is its own frame limiter (Graphics > Frame rate).
     let fps = match state.store.text("frame_rate").as_str() {
-        "0" => tr(lang, "Unlimited"),
+        // The game's maximum, stored as the former Unlimited's 0.
+        "0" => "200 FPS".to_string(),
         rate @ ("30" | "120") => format!("{rate} FPS"),
         _ => "60 FPS".to_string(),
     };
