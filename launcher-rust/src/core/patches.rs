@@ -172,7 +172,9 @@ pub fn selectable(metas: &[PatchMeta]) -> Vec<PatchMeta> {
     metas
         .iter()
         .filter(|m| {
-            !(m.name.starts_with(RESOLUTION_PATCH_PREFIX)
+            // Diablo III's raised second frame limiter follows the 200 FPS frame rate (run.py).
+            !(m.name == crate::core::options::FOREGROUND_CAP_PATCH
+                || m.name.starts_with(RESOLUTION_PATCH_PREFIX)
                 || m.name.starts_with(FRAME_RATE_PATCH_PREFIX)
                 || m.name.starts_with(FRAME_LIMITER_PATCH_PREFIX)
                 || m.name == FIXED_SCALE_PATCH
@@ -218,6 +220,10 @@ mod tests {
             && meta.name != FIXED_SCALE_PATCH));
         assert!(offered.iter().any(|meta| meta.name.starts_with("Offline Seasons - Season ")));
         assert!(offered.iter().any(|meta| meta.name.starts_with("Event: ")));
+        // The raised foreground cap is in the file but follows the 200 FPS frame rate (run.py).
+        let cap = crate::core::options::FOREGROUND_CAP_PATCH;
+        assert!(metas.iter().any(|meta| meta.name == cap));
+        assert!(offered.iter().all(|meta| meta.name != cap));
         assert!(game_patch_metas(&diablo_xml(), "01.00").unwrap().is_empty());
     }
 

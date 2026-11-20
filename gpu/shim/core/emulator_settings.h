@@ -33,7 +33,7 @@ public:
     // rate frames alternated 10/20 ms at 100 Hz: judder), and GetFrameLimit() caps the rate at
     // the display refresh, at most 120 (above ~120 FPS movement timing breaks: running slows).
     // An explicit SANCTUARY_VBLANK_HZ is used as given, without a limit (measurements).
-    // run.py passes the same 480 as the frame limit of Diablo III's Unlimited frame rate
+    // run.py passes the same 480 as the frame limit of Diablo III's 200 FPS frame rate
     // (scripts/graphics_options.py limiter_environment): change the two together.
     u32 GetVblankFrequency() {
         static const u32 value = [] {

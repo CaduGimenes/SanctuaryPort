@@ -254,6 +254,45 @@
             <Line Type="bytes" Address="0x00d2d49d" Value="0000000e" Pattern="b9 00 00 00 02 41 b8 00 10 00 00 45 31 c9" At="1"/>
         </PatchList>
     </Metadata>
+    <!-- Max Foreground FPS: what the Frame Limiter patch that does not wait (Unlimited) stops at.
+         After the frame limiter of the header comment, the game's end-of-frame code (1.47 eboot
+         0x234190) runs a second one, the PC game's "Max Foreground FPS" setting. When
+         LimitForegroundFPS ([settings+0x74], default 1) is set, it calls 0x2354f0 with
+         MaxForegroundFPS ([settings+0x78], default 150, range 1..200), which sleeps 1 ms at a time
+         until (n + 2000) / (2 * n) whole milliseconds have passed since its last frame. That is
+         7 ms for 150: with the Unlimited patch, where the first limiter does not wait, the game
+         runs at about 143 FPS. At 30, 60 and 120 FPS the first limiter has already waited longer
+         and this one returns at once. (0x2354f0 has a second mode, taken when [0x1631020] is not
+         1: one sleep of 1 ms when n is below the float at [obj+0x1c]. Stack samples show the port
+         in the loop described here.)
+             0x2341e2  e8 rel32 / 48 89 c7 / e8 rel32       eax = [settings+0x74]
+             0x2341ef  85 c0 / 74 rel8   test eax, eax / je    no limit: skip
+             0x2341f3  e8 rel32 / 48 89 c7                     rdi = settings
+             0x2341fb  e8 20 55 fd ff    call 0x209720         eax = [settings+0x78]   becomes
+                       b8 c8 00 00 00    mov eax, 200
+             0x234200  48 8d 3d rel32 / 89 c6 / e8 rel32       0x2354f0(&last, eax)
+         The limiter is asked for 200, the setting's own maximum: (200 + 2000) / 400 = 5 ms, about
+         200 FPS. Not more: the cloth simulation's time step has a floor of 5 ms (0x37980), so
+         above 200 FPS cloth would run faster than real time (at 200 it is about real time: a
+         frame the millisecond clock cuts short of 5 ms is still stepped as 5). The value read is
+         replaced, not the default that 0x20e2a0 writes into the setting's descriptor, because a
+         saved preference is applied after the defaults and would win. The entry also needs the
+         limiter's arithmetic (Target "limiter": cmovg ecx, ebx; lea eax, [rcx+2000];
+         add ecx, ecx; cdq; idiv ecx; nothing is written there), so an executable whose limiter
+         computes something else is left alone. The getter's call target, the je distance and the
+         displacements are left open, so the same entry covers every build checked, each matching
+         once: 1.47 and 1.46 (write at 0x2341fb, getter [rdi+0x78]), CUSA00243's 1.25 update
+         (0x22d27b, [rdi+0x78]) and the 1.00 disc executable of CUSA00434 and CUSA00243 (0x1a56e7,
+         getter [rdi+0x64], je +0x21).
+         run.py adds the patch together with "Frame Limiter - Unlimited" for Graphics > Frame rate
+         200 FPS (sanctuary.ini frame_rate=0, the value of the former Unlimited), and never
+         otherwise. -->
+    <Metadata Title="Diablo III" Name="Max Foreground FPS - 200" Note="With the Frame Limiter patch that does not wait the game reaches up to 200 FPS instead of about 143: its second frame limiter (the PC game's Max Foreground FPS, 150 by default) is asked for 200, the setting's maximum. Applied by Graphics &gt; Frame rate 200 FPS." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x006341fb" Value="b8c8000000" Pattern="e8 ?? ?? ?? ?? 48 89 c7 e8 ?? ?? ?? ?? 85 c0 74 ?? e8 ?? ?? ?? ?? 48 89 c7 e8 ?? ?? ?? ?? 48 8d 3d ?? ?? ?? ?? 89 c6 e8 ?? ?? ?? ??" At="25"/>
+        </PatchList>
+        <Target Name="limiter" Address="0x0063550d" Pattern="0f 4f cb 8d 81 d0 07 00 00 01 c9 99 f7 f9 89 c3" At="0"/>
+    </Metadata>
     <Metadata Title="Diablo III" Name="Frame Limiter - 30 FPS" Note="The game's frame limiter waits 33367 us (30 FPS) instead of 16683 us per frame." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x004bda91" Value="57820000" Pattern="49 c7 87 e0 0c 00 00 2b 41 00 00 eb 18 49 c7 87 e0 0c 00 00 e5 a2 00 00" At="7"/>
