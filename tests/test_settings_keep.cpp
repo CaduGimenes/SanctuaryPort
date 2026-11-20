@@ -20,7 +20,7 @@ int main() {
     {
         std::ofstream out(path);
         out << "# launcher\nframe_rate=120\nvertical_sync=1\ndynamic_resolution=0\nglyph_style=auto\r\n"
-               "fxaa=1\nanisotropy=16\nplayer_note=" << long_value << "\n";
+               "fxaa=1\ngtao=low\nanisotropy=16\nplayer_note=" << long_value << "\n";
     }
     setenv("SANCTUARY_CONFIG", path, 1);
     SanctuarySettings::Load();
@@ -34,10 +34,33 @@ int main() {
     assert(saved.find("player_note=" + long_value + "\n") != std::string::npos);  // a long line stays whole
     assert(saved.find("anisotropy=16") == std::string::npos);  // the menu's own key is not repeated
     assert(saved.find("fxaa=") == saved.rfind("fxaa="));
+    assert(saved.find("gtao=low\n") != std::string::npos);
+    assert(saved.find("gtao=") == saved.rfind("gtao="));
     // A second save changes nothing.
     SanctuarySettings::Save();
     assert(Read(path) == saved);
     assert(!std::ifstream(std::string(path) + ".new"));
+
+    // GTAO: off by default, parses off/low/high (and 1/2), live toggle (no restart), env wins.
+    SanctuarySettings::Load();
+    auto& v = SanctuarySettings::Get();
+    assert(v.gtao == SanctuarySettings::GtaoLow);
+    v.gtao = SanctuarySettings::GtaoHigh;
+    assert(!SanctuarySettings::GraphicsNeedRestart());
+    SanctuarySettings::Save();
+    assert(Read(path).find("gtao=high\n") != std::string::npos);
+    {
+        std::ofstream out(path);
+        out << "gtao=bogus\n";
+    }
+    unsetenv("SANCTUARY_GTAO");
+    SanctuarySettings::Load();
+    assert(v.gtao == SanctuarySettings::GtaoOff);
+    setenv("SANCTUARY_GTAO", "high", 1);
+    SanctuarySettings::Load();
+    assert(v.gtao == SanctuarySettings::GtaoHigh);
+    unsetenv("SANCTUARY_GTAO");
+
     std::remove(path);
     std::puts("PASS: settings keep the launcher's keys");
 }

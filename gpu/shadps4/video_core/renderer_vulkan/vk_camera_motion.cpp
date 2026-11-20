@@ -358,6 +358,54 @@ bool CameraMotion::OnObjectBlock(const float* block, u64 shader) {
     return true;
 }
 
+void CameraMotion::NoteGtaoDepth(VideoCore::ImageId depth, const float* block) noexcept {
+    if (!depth ||
+        SanctuarySettings::Get().gtao.load(std::memory_order_relaxed) == SanctuarySettings::GtaoOff) {
+        return;
+    }
+    std::array<double, 16> m{};
+    for (u32 i = 0; i < m.size(); ++i) m[i] = block[56 + i];
+    std::array<double, 3> camera{};
+    if (!IsPerspective(m) || !SolveCamera(m, camera)) return;
+    const auto length = [&](u32 row) {
+        return std::sqrt(m[row * 4] * m[row * 4] + m[row * 4 + 1] * m[row * 4 + 1] +
+                         m[row * 4 + 2] * m[row * 4 + 2]);
+    };
+    const double sx = length(0), sy = length(1), sw = length(3);
+    const double a = (m[8] * m[12] + m[9] * m[13] + m[10] * m[14]) / (sw * sw);
+    const double b = m[8] * camera[0] + m[9] * camera[1] + m[10] * camera[2] + m[11];
+    const double near = -b / a, far = b / (1.0 - a);
+    if (!std::isfinite(near) || !std::isfinite(far) || near <= 0.0 || far <= near || far >= 1e7)
+        return;
+    const auto uid = texture_cache.GetImage(depth).image_uid;
+    const std::array<float, 4> projection{float(sx / sw), float(sy / sw), float(a), float(b)};
+    auto it = std::ranges::find(gtao_projections, uid, &DepthProjection::image_uid);
+    if (it == gtao_projections.end()) {
+        gtao_projections.push_back({uid, projection, true});
+        return;
+    }
+    // Object transforms introduce rounding. Distinct projections sharing a depth image
+    // cannot be reconstructed by a single full-screen dispatch.
+    constexpr std::array<float, 4> tolerance{0.001f, 0.001f, 0.000001f, 0.002f};
+    for (size_t i = 0; i < projection.size(); ++i) {
+        if (std::abs(it->projection[i] - projection[i]) >
+            tolerance[i] * std::max(1.0f, std::abs(it->projection[i]))) {
+            it->consistent = false;
+            break;
+        }
+    }
+}
+
+bool CameraMotion::GtaoProjectionFor(VideoCore::ImageId depth,
+                                     std::array<float, 4>& projection) const noexcept {
+    if (!depth) return false;
+    const auto uid = texture_cache.GetImage(depth).image_uid;
+    const auto it = std::ranges::find(gtao_projections, uid, &DepthProjection::image_uid);
+    if (it == gtao_projections.end() || !it->consistent) return false;
+    projection = it->projection;
+    return true;
+}
+
 void CameraMotion::OnSceneDepthCopy(VideoCore::ImageId depth, u32 width, u32 height) {
     if (geometry_depth_candidate && geometry_depth_candidate != geometry_depth) {
         geometry_depth = geometry_depth_candidate;
@@ -548,6 +596,7 @@ void CameraMotion::ResolveObjectCamera(bool after_scene) {
 }
 
 void CameraMotion::OnDisplayPass(VideoCore::ImageId frame) {
+    gtao_projections.clear();
     if (!camera_resolved) {
         ResolveObjectCamera(false);
     }

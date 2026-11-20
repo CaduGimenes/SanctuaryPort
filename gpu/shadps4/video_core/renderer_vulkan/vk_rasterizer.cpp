@@ -24,6 +24,7 @@
 #include "video_core/renderer_vulkan/vk_occlusion_query.h"
 #include "video_core/renderer_vulkan/vk_rasterizer.h"
 #include "video_core/renderer_vulkan/vk_fxaa.h"
+#include "video_core/renderer_vulkan/vk_gtao.h"
 #include "video_core/renderer_vulkan/vk_gpu_profiler.h"
 #include "sanctuary_threads.h"
 #include "video_core/renderer_vulkan/vk_runtime.h"
@@ -66,6 +67,7 @@ Rasterizer::Rasterizer(const Instance& instance_, Scheduler& scheduler_, Runtime
     frame_generation =
         std::make_unique<FrameGeneration>(instance, scheduler, texture_cache, runtime);
     fxaa = std::make_unique<Fxaa>(instance, scheduler, texture_cache, runtime);
+    gtao = std::make_unique<Gtao>(instance, scheduler, texture_cache, runtime);
     if (!EmulatorSettings.IsNullGPU()) {
         liverpool->BindRasterizer(this);
     }
@@ -1431,6 +1433,102 @@ void Rasterizer::DrawRecord(const GraphicsPipeline* pipeline, const PreparedDraw
             FrameCapture::Note(note);
         }
     }
+    // Diablo III's SSAO upscale writes the full-size R8 visibility used by scene lighting.
+    // Matched structurally by role (single R8Unorm target, no depth target, 4-index fullscreen
+    // quad, 4 sampled inputs: one full-res scene depth, two half-res buffers including R8Unorm
+    // half-res SSAO, and one small vignette) so it works across 1.00, 1.46, and 1.47 builds
+    // regardless of shader hashes or resource-slot order. The stock draw has already completed
+    // and is retained whenever any input or state does not match.
+    if (const auto* ps = pipeline->GetStages()[u32(Shader::SwStage::Fragment)];
+        SanctuarySettings::Get().gtao.load(std::memory_order_relaxed) !=
+            SanctuarySettings::GtaoOff &&
+        ps && num_indices == 4 && num_instances == 1 && ps->images.size() == 4 &&
+        state.num_color_attachments == 1 && !db_desc.first && cb_descs[0].first) {
+        bool applied_gtao = false;
+        std::array<float, 4> projection{};
+        VideoCore::ImageId depth_id{};
+        const auto target_id = cb_descs[0].first;
+        const auto& target = texture_cache.GetImage(target_id);
+        if (gtao_input.captured && !scene_targets->Reduced() && target_scale[0] == 1.0f &&
+            target_scale[1] == 1.0f && target.info.pixel_format == vk::Format::eR8Unorm) {
+            const u32 w = target.info.size.width;
+            const u32 h = target.info.size.height;
+            const auto is_half = [&](const VideoCore::Image& img) {
+                return (img.info.size.width == w / 2 || img.info.size.width == (w + 1) / 2) &&
+                       (img.info.size.height == h / 2 || img.info.size.height == (h + 1) / 2);
+            };
+            int depth_idx = -1, vignette_idx = -1;
+            int depth_count = 0, vignette_count = 0, half_count = 0, half_r8_count = 0;
+            for (int i = 0; i < 4; ++i) {
+                const auto& b = gtao_input.bindings[i];
+                if (!b.id) {
+                    continue;
+                }
+                const auto& img = texture_cache.GetImage(b.id);
+                const bool is_depth_fmt =
+                    img.info.pixel_format == vk::Format::eD32Sfloat ||
+                    img.info.pixel_format == vk::Format::eD32SfloatS8Uint;
+                if (is_depth_fmt && img.info.size.width == w && img.info.size.height == h &&
+                    b.native && b.base_single) {
+                    depth_idx = i;
+                    ++depth_count;
+                } else if (is_half(img)) {
+                    ++half_count;
+                    if (img.info.pixel_format == vk::Format::eR8Unorm) {
+                        ++half_r8_count;
+                    }
+                } else if (b.native && b.view && img.info.size.width <= 256 &&
+                           img.info.size.height <= 256 && img.info.size.width < w / 2 &&
+                           img.info.size.height < h / 2) {
+                    vignette_idx = i;
+                    ++vignette_count;
+                }
+            }
+            const bool layout_matches = depth_count == 1 && vignette_count == 1 &&
+                                        half_count == 2 && half_r8_count >= 1;
+            if (layout_matches) {
+                depth_id = gtao_input.bindings[depth_idx].id;
+            }
+            const auto& range = cb_descs[0].second.view_info.range;
+            const auto& native_view =
+                texture_cache.FindRenderTarget(target_id, cb_descs[0].second).image_view;
+            // Dynamic resolution draws into the top-left of the same full-sized images.
+            // A clipped draw with a larger viewport only updates part of an existing AO map.
+            const auto& dynamic = scheduler.GetDynamicState();
+            const auto& vp = dynamic.viewports.front();
+            const auto& scissor = dynamic.scissors.front();
+            const vk::Extent2D scene_extent{
+                std::min(scissor.extent.width, w),
+                std::min(scissor.extent.height, h)};
+            const bool scene_viewport = dynamic.viewports.size() == 1 &&
+                                        dynamic.scissors.size() == 1 && vp.x == 0 &&
+                                        std::min(vp.y, vp.y + vp.height) == 0 &&
+                                        vp.width == scene_extent.width &&
+                                        std::abs(vp.height) == scene_extent.height &&
+                                        scissor.offset.x == 0 && scissor.offset.y == 0;
+            if (layout_matches && camera_motion->GtaoProjectionFor(depth_id, projection) &&
+                native_view && state.color_attachments[0].image_view == *native_view &&
+                state.width == w && state.height == h && range.base.level == 0 &&
+                range.base.layer == 0 && range.extent.levels == 1 && range.extent.layers == 1 &&
+                scene_viewport) {
+                applied_gtao = gtao->Run(depth_id, target_id, projection,
+                                         gtao_input.bindings[vignette_idx].view,
+                                         gtao_input.bindings[vignette_idx].layout, scene_extent);
+            }
+        }
+        static const bool trace = std::getenv("SANCTUARY_GTAO_TRACE") != nullptr;
+        if (trace && target.info.pixel_format == vk::Format::eR8Unorm) {
+            std::fprintf(stderr,
+                         "ao-pass frame=%llu applied=%d captured=%d vs=%08x ps=%08x depth=%u "
+                         "target=%u area=%ux%u scissor=%dx%d projection=%.6f,%.6f,%.8f,%.8f\n",
+                         static_cast<unsigned long long>(FrameCapture::Flips()), int(applied_gtao),
+                         int(gtao_input.captured), u32(vs_info.pgm_hash), u32(ps->pgm_hash),
+                         depth_id.index, target_id.index, state.width, state.height,
+                         int(regs.screen_scissor.bottom_right_x),
+                         int(regs.screen_scissor.bottom_right_y), projection[0], projection[1],
+                         projection[2], projection[3]);
+        }
+    }
     DebugState.IncDrawCall();
 
     ResetBindings(false);
@@ -1913,6 +2011,7 @@ bool Rasterizer::BindResources(const Pipeline* pipeline) {
     set_writes.clear();
     buffer_infos.clear();
     image_infos.clear();
+    gtao_input = {};
     // sanctuary: G-buffer passes sample material textures for a scene rendered below the output
     // size; the temporal upscaler restores the detail of the output's mip level (FSR guide:
     // log2(render / output)). Shadows, post-processing and UI keep the guest's bias.
@@ -2457,6 +2556,11 @@ void Rasterizer::BindBuffers(const Shader::Info& stage, const PreparedStage* pre
                             stage.pgm_hash) &&
                         db_desc.first) {
                         camera_motion->NoteGeometryDepth(db_desc.first);
+                        if (Regs().depth_control.depth_write_enable) {
+                            camera_motion->NoteGtaoDepth(
+                                db_desc.first,
+                                reinterpret_cast<const float*>(constant_ring->Data(ring->offset)));
+                        }
                     }
                 }
                 if (ring->size == 864 && gbuffer_draw &&
@@ -2527,6 +2631,10 @@ void Rasterizer::BindBuffers(const Shader::Info& stage, const PreparedStage* pre
                         reinterpret_cast<const float*>(vsharp.base_address), stage.pgm_hash) &&
                     db_desc.first) {
                     camera_motion->NoteGeometryDepth(db_desc.first);
+                    if (Regs().depth_control.depth_write_enable) {
+                        camera_motion->NoteGtaoDepth(
+                            db_desc.first, reinterpret_cast<const float*>(vsharp.base_address));
+                    }
                 }
             }
             if (vsharp.GetSize() == 864 && gbuffer_draw &&
@@ -2635,8 +2743,15 @@ void Rasterizer::BindTextures(const Shader::Info& stage, const PreparedStage* pr
                               Shader::Backend::Bindings& binding, u32& write_index,
                               bool& barrier, bool on_helper) {
     const u32 first_image_idx = image_infos.size();
+    const bool gtao_stage =
+        stage.sw_stage == Shader::SwStage::Fragment && stage.images.size() == 4 &&
+        SanctuarySettings::Get().gtao.load(std::memory_order_relaxed) !=
+            SanctuarySettings::GtaoOff &&
+        Regs().color_buffers[0].GetDataFmt() == AmdGpu::DataFormat::Format8 &&
+        Regs().color_buffers[0].GetNumberFmt() == AmdGpu::NumberFormat::Unorm;
     TextureSet* set_slot = nullptr;
-    if (!on_helper && BindTexturesFromSet(stage, prepared, first_image_idx, barrier, set_slot)) {
+    if (!gtao_stage && !on_helper &&
+        BindTexturesFromSet(stage, prepared, first_image_idx, barrier, set_slot)) {
         // Descriptor writes: one per image (no mip arrays in a memoized set).
         for (u32 i = 0; i < stage.images.size(); ++i) {
             auto& set_write = set_writes[write_index++];
@@ -2663,6 +2778,7 @@ void Rasterizer::BindTextures(const Shader::Info& stage, const PreparedStage* pr
     // SampleSceneProxies: bindings that may read a reduced scene proxy instead of the native
     // image (normalized sampling only; see Shader::ImageResource::needs_native).
     boost::container::small_vector<bool, 16> binding_proxy_ok;
+    std::array<bool, 4> gtao_native{};
     const bool sample_proxies = !SanctuaryToggle::Disabled(SanctuaryToggle::SampleSceneProxies) &&
                                 !on_helper && scene_targets->Reduced();
 
@@ -2909,12 +3025,34 @@ void Rasterizer::BindTextures(const Shader::Info& stage, const PreparedStage* pr
                 upscaler->RedirectSampled(image_id, image_view.info, view, layout);
             }
             image_infos.emplace_back(VK_NULL_HANDLE, view, layout);
+            if (gtao_stage && binding_index < gtao_native.size() &&
+                !(upscaler->Enabled() && upscaler->RedirectsSampled(image_id))) {
+                gtao_native[binding_index] = true;
+            }
             if (set_ok && binding_index < resolved.size()) {
                 resolved[binding_index] = {image_id, *image_view.image_view, image.backing,
                                            desc.view_info.range};
                 set_ok = !is_storage && !binding.force_general && !binding.is_target;
             }
         }
+    }
+    if (gtao_stage && image_bindings.size() == 4 &&
+        image_descriptor_array_sizes.size() == 4 &&
+        std::all_of(image_descriptor_array_sizes.begin(), image_descriptor_array_sizes.end(),
+                    [](u32 count) { return count == 1; })) {
+        for (u32 i = 0; i < 4; ++i) {
+            const auto& range = image_bindings[i].second->view_info.range;
+            const bool base_single = range.base.level == 0 && range.base.layer == 0 &&
+                                     range.extent.levels == 1 && range.extent.layers == 1;
+            gtao_input.bindings[i] = {
+                .id = image_bindings[i].first,
+                .view = image_infos[first_image_idx + i].imageView,
+                .layout = image_infos[first_image_idx + i].imageLayout,
+                .native = gtao_native[i],
+                .base_single = base_single,
+            };
+        }
+        gtao_input.captured = true;
     }
     if (set_ok && image_bindings.size() == stage.images.size()) {
         // Remember the set: the same T#s resolve the same way while no image is (un)registered.

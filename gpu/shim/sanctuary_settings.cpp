@@ -104,6 +104,14 @@ void Set(Values& v, const std::string& key, const std::string& value) {
         v.rcas = i != 0;
     } else if (key == "fxaa") {
         v.fxaa = i != 0;
+    } else if (key == "gtao") {
+        if (value == "high" || value == "2") {
+            v.gtao = GtaoHigh;
+        } else if (value == "low" || value == "1") {
+            v.gtao = GtaoLow;
+        } else {
+            v.gtao = GtaoOff;
+        }
     } else if (key == "rcas_strength") {
         v.rcas_strength = SanctuaryGraphics::ParseRcasStrength(value.empty() ? -1 : i);
     } else if (key == "frames_queued") {
@@ -187,6 +195,7 @@ void Load() {
         {"SANCTUARY_ANISOTROPY", "anisotropy"},            {"SANCTUARY_VIBRATION", "vibration"},
         {"SANCTUARY_MOUSE_PROMPT_DISTANCE", "mouse_prompt_distance"}, {"SANCTUARY_MOUSE_LOCK", "mouse_lock"},
         {"SANCTUARY_MOUSE_AIM_STYLE", "mouse_aim_style"}, {"SANCTUARY_VSYNC", "vsync"}, {"SANCTUARY_MOUSE_AIM_SENSITIVITY", "mouse_aim_sensitivity"},
+        {"SANCTUARY_GTAO", "gtao"},
     };
     for (const auto& [env, key] : env_keys) {
         if (const char* value = std::getenv(env); value && value[0]) {
@@ -350,6 +359,8 @@ static void SaveOwnKeys(FILE* file) {
                  v.engine_fps.load(), int(v.deferred_readback.load()), int(v.stale_readback.load()),
                  int(v.restart_unconfirmed.load()));
     std::fprintf(file, "fxaa=%d\n", int(v.fxaa.load()));
+    const int gtao = v.gtao.load();
+    std::fprintf(file, "gtao=%s\n", gtao == GtaoHigh ? "high" : gtao == GtaoLow ? "low" : "off");
     std::fprintf(file, "anisotropy=%d\nvibration=%d\nmouse_prompt_distance=%d\nmouse_lock=%d\nmouse_aim_style=%d\n"
                        "mouse_aim_sensitivity=%d\n",
                  v.anisotropy.load(), v.vibration.load(), v.mouse_prompt_distance.load(), int(v.mouse_lock.load()),

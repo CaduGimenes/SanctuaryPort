@@ -65,6 +65,13 @@ pub static ANISOTROPY: &[Choice] = &[
     c("16", "16x"),
 ];
 
+/// SanctuaryPort: optional GTAO replacement for Diablo III's SSAO upscale pass (`gtao`).
+pub static GTAO_MODES: &[Choice] = &[
+    c("off", "Off (game SSAO)"),
+    c("low", "Low"),
+    c("high", "High"),
+];
+
 /// SanctuaryPort: Diablo III runs at 60 frames per second; a limit above it changes nothing.
 pub static FPS_LIMITS: &[Choice] = &[
     c("30", "30"),

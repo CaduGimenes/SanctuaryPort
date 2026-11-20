@@ -11,7 +11,7 @@ use iced::Element;
 
 use crate::core::gpu::{no_msaa_decision, MsaaDecision};
 use crate::core::i18n::tr;
-use crate::core::options::{ANISOTROPY, DISPLAY_MODES};
+use crate::core::options::{ANISOTROPY, DISPLAY_MODES, GTAO_MODES};
 use crate::ui::app::{Message, State};
 use crate::ui::pages::controls::ini_number;
 use crate::ui::pages::performance::{aspect_options, select_row, NO_MSAA_HINT};
@@ -33,6 +33,9 @@ pub const DYNRES_HINT: &str = "Lowers the scene in heavy fights to keep the FPS.
 pub const VSYNC_HINT: &str = "Removes tearing; on a 60 Hz screen it caps at 60.";
 /// The note under the frame rate limit (also on the first-start page).
 pub const FRAME_RATE_HINT: &str = "Above 60 the camera is smoother, but characters may judder.";
+/// The note under the GTAO quality choice.
+pub const GTAO_HINT: &str =
+    "Adds contact shadows in the 3D scene; Low is lighter for integrated GPUs.";
 
 /// The Upscaling choices: (id, English label, hint).
 pub const UPSCALING: [(&str, &str, &str); 3] = [
@@ -233,6 +236,13 @@ pub fn view(state: &State) -> Element<'_, Message> {
             &restart("Anisotropic filtering"),
             select("anisotropy", ANISOTROPY, &ini("anisotropy"), lang),
             Some(&hint("Floors and walls stay sharp in the distance.")),
+        ),
+        section(state.rtl, &tr(lang, "Ambient occlusion")),
+        row(
+            state.rtl,
+            &tr(lang, "GTAO (experimental)"),
+            select("gtao", GTAO_MODES, &ini("gtao"), lang),
+            Some(&hint(GTAO_HINT)),
         ),
         section(state.rtl, &tr(lang, "Tools")),
         checkbox(

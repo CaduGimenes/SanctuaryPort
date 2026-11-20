@@ -176,6 +176,18 @@ copy, where FSR 3 would run: Diablo III's A2B10G10R10 frame before the HUD, so t
 Two compute passes (frame to an RGBA16F copy with the filter, then back keeping the frame's alpha);
 off while FSR 3 is on. Frames in another format (menus) are left alone.
 
+## GTAO
+
+`gtao=low` or `gtao=high` in sanctuary.ini (`SANCTUARY_GTAO=off|low|high`, launcher Graphics >
+Ambient occlusion, in-game menu Image; off by default) runs four compute passes
+(`host_shaders/gtao_*.comp`, `renderer_vulkan/vk_gtao.cpp`: depth pyramid prefilter,
+visibility-bitmask GTAO evaluation, plane-aware a-trous denoise, and vignette-masked store) right
+after Diablo III's SSAO upscale draw writes the full-size R8 visibility target. `low` uses 3×4 taps
+and a 3×3 denoiser; `high` uses 8×8 taps and a 5×5 denoiser. The pass is matched structurally by
+attachments and sampled inputs (no hardcoded shader hashes) and takes the projection from
+`CameraMotion::OnObjectBlock`; the stock SSAO draw completes first and is kept untouched whenever
+any input, viewport, projection, or device limit does not match.
+
 ## Xbox button icons
 
 The PS4 game ships Blizzard's Xbox One art unused in `CPKs/ClientCommon.cpk`: the button atlas
@@ -250,6 +262,7 @@ America) whose pack is missing with the first one the dump has, Portuguese first
 | `SANCTUARY_VIRTUAL_PAD=1` | attach an SDL virtual gamepad (scripted runs that need a connected controller) |
 | `SANCTUARY_DEBUGGABLE=1` | let other processes read the game's memory (`/proc/PID/mem`, gdb without root) |
 | `SANCTUARY_RECORD_THREADS=1` | report (with a backtrace) any use of the Vulkan command recording from a thread that does not own it at that moment |
+| `SANCTUARY_GTAO_TRACE=1` | log GTAO match/fallback state on Diablo III's full-size R8 SSAO upscale pass |
 
 The guest image base is `0x800000000`; shadPS4 loads at `0x400000`, so its addresses are image
 offsets + `0x400000`.

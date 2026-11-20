@@ -36,6 +36,7 @@ class Runtime;
 class OcclusionQueries;
 class GuestGpuClock;
 class Fxaa;
+class Gtao;
 
 class Rasterizer {
 public:
@@ -358,6 +359,7 @@ private:
     bool gbuffer_draw = false;
     std::unique_ptr<TemporalUpscaler> upscaler; // sanctuary: FSR (docs/upscaler.md)
     std::unique_ptr<Fxaa> fxaa;                 // sanctuary: FXAA while FSR 3 is off
+    std::unique_ptr<Gtao> gtao;                 // optional replacement for Diablo III PS4 SSAO
     std::unique_ptr<FrameGeneration> frame_generation; // sanctuary: FSR 3 frame generation
     u32 display_draws = 0;                 ///< draws into this frame's display buffer
     VideoCore::ImageId display_image{};    ///< its image at the display copy
@@ -369,6 +371,17 @@ private:
     using RenderTargetInfo = std::pair<VideoCore::ImageId, VideoCore::TextureCache::ImageDesc>;
     std::array<RenderTargetInfo, AmdGpu::NUM_COLOR_BUFFERS> cb_descs;
     std::pair<VideoCore::ImageId, VideoCore::TextureCache::ImageDesc> db_desc;
+    struct GtaoInput {
+        struct Binding {
+            VideoCore::ImageId id{};
+            vk::ImageView view{};
+            vk::ImageLayout layout = vk::ImageLayout::eUndefined;
+            bool native = false;
+            bool base_single = false;
+        };
+        std::array<Binding, 4> bindings{};
+        bool captured = false;
+    } gtao_input;
     boost::container::static_vector<vk::DescriptorImageInfo, Shader::NUM_IMAGES> image_infos;
     boost::container::static_vector<vk::DescriptorBufferInfo, Shader::NUM_BUFFERS> buffer_infos;
     /// knack_pc: the pass a feedback copy belongs to (TextureCache::FeedbackCopy): the color

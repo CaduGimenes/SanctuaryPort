@@ -1,0 +1,139 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+// Visibility-bitmask GTAO evaluator with finite-thickness occluders across 32 angular sectors.
+// Slice and step counts are driven by push constants (Low: 3x4, High: 8x8).
+#version 450
+layout(local_size_x = 8, local_size_y = 8) in;
+
+layout(push_constant) uniform Params {
+    vec4 projection;
+    vec4 dims;
+    vec4 p0;
+    vec4 p1;
+    vec4 p2;
+} pc;
+layout(binding = 0) uniform sampler2D viewDist;
+layout(binding = 2, r16f) uniform writeonly image2D outAO;
+
+const float PI = 3.14159265;
+const float HALF_PI = 1.57079633;
+
+float load_dist(ivec2 p) {
+    return texelFetch(viewDist, clamp(p, ivec2(0), ivec2(pc.dims.xy) - 1), 0).r;
+}
+
+vec3 view_pos(vec2 p, float dist) {
+    vec2 uv = (p + 0.5) * pc.dims.zw;
+    vec2 ndc = vec2(uv.x * 2.0 - 1.0, 1.0 - uv.y * 2.0);
+    return vec3(ndc * abs(vec2(1.0) / pc.projection.xy) * dist, -dist);
+}
+
+float ign(vec2 p) {
+    return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715))));
+}
+
+float fast_acos(float x) {
+    float ax = abs(x);
+    float r = (-0.156583 * ax + HALF_PI) * sqrt(max(0.0, 1.0 - ax));
+    return x >= 0.0 ? r : PI - r;
+}
+
+float slice_measure(float h, float n, float cos_n, float sin_n) {
+    float f = 0.25 * (-cos(2.0 * h - n) + cos_n + 2.0 * h * sin_n);
+    return h < 0.0 ? -f : f;
+}
+
+uint sector_mask(float lo, float hi) {
+    uint a = uint(floor(clamp(lo, 0.0, 1.0) * 32.0 + 0.5));
+    uint b = uint(floor(clamp(hi, 0.0, 1.0) * 32.0 + 0.5));
+    if (b <= a || a >= 32u) return 0u;
+    uint count = b - a;
+    return (count >= 32u ? 0xffffffffu : ((1u << count) - 1u)) << a;
+}
+
+void main() {
+    ivec2 pix = ivec2(gl_GlobalInvocationID.xy);
+    if (any(greaterThanEqual(pix, ivec2(pc.dims.xy)))) return;
+    float dist = load_dist(pix);
+    if (dist >= pc.p2.z * 0.995) {
+        imageStore(outAO, pix, vec4(1.0));
+        return;
+    }
+    vec3 P = view_pos(vec2(pix), dist);
+    vec3 pl = view_pos(vec2(pix + ivec2(-1, 0)), load_dist(pix + ivec2(-1, 0)));
+    vec3 pr = view_pos(vec2(pix + ivec2( 1, 0)), load_dist(pix + ivec2( 1, 0)));
+    vec3 pu = view_pos(vec2(pix + ivec2(0, -1)), load_dist(pix + ivec2(0, -1)));
+    vec3 pd = view_pos(vec2(pix + ivec2(0,  1)), load_dist(pix + ivec2(0,  1)));
+    vec3 dx = abs(pr.z - P.z) < abs(P.z - pl.z) ? pr - P : P - pl;
+    vec3 dy = abs(pd.z - P.z) < abs(P.z - pu.z) ? pd - P : P - pu;
+    vec3 V = normalize(-P);
+    vec3 N = normalize(cross(dx, dy));
+    if (dot(N, V) < 0.0) N = -N;
+    P += V * (0.0005 * dist);
+
+    float radius_px = min(pc.p0.x / (abs(1.0 / pc.projection.y) * dist) * 0.5 * pc.dims.y,
+                          pc.p0.z * pc.dims.y);
+    if (radius_px < 1.5) {
+        imageStore(outAO, pix, vec4(1.0));
+        return;
+    }
+    float noise_dir = ign(vec2(pix));
+    float noise_step = ign(vec2(pix) + vec2(37.0, 17.0));
+    float falloff_mul = -1.0 / (pc.p0.x * pc.p0.y);
+    float falloff_add = 1.0 / pc.p0.y;
+    vec2 inv_dist_size = 1.0 / vec2(textureSize(viewDist, 0));
+    float visibility = 0.0, weight_sum = 0.0;
+
+    for (int slice = 0; slice < int(pc.p1.x); ++slice) {
+        float phi = (float(slice) + noise_dir) * (PI / pc.p1.x);
+        vec2 dir = vec2(cos(phi), sin(phi));
+        vec3 dir_v = vec3(dir.x, -dir.y, 0.0);
+        vec3 ortho = dir_v - dot(dir_v, V) * V;
+        vec3 axis = normalize(cross(ortho, V));
+        vec3 proj_n = N - axis * dot(N, axis);
+        float proj_len = length(proj_n) + 1e-5;
+        float cos_n = clamp(dot(proj_n, V) / proj_len, 0.0, 1.0);
+        float n = sign(dot(ortho, proj_n)) * fast_acos(cos_n);
+        float sin_n = sin(n);
+        cos_n = cos(n);
+        float left = n - HALF_PI, right = n + HALF_PI;
+        float measure_left = slice_measure(left, n, cos_n, sin_n);
+        float total = slice_measure(right, n, cos_n, sin_n) - measure_left;
+        float inv_total = 1.0 / max(total, 1e-4);
+        uint mask = 0u;
+        float occlusion = 0.0;
+
+        for (int side = 0; side < 2; ++side) {
+            float sgn = side == 0 ? 1.0 : -1.0;
+            for (int step = 0; step < int(pc.p1.y); ++step) {
+                float f = (float(step) + noise_step) / pc.p1.y;
+                float len_px = max(f * f * radius_px, float(step + 1));
+                vec2 sp = vec2(pix) + sgn * dir * len_px;
+                if (any(lessThan(sp, vec2(0.0))) || any(greaterThan(sp, pc.dims.xy - 1.0))) break;
+                float mip = clamp(log2(len_px) - pc.p2.x, 0.0, 4.0);
+                float sample_dist = textureLod(viewDist, (sp + 0.5) * inv_dist_size, mip).r;
+                vec3 d = view_pos(sp, sample_dist) - P;
+                float dv = dot(d, V), dd = dot(d, d);
+                float len = sqrt(dd);
+                float cos_front = dv * inversesqrt(max(dd, 1e-12));
+                float thickness = pc.p2.y;
+                float cos_back = (dv - thickness) * inversesqrt(
+                    max(dd - 2.0 * thickness * dv + thickness * thickness, 1e-12));
+                float theta_front = sgn * fast_acos(clamp(cos_front, -1.0, 1.0));
+                float theta_back = sgn * fast_acos(clamp(cos_back, -1.0, 1.0));
+                float u_front = (slice_measure(clamp(theta_front, left, right), n, cos_n, sin_n)
+                                 - measure_left) * inv_total;
+                float u_back = (slice_measure(clamp(theta_back, left, right), n, cos_n, sin_n)
+                                - measure_left) * inv_total;
+                uint fresh = sector_mask(min(u_front, u_back), max(u_front, u_back)) & ~mask;
+                mask |= fresh;
+                occlusion += float(bitCount(fresh)) * (1.0 / 32.0) *
+                             clamp(len * falloff_mul + falloff_add, 0.0, 1.0);
+            }
+        }
+        float slice_weight = proj_len * total;
+        visibility += slice_weight * (1.0 - occlusion);
+        weight_sum += slice_weight;
+    }
+    float ao = pow(clamp(visibility / max(weight_sum, 1e-4), 0.0, 1.0), pc.p0.w);
+    imageStore(outAO, pix, vec4(ao));
+}

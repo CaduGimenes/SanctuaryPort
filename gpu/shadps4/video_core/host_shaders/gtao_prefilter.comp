@@ -1,0 +1,88 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+// Five-level, far-depth weighted prefilter for GTAO.
+#version 450
+layout(local_size_x = 8, local_size_y = 8) in;
+
+layout(push_constant) uniform Params {
+    vec4 projection;
+    vec4 dims;
+    vec4 p0;
+    vec4 p1;
+    vec4 p2;
+} pc;
+#ifdef GTAO_MSAA
+layout(binding = 0) uniform sampler2DMS srcDepth;
+#else
+layout(binding = 0) uniform sampler2D srcDepth;
+#endif
+layout(binding = 2, r32f) uniform writeonly image2D outMip0;
+layout(binding = 3, r32f) uniform writeonly image2D outMip1;
+layout(binding = 4, r32f) uniform writeonly image2D outMip2;
+layout(binding = 5, r32f) uniform writeonly image2D outMip3;
+layout(binding = 6, r32f) uniform writeonly image2D outMip4;
+
+shared float tile[8][8];
+
+float filter4(float a, float b, float c, float d) {
+    float m = max(max(a, b), max(c, d));
+    float range = 0.615 * pc.p0.x;
+    float mul = -1.0 / range;
+    float add = (pc.p0.x - range) / range + 1.0;
+    float wa = clamp((m - a) * mul + add, 0.0, 1.0);
+    float wb = clamp((m - b) * mul + add, 0.0, 1.0);
+    float wc = clamp((m - c) * mul + add, 0.0, 1.0);
+    float wd = clamp((m - d) * mul + add, 0.0, 1.0);
+    return (a * wa + b * wb + c * wc + d * wd) / (wa + wb + wc + wd);
+}
+
+float load_dist(ivec2 p) {
+    ivec2 q = clamp(p, ivec2(0), ivec2(pc.dims.xy) - 1);
+#ifdef GTAO_MSAA
+    float d = texelFetch(srcDepth, q, 0).r;
+#else
+    float d = texelFetch(srcDepth, q, 0).r;
+#endif
+    return clamp(pc.projection.w / (d - pc.projection.z), 0.0, pc.p2.z);
+}
+
+void main() {
+    ivec2 gid = ivec2(gl_WorkGroupID.xy);
+    ivec2 tid = ivec2(gl_LocalInvocationID.xy);
+    ivec2 base = gid * 16 + tid * 2;
+    float d00 = load_dist(base);
+    float d10 = load_dist(base + ivec2(1, 0));
+    float d01 = load_dist(base + ivec2(0, 1));
+    float d11 = load_dist(base + ivec2(1, 1));
+    if (all(lessThan(base, imageSize(outMip0)))) imageStore(outMip0, base, vec4(d00));
+    if (all(lessThan(base + ivec2(1, 0), imageSize(outMip0))))
+        imageStore(outMip0, base + ivec2(1, 0), vec4(d10));
+    if (all(lessThan(base + ivec2(0, 1), imageSize(outMip0))))
+        imageStore(outMip0, base + ivec2(0, 1), vec4(d01));
+    if (all(lessThan(base + ivec2(1, 1), imageSize(outMip0))))
+        imageStore(outMip0, base + ivec2(1, 1), vec4(d11));
+    float m = filter4(d00, d10, d01, d11);
+    ivec2 p1 = gid * 8 + tid;
+    if (all(lessThan(p1, imageSize(outMip1)))) imageStore(outMip1, p1, vec4(m));
+    tile[tid.y][tid.x] = m;
+    barrier();
+    if (all(equal(tid & 1, ivec2(0)))) {
+        m = filter4(tile[tid.y][tid.x], tile[tid.y][tid.x + 1],
+                    tile[tid.y + 1][tid.x], tile[tid.y + 1][tid.x + 1]);
+        ivec2 p2 = gid * 4 + tid / 2;
+        if (all(lessThan(p2, imageSize(outMip2)))) imageStore(outMip2, p2, vec4(m));
+        tile[tid.y][tid.x] = m;
+    }
+    barrier();
+    if (all(equal(tid & 3, ivec2(0)))) {
+        m = filter4(tile[tid.y][tid.x], tile[tid.y][tid.x + 2],
+                    tile[tid.y + 2][tid.x], tile[tid.y + 2][tid.x + 2]);
+        ivec2 p3 = gid * 2 + tid / 4;
+        if (all(lessThan(p3, imageSize(outMip3)))) imageStore(outMip3, p3, vec4(m));
+        tile[tid.y][tid.x] = m;
+    }
+    barrier();
+    if (all(equal(tid, ivec2(0)))) {
+        m = filter4(tile[0][0], tile[0][4], tile[4][0], tile[4][4]);
+        if (all(lessThan(gid, imageSize(outMip4)))) imageStore(outMip4, gid, vec4(m));
+    }
+}
