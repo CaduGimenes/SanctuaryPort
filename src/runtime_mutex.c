@@ -1,4 +1,5 @@
-/* Linux pthread-backed opaque PS4 mutex handles. No guest threads yet. */
+/* Linux pthread-backed PS4 mutex handles; the guest's libc writes into the first bytes of
+ * each one (GuestMutex). No guest threads yet. */
 #define _GNU_SOURCE
 #include "runtime.h"
 #include <stdio.h>
@@ -8,7 +9,19 @@
 #include <errno.h>
 #include <time.h>
 typedef struct { int type; } GuestAttr;
-typedef struct { pthread_mutex_t native; } GuestMutex;
+typedef struct {
+    /* The game's own libc treats the handle as FreeBSD's struct pthread_mutex:
+     * after scePthreadMutexInit it sets PMUTEX_FLAG_PRIVATE with
+     * `orl $0x100,0x20(%rax)`. Keep that 0x50-byte amd64 layout (struct umutex,
+     * then the flags word whose low byte is the type) as guest storage, so the
+     * write cannot land in the host mutex or past the allocation. */
+    uint8_t guest_lock[0x20];
+    uint32_t guest_flags;
+    uint8_t guest_tail[0x50 - 0x24];
+    pthread_mutex_t native;
+} GuestMutex;
+_Static_assert(offsetof(GuestMutex, guest_flags) == 0x20, "guest mutex flag offset");
+_Static_assert(offsetof(GuestMutex, native) >= 0x50, "host mutex follows guest storage");
 static size_t created, locks, unlocks;
 static int32_t orbis_error(int e) {
     if (!e) return 0;
@@ -48,8 +61,9 @@ static ABI int32_t mutex_init(GuestMutex **out, GuestAttr **attr, const char *na
     if (!out || (attr && !*attr)) return orbis_error(EINVAL);
     int type = attr ? (*attr)->type : 1;
     if (type < 1 || type > 4) return orbis_error(EINVAL);
-    GuestMutex *mutex = malloc(sizeof(*mutex));
+    GuestMutex *mutex = calloc(1, sizeof(*mutex));
     if (!mutex) return orbis_error(ENOMEM);
+    mutex->guest_flags = (uint32_t)type;
     pthread_mutexattr_t native_attr;
     int e = pthread_mutexattr_init(&native_attr);
     if (e) { free(mutex); return orbis_error(e); }

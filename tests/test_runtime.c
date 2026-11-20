@@ -132,8 +132,14 @@ static void mutexes(void) {
     assert((uint32_t)type(&attr,99)==0x80020016);
     assert(type(&attr,2)==0 && init(&mutex,&attr,"recursive-test")==0);
     assert(attr_destroy(&attr)==0 && attr==NULL);
+    /* The game's libc sets its private flag at +0x20 of each new mutex; the
+     * host lock must keep working and must not touch that word. */
+    uint32_t *guest_flags=(uint32_t *)((unsigned char *)mutex+0x20);
+    assert(*guest_flags==2);
+    *guest_flags|=0x100;
     assert(lock(&mutex)==0 && trylock(&mutex)==0);
     assert((uint32_t)destroy(&mutex)==0x80020010);
+    assert(*guest_flags==0x102);
     assert(unlock(&mutex)==0 && unlock(&mutex)==0 && destroy(&mutex)==0);
     assert((uint32_t)lock(&mutex)==0x80020016);
     mutex=NULL;
