@@ -25,6 +25,47 @@ class Diablo3PatchTests(unittest.TestCase):
         'Ethereal Items', 'Soul Shards', 'Swarm Rifts', 'Sanctified Items', 'Whimsyshire (Easter Egg World)',
         'Also in non-seasonal games', 'Challenge Rifts', 'The Darkening of Tristram')]
     OFFLINE_NAMES = {'Offline Seasons', 'Offline: no sign-in warning', *SEASONS, *EVENTS}
+    SMOOTH = 'Experimental: Smooth character motion above 60 FPS'
+    # 1.47 movement interpolation (0x256fc0): the original bytes around its read of the client time.
+    SMOOTH_SITE = bytes.fromhex('c5f2589338020000 c5f258b33c020000 0fb793d8010000 89d6 c5fa104060'
+                                '488b80780a0000 c5ea5cd0 c5ca5cc0')
+
+    def test_smooth_motion_patch_is_off_and_found_by_signature(self):
+        # GitHub #24: experimental, never on by default, and skipped (not misapplied) on another eboot.
+        xml = ROOT / 'patches' / 'Diablo_III.xml'
+        root = ET.parse(xml).getroot()
+        (meta,) = [m for m in root.iter('Metadata') if m.get('Name') == self.SMOOTH]
+        self.assertEqual(meta.get('isEnabled'), 'false')
+        self.assertEqual(meta.get('AppVer'), '01.47')
+        self.assertNotIn(self.SMOOTH, patches.selected_patches(xml, '01.47', ''))
+        targets = {t.get('Name') for t in meta.iter('Target')}
+        for target in meta.iter('Target'):
+            self.assertTrue(target.get('Pattern'), target.get('Name'))
+        for line in meta.iter('Line'):
+            self.assertTrue(line.get('Pattern') or line.get('Target') in targets, line.get('Address'))
+        # A small image: the site, and the zero padding that ends the code (the offline seasons' anchor).
+        anchor = bytes.fromhex(next(t for t in meta.iter('Target')).get('Pattern').replace(' ', ''))
+        site_at, anchor_at = 0x1000, 0x3000
+        image = bytearray(0x6000)
+        image[site_at:site_at + len(self.SMOOTH_SITE)] = self.SMOOTH_SITE
+        image[anchor_at:anchor_at + 24] = anchor[:24]
+        writes = dict(patches.compile_patches(xml, [self.SMOOTH], '01.47', [(0, len(image))], image=bytes(image)))
+        cave = anchor_at + 4236
+        call = site_at + 25
+        self.assertEqual(set(writes), {cave, call})
+        self.assertEqual(writes[call][:1], b'\xe8')
+        self.assertEqual(call + 5 + struct.unpack('<i', writes[call][1:])[0], cave)
+        code = writes[cave]
+        # (W+0x54 ticks * 50 + accumulated W+0x38 - simulated W+0x40) / 3000.0, rcx saved, xmm0 out.
+        self.assertEqual(code[:1] + code[-6:-4], bytes.fromhex('5159c3'))
+        self.assertEqual(code[1:13], bytes.fromhex('8b48546bc9320348382b4840'))
+        disp = struct.unpack('<i', code[21:25])[0]
+        self.assertEqual(struct.unpack('<f', code[25 + disp:29 + disp])[0], 3000.0)
+        # The game's own bytes are untouched without the patch, and another build is skipped whole.
+        skipped = {}
+        self.assertEqual(patches.compile_patches(xml, [self.SMOOTH], '01.47', [(0, 0x6000)],
+                                                 image=bytes(0x6000), skipped=skipped), [])
+        self.assertIn(self.SMOOTH, skipped)
 
     def test_offline_patches_find_every_site_by_signature(self):
         # A different eboot is skipped, never overwritten: every Line has a signature, or writes at a
@@ -72,10 +113,10 @@ class Diablo3PatchTests(unittest.TestCase):
                               '2560x1080', '3440x1440', '3840x1600', '5120x1440',
                               '1280x800', '1920x1200', '2560x1600')}
         expected |= {f'{graphics_options.LIMITER_PREFIX} - {n}' for n in ('30 FPS', '120 FPS', 'Unlimited')}
-        expected |= self.OFFLINE_NAMES
+        expected |= self.OFFLINE_NAMES | {self.SMOOTH}
         self.assertEqual(names, expected)
         for meta in ET.parse(xml).getroot().iter('Metadata'):
-            if meta.get('Name') in self.OFFLINE_NAMES:
+            if meta.get('Name') in self.OFFLINE_NAMES | {self.SMOOTH}:
                 continue
             if meta.get('Name').startswith(graphics_options.LIMITER_PREFIX):
                 # The frame limiter: one microsecond wait, 16683 (0x412b) in the pattern.

@@ -284,6 +284,23 @@
             <Line Type="bytes" Address="0x0077c3b9" Value="00000000" Pattern="49 c7 86 a8 0b 00 00 2b 41 00 00 41 c7 86 f8 0b" At="7"/>
         </PatchList>
     </Metadata>
+    <!-- Smooth character motion above 60 FPS (GitHub #24). The simulation runs at 60 ticks per second; each
+         frame, 0x256fc0 draws a moving actor at lerp(previous tick position +0x218, new one +0x228, f) with
+         f = clamp((W+0x60 - update time +0x238) * 60, 0, 1), W = [0x14e2c48]. W+0x60 (client time) lags the
+         tick stamps (W+0x54 ticks / 60) by about one frame, so above 60 FPS f stays 0 on the frame of a tick
+         and jumps on the next: the hero and monsters move every other frame (about 0.36, 0.05, 0.31... per
+         frame instead of 0.23). The cave replaces that time with the tick time plus the part of a tick the
+         frame accumulator holds (W+0x34: +4 time accumulated, +0xc time simulated, 3000 units per second):
+         (W+0x54 * 50 + W+0x38 - W+0x40) / 3000, so f is the accumulator's fraction. Weapons, lights and the
+         actor's world matrix follow, since they are built from that position. Off: the game is unchanged.
+         Code in the code segment's zero padding, after the offline seasons' code. -->
+    <Metadata Title="Diablo III" Name="Experimental: Smooth character motion above 60 FPS" Note="Experimental. Above 60 FPS the hero and monsters move only on every other frame and look jittery; this places them where they are at the moment of each frame. No change at 60 FPS or below." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x177b800" Value="51 8b4854 6bc932 034838 2b4840 c5fa2ac1 c5fa5e0502000000 59 c3 00803b45" Target="smooth_cave"/>
+            <Line Type="bytes" Address="0x657022" Value="e8{rel:smooth_cave:0}" Pattern="c5 f2 58 93 38 02 00 00 c5 f2 58 b3 3c 02 00 00 0f b7 93 d8 01 00 00 89 d6 c5 fa 10 40 60 48 8b 80 78 0a 00 00 c5 ea 5c d0 c5 ca 5c c0" At="25"/>
+        </PatchList>
+        <Target Name="smooth_cave" Address="0x177b800" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="4236"/>
+    </Metadata>
     <!-- Offline seasons, community events and Challenge Rifts (d3hack-style, no cheats). The game asks the
          online pubfile service for Seasons.txt and Config.txt; offline the answer never comes. The base patch
          "Offline Seasons" hooks the per-user lobby update (eboot 0x43528) and feeds both files once to the
