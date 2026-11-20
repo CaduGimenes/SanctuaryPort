@@ -6,7 +6,7 @@
   "game": {
     "kind": "folder",
     "label": "Your Diablo III dump from a PS4 you own: the folder with eboot.bin (CUSA00243, CUSA00242, CUSA00433 or CUSA00434).",
-    "check": { "file": "eboot.bin" },
+    "check": { "file": "eboot.bin", "ids": ["CUSA00243", "CUSA00242", "CUSA00433", "CUSA00434"] },
     "update": {
       "into": "update",
       "label": "Your 1.47 update dump (CUSA00243-UPDATE), if your game has one.",
