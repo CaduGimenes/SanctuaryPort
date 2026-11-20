@@ -185,12 +185,18 @@ off while FSR 3 is on. Frames in another format (menus) are left alone.
 `gtao=low` or `gtao=high` in sanctuary.ini (`SANCTUARY_GTAO=off|low|high`, launcher Graphics >
 Ambient occlusion, in-game menu Image; off by default) runs four compute passes
 (`host_shaders/gtao_*.comp`, `renderer_vulkan/vk_gtao.cpp`: depth pyramid prefilter,
-visibility-bitmask GTAO evaluation, plane-aware a-trous denoise, and vignette-masked store) right
+visibility-bitmask GTAO evaluation, plane-aware a-trous denoise, and full-edge store) right
 after Diablo III's SSAO upscale draw writes the full-size R8 visibility target. `low` uses 3×4 taps
 and a 3×3 denoiser; `high` uses 8×8 taps and a 5×5 denoiser. The pass is matched structurally by
 attachments and sampled inputs (no hardcoded shader hashes) and takes the projection from
 `CameraMotion::OnObjectBlock`; the stock SSAO draw completes first and is kept untouched whenever
 any input, viewport, projection, or device limit does not match.
+
+The store pass writes GTAO visibility straight to the stock SSAO output without applying Diablo
+III's 64x64 screen-edge vignette mask: `gtao_evaluate.comp` stops rays at the viewport edges rather
+than clamping depth, so it does not create the border halos the stock SSAO mask hid, and edge
+normals/slopes in the evaluate and denoise passes use inward differences on the 1-px border.
+Ambient occlusion off keeps the game's SSAO with its own fade.
 
 ## Xbox button icons
 
