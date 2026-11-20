@@ -57,10 +57,14 @@ Frame rate: the game paces itself. After each frame (1.47 eboot 0xbef87) it slee
 50), so a faster vblank alone stays at 60. The "Frame Limiter" patches (both executables) replace
 16683 with 33367 (30), 8341 (120) or 0 (unlimited); the launcher's Graphics > Frame rate
 (`sanctuary.ini frame_rate`, run.py) picks one, and above 60 run.py sets a 480 Hz vblank and the
-present limit (`SANCTUARY_FPS_LIMIT`). The game's clock follows real time: the same 99 s route in
-the Royal Crypt gave the same `time_played` and the same walking distance at 60, ~100 and ~114 FPS,
-with no audio starvation. A Radeon 760M reaches about 85 FPS in New Tristram and 100-114 in the
-Royal Crypt (the port's recording thread is then the limit).
+present limit (`SANCTUARY_FPS_LIMIT`). Unlimited gets 480, the vblank's own rate: without a limit
+a frame waits for the next vblank tick, with one it is shown when it arrives, as at 60 and 120.
+That limit is not the frame rate, so the `Stall:` lines of `SANCTUARY_FRAME_STATS=1` keep the
+40 ms threshold they have without a limit (`SANCTUARY_STALL_MS` sets another). The game's clock
+follows real time: the same 99 s route in the Royal Crypt gave the same `time_played` and the
+same walking distance at 60, ~100 and ~114 FPS, with no audio starvation. A Radeon 760M reaches
+about 85 FPS in New Tristram and 100-114 in the Royal Crypt (the port's recording thread is then
+the limit).
 
 Ultrawide: right after the size, the renderer setup stores the camera's aspect ratio, 16/9 as a
 float in `[obj+0x54]` (`movl $0x3fe38e39`, imm32 at 0x4bb218). The 2560x1080, 3440x1440,

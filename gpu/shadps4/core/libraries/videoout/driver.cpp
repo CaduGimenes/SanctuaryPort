@@ -349,11 +349,15 @@ void VideoOutDriver::Flip(const Request& req) {
         // sanctuary: every frame over 2.5 frame periods of the frame limit (40 ms without one;
         // SANCTUARY_STALL_MS sets it) after the first, at most 10 per 5 s window. At 120 FPS a
         // hitch of two or three frames (17-25 ms, GitHub #24) went unreported under a fixed 40 ms.
+        // A limit as fast as the vblank (Diablo III's Unlimited) holds no frame back, so it is
+        // not the frame rate: 40 ms, as without a limit.
         static const double stall_ms = [] {
             const char* value = std::getenv("SANCTUARY_STALL_MS");
             if (value) return std::atof(value);
             const u32 limit = EmulatorSettings.GetFrameLimit();
-            return limit >= 30 ? std::min(40.0, 2500.0 / limit) : 40.0;
+            return limit >= 30 && limit < EmulatorSettings.GetVblankFrequency()
+                       ? std::min(40.0, 2500.0 / limit)
+                       : 40.0;
         }();
         static const Clock::time_point stats_start = Clock::now();
         static bool primed = false;

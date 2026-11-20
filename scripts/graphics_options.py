@@ -198,7 +198,8 @@ def limiter_patch(rate):
 
 def limiter_environment(applied):
     """Environment for the applied Frame Limiter patch: the vblank runs fast (480 Hz) so a frame is
-    shown as soon as it is done, and the present thread lets through the chosen rate (0: no limit).
+    shown as soon as it is done, and the present thread lets through the chosen rate (unlimited:
+    the vblank's 480, which was the ceiling already; without a limit frames wait for a tick).
     That holds for the game's own 60 too (GitHub #29): its limiter waits 16683 us (59.94 Hz) while a
     60 Hz vblank ticks every 16667 us, so a frame waited a whole extra tick about every 12-17 s
     (6 repeated frames in 75 s, none with immediate flips), and frames were held to the tick instead
@@ -208,7 +209,12 @@ def limiter_environment(applied):
         if name == f'{LIMITER_PREFIX} - 120 FPS':
             return {'SANCTUARY_VBLANK_HZ': '0', 'SANCTUARY_FPS_LIMIT': '120'}
         if name == f'{LIMITER_PREFIX} - Unlimited':
-            return {'SANCTUARY_VBLANK_HZ': '0', 'SANCTUARY_FPS_LIMIT': '0'}
+            # 480 is what SANCTUARY_VBLANK_HZ=0 stands for (gpu/shim/core/emulator_settings.h
+            # GetVblankFrequency): change the two together. A caller's own SANCTUARY_VBLANK_HZ moves
+            # the tick only; frames are still shown as they arrive, up to 480 a second
+            # (SANCTUARY_FPS_LIMIT=0 with it: one per tick, as before), and above 480 Hz the stall
+            # diagnostic takes the 480 for the frame rate (SANCTUARY_STALL_MS).
+            return {'SANCTUARY_VBLANK_HZ': '0', 'SANCTUARY_FPS_LIMIT': '480'}
         if name == f'{LIMITER_PREFIX} - 30 FPS':
             return {'SANCTUARY_FPS_LIMIT': '0'}
     return {'SANCTUARY_VBLANK_HZ': '0', 'SANCTUARY_FPS_LIMIT': '60'}

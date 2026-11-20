@@ -246,8 +246,9 @@ class FrameLimiterTest(unittest.TestCase):
         self.assertEqual(g.limiter_environment(['Frame Limiter - 30 FPS']), {'SANCTUARY_FPS_LIMIT': '0'})
         self.assertEqual(g.limiter_environment(['Resolution Patch - 4K', 'Frame Limiter - 120 FPS']),
                          {'SANCTUARY_VBLANK_HZ': '0', 'SANCTUARY_FPS_LIMIT': '120'})
+        # Unlimited: immediate flips too, up to one per 480 Hz tick as before (0 would wait for the tick).
         self.assertEqual(g.limiter_environment(['Frame Limiter - Unlimited']),
-                         {'SANCTUARY_VBLANK_HZ': '0', 'SANCTUARY_FPS_LIMIT': '0'})
+                         {'SANCTUARY_VBLANK_HZ': '0', 'SANCTUARY_FPS_LIMIT': '480'})
 
     def test_each_choice_has_a_patch_for_both_executables(self):
         xml = (Path(__file__).resolve().parent.parent / 'patches' / 'Diablo_III.xml').read_text(encoding='utf-8')
