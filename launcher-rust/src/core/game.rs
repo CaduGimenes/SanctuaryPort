@@ -134,9 +134,52 @@ pub struct GameFolder {
 /// param.sfo (APP_VER 01.00), so the eboot tells the version then (GitHub #30).
 const DIABLO_EBOOT_SIZES: [(u64, &str); 2] = [(19_773_126, "01.00"), (22_646_255, "01.47")];
 
+/// Diablo III eboots known by their SHA-256, for builds whose size is not in the list above: the
+/// European 1.46 merged into the base package (CUSA00433, GitHub #38, whose param.sfo says 01.00).
+const DIABLO_EBOOT_HASHES: [(&str, &str); 3] = [
+    ("2696c9a49fd3cece23664b2570cb5635742af0d0a1f1f250cff2f06047d97373", "01.00"),
+    ("a2bd5058a887f624b596b4d640771162fb9c4afdfad812d59e7a58c29f7c744b", "01.46"),
+    ("680387c887625dbeaef0c46fac54a893fcb45eac428c85632acb06e6062a3176", "01.47"),
+];
+
+/// Only eboots of a Diablo III's size range are hashed (about 20 MB, once per file and change).
+const HASHED_EBOOT_SIZES: std::ops::RangeInclusive<u64> = 15_000_000..=40_000_000;
+
 fn eboot_version(eboot: &Path) -> Option<&'static str> {
-    let size = std::fs::metadata(eboot).ok()?.len();
-    DIABLO_EBOOT_SIZES.iter().find(|(s, _)| *s == size).map(|(_, v)| *v)
+    let meta = std::fs::metadata(eboot).ok()?;
+    let size = meta.len();
+    if let Some((_, version)) = DIABLO_EBOOT_SIZES.iter().find(|(s, _)| *s == size) {
+        return Some(version);
+    }
+    if !HASHED_EBOOT_SIZES.contains(&size) {
+        return None;
+    }
+    let hash = eboot_hash(eboot, size, meta.modified().ok())?;
+    DIABLO_EBOOT_HASHES.iter().find(|(h, _)| *h == hash).map(|(_, v)| *v)
+}
+
+/// The eboot's SHA-256 in hex, cached by path, size and modification time: the folder is read
+/// again on every settings change.
+fn eboot_hash(eboot: &Path, size: u64, modified: Option<std::time::SystemTime>) -> Option<String> {
+    use sha2::{Digest, Sha256};
+    use std::sync::{Mutex, OnceLock};
+    type Key = (std::path::PathBuf, u64, Option<std::time::SystemTime>);
+    static CACHE: OnceLock<Mutex<Vec<(Key, String)>>> = OnceLock::new();
+    let key: Key = (eboot.to_path_buf(), size, modified);
+    let cache = CACHE.get_or_init(|| Mutex::new(Vec::new()));
+    if let Some((_, hash)) = cache.lock().ok()?.iter().find(|(k, _)| *k == key) {
+        return Some(hash.clone());
+    }
+    let mut hasher = Sha256::new();
+    let mut file = std::fs::File::open(eboot).ok()?;
+    std::io::copy(&mut file, &mut hasher).ok()?;
+    let hash: String = hasher.finalize().iter().map(|b| format!("{b:02x}")).collect();
+    let mut cache = cache.lock().ok()?;
+    if cache.len() > 16 {
+        cache.remove(0);
+    }
+    cache.push((key, hash.clone()));
+    Some(hash)
 }
 
 impl GameFolder {
@@ -525,6 +568,25 @@ mod tests {
         assert_eq!(GameFolder::read(dir.path()).app_version(), Some("01.00"));
         eboot.set_len(5).unwrap();
         assert_eq!(GameFolder::read(dir.path()).app_version(), Some("01.00"));
+    }
+
+    #[test]
+    fn an_eboot_of_an_unknown_size_is_known_by_its_hash() {
+        // A file of a Diablo-sized length that is none of the known builds: hashed, not known,
+        // so param.sfo's version stays; the hash is the file's real SHA-256.
+        let dir = tempfile::tempdir().unwrap();
+        let eboot = dir.path().join("eboot.bin");
+        let file = fs::File::create(&eboot).unwrap();
+        file.set_len(20_000_000).unwrap();
+        let meta = fs::metadata(&eboot).unwrap();
+        let hash = eboot_hash(&eboot, meta.len(), meta.modified().ok()).unwrap();
+        // sha256 of 20,000,000 zero bytes.
+        assert_eq!(hash.len(), 64);
+        assert_eq!(eboot_hash(&eboot, meta.len(), meta.modified().ok()).unwrap(), hash, "cached");
+        assert_eq!(eboot_version(&eboot), None);
+        put(dir.path(), "sce_sys/param.sfo", &sfo(&[("TITLE_ID", "CUSA00433"), ("APP_VER", "01.00")]));
+        assert_eq!(GameFolder::read(dir.path()).app_version(), Some("01.00"));
+        assert!(DIABLO_EBOOT_HASHES.iter().any(|(_, v)| *v == "01.46"));
     }
 
     #[test]

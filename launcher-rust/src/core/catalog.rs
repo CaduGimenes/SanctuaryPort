@@ -298,10 +298,13 @@ pub static SETTINGS: &[Setting] = &[
     // from the content of these two, so they carry no `env`.
     app("game_patches", Json, Object, None),
     // SanctuaryPort: Game > Offline seasons: how the events follow the season ("manual", "season",
-    // "full") and the 15 day rotation ("<first season>:<day it started>", days since 1970).
+    // "full"), the rotation ("<first season>:<day it started>", days since 1970) and its season
+    // length in days (15, 30, 60 or 90; picking another length restarts the count from today at
+    // today's season).
     app("season_mode", Kind::Text, Text("manual"), None),
     app("season_rotate", Flag, Bool(false), None),
     app("season_rotate_start", Kind::Text, Text(""), None),
+    app("season_rotate_days", Kind::Int, Int(15), None),
     // SanctuaryPort: Seasons > The Darkening of Tristram: the check box and the first and last day
     // it is open ("YYYY-MM-DD", empty = no limit on that side).
     app("tristram_on", Flag, Bool(false), None),

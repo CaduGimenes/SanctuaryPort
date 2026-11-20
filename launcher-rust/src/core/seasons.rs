@@ -1,4 +1,4 @@
-//! The offline season rules: which community events come with a season, and the 15 day rotation.
+//! The offline season rules: which community events come with a season, and the season rotation.
 //!
 //! Every "Offline Seasons - Season N" patch already carries that season's own community event, the
 //! Altar of Rites, Visions of Enmity and the Season Journey. A few seasons (22, 33, 38, 39, 40) have
@@ -14,8 +14,21 @@ pub const EVENT_PREFIX: &str = "Event: ";
 /// The name prefix of the offline season patches (patches/Diablo_III.xml).
 pub const SEASON_PREFIX: &str = "Offline Seasons - Season ";
 
-/// Days one season lasts when the rotation is on.
+/// Days one season lasts when the rotation is on, unless the player picks another length.
 pub const ROTATION_DAYS: i64 = 15;
+
+/// The season lengths the Seasons page offers, in days: 90 is about Blizzard's usual season.
+pub const ROTATION_LENGTHS: [i64; 4] = [15, 30, 60, 90];
+
+/// The saved `season_rotate_days` as a length the page offers; anything else is `ROTATION_DAYS`.
+pub fn rotation_days(saved: &str) -> i64 {
+    saved
+        .trim()
+        .parse()
+        .ok()
+        .filter(|days| ROTATION_LENGTHS.contains(days))
+        .unwrap_or(ROTATION_DAYS)
+}
 
 /// The anniversary event patch (the Diablo 1 dungeon in Old Tristram). It follows its own check box
 /// and dates on the Seasons page, never a season.
@@ -199,20 +212,21 @@ pub fn apply_tristram(
 }
 
 /// The season the rotation is on: it starts at `first` on day `start`, and every
-/// `ROTATION_DAYS` days moves to the next season of `numbers` (ascending), wrapping at the end.
+/// `days` days moves to the next season of `numbers` (ascending), wrapping at the end.
 /// A `first` that is not in the list starts at the first entry.
-pub fn rotated_season(numbers: &[u32], first: u32, start: i64, today: i64) -> Option<u32> {
+pub fn rotated_season(numbers: &[u32], first: u32, start: i64, today: i64, days: i64) -> Option<u32> {
     if numbers.is_empty() {
         return None;
     }
     let at = numbers.iter().position(|n| *n == first).unwrap_or(0) as i64;
-    let steps = (today - start).max(0) / ROTATION_DAYS;
+    let steps = (today - start).max(0) / days.max(1);
     Some(numbers[((at + steps) % numbers.len() as i64) as usize])
 }
 
 /// The days left of the current season of the rotation (1 on its last day).
-pub fn days_left(start: i64, today: i64) -> i64 {
-    ROTATION_DAYS - ((today - start).max(0) % ROTATION_DAYS)
+pub fn days_left(start: i64, today: i64, days: i64) -> i64 {
+    let days = days.max(1);
+    days - ((today - start).max(0) % days)
 }
 
 #[cfg(test)]
@@ -285,20 +299,51 @@ mod tests {
     #[test]
     fn the_rotation_moves_every_15_days_and_wraps() {
         let numbers = [14, 15, 30];
-        assert_eq!(rotated_season(&numbers, 15, 100, 100), Some(15));
-        assert_eq!(rotated_season(&numbers, 15, 100, 114), Some(15));
-        assert_eq!(rotated_season(&numbers, 15, 100, 115), Some(30));
-        assert_eq!(rotated_season(&numbers, 15, 100, 130), Some(14));
-        assert_eq!(rotated_season(&numbers, 15, 100, 50), Some(15), "a date before the start stays");
-        assert_eq!(rotated_season(&[], 15, 100, 130), None);
-        assert_eq!(rotated_season(&numbers, 99, 100, 115), Some(15), "unknown first season: the first entry");
+        assert_eq!(rotated_season(&numbers, 15, 100, 100, ROTATION_DAYS), Some(15));
+        assert_eq!(rotated_season(&numbers, 15, 100, 114, ROTATION_DAYS), Some(15));
+        assert_eq!(rotated_season(&numbers, 15, 100, 115, ROTATION_DAYS), Some(30));
+        assert_eq!(rotated_season(&numbers, 15, 100, 130, ROTATION_DAYS), Some(14));
+        assert_eq!(rotated_season(&numbers, 15, 100, 50, ROTATION_DAYS), Some(15), "a date before the start stays");
+        assert_eq!(rotated_season(&[], 15, 100, 130, ROTATION_DAYS), None);
+        assert_eq!(rotated_season(&numbers, 99, 100, 115, ROTATION_DAYS), Some(15), "unknown first season: the first entry");
+    }
+
+    #[test]
+    fn the_rotation_follows_each_length() {
+        let numbers = [14, 15, 30];
+        for days in ROTATION_LENGTHS {
+            let at = |today| rotated_season(&numbers, 15, 100, today, days);
+            assert_eq!(at(100), Some(15), "{days}");
+            assert_eq!(at(100 + days - 1), Some(15), "{days}: the last day of the first season");
+            assert_eq!(at(100 + days), Some(30), "{days}: the next season");
+            assert_eq!(at(100 + 2 * days), Some(14), "{days}: wraps to the first entry");
+            assert_eq!(at(100 + 3 * days), Some(15), "{days}");
+            assert_eq!(days_left(100, 100, days), days, "{days}");
+            assert_eq!(days_left(100, 100 + days - 1, days), 1, "{days}");
+            assert_eq!(days_left(100, 100 + days, days), days, "{days}");
+        }
+        // 90 days is about Blizzard's three months: day 89 is still the first season.
+        assert_eq!(rotated_season(&numbers, 15, 100, 189, 90), Some(15));
+        assert_eq!(rotated_season(&numbers, 15, 100, 190, 90), Some(30));
+    }
+
+    #[test]
+    fn the_saved_length_is_one_the_page_offers() {
+        assert_eq!(rotation_days(""), ROTATION_DAYS);
+        assert_eq!(rotation_days("15"), 15);
+        assert_eq!(rotation_days("30"), 30);
+        assert_eq!(rotation_days(" 60 "), 60);
+        assert_eq!(rotation_days("90"), 90);
+        for bad in ["0", "-15", "7", "abc", "90.5"] {
+            assert_eq!(rotation_days(bad), ROTATION_DAYS, "{bad}");
+        }
     }
 
     #[test]
     fn days_left_counts_down_to_one() {
-        assert_eq!(days_left(100, 100), 15);
-        assert_eq!(days_left(100, 114), 1);
-        assert_eq!(days_left(100, 115), 15);
+        assert_eq!(days_left(100, 100, ROTATION_DAYS), 15);
+        assert_eq!(days_left(100, 114, ROTATION_DAYS), 1);
+        assert_eq!(days_left(100, 115, ROTATION_DAYS), 15);
     }
 
     #[test]

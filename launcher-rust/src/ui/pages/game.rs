@@ -17,8 +17,8 @@ use crate::core::patches::{builtin_xml, game_patch_metas, selectable, PatchMeta}
 use crate::core::save_backup::{list_backups, restore, KEEP};
 use crate::core::save_restore;
 use crate::core::seasons::{
-    apply_mode, apply_tristram, days_left, event_window, rotated_season, today, SeasonMode, Window, EVENT_PREFIX,
-    SEASON_PREFIX, TRISTRAM_PATCH,
+    apply_mode, apply_tristram, days_left, event_window, rotated_season, rotation_days, today, SeasonMode,
+    Window, EVENT_PREFIX, ROTATION_LENGTHS, SEASON_PREFIX, TRISTRAM_PATCH,
 };
 use crate::core::settings::mark_default_patches_offered;
 use crate::ui::app::{Message, State};
@@ -531,7 +531,8 @@ pub fn seasons_view(state: &State) -> Element<'_, Message> {
             .push(section(state.rtl, &tr(lang, "Offline seasons")))
             .push(season_row(state))
             .push(mode_row(state))
-            .push(rotate_row(state));
+            .push(rotate_row(state))
+            .push(length_row(state));
     }
     // The offline community events ("Event: ..." patches), one check box each, when the player
     // picks them: the other modes choose them with the season.
@@ -640,7 +641,48 @@ pub fn season_picked(state: &mut State, choice: &SeasonChoice) {
 const SEASON_MODE_HINT: &str = "Manual: you tick the events below. With its events: the season brings its own events and no others, like Blizzard's calendar. Full: the season with every event at once.";
 
 /// The note under the rotation row; the translation tables key on this text.
-const SEASON_ROTATE_HINT: &str = "From the day you switch it on, the season moves to the next one every 15 days, with its events. Seasonal heroes of past seasons stay in your saves.";
+const SEASON_ROTATE_HINT: &str = "From the day you switch it on, the season moves to the next one when its season length below ends, with its events. Seasonal heroes of past seasons stay in your saves.";
+
+/// The note under the season length row; the translation tables key on this text.
+const SEASON_LENGTH_HINT: &str = "How long each season of the rotation lasts. Blizzard's seasons lasted about 3 months. Changing it keeps the current season and counts the new length from today.";
+
+/// One entry of the season length drop-down.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct LengthChoice {
+    pub days: i64,
+    label: String,
+}
+
+impl std::fmt::Display for LengthChoice {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.label)
+    }
+}
+
+fn length_choices(lang: &str) -> Vec<LengthChoice> {
+    ROTATION_LENGTHS
+        .into_iter()
+        .zip(["15 days", "30 days", "60 days", "90 days (about 3 months)"])
+        .map(|(days, label)| LengthChoice { days, label: tr(lang, label) })
+        .collect()
+}
+
+/// The season length drop-down of the rotation.
+fn length_row(state: &State) -> Element<'_, Message> {
+    let lang = state.lang.as_str();
+    let choices = length_choices(lang);
+    let days = rotation_days(&state.store.text("season_rotate_days"));
+    let current = choices.iter().find(|c| c.days == days).cloned();
+    let list = pick_list(choices, current, Message::SeasonLengthPicked)
+        .text_size(SELECT_TEXT)
+        .style(theme::pick_list_dark);
+    row(
+        state.rtl,
+        &tr(lang, "Season length"),
+        min_width(SELECT_MIN, list).into(),
+        Some(&tr(lang, SEASON_LENGTH_HINT)),
+    )
+}
 
 /// One entry of the season mode drop-down.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -689,12 +731,13 @@ fn rotate_row(state: &State) -> Element<'_, Message> {
     let on = state.store.flag("season_rotate");
     let check = toggle_row(
         state.rtl,
-        &tr(lang, "Rotate the season every 15 days"),
+        &tr(lang, "Rotate the season"),
         on,
         Some(Message::SeasonRotateToggled),
         Some(&tr(lang, SEASON_ROTATE_HINT)),
     );
     let started = parse_rotation(&state.store.text("season_rotate_start"));
+    let days = rotation_days(&state.store.text("season_rotate_days"));
     match (on, started) {
         (true, Some((_, start))) => {
             let now = state
@@ -705,7 +748,7 @@ fn rotate_row(state: &State) -> Element<'_, Message> {
                 .unwrap_or("?");
             column![
                 check,
-                text(format!("{} {now}: {} {}", tr(lang, "Now: Season"), days_left(start, today()), tr(lang, "days left")))
+                text(format!("{} {now}: {} {}", tr(lang, "Now: Season"), days_left(start, today(), days), tr(lang, "days left")))
                     .size(13)
                     .style(theme::text_muted)
             ]
@@ -740,7 +783,21 @@ pub fn season_mode_picked(state: &mut State, choice: &ModeChoice) {
     apply_season_rules(state);
 }
 
-/// Switches the 15 day rotation on (starting today at the ticked season, or at the first one) or off.
+/// Picks the season length. With the rotation on, today's season (under the old length) stays and
+/// becomes the new start, so the new length counts from today: a longer length never moves the
+/// season back to an earlier one, and a shorter one never skips ahead.
+pub fn season_length_picked(state: &mut State, choice: &LengthChoice) {
+    apply_season_rules(state);
+    state.store.set("season_rotate_days", Value::from(choice.days));
+    if state.store.flag("season_rotate") {
+        if let Some(now) = current_season(&state.patches.chosen) {
+            start_rotation(state, &now.to_string());
+        }
+    }
+    apply_season_rules(state);
+}
+
+/// Switches the season rotation on (starting today at the ticked season, or at the first one) or off.
 pub fn season_rotate_toggled(state: &mut State, on: bool) {
     state.store.set("season_rotate", Value::Bool(on));
     if on {
@@ -776,7 +833,8 @@ pub fn apply_season_rules(state: &mut State) {
     if state.store.flag("season_rotate") {
         if let Some((first, start)) = parse_rotation(&state.store.text("season_rotate_start")) {
             let numbers = sorted_season_numbers(state);
-            if let Some(number) = rotated_season(&numbers, first, start, today()) {
+            let days = rotation_days(&state.store.text("season_rotate_days"));
+            if let Some(number) = rotated_season(&numbers, first, start, today(), days) {
                 pick_season(&mut state.patches.chosen, Some(&number.to_string()));
             }
         }

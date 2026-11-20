@@ -182,7 +182,7 @@ mod tests {
     #[test]
     fn defaults_are_in_python_order() {
         let defaults = app_defaults(&no_env);
-        assert_eq!(defaults.len(), 47); // SanctuaryPort: + player_name, + season_mode, season_rotate, season_rotate_start, + tristram_on, tristram_start, tristram_end
+        assert_eq!(defaults.len(), 48); // SanctuaryPort: + player_name, + season_mode, season_rotate, season_rotate_start, season_rotate_days, + tristram_on, tristram_start, tristram_end
         assert_eq!(defaults.keys().next().unwrap(), "ui_language");
         assert_eq!(defaults.keys().next_back().unwrap(), "glyph_style");
         // The 2.7.0 shader cache switches sit between the screen effects and the warm-up.

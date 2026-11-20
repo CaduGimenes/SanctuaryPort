@@ -541,9 +541,13 @@ void Runtime::CopyColorAndDepth(VideoCore::Image* src, VideoCore::Image* dst) {
             CopyImage(src, dst);
         } else {
             // Perform depth from/to color copy using the intermediate copy buffer.
-            static constexpr size_t COPY_BUFFER_SIZE = 128_MB;
+            // sanctuary (GitHub #61): as large as the images, not a fixed 128 MiB of video
+            // memory kept for the whole session (the images are 8-16 MiB at 1080p; on a 3 GB
+            // card those 128 MiB pushed the game over its budget).
+            const u64 copy_buffer_size = Common::AlignUp(
+                std::max<u64>(src->GetHostImageSize(), dst->GetHostImageSize()), 64_KB);
             const auto copy_ref =
-                staging_pool.Request(COPY_BUFFER_SIZE, VideoCore::MemoryType::DeviceLocal);
+                staging_pool.Request(copy_buffer_size, VideoCore::MemoryType::DeviceLocal);
             CopyImageWithBuffer(src, dst, copy_ref.buffer, copy_ref.offset);
         }
     } else if (src->info.num_samples == 1 && (dst->info.num_samples > 1 || guest_ms_depth) &&

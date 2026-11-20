@@ -43,6 +43,7 @@
   "season_mode": "manual",
   "season_rotate": false,
   "season_rotate_start": "",
+  "season_rotate_days": 15,
   "tristram_on": false,
   "tristram_start": "",
   "tristram_end": "",

@@ -2722,7 +2722,15 @@
    "Saved as PNG in the screenshots folder.": "Salva em PNG na pasta de capturas.",
    "Use it if graphics look wrong after an update.": "Use se os gráficos ficarem errados após uma atualização.",
    "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "Suavização original do jogo; Automático desliga em AMD e Intel no Windows.",
-   "Above 60 the camera is smoother, but characters may judder.": "Acima de 60 a câmera fica mais fluida, mas os personagens podem tremer."
+   "Above 60 the camera is smoother, but characters may judder.": "Acima de 60 a câmera fica mais fluida, mas os personagens podem tremer.",
+   "Rotate the season": "Alternar a temporada",
+   "From the day you switch it on, the season moves to the next one when its season length below ends, with its events. Seasonal heroes of past seasons stay in your saves.": "A partir do dia em que você liga, a temporada passa para a próxima quando termina a duração da temporada abaixo, com seus eventos. Os heróis sazonais de temporadas passadas continuam nos seus saves.",
+   "Season length": "Duração da temporada",
+   "How long each season of the rotation lasts. Blizzard's seasons lasted about 3 months. Changing it keeps the current season and counts the new length from today.": "Quanto tempo dura cada temporada da rotação. As temporadas da Blizzard duravam cerca de 3 meses. Ao mudar, a temporada atual continua e a nova duração conta a partir de hoje.",
+   "15 days": "15 dias",
+   "30 days": "30 dias",
+   "60 days": "60 dias",
+   "90 days (about 3 months)": "90 dias (cerca de 3 meses)"
   },
   "es": {
    "The launcher cannot write to {}, so it cannot replace itself there. Open the releases page to download the new version by hand?": "El launcher no puede escribir en {}, así que no puede reemplazarse ahí. ¿Abrir la página de releases para descargar la versión nueva a mano?",
@@ -3232,7 +3240,15 @@
    "Saved as PNG in the screenshots folder.": "Se guarda como PNG en la carpeta de capturas.",
    "Use it if graphics look wrong after an update.": "Úsalo si los gráficos se ven mal tras una actualización.",
    "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "El suavizado propio del juego; Automático lo apaga en AMD e Intel en Windows.",
-   "Above 60 the camera is smoother, but characters may judder.": "Por encima de 60 la cámara es más fluida, pero los personajes pueden temblar."
+   "Above 60 the camera is smoother, but characters may judder.": "Por encima de 60 la cámara es más fluida, pero los personajes pueden temblar.",
+   "Rotate the season": "Rotar la temporada",
+   "From the day you switch it on, the season moves to the next one when its season length below ends, with its events. Seasonal heroes of past seasons stay in your saves.": "Desde el día en que la activas, la temporada pasa a la siguiente cuando termina la duración de temporada de abajo, con sus eventos. Los héroes de temporada de temporadas pasadas se quedan en tus partidas.",
+   "Season length": "Duración de la temporada",
+   "How long each season of the rotation lasts. Blizzard's seasons lasted about 3 months. Changing it keeps the current season and counts the new length from today.": "Cuánto dura cada temporada de la rotación. Las temporadas de Blizzard duraban unos 3 meses. Al cambiarla, la temporada actual se mantiene y la nueva duración cuenta desde hoy.",
+   "15 days": "15 días",
+   "30 days": "30 días",
+   "60 days": "60 días",
+   "90 days (about 3 months)": "90 días (unos 3 meses)"
   },
   "pl": {
    "Polish": "Polski",
@@ -3595,7 +3611,15 @@
    "Saved as PNG in the screenshots folder.": "Zapisywane jako PNG w folderze zrzutów.",
    "Use it if graphics look wrong after an update.": "Użyj, jeśli grafika wygląda źle po aktualizacji.",
    "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "Wygładzanie gry; Automatycznie wyłącza je na AMD i Intel w Windows.",
-   "Above 60 the camera is smoother, but characters may judder.": "Powyżej 60 kamera jest płynniejsza, ale postacie mogą drgać."
+   "Above 60 the camera is smoother, but characters may judder.": "Powyżej 60 kamera jest płynniejsza, ale postacie mogą drgać.",
+   "Rotate the season": "Zmieniaj sezon",
+   "From the day you switch it on, the season moves to the next one when its season length below ends, with its events. Seasonal heroes of past seasons stay in your saves.": "Od dnia włączenia sezon przechodzi na następny, gdy kończy się poniższa długość sezonu, razem z jego wydarzeniami. Sezonowi bohaterowie z poprzednich sezonów zostają w twoich zapisach.",
+   "Season length": "Długość sezonu",
+   "How long each season of the rotation lasts. Blizzard's seasons lasted about 3 months. Changing it keeps the current season and counts the new length from today.": "Jak długo trwa każdy sezon rotacji. Sezony Blizzarda trwały około 3 miesięcy. Zmiana zachowuje bieżący sezon i liczy nową długość od dziś.",
+   "15 days": "15 dni",
+   "30 days": "30 dni",
+   "60 days": "60 dni",
+   "90 days (about 3 months)": "90 dni (około 3 miesięcy)"
   },
   "fr": {
    "Polish": "Polonais",
@@ -3703,7 +3727,15 @@
    "Saved as PNG in the screenshots folder.": "Enregistré en PNG dans le dossier des captures.",
    "Use it if graphics look wrong after an update.": "À utiliser si les graphismes sont faux après une mise à jour.",
    "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "Le lissage du jeu ; Automatique le coupe sur AMD et Intel sous Windows.",
-   "Above 60 the camera is smoother, but characters may judder.": "Au-dessus de 60, la caméra est plus fluide, mais les personnages peuvent saccader."
+   "Above 60 the camera is smoother, but characters may judder.": "Au-dessus de 60, la caméra est plus fluide, mais les personnages peuvent saccader.",
+   "Rotate the season": "Faire tourner la saison",
+   "From the day you switch it on, the season moves to the next one when its season length below ends, with its events. Seasonal heroes of past seasons stay in your saves.": "À partir du jour où vous l'activez, la saison passe à la suivante quand la durée de saison ci-dessous se termine, avec ses événements. Les héros saisonniers des saisons passées restent dans vos sauvegardes.",
+   "Season length": "Durée de la saison",
+   "How long each season of the rotation lasts. Blizzard's seasons lasted about 3 months. Changing it keeps the current season and counts the new length from today.": "La durée de chaque saison de la rotation. Les saisons de Blizzard duraient environ 3 mois. La changer garde la saison actuelle et compte la nouvelle durée à partir d'aujourd'hui.",
+   "15 days": "15 jours",
+   "30 days": "30 jours",
+   "60 days": "60 jours",
+   "90 days (about 3 months)": "90 jours (environ 3 mois)"
   },
   "de": {
    "Polish": "Polnisch",
@@ -3802,7 +3834,15 @@
    "Saved as PNG in the screenshots folder.": "Als PNG im Screenshot-Ordner gespeichert.",
    "Use it if graphics look wrong after an update.": "Nutzen, wenn die Grafik nach einem Update falsch aussieht.",
    "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "Die Glättung des Spiels; Automatisch schaltet sie bei AMD und Intel unter Windows aus.",
-   "Above 60 the camera is smoother, but characters may judder.": "Über 60 läuft die Kamera flüssiger, aber Figuren können ruckeln."
+   "Above 60 the camera is smoother, but characters may judder.": "Über 60 läuft die Kamera flüssiger, aber Figuren können ruckeln.",
+   "Rotate the season": "Saison wechseln",
+   "From the day you switch it on, the season moves to the next one when its season length below ends, with its events. Seasonal heroes of past seasons stay in your saves.": "Ab dem Tag, an dem du es einschaltest, wechselt die Saison zur nächsten, wenn die Saisondauer unten abläuft, mit ihren Events. Saisonhelden vergangener Saisons bleiben in deinen Spielständen.",
+   "Season length": "Saisondauer",
+   "How long each season of the rotation lasts. Blizzard's seasons lasted about 3 months. Changing it keeps the current season and counts the new length from today.": "Wie lange jede Saison der Rotation dauert. Blizzards Saisons dauerten etwa 3 Monate. Eine Änderung behält die aktuelle Saison und zählt die neue Dauer ab heute.",
+   "15 days": "15 Tage",
+   "30 days": "30 Tage",
+   "60 days": "60 Tage",
+   "90 days (about 3 months)": "90 Tage (etwa 3 Monate)"
   },
   "it": {
    "Polish": "Polacco",
@@ -3899,7 +3939,15 @@
    "Saved as PNG in the screenshots folder.": "Salvato come PNG nella cartella degli screenshot.",
    "Use it if graphics look wrong after an update.": "Usalo se la grafica appare errata dopo un aggiornamento.",
    "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "La smussatura del gioco; Automatico la spegne su AMD e Intel in Windows.",
-   "Above 60 the camera is smoother, but characters may judder.": "Sopra 60 la telecamera è più fluida, ma i personaggi possono tremolare."
+   "Above 60 the camera is smoother, but characters may judder.": "Sopra 60 la telecamera è più fluida, ma i personaggi possono tremolare.",
+   "Rotate the season": "Ruota la stagione",
+   "From the day you switch it on, the season moves to the next one when its season length below ends, with its events. Seasonal heroes of past seasons stay in your saves.": "Dal giorno in cui la attivi, la stagione passa alla successiva quando finisce la durata della stagione qui sotto, con i suoi eventi. Gli eroi stagionali delle stagioni passate restano nei tuoi salvataggi.",
+   "Season length": "Durata della stagione",
+   "How long each season of the rotation lasts. Blizzard's seasons lasted about 3 months. Changing it keeps the current season and counts the new length from today.": "Quanto dura ogni stagione della rotazione. Le stagioni di Blizzard duravano circa 3 mesi. Cambiarla mantiene la stagione attuale e conta la nuova durata da oggi.",
+   "15 days": "15 giorni",
+   "30 days": "30 giorni",
+   "60 days": "60 giorni",
+   "90 days (about 3 months)": "90 giorni (circa 3 mesi)"
   },
   "tr": {
    "Polish": "Lehçe",
@@ -3994,7 +4042,15 @@
    "Saved as PNG in the screenshots folder.": "Ekran görüntüleri klasörüne PNG olarak kaydedilir.",
    "Use it if graphics look wrong after an update.": "Bir güncellemeden sonra grafikler bozuk görünürse kullanın.",
    "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "Oyunun kendi yumuşatması; Otomatik, Windows'ta AMD ve Intel'de kapatır.",
-   "Above 60 the camera is smoother, but characters may judder.": "60'ın üzerinde kamera daha akıcıdır, ancak karakterler titreyebilir."
+   "Above 60 the camera is smoother, but characters may judder.": "60'ın üzerinde kamera daha akıcıdır, ancak karakterler titreyebilir.",
+   "Rotate the season": "Sezonu döndür",
+   "From the day you switch it on, the season moves to the next one when its season length below ends, with its events. Seasonal heroes of past seasons stay in your saves.": "Açtığın günden itibaren, aşağıdaki sezon süresi bittiğinde sezon etkinlikleriyle birlikte bir sonrakine geçer. Geçmiş sezonların sezonluk kahramanları kayıtlarında kalır.",
+   "Season length": "Sezon süresi",
+   "How long each season of the rotation lasts. Blizzard's seasons lasted about 3 months. Changing it keeps the current season and counts the new length from today.": "Rotasyondaki her sezonun ne kadar sürdüğü. Blizzard'ın sezonları yaklaşık 3 ay sürerdi. Değiştirmek mevcut sezonu korur ve yeni süreyi bugünden itibaren sayar.",
+   "15 days": "15 gün",
+   "30 days": "30 gün",
+   "60 days": "60 gün",
+   "90 days (about 3 months)": "90 gün (yaklaşık 3 ay)"
   },
   "ar": {
    "Polish": "البولندية",
@@ -4088,7 +4144,15 @@
    "Saved as PNG in the screenshots folder.": "يُحفظ بصيغة PNG في مجلد لقطات الشاشة.",
    "Use it if graphics look wrong after an update.": "استخدمه إن بدت الرسوميات خاطئة بعد تحديث.",
    "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "التنعيم الأصلي للعبة؛ الوضع التلقائي يوقفه على AMD وIntel في Windows.",
-   "Above 60 the camera is smoother, but characters may judder.": "فوق 60 تصبح الكاميرا أكثر سلاسة، لكن قد ترتجف الشخصيات."
+   "Above 60 the camera is smoother, but characters may judder.": "فوق 60 تصبح الكاميرا أكثر سلاسة، لكن قد ترتجف الشخصيات.",
+   "Rotate the season": "تدوير الموسم",
+   "From the day you switch it on, the season moves to the next one when its season length below ends, with its events. Seasonal heroes of past seasons stay in your saves.": "من اليوم الذي تفعّله فيه، ينتقل الموسم إلى الموسم التالي عند انتهاء مدة الموسم أدناه، مع أحداثه. يبقى أبطال المواسم السابقة في ملفات الحفظ.",
+   "Season length": "مدة الموسم",
+   "How long each season of the rotation lasts. Blizzard's seasons lasted about 3 months. Changing it keeps the current season and counts the new length from today.": "المدة التي يستمر فيها كل موسم في التدوير. كانت مواسم Blizzard تستمر نحو 3 أشهر. تغييرها يُبقي الموسم الحالي ويحسب المدة الجديدة من اليوم.",
+   "15 days": "15 يومًا",
+   "30 days": "30 يومًا",
+   "60 days": "60 يومًا",
+   "90 days (about 3 months)": "90 يومًا (نحو 3 أشهر)"
   },
   "zh": {
    "Polish": "波兰语",
@@ -4573,7 +4637,15 @@
    "Saved as PNG in the screenshots folder.": "以 PNG 保存在截图文件夹。",
    "Use it if graphics look wrong after an update.": "更新后画面异常时使用。",
    "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "游戏自带的平滑；“自动”在 Windows 的 AMD 和 Intel 上关闭它。",
-   "Above 60 the camera is smoother, but characters may judder.": "高于 60 时镜头更流畅，但角色可能会抖动。"
+   "Above 60 the camera is smoother, but characters may judder.": "高于 60 时镜头更流畅，但角色可能会抖动。",
+   "Rotate the season": "轮换赛季",
+   "From the day you switch it on, the season moves to the next one when its season length below ends, with its events. Seasonal heroes of past seasons stay in your saves.": "从开启当天起，每当下方的赛季时长结束，赛季就会连同其活动切换到下一个。往期赛季的赛季英雄仍保留在你的存档中。",
+   "Season length": "赛季时长",
+   "How long each season of the rotation lasts. Blizzard's seasons lasted about 3 months. Changing it keeps the current season and counts the new length from today.": "轮换中每个赛季持续的时间。暴雪的赛季通常约为 3 个月。更改后当前赛季保持不变，新的时长从今天开始计算。",
+   "15 days": "15 天",
+   "30 days": "30 天",
+   "60 days": "60 天",
+   "90 days (about 3 months)": "90 天（约 3 个月）"
   },
   "ja": {
    "Polish": "ポーランド語",
@@ -4668,7 +4740,15 @@
    "Saved as PNG in the screenshots folder.": "スクリーンショットフォルダーに PNG で保存。",
    "Use it if graphics look wrong after an update.": "更新後に表示がおかしいときに使います。",
    "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "ゲーム本来の平滑化。自動では Windows の AMD・Intel でオフ。",
-   "Above 60 the camera is smoother, but characters may judder.": "60 を超えるとカメラは滑らかになりますが、キャラクターがカクつくことがあります。"
+   "Above 60 the camera is smoother, but characters may judder.": "60 を超えるとカメラは滑らかになりますが、キャラクターがカクつくことがあります。",
+   "Rotate the season": "シーズンをローテーション",
+   "From the day you switch it on, the season moves to the next one when its season length below ends, with its events. Seasonal heroes of past seasons stay in your saves.": "オンにした日から、下のシーズンの長さが終わるたびに、シーズンはイベントと共に次のシーズンへ移ります。過去のシーズンのシーズンヒーローはセーブに残ります。",
+   "Season length": "シーズンの長さ",
+   "How long each season of the rotation lasts. Blizzard's seasons lasted about 3 months. Changing it keeps the current season and counts the new length from today.": "ローテーションの各シーズンが続く期間です。Blizzard のシーズンは約 3 か月でした。変更しても現在のシーズンはそのままで、新しい長さは今日から数えます。",
+   "15 days": "15 日",
+   "30 days": "30 日",
+   "60 days": "60 日",
+   "90 days (about 3 months)": "90 日（約 3 か月）"
   },
   "ko": {
    "Polish": "폴란드어",
@@ -4763,7 +4843,15 @@
    "Saved as PNG in the screenshots folder.": "스크린샷 폴더에 PNG로 저장됩니다.",
    "Use it if graphics look wrong after an update.": "업데이트 후 그래픽이 이상하면 사용하세요.",
    "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "게임 자체 다듬기입니다. 자동은 Windows의 AMD·Intel에서 끕니다.",
-   "Above 60 the camera is smoother, but characters may judder.": "60을 넘으면 카메라는 더 부드럽지만 캐릭터가 떨릴 수 있습니다."
+   "Above 60 the camera is smoother, but characters may judder.": "60을 넘으면 카메라는 더 부드럽지만 캐릭터가 떨릴 수 있습니다.",
+   "Rotate the season": "시즌 순환",
+   "From the day you switch it on, the season moves to the next one when its season length below ends, with its events. Seasonal heroes of past seasons stay in your saves.": "켠 날부터 아래의 시즌 길이가 끝날 때마다 시즌이 이벤트와 함께 다음 시즌으로 넘어갑니다. 지난 시즌의 시즌 영웅은 저장 파일에 남습니다.",
+   "Season length": "시즌 길이",
+   "How long each season of the rotation lasts. Blizzard's seasons lasted about 3 months. Changing it keeps the current season and counts the new length from today.": "순환에서 각 시즌이 지속되는 기간입니다. 블리자드의 시즌은 약 3개월이었습니다. 바꾸면 현재 시즌은 그대로 유지되고 새 길이는 오늘부터 계산됩니다.",
+   "15 days": "15일",
+   "30 days": "30일",
+   "60 days": "60일",
+   "90 days (about 3 months)": "90일 (약 3개월)"
   },
   "id": {
    "Polish": "Polandia",
@@ -5160,7 +5248,15 @@
    "Saved as PNG in the screenshots folder.": "Disimpan sebagai PNG di folder tangkapan layar.",
    "Use it if graphics look wrong after an update.": "Gunakan jika grafis tampak salah setelah pembaruan.",
    "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "Penghalusan bawaan game; Otomatis mematikannya di AMD dan Intel pada Windows.",
-   "Above 60 the camera is smoother, but characters may judder.": "Di atas 60 kamera lebih mulus, tetapi karakter bisa tersendat."
+   "Above 60 the camera is smoother, but characters may judder.": "Di atas 60 kamera lebih mulus, tetapi karakter bisa tersendat.",
+   "Rotate the season": "Putar musim",
+   "From the day you switch it on, the season moves to the next one when its season length below ends, with its events. Seasonal heroes of past seasons stay in your saves.": "Sejak hari Anda menyalakannya, musim berpindah ke musim berikutnya saat durasi musim di bawah berakhir, beserta acaranya. Pahlawan musiman dari musim lalu tetap ada di save Anda.",
+   "Season length": "Durasi musim",
+   "How long each season of the rotation lasts. Blizzard's seasons lasted about 3 months. Changing it keeps the current season and counts the new length from today.": "Berapa lama setiap musim dalam rotasi berlangsung. Musim Blizzard berlangsung sekitar 3 bulan. Mengubahnya mempertahankan musim saat ini dan menghitung durasi baru mulai hari ini.",
+   "15 days": "15 hari",
+   "30 days": "30 hari",
+   "60 days": "60 hari",
+   "90 days (about 3 months)": "90 hari (sekitar 3 bulan)"
   },
   "cs": {
    "Trophies": "Trofeje",
@@ -5616,7 +5712,15 @@
    "Saved as PNG in the screenshots folder.": "Uloží se jako PNG do složky snímků.",
    "Use it if graphics look wrong after an update.": "Použijte, pokud grafika po aktualizaci vypadá špatně.",
    "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "Vlastní vyhlazování hry; Automaticky ho vypne na AMD a Intel ve Windows.",
-   "Above 60 the camera is smoother, but characters may judder.": "Nad 60 je kamera plynulejší, ale postavy se mohou trhat."
+   "Above 60 the camera is smoother, but characters may judder.": "Nad 60 je kamera plynulejší, ale postavy se mohou trhat.",
+   "Rotate the season": "Střídat sezónu",
+   "From the day you switch it on, the season moves to the next one when its season length below ends, with its events. Seasonal heroes of past seasons stay in your saves.": "Ode dne, kdy ji zapnete, se sezóna přepne na další, jakmile skončí délka sezóny níže, i s jejími událostmi. Sezónní hrdinové minulých sezón zůstanou ve vašich uložených hrách.",
+   "Season length": "Délka sezóny",
+   "How long each season of the rotation lasts. Blizzard's seasons lasted about 3 months. Changing it keeps the current season and counts the new length from today.": "Jak dlouho trvá každá sezóna rotace. Sezóny Blizzardu trvaly zhruba 3 měsíce. Změna ponechá aktuální sezónu a novou délku počítá od dneška.",
+   "15 days": "15 dní",
+   "30 days": "30 dní",
+   "60 days": "60 dní",
+   "90 days (about 3 months)": "90 dní (zhruba 3 měsíce)"
   }
  },
  "ru": {
@@ -6084,7 +6188,15 @@
   "Saved as PNG in the screenshots folder.": "Сохраняется в PNG в папку скриншотов.",
   "Use it if graphics look wrong after an update.": "Используйте, если после обновления графика выглядит неправильно.",
   "The game's own smoothing; Automatic turns it off on AMD and Intel on Windows.": "Собственное сглаживание игры; «Авто» выключает его на AMD и Intel в Windows.",
-  "Above 60 the camera is smoother, but characters may judder.": "Выше 60 камера плавнее, но персонажи могут дёргаться."
+  "Above 60 the camera is smoother, but characters may judder.": "Выше 60 камера плавнее, но персонажи могут дёргаться.",
+  "Rotate the season": "Менять сезон",
+  "From the day you switch it on, the season moves to the next one when its season length below ends, with its events. Seasonal heroes of past seasons stay in your saves.": "С того дня, как вы это включите, сезон переходит к следующему, когда заканчивается длительность сезона ниже, вместе с его событиями. Сезонные герои прошлых сезонов остаются в ваших сохранениях.",
+  "Season length": "Длительность сезона",
+  "How long each season of the rotation lasts. Blizzard's seasons lasted about 3 months. Changing it keeps the current season and counts the new length from today.": "Сколько длится каждый сезон ротации. Сезоны Blizzard длились около 3 месяцев. При изменении текущий сезон сохраняется, а новая длительность отсчитывается с сегодняшнего дня.",
+  "15 days": "15 дней",
+  "30 days": "30 дней",
+  "60 days": "60 дней",
+  "90 days (about 3 months)": "90 дней (около 3 месяцев)"
  },
  "windows_languages": {
   "25": "ru",
