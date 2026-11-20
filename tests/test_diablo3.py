@@ -72,10 +72,10 @@ class Diablo3PatchTests(unittest.TestCase):
                               '2560x1080', '3440x1440', '3840x1600', '5120x1440',
                               '1280x800', '1920x1200', '2560x1600')}
         expected |= {f'{graphics_options.LIMITER_PREFIX} - {n}' for n in ('30 FPS', '120 FPS', 'Unlimited')}
-        expected |= self.OFFLINE_NAMES
+        expected |= self.OFFLINE_NAMES | {graphics_options.FIXED_SCALE_PATCH}
         self.assertEqual(names, expected)
         for meta in ET.parse(xml).getroot().iter('Metadata'):
-            if meta.get('Name') in self.OFFLINE_NAMES:
+            if meta.get('Name') in self.OFFLINE_NAMES | {graphics_options.FIXED_SCALE_PATCH}:
                 continue
             if meta.get('Name').startswith(graphics_options.LIMITER_PREFIX):
                 # The frame limiter: one microsecond wait, 16683 (0x412b) in the pattern.
@@ -139,6 +139,19 @@ class Diablo3PatchTests(unittest.TestCase):
                                          image=bytes(new))
         self.assertEqual(writes, [(0x800 + 6, (2560).to_bytes(4, 'little')),
                                   (0x800 + 17 + 0x40 + 6, (1440).to_bytes(4, 'little'))])
+
+    def test_dynamic_resolution_off_takes_the_fixed_scale_branch(self):
+        xml = ROOT / 'patches' / 'Diablo_III.xml'
+        line, = ET.parse(xml).getroot().find(f"Metadata[@Name='{graphics_options.FIXED_SCALE_PATCH}']").iter('Line')
+        pattern, at = line.get('Pattern').split(), int(line.get('At'))
+        # The je over "scale = 1.0, countdown = 0" becomes two nops. The call before it is to a
+        # function that moved between 1.46 and 1.47: its displacement is not part of the signature.
+        self.assertEqual((pattern[3:8], pattern[at:at + 2]), (['e8', '??', '??', '??', '??'], ['74', '10']))
+        for displacement in ('72fd5100', 'f2ff5100'):
+            image = bytes(0x100) + bytes.fromhex(''.join(pattern).replace('????????', displacement)) + bytes(0x100)
+            self.assertEqual(patches.compile_patches(xml, [graphics_options.FIXED_SCALE_PATCH], '01.47',
+                                                     [(0, len(image))], image=image),
+                             [(0x100 + at, bytes.fromhex('9090'))])
 
     def test_both_releases_use_it(self):
         for title in ('CUSA00242', 'CUSA00243'):

@@ -428,6 +428,12 @@ def main():
                 graphics_options.frame_rate(graphics_options.read_ini(env['SANCTUARY_CONFIG']))) if diablo3 else None
             if limiter:
                 names.append(limiter)
+            # Graphics > Dynamic resolution off: the game's own fixed 100% scene scale.
+            fixed_scale = diablo3 and 'SANCTUARY_DYNRES' not in env and \
+                graphics_options.read_ini(env['SANCTUARY_CONFIG']).get('dynamic_resolution') == '0'
+            names = [n for n in names if n != graphics_options.FIXED_SCALE_PATCH]
+            if fixed_scale:
+                names.append(graphics_options.FIXED_SCALE_PATCH)
             available = patches.available_patches(patch_xml, profile[2])
             frame_rates = any(n.startswith(graphics_options.FPS_PREFIX) for n in available)
             names = graphics_options.restrict_to_available(names, available)
@@ -441,17 +447,24 @@ def main():
         if profile:
             # Only the patches found in this eboot.bin count: a frame rate patch that was skipped
             # leaves the engine at 60 FPS, and the notes' memory and VBlank needs follow the same list.
-            applied = (patch_status(out) or {}).get('applied', [])
+            status = patch_status(out) or {}
+            applied = status.get('applied', [])
             engine_fps = graphics_options.applied_engine_fps(applied)
             dmem, vblank = patch_requirements(patch_xml, applied, profile[2])
             # Graphics > V-Sync (sanctuary.ini vertical_sync): the profile keeps it off otherwise.
             if diablo3 and 'SANCTUARY_VSYNC' not in caller_env:
                 vsync = graphics_options.read_ini(env['SANCTUARY_CONFIG']).get('vertical_sync') == '1'
                 env['SANCTUARY_VSYNC'] = '1' if vsync else '0'
-            # Graphics > Dynamic resolution off: the scene stays at 100% (guest_clock_scale.h).
-            if diablo3 and 'SANCTUARY_DYNRES' not in caller_env and \
-                    graphics_options.read_ini(env['SANCTUARY_CONFIG']).get('dynamic_resolution') == '0':
-                env['SANCTUARY_DYNRES'] = 'fixed'
+            # Graphics > Dynamic resolution off: the scene stays at 100%. An eboot.bin the fixed-scale
+            # patch was not found in gets the slowed GPU clock instead (guest_clock_scale.h), derived
+            # so that "Apply and restart" decides again.
+            if fixed_scale:
+                reason = graphics_options.fixed_scale_fallback(status)
+                if reason:
+                    env['SANCTUARY_DYNRES'] = 'fixed'
+                    derived.append('SANCTUARY_DYNRES')
+                    print(f'Dynamic resolution: the fixed-scale patch was left out ({reason}); '
+                          'the GPU clock is slowed instead', flush=True)
                 print('Dynamic resolution: off (the scene stays at 100%)', flush=True)
             for key, value in (graphics_options.limiter_environment(applied) if diablo3 else {}).items():
                 if key not in env:

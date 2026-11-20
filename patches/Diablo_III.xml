@@ -284,6 +284,20 @@
             <Line Type="bytes" Address="0x0077c3b9" Value="00000000" Pattern="49 c7 86 a8 0b 00 00 2b 41 00 00 41 c7 86 f8 0b" At="7"/>
         </PatchList>
     </Metadata>
+    <!-- Dynamic resolution off (Graphics > Dynamic resolution, run.py). The scaler's update (1.47 eboot
+         0x26e80) averages its last eight GPU times and steps the scene's scale [obj+0x18] by 0.05 between
+         its floor and 1.0 (down when the average is above 15250, up below 14250), then counts eight
+         updates down before the next step. Before that it asks a game flag (call, test eax, je +0x10 at
+         0x26ee9) and, when it is set, stores scale 1.0 and clears the countdown instead: the game's own
+         fixed 100%. The two nops always take that branch. The signature leaves the call's displacement
+         open (it differs between 1.46 and 1.47, the code around it does not). No entry for the US 1.00
+         eboot, which was not examined: run.py then keeps the scene at 100% by slowing the GPU clock the
+         scaler reads (SANCTUARY_DYNRES=fixed, as before this patch). -->
+    <Metadata Title="Diablo III" Name="Dynamic Resolution - Off" Note="The scene stays at 100%: the dynamic resolution always takes the game's own fixed-scale branch." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x00426ef0" Value="9090" Pattern="89 43 20 e8 ?? ?? ?? ?? 85 c0 74 10 c7 43 18 00 00 80 3f c7 43 08 00 00 00 00 eb 61 8b 43 08" At="10"/>
+        </PatchList>
+    </Metadata>
     <!-- Offline seasons, community events and Challenge Rifts (d3hack-style, no cheats). The game asks the
          online pubfile service for Seasons.txt and Config.txt; offline the answer never comes. The base patch
          "Offline Seasons" hooks the per-user lobby update (eboot 0x43528) and feeds both files once to the
