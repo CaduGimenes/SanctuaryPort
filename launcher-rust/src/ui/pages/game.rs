@@ -441,7 +441,7 @@ pub fn view(state: &State) -> Element<'_, Message> {
 }
 
 /// The note under the first offline event; the translation tables key on this text.
-const OFFLINE_EVENTS_HINT: &str = "On top of the season's theme, for the next start. They need an offline season; the Altar of Rites and Visions of Enmity are always on with one.";
+const OFFLINE_EVENTS_HINT: &str = "On top of the season's theme, for the next start. They need an offline season; the Altar of Rites comes with Season 28 and later, Visions of Enmity with Season 29 and later.";
 
 /// The note under the offline season row; the translation tables key on this text.
 const OFFLINE_SEASON_HINT: &str = "Seasonal heroes offline: the season the game runs. Takes effect on the next start. Off: no season.";
