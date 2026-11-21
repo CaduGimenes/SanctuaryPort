@@ -373,3 +373,66 @@ D3_EBOOT=eboot.bin python3 -I tools/re/vt.py scripts 116e1f0   # vtable slots
 ```
 
 `tools/re/niddb.json` maps PS4 NIDs to names (`tools/add_import_names.py` uses it).
+
+## LAN multiplayer (experimental, `SANCTUARY_LAN=1`)
+
+In the launcher: Game > Player > **LAN play (experimental)** (off by default). It sends `SANCTUARY_LAN=1`, or
+`0` when off, so an inherited value never turns it on.
+
+The game has its own **LAN Play** network mode (main menu → R3 *Network Settings*), with no PSN
+involved. By default the runtime reports the network cable as unplugged, so the game answers
+"You have no network connection". With `SANCTUARY_LAN=1`, `src/runtime_net.c` gives it a wired
+connection:
+
+- **NetCtl** is connected and reports this machine's LAN IPv4 address. `SANCTUARY_LAN_IP` picks
+  the address; by default it is the first non-loopback IPv4.
+- **`libSceNet`** sockets are host sockets, with FreeBSD numbers and the `sockaddr_in` layout
+  translated. Sony's `SO_NBIO` (0x1200) maps to `O_NONBLOCK` / `FIONBIO`.
+- **Epoll** is host epoll on Linux. On Windows it is `WSAPoll` over the sockets each epoll holds.
+- **Winsock differences are handled:** `WSAExxx` errors map to their BSD numbers, a non-blocking
+  connect reports `EINPROGRESS`, `MSG_DONTWAIT` is emulated, UDP "connection reset" is turned off
+  (`SIO_UDP_CONNRESET`), and the LAN address comes from a UDP connect, which sends nothing.
+- **What stays off:**
+  - Hostname lookups, HTTP and PSN keep failing, so nothing contacts Sony or Blizzard.
+  - **Only local destinations are reachable.** A send or connect goes through only to loopback,
+    10/8, 172.16/12, 192.168/16, 169.254/16, 100.64/10 (VPNs such as Tailscale or ZeroTier's
+    CGNAT range) or a broadcast. Anything else is refused with `ENETUNREACH` and logged
+    (`Net: ... refused`), so even a hard-coded internet address cannot be reached. The first
+    contact with each new address is always logged (`Net: new destination`).
+  - **The same rule applies to incoming connections:** `accept()` closes a connection from a
+    non-local address and reports `ECONNABORTED`. `tests/test_net.c` checks the address rule
+    (including the edge of each range), the refused `sendto`/`connect` and a local `accept`.
+  - UPnP (SSDP, port 1900) is refused. The game would otherwise ask the router for a port
+    forward, and LAN play does not need one.
+
+Checked with `strace -f -e trace=%network` over a whole run on a real LAN address (menu, Find
+Game, hosting in town). The game's internet sockets were UDP only (no TCP, no IPv6), and their
+only destinations were the discovery broadcast and the LAN address itself.
+
+What the game does (1.47, observed):
+
+| Port | Use |
+|---|---|
+| UDP 3074 | game traffic: handshake, hero upload, world state, a 32-byte heartbeat |
+| UDP 1200 | LAN discovery: *Find Game* broadcasts a 14-byte probe to `255.255.255.255:1200`; each host answers with a ~150-byte game description (host, level, difficulty, quest, party size) |
+
+Verified flow:
+
+1. The host picks LAN Play and plays (Continue).
+2. The other player picks LAN Play, then *Find Game*. The host's game is listed; Accept joins its
+   party.
+3. *Join Game* loads into the host's world. Both players see each other (P1/P2).
+
+Testing on one machine: give each instance its own loopback address and data folder. Sockets
+bind to that address, and broadcasts go to `127.0.0.2`–`127.0.0.9`:
+
+    SANCTUARY_LAN=1 SANCTUARY_LAN_IP=127.0.0.2 SANCTUARY_DATA_DIR=dataA bash run.sh   # host
+    SANCTUARY_LAN=1 SANCTUARY_LAN_IP=127.0.0.3 SANCTUARY_DATA_DIR=dataB SANCTUARY_PLAYER_NAME=Player2 bash run.sh
+
+Linux ↔ Linux and Linux ↔ Windows (the Windows build under Wine) were tested this way; both
+reached the host's world.
+
+Not done yet:
+
+- Removing the per-call `Net:` logging.
+- Testing between two real machines (UDP 3074 and 1200 must be open in the firewall).

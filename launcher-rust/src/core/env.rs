@@ -169,6 +169,7 @@ pub fn environment(
     }
     // On by default (R91), also in a file without the key.
     put_switch(&mut env, settings, "discord_rpc");
+    put_switch(&mut env, settings, "lan_play");
     // Always written (#980): the runner copies it into the ini once, as `0` too.
     put_switch(&mut env, settings, "hdr");
     for key in ["draw_pipe", "readbacks", "no_msaa"] {
@@ -411,6 +412,19 @@ mod tests {
         let (empty, paths, _dir) = setup(json!({"player_name": "  "}));
         let env = game_environment(&empty, &paths, "en", &IndexMap::new(), true);
         assert!(!env.contains_key("SANCTUARY_PLAYER_NAME"));
+    }
+
+    #[test]
+    fn lan_play_is_off_unless_chosen() {
+        // Off by default, and off wins over an inherited SANCTUARY_LAN=1.
+        let mut inherited = IndexMap::new();
+        inherited.insert("SANCTUARY_LAN".to_string(), "1".to_string());
+        let (settings, paths, _dir) = setup(json!({}));
+        let env = game_environment(&settings, &paths, "en", &inherited, true);
+        assert_eq!(env["SANCTUARY_LAN"], "0");
+        let (on, paths, _dir) = setup(json!({"lan_play": true}));
+        let env = game_environment(&on, &paths, "en", &IndexMap::new(), true);
+        assert_eq!(env["SANCTUARY_LAN"], "1");
     }
 
     #[test]
