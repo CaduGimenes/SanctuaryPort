@@ -95,6 +95,20 @@ int main() {
         assert(!sanctuary_no_msaa_default(keeps_msaa));
     }
 
+    // SANCTUARY_MSAA_RESOLVE (Game MSAA samples): off by default; then multisampled color images
+    // are read from their averaged copy, depth and single-sampled stand-ins are not.
+    assert(!MsaaResolve());
+    assert(!ReadsSampleMean(false, 4, 4));
+    msaa_resolve.store(true);
+    for (const unsigned samples : {2u, 4u, 8u}) {
+        assert(ReadsSampleMean(false, samples, samples));
+        assert(!ReadsSampleMean(true, samples, samples));
+    }
+    assert(!ReadsSampleMean(false, 1, 1));
+    assert(!ReadsSampleMean(false, 1, 4));
+    assert(!ReadsSampleMean(false, 4, 1));
+    msaa_resolve.store(false);
+
     std::puts("no msaa OK");
     return EXIT_SUCCESS;
 }

@@ -251,6 +251,10 @@ public:
     /// The copy is taken again when `epoch` changes.
     ImageId FeedbackCopy(ImageId target, u64 epoch);
 
+    /// sanctuary: a copy of the multisampled color image `source` whose every sample holds the
+    /// mean of the source's samples (AmdGpu::MsaaResolve). Taken again when `epoch` changes.
+    ImageId MsaaAverage(ImageId source, u64 epoch);
+
     [[nodiscard]] Image& GetImage(ImageId id) {
         auto& image = slot_images[id];
         TouchImage(image);
@@ -449,6 +453,12 @@ private:
         u64 epoch = ~u64(0);
     };
     std::unordered_map<u32, FeedbackCopyEntry> feedback_copies;
+    struct MsaaAverageEntry {
+        ImageId copy{};
+        u64 source_uid = 0;
+        u64 epoch = ~u64(0);
+    };
+    std::unordered_map<u32, MsaaAverageEntry> msaa_averages;
     Vulkan::Scheduler& scheduler;
     Vulkan::Runtime& runtime;
     AmdGpu::Liverpool* liverpool;

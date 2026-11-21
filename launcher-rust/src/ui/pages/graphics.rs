@@ -11,7 +11,7 @@ use iced::Element;
 
 use crate::core::gpu::{no_msaa_decision, MsaaDecision};
 use crate::core::i18n::tr;
-use crate::core::options::{ANISOTROPY, DISPLAY_MODES, GTAO_MODES};
+use crate::core::options::{ANISOTROPY, DISPLAY_MODES, GAME_MSAA, GTAO_MODES};
 use crate::ui::app::{Message, State};
 use crate::ui::pages::controls::ini_number;
 use crate::ui::pages::performance::{aspect_options, select_row, NO_MSAA_HINT};
@@ -39,6 +39,8 @@ pub const FRAME_RATE_HINT: &str = "Above 60 the camera is smoother, but characte
 /// The note under the GTAO quality choice.
 pub const GTAO_HINT: &str =
     "Adds contact shadows in the 3D scene; Low is lighter for integrated GPUs.";
+/// The note under the MSAA samples choice.
+pub const GAME_MSAA_HINT: &str = "The game keeps one sample; a count also averages them.";
 
 /// The Upscaling choices: (id, English label, hint).
 pub const UPSCALING: [(&str, &str, &str); 3] = [
@@ -232,6 +234,12 @@ pub fn view(state: &State) -> Element<'_, Message> {
             &restart("Game MSAA (2x)"),
             select_row(state, lang, "no_msaa"),
             Some(&hint(NO_MSAA_HINT)),
+        ),
+        row(
+            state.rtl,
+            &restart("MSAA samples"),
+            select("msaa", GAME_MSAA, &ini("msaa"), lang),
+            Some(&hint(GAME_MSAA_HINT)),
         ),
         fxaa,
         row(

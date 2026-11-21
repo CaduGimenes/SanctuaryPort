@@ -1916,8 +1916,9 @@ bool Rasterizer::BindHelperWanted() {
 }
 
 bool Rasterizer::HelperEligible(const Pipeline* pipeline) const {
+    // MsaaResolve records its copies on this thread only.
     if (pipeline->IsCompute() || !bind_helper.Available() || FrameCapture::Active() ||
-        SanctuaryToggle::Disabled(SanctuaryToggle::TextureBindHelper) ||
+        AmdGpu::MsaaResolve() || SanctuaryToggle::Disabled(SanctuaryToggle::TextureBindHelper) ||
         SanctuaryToggle::Disabled(SanctuaryToggle::TextureBindingMemo) ||
         SanctuaryToggle::Disabled(SanctuaryToggle::UpdateImageFastPath)) {
         return false;
@@ -2960,6 +2961,28 @@ void Rasterizer::BindTextures(const Shader::Info& stage, const PreparedStage* pr
                     ++proxy_samples;
                     continue;
                 }
+            }
+            // sanctuary: AmdGpu::MsaaResolve (sanctuary_msaa.h): a sampled multisampled color image
+            // is read from a copy holding the mean of its samples, taken once per pass.
+            if (AmdGpu::ReadsSampleMean(image.info.props.is_depth, image.backing->num_samples,
+                                        image.info.num_samples) &&
+                !on_helper && !is_storage && !binding.force_general && !binding.is_target) {
+                image.usage.texture = 1u;
+                if (FrameCapture::Active()) {
+                    FrameCapture::Sampled(image.info, false);
+                }
+                // `image` is not used below: creating the copy may move the images.
+                const auto copy_id = texture_cache.MsaaAverage(image_id, FeedbackEpoch());
+                // Not GetImage: the copy is not registered, so it has no LRU entry to touch.
+                auto& copy = *texture_cache.TryGetImage(copy_id, 0);
+                auto& copy_view = texture_cache.FindTexture(copy_id, desc, nullptr, false);
+                barrier |= runtime.Transit(&copy, vk::ImageLayout::eShaderReadOnlyOptimal,
+                                           vk::PipelineStageFlagBits2::eAllCommands,
+                                           vk::AccessFlagBits2::eShaderRead, desc.view_info.range);
+                image_infos.emplace_back(VK_NULL_HANDLE, *copy_view.image_view,
+                                         copy.backing->state.layout);
+                set_ok = false;
+                continue;
             }
             // knack_pc: a color target the draw also samples is read from a copy taken once per
             // pass (TextureCache::FeedbackCopy) with SANCTUARY_FEEDBACK_COPY=1; else the feedback loop

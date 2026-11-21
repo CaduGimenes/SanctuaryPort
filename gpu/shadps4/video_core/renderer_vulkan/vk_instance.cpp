@@ -880,6 +880,12 @@ void Instance::CollectDeviceParameters() {
     AmdGpu::no_msaa.store(no_msaa, std::memory_order_relaxed);
     std::printf("GPU: guest multisampling %s\n",
                 no_msaa ? "off (single-sampled images; SANCTUARY_NO_MSAA=0 keeps it)" : "on");
+    // sanctuary: single-sampled images have nothing to average.
+    const char* resolve_env = std::getenv("SANCTUARY_MSAA_RESOLVE");
+    if (!no_msaa && resolve_env && *resolve_env == '1') {
+        AmdGpu::msaa_resolve.store(true, std::memory_order_relaxed);
+        std::printf("GPU: sampled multisampled color images read as the mean of their samples\n");
+    }
 
     const std::string model_name{GetModelName()};
     const std::string driver_version = GetDriverVersionName();

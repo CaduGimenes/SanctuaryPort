@@ -434,6 +434,11 @@ def main():
             names = [n for n in names if n != graphics_options.FIXED_SCALE_PATCH]
             if fixed_scale:
                 names.append(graphics_options.FIXED_SCALE_PATCH)
+            # Graphics > Game MSAA: the scene's sample count, also from sanctuary.ini alone.
+            names = [n for n in names if not n.startswith(graphics_options.MSAA_PREFIX)]
+            msaa = graphics_options.msaa(graphics_options.read_ini(env['SANCTUARY_CONFIG'])) if diablo3 else ''
+            if graphics_options.msaa_patch(msaa):
+                names.append(graphics_options.msaa_patch(msaa))
             available = patches.available_patches(patch_xml, profile[2])
             frame_rates = any(n.startswith(graphics_options.FPS_PREFIX) for n in available)
             # Diablo III's 200 FPS: the game's second limiter, which follows the limiter chosen above.
@@ -477,6 +482,13 @@ def main():
                 env['SANCTUARY_FRAME_RATE'] = rate + '  ·  Launcher > Graphics'
                 derived.append('SANCTUARY_FRAME_RATE')
                 print(f'Frame rate: {rate}', flush=True)
+            for key, value in graphics_options.msaa_environment(msaa).items():
+                if key not in env:
+                    env[key] = value
+                    derived.append(key)
+            if msaa:
+                count = next((n.split(' - ')[1] for n in applied if n.startswith(graphics_options.MSAA_PREFIX)), '2x')
+                print(f'Game MSAA: {count}, samples averaged', flush=True)
             for key, value in (('SANCTUARY_DMEM_MB', dmem), ('SANCTUARY_VBLANK_HZ', vblank)):
                 if value and key not in env:
                     env[key] = str(value)

@@ -9,6 +9,8 @@ pub const FRAME_RATE_PATCH_PREFIX: &str = "Frame Rate Patch";
 pub const FRAME_LIMITER_PATCH_PREFIX: &str = "Frame Limiter";
 /// SanctuaryPort: Diablo III's own fixed scene scale (Graphics > Dynamic resolution off, run.py).
 pub const FIXED_SCALE_PATCH: &str = "Dynamic Resolution - Off";
+/// SanctuaryPort: Diablo III's scene samples (Graphics > MSAA samples, run.py).
+pub const GAME_MSAA_PATCH_PREFIX: &str = "Game MSAA";
 /// The fix a resolution patch replaces: both resize the video arena.
 pub const TEXTURE_FIX_PATCH: &str = "Bug Fix - Texture Corruption Fix";
 /// SanctuaryPort: Diablo III's second frame limiter raised to its maximum, which run.py adds for
@@ -69,6 +71,10 @@ pub static ANISOTROPY: &[Choice] = &[
     c("8", "8x"),
     c("16", "16x"),
 ];
+
+/// SanctuaryPort: Diablo III's scene samples (`msaa`, run.py): the game's own picks no patch and
+/// leaves the game's copy of its scene, which reads one sample, as it is; a count also averages them.
+pub static GAME_MSAA: &[Choice] = &[c("", "The game's own"), c("2", "2x"), c("4", "4x")];
 
 /// SanctuaryPort: optional GTAO replacement for Diablo III's SSAO upscale pass (`gtao`).
 pub static GTAO_MODES: &[Choice] = &[
@@ -554,9 +560,24 @@ mod tests {
     }
 
     #[test]
+    fn game_msaa_offers_what_run_py_reads() {
+        // run.py takes these values (scripts/graphics_options.py MSAA_CHOICES); the default, empty,
+        // picks no patch and leaves the game as it is.
+        let values: Vec<&str> = GAME_MSAA.iter().map(|choice| choice.value).collect();
+        assert_eq!(values, ["", "2", "4"]);
+        let script = std::fs::read_to_string(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../scripts/graphics_options.py"),
+        )
+        .unwrap();
+        assert!(script.contains("MSAA_CHOICES = ('', '2', '4')"));
+        assert!(script.contains(&format!("MSAA_PREFIX = '{GAME_MSAA_PATCH_PREFIX}'")));
+    }
+
+    #[test]
     fn every_table_has_unique_values() {
-        let tables: [&[Choice]; 23] = [
+        let tables: [&[Choice]; 24] = [
             FRAME_RATES,
+            GAME_MSAA,
             FRAME_GENERATION,
             DISPLAY_MODES,
             ANISOTROPY,

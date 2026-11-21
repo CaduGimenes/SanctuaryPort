@@ -113,12 +113,14 @@ class Diablo3PatchTests(unittest.TestCase):
                               '2560x1080', '3440x1440', '3840x1600', '5120x1440',
                               '1280x800', '1920x1200', '2560x1600')}
         expected |= {f'{graphics_options.LIMITER_PREFIX} - {n}' for n in ('30 FPS', '120 FPS', 'Unlimited')}
+        expected.add(f'{graphics_options.MSAA_PREFIX} - 4x')
         expected |= self.OFFLINE_NAMES | {self.SMOOTH, graphics_options.FIXED_SCALE_PATCH,
                                           graphics_options.FOREGROUND_CAP_PATCH}
         self.assertEqual(names, expected)
         for meta in ET.parse(xml).getroot().iter('Metadata'):
-            if meta.get('Name') in self.OFFLINE_NAMES | {self.SMOOTH, graphics_options.FIXED_SCALE_PATCH,
-                                                         graphics_options.FOREGROUND_CAP_PATCH}:
+            if (meta.get('Name') in self.OFFLINE_NAMES | {self.SMOOTH, graphics_options.FIXED_SCALE_PATCH,
+                                                          graphics_options.FOREGROUND_CAP_PATCH}
+                    or meta.get('Name').startswith(graphics_options.MSAA_PREFIX)):
                 continue
             if meta.get('Name').startswith(graphics_options.LIMITER_PREFIX):
                 # The frame limiter: one microsecond wait, 16683 (0x412b) in the pattern.
@@ -239,6 +241,32 @@ class Diablo3PatchTests(unittest.TestCase):
         for title in ('CUSA00242', 'CUSA00243'):
             profile = patches.game_profile(title)
             self.assertEqual(profile[1].name, 'Diablo_III.xml')
+
+    def test_game_msaa_rewrites_the_level(self):
+        # The 1.47 code around each site (eboot 0xbe420, 0xbe4fe), apart in an image.
+        level_a = bytes.fromhex('c7433004000000418b4754894334')
+        level_b = bytes.fromhex('c7433004000000418b4654894334')
+        image = bytearray(0x100)
+        sites = {}
+        for name, code in (('level_a', level_a), ('level_b', level_b)):
+            sites[name] = len(image)
+            image += code + bytearray(0x100)
+        xml = ROOT / 'patches' / 'Diablo_III.xml'
+        level16 = bytes.fromhex('c7433010000000')
+        four = patches.compile_patches(xml, ['Game MSAA - 4x'], '01.47', [(0, len(image))], image=bytes(image))
+        self.assertEqual(sorted(four), [(sites['level_a'], level16), (sites['level_b'], level16)])
+        # Each write replaces a whole instruction of the same length: movl $4 becomes movl $16.
+        for meta in ET.parse(xml).getroot().iter('Metadata'):
+            if meta.get('Name').startswith(graphics_options.MSAA_PREFIX):
+                for line in meta.iter('Line'):
+                    at, value = int(line.get('At')), bytes.fromhex(line.get('Value'))
+                    old = bytes.fromhex(''.join(line.get('Pattern').split()[at:at + len(value)]))
+                    self.assertEqual(old, bytes.fromhex('c7433004000000'))
+        # Another executable: no signature found, nothing written, the entry reported as skipped.
+        skipped = {}
+        self.assertEqual(patches.compile_patches(xml, ['Game MSAA - 4x'], '01.47', [(0, 0x1000)],
+                                                 image=bytes(0x1000), skipped=skipped), [])
+        self.assertIn('Game MSAA - 4x', skipped)
 
 
 class GamepadTests(unittest.TestCase):

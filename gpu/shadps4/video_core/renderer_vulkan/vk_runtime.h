@@ -88,6 +88,9 @@ public:
                       const VideoCore::SubresourceRange& dst_range);
     void ClearImage(VideoCore::Image* dst, const VideoCore::SubresourceRange& range,
                     const vk::ClearValue& clear_value);
+    /// sanctuary: every sample of `dst` (same size, format and samples) gets the mean of the
+    /// samples of the multisampled color image `src` (TextureCache::MsaaAverage).
+    void AverageMsImage(VideoCore::Image* src, VideoCore::Image* dst);
 
     void SetBackingSamples(VideoCore::Image* image, u32 num_samples, bool copy_backing = true);
 

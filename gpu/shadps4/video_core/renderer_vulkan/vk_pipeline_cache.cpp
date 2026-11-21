@@ -899,12 +899,12 @@ bool PipelineCache::RefreshGraphicsKey(PipelineSelection& sel) {
             bound += (regs.color_buffers[cb] && regs.color_target_mask.GetMask(cb)) ? 1 : 0;
         }
         // The old game's G-buffer (5+ targets, single-sample depth), or Diablo III's lit
-        // scene: one 10-bit target with its 2-sample scene depth (Motion::Diablo3Skinned
-        // then keeps the skinned draws).
+        // scene: one 10-bit target with its multisampled scene depth (2 samples, 4 or 8 with
+        // Game MSAA; Motion::Diablo3Skinned then keeps the skinned draws).
         const auto& cb0 = regs.color_buffers[0];
         const bool d3_scene = bound == 1 && cb0 && regs.color_target_mask.GetMask(0) &&
                               cb0.GetDataFmt() == AmdGpu::DataFormat::Format2_10_10_10 &&
-                              regs.depth_buffer.NumSamples() == 2;
+                              regs.depth_buffer.NumSamples() > 1;
         motion_possible = Shader::MotionVectors::positions_address != 0 &&
                           (bound >= 5 && regs.depth_buffer.NumSamples() == 1 || d3_scene) &&
                           !regs.color_buffers[Shader::MotionVectors::Output] &&

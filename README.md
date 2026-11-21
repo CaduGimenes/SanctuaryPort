@@ -69,6 +69,7 @@ Then follow [Getting your game ready](#getting-your-game-ready) with your own du
 | ✅ FXAA | cheap anti-aliasing of the 3D picture before the HUD (Graphics > Anti-aliasing), when FSR 3 is off |
 | ✅ **Frame rate 30 / 60 / 120 / 200** | the game's own frame limiter (Graphics > Frame rate; 200 is the game's own maximum); the game's speed stays the same; at 60 and above each frame is shown as soon as it is done (VRR and gamescope friendly) |
 | 🧪 Game MSAA on AMD and Intel (Windows) | off by default there (black lines); On is experimental: its depth is created without compression |
+| 🧪 MSAA 2x / 4x | the game's scene drawn with more samples and averaged into the picture, as on PC (Graphics > MSAA samples); the game's own copy keeps one sample |
 | ✅ Updates | from their own folder, read over the game in place: nothing is copied, on any drive (microSD cards on the ROG Ally / Steam Deck included); the base game is never changed |
 | ✅ Windows 10 / 11, Linux, SteamOS | played by the community on NVIDIA, AMD and Intel graphics, Steam Deck / Steam Machine and ROG Ally; every release is also tested under Wine |
 | ❌ Online play / PSN | offline only |
