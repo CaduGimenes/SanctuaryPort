@@ -26,7 +26,7 @@ use crate::ui::follow::{follow, Cause};
 use crate::ui::play::{refuse_while_live, LiveAction};
 use crate::ui::theme;
 use crate::ui::widgets::{
-    checkbox, choice_pairs, folder, min_width, row, section, select_pairs, toggle_row, Modal,
+    checkbox, choice_pairs, folder, min_width, row, section, section_fold, select_pairs, toggle_row, Modal,
     SELECT_MIN, SELECT_TEXT,
 };
 
@@ -441,7 +441,7 @@ pub fn view(state: &State) -> Element<'_, Message> {
 }
 
 /// The note under the first offline event; the translation tables key on this text.
-const OFFLINE_EVENTS_HINT: &str = "On top of the season's theme, for the next start. They need an offline season; the Altar of Rites comes with Season 28 and later, Visions of Enmity with Season 29 and later.";
+const OFFLINE_EVENTS_HINT: &str = "They need a season: Altar of Rites from Season 28, Visions of Enmity from 29.";
 
 /// The note under the offline season row; the translation tables key on this text.
 const OFFLINE_SEASON_HINT: &str = "Seasonal heroes offline: the season the game runs. Takes effect on the next start. Off: no season.";
@@ -512,6 +512,9 @@ fn season_row(state: &State) -> Element<'_, Message> {
 
 /// The Seasons tab: the offline season, how its events follow it, the 15 day rotation and, in
 /// Manual mode, one check box per event.
+/// The folding section of the Seasons page (`State::open_sections`).
+pub const SEASON_DETAILS: &str = "season_details";
+
 pub fn seasons_view(state: &State) -> Element<'_, Message> {
     let lang = state.lang.as_str();
     let any = state
@@ -525,11 +528,20 @@ pub fn seasons_view(state: &State) -> Element<'_, Message> {
             .into();
     }
     let mut page = column![];
-    // The offline season, when the patch file has "Offline Seasons - Season N" entries.
-    if state.patches.selectable.iter().any(|m| m.name.starts_with(SEASON_PREFIX)) {
+    let seasons = state.patches.selectable.iter().any(|m| m.name.starts_with(SEASON_PREFIX));
+    // The offline season in view; the rest under Details, closed at first.
+    if seasons {
         page = page
             .push(section(state.rtl, &tr(lang, "Offline seasons")))
-            .push(season_row(state))
+            .push(season_row(state));
+    }
+    let open = state.open_sections.contains(&SEASON_DETAILS);
+    page = page.push(section_fold(state.rtl, &tr(lang, "Details"), open, SEASON_DETAILS));
+    if !open {
+        return page.spacing(2).into();
+    }
+    if seasons {
+        page = page
             .push(mode_row(state))
             .push(rotate_row(state))
             .push(length_row(state));
@@ -579,7 +591,7 @@ pub fn seasons_view(state: &State) -> Element<'_, Message> {
 }
 
 /// The note under the Tristram check box; the translation tables key on this text.
-const TRISTRAM_HINT: &str = "The Diablo 1 dungeon of the yearly anniversary event: a portal near the fountain of the Old Ruins of Tristram, in Adventure Mode. Checked when you press PLAY: it is on only from the first to the last day below. Leave both empty for always.";
+const TRISTRAM_HINT: &str = "Diablo 1's dungeon, by the Old Ruins of Tristram (Adventure Mode). Only between the days below.";
 
 const TRISTRAM_DATE_NOTE: &str = "Year-month-day, like 2027-01-03. Empty: no limit.";
 
@@ -638,13 +650,13 @@ pub fn season_picked(state: &mut State, choice: &SeasonChoice) {
 }
 
 /// The note under the season mode row; the translation tables key on this text.
-const SEASON_MODE_HINT: &str = "Manual: you tick the events below. With its events: the season brings its own events and no others, like Blizzard's calendar. Full: the season with every event at once.";
+const SEASON_MODE_HINT: &str = "Which events run with the season.";
 
 /// The note under the rotation row; the translation tables key on this text.
-const SEASON_ROTATE_HINT: &str = "From the day you switch it on, the season moves to the next one when its season length below ends, with its events. Seasonal heroes of past seasons stay in your saves.";
+const SEASON_ROTATE_HINT: &str = "Moves on to the next season when this one ends. Past heroes stay.";
 
 /// The note under the season length row; the translation tables key on this text.
-const SEASON_LENGTH_HINT: &str = "How long each season of the rotation lasts. Blizzard's seasons lasted about 3 months. Changing it keeps the current season and counts the new length from today.";
+const SEASON_LENGTH_HINT: &str = "Blizzard's seasons lasted about 3 months.";
 
 /// One entry of the season length drop-down.
 #[derive(Clone, Debug, PartialEq, Eq)]

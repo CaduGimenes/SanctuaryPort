@@ -22,7 +22,7 @@ pub use hairline::{hairline, hairline_style, HAIRLINE};
 pub use min_width::{leave_room, min_width};
 pub use modal::{modal, Modal, ModalKind, ModalMessage};
 pub use row::row;
-pub use section::section;
+pub use section::{section, section_fold};
 pub use select::{
     choice_pairs, select, select_message, select_pairs, select_pairs_small, SELECT_MIN,
     SELECT_MIN_SMALL, SELECT_TEXT,

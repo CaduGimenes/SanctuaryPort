@@ -1118,7 +1118,7 @@ pub fn profile_section<'a>(state: &State, lang: &str) -> Element<'a, Message> {
         .spacing(8)
         .align_y(Center)
         .push(flat(
-            tr(lang, "Save"),
+            tr(lang, "Save profile"),
             can_save.then_some(Message::Controls(save)),
         ))
         .push(flat(

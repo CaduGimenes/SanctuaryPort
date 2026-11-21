@@ -48,8 +48,23 @@ pub struct CheckRow {
     pub enabled: bool,
 }
 
+/// The same marker as the Graphics page (`graphics::RESTART_MARK`).
 fn restart(lang: &str, english: &str) -> String {
-    format!("{}  ·  {}", tr(lang, english), tr(lang, "restart"))
+    format!("{}  {}", tr(lang, english), crate::ui::pages::graphics::RESTART_MARK)
+}
+
+/// The shader warm-up switch under Troubleshooting (GitHub #63).
+pub const WARMUP_LABEL: &str = "Load shaders while playing";
+pub const WARMUP_HINT: &str = "Off: a slower start that avoids some crashes at launch.";
+
+/// Delete shader cache, held while the game runs.
+fn delete_cache_button<'a>(state: &State, lang: &str) -> Element<'a, Message> {
+    let delete = button(text(tr(lang, "Delete shader cache"))).style(theme::button_flat);
+    if state.game.is_live() {
+        delete.into()
+    } else {
+        delete.on_press(Message::ClearShaderCache).into()
+    }
 }
 
 /// The drop-downs of the page: the language, the scale and (off Windows) the window system.
@@ -278,7 +293,7 @@ pub fn view(state: &State) -> Element<'_, Message> {
         section(state.rtl, &tr(lang, "Launcher")),
         row(
             state.rtl,
-            &tr(lang, "GUI Scale"),
+            &tr(lang, "Launcher size"),
             pick("ui_scale"),
             Some(&hint("For launcher only. Applies after Save.")),
         ),
@@ -336,19 +351,41 @@ pub fn view(state: &State) -> Element<'_, Message> {
             Message::OpenFolder(state.paths.data_dir.clone())
         ),
         flat("sanctuary.ini".to_string(), Message::OpenIni),
-        flat(tr(lang, "Last start log"), Message::ShowPage(Page::Log)),
+        flat(tr(lang, "Screenshots"), Message::OpenFolder(
+            state.paths.user_dir(&state.store.text("user_dir")).join("screenshots"),
+        )),
     ]
     .spacing(6)
     .align_y(Center);
     page = page
+        .push(section(state.rtl, &tr(lang, "Troubleshooting")))
+        .push(row(
+            state.rtl,
+            &tr(lang, "Shader cache"),
+            delete_cache_button(state, lang),
+            Some(&hint("Use it if graphics look wrong after an update.")),
+        ))
+        // GitHub #63: loading the cached pipelines on worker threads while the game runs crashed
+        // one AMD driver at start; off, they load before the first frame (SANCTUARY_BACKGROUND_WARMUP=0).
+        .push(checkbox(
+            state.rtl,
+            "background_warmup",
+            &tr(lang, WARMUP_LABEL),
+            state.store.flag("background_warmup"),
+            Some(&hint(WARMUP_HINT)),
+        ))
+        .push(row(
+            state.rtl,
+            &tr(lang, "Last start log"),
+            flat(tr(lang, "Open"), Message::ShowPage(Page::Log)),
+            Some(&hint("To report a problem, attach last_run.log from the port folder.")),
+        ))
         .push(section(state.rtl, &tr(lang, "Files")))
         .push(actions(
             state.rtl,
             FILES_ROW,
             files.into(),
-            Some(&hint(
-                "When you report a problem, attach last_run.log from the port folder: it is the log of the last start.",
-            )),
+            Some(&hint("F12 in the game saves a screenshot.")),
         ));
     page.into()
 }

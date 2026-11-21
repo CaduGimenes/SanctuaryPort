@@ -139,6 +139,9 @@ pub struct State {
     /// it, to keep the reference images small.
     pub art_override: Option<home::Art>,
     pub modal: Option<Modal>,
+    /// The folding sections that are open ("More options" on Graphics, the season details);
+    /// all start closed, so a pad reaches the common rows first.
+    pub open_sections: Vec<&'static str>,
     /// SanctuaryPort: the exit code of the last start that ended in an error (crash report).
     pub crash_code: Option<i32>,
     /// Whether `settings.json` or the ini could not be read at start and nothing was saved since:
@@ -257,6 +260,7 @@ impl State {
             installation,
             home: Default::default(),
             art_override: None,
+            open_sections: Vec::new(),
             modal: None,
             crash_code: None,
             settings_unreadable: !unreadable.is_empty(),
@@ -301,6 +305,8 @@ pub enum Message {
     Upscaling(String),
     /// The Aspect ratio box of the Graphics page.
     Aspect(String),
+    /// Opens or closes a folding section (`widgets::section_fold`).
+    ToggleSection(&'static str),
     Browse(String),
     /// The folder of a folder setting: the dialog's answer, or the path typed into its field.
     Browsed(String, Option<PathBuf>),
@@ -551,6 +557,13 @@ pub fn update(state: &mut State, message: Message) -> Task<Message> {
             }
         }
         Message::Aspect(aspect) => performance::choose_aspect(state, &aspect),
+        Message::ToggleSection(name) => {
+            if let Some(at) = state.open_sections.iter().position(|open| *open == name) {
+                state.open_sections.remove(at);
+            } else {
+                state.open_sections.push(name);
+            }
+        }
         Message::MonitorsListed(displays) => {
             let saved = state.store.text("monitor");
             state.monitor_pairs = monitor_options(&displays);

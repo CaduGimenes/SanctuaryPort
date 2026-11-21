@@ -59,8 +59,18 @@ pub fn run_task(task: iced::Task<Message>) -> Vec<Message> {
     )
 }
 
+/// Opens `page` with its folding sections open, so the tests reach every row (they start closed:
+/// `graphics_more_options_start_closed`).
 pub fn open(state: &mut State, page: Page) {
     let _ = app::update(state, Message::ShowPage(page));
+    let fold = match page {
+        Page::Graphics => Some(sanctuaryport_launcher::ui::pages::graphics::MORE_OPTIONS),
+        Page::Seasons => Some(sanctuaryport_launcher::ui::pages::game::SEASON_DETAILS),
+        _ => None,
+    };
+    if let Some(name) = fold.filter(|name| !state.open_sections.contains(name)) {
+        let _ = app::update(state, Message::ToggleSection(name));
+    }
 }
 
 /// Clicks `label` in the current view and returns what the click emitted.

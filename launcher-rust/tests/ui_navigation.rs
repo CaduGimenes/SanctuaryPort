@@ -471,12 +471,12 @@ fn rtl_mirrors_the_drawer_rows_and_header() {
     let dir = tempfile::tempdir().unwrap();
     std::fs::write(dir.path().join("settings.json"), r#"{"ui_language": "ar"}"#).unwrap();
     let mut state = state_in(dir.path());
-    let _ = app::update(&mut state, Message::ShowPage(Page::Graphics));
+    let _ = app::update(&mut state, Message::ShowPage(Page::Advanced));
     let mut ui = settled_ui(&mut state);
-    // A row: its control (the screenshots button) sits to the left of its name.
-    let name = ui.find(tr("ar", "Screenshot key: F12")).unwrap().bounds();
+    // A row: its control (the shader cache button) sits to the left of its name.
+    let name = ui.find(tr("ar", "Shader cache")).unwrap().bounds();
     let control = ui
-        .find(tr("ar", "Open the screenshots folder"))
+        .find(tr("ar", "Delete shader cache"))
         .unwrap()
         .bounds();
     assert!(
@@ -488,7 +488,7 @@ fn rtl_mirrors_the_drawer_rows_and_header() {
     // The header: Save at the left, the title and its subtitle at the right.
     let save = ui.find(tr("ar", "Save")).unwrap().bounds();
     let subtitle = ui
-        .find(tr("ar", Page::Graphics.subtitle_en()))
+        .find(tr("ar", Page::Advanced.subtitle_en()))
         .unwrap()
         .bounds();
     assert!(
@@ -503,13 +503,13 @@ fn rtl_mirrors_the_drawer_rows_and_header() {
     let dir = tempfile::tempdir().unwrap();
     let mut state = state_in(dir.path());
     state.lang = "en".into();
-    let _ = app::update(&mut state, Message::ShowPage(Page::Graphics));
+    let _ = app::update(&mut state, Message::ShowPage(Page::Advanced));
     let mut ui = settled_ui(&mut state);
-    let name = ui.find("Screenshot key: F12").unwrap().bounds();
-    let control = ui.find("Open the screenshots folder").unwrap().bounds();
+    let name = ui.find("Shader cache").unwrap().bounds();
+    let control = ui.find("Delete shader cache").unwrap().bounds();
     assert!(name.x < control.x);
     let save = ui.find("Save").unwrap().bounds();
-    let subtitle = ui.find(Page::Graphics.subtitle_en()).unwrap().bounds();
+    let subtitle = ui.find(Page::Advanced.subtitle_en()).unwrap().bounds();
     assert!(subtitle.x < save.x);
 }
 

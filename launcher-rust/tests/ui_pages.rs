@@ -54,11 +54,37 @@ fn graphics_rows_change_the_right_keys() {
 }
 
 #[test]
-fn the_shader_warm_up_switch_reaches_the_game() {
-    // GitHub #63: the Graphics page turns the background shader warm-up off.
+fn graphics_more_options_start_closed() {
+    use sanctuaryport_launcher::ui::pages::graphics::MORE_OPTIONS;
     let dir = tempfile::tempdir().unwrap();
     let mut state = state(dir.path());
-    open(&mut state, Page::Graphics);
+    let _ = app::update(&mut state, Message::ShowPage(Page::Graphics));
+    assert!(!state.open_sections.contains(&MORE_OPTIONS));
+    let _ = app::update(
+        &mut state,
+        Message::Tick(iced::time::Instant::now() + std::time::Duration::from_secs(1)),
+    );
+    let mut ui = iced_test::simulator::Simulator::with_size(
+        iced::Settings::default(),
+        iced::Size::new(1280.0, 4000.0),
+        app::view(&state),
+    );
+    assert!(ui.find("Dynamic resolution  ↻").is_err());
+    ui.click("More options").unwrap();
+    let clicked: Vec<Message> = ui.into_messages().collect();
+    for message in clicked {
+        let _ = app::update(&mut state, message);
+    }
+    assert!(state.open_sections.contains(&MORE_OPTIONS));
+    page_has(&state, &["Dynamic resolution  ↻", "FXAA", "Anisotropic filtering  ↻"]);
+}
+
+#[test]
+fn the_shader_warm_up_switch_reaches_the_game() {
+    // GitHub #63: Advanced > Troubleshooting turns the background shader warm-up off.
+    let dir = tempfile::tempdir().unwrap();
+    let mut state = state(dir.path());
+    open(&mut state, Page::Advanced);
     assert!(state.store.flag("background_warmup"));
     let clicked: Vec<Message> = {
         let mut ui = iced_test::simulator::Simulator::with_size(
@@ -182,7 +208,7 @@ fn every_row_control_ends_on_the_same_right_edge() {
             tr("Upscaling"),
             format!("{}  ↻", tr("Anisotropic filtering")),
             tr("Show performance overlay"),
-            tr("Screenshot key: F12"),
+            format!("{}  ↻", tr("Frame rate")),
         ];
         let mut ui = settled(&mut state, Page::Graphics, 1280.0, 800.0);
         let edges: Vec<(String, f32)> = labels
@@ -329,14 +355,15 @@ fn graphics_page_offers_the_choice() {
     assert_eq!(state.monitor_pairs.len(), 1);
     assert_eq!(state.store.text("monitor"), "");
 
-    // The screenshots button opens <saves>/screenshots, made first when missing. The page is
-    // taller than the default window since the Effects section (the drawer scrolls).
+    // The screenshots button (Advanced > Files) opens <saves>/screenshots, made first when
+    // missing. The page is taller than the default window (the drawer scrolls).
+    open(&mut state, Page::Advanced);
     let mut ui = iced_test::simulator::Simulator::with_size(
         iced::Settings::default(),
         iced::Size::new(1280.0, 4000.0),
         app::view(&state),
     );
-    ui.click("Open the screenshots folder").unwrap();
+    ui.click("Screenshots").unwrap();
     let sent: Vec<Message> = ui.into_messages().collect();
     let expected = state.paths.user_dir("").join("screenshots");
     assert!(matches!(sent.as_slice(), [Message::OpenFolder(path)] if *path == expected));
@@ -582,9 +609,12 @@ fn anti_aliasing_section_says_what_the_choices_do() {
         &[
             "Now: FSR 3 smooths edges.",
             graphics::FXAA_OFF_HINT,
-            "Turn Sharpening on to use this.",
         ],
     );
+    // The strength only while Sharpening is on.
+    let mut ui = settled(&mut state, Page::Graphics, 1280.0, 4000.0);
+    assert!(ui.find("Sharpening strength").is_err());
+    drop(ui);
     let _ = app::update(&mut state, Message::Upscaling("off".into()));
     assert_eq!(state.store.text("temporal_aa"), "off");
     assert!(!state.store.flag("fsr1"));
@@ -1909,11 +1939,12 @@ fn performance_page_has_the_shader_cache_rows() {
     let dir = tempfile::tempdir().unwrap();
     let mut state = state(dir.path());
     state.lang = "en".into();
-    open(&mut state, Page::Graphics);
-    page_has(&state, &["Shader cache", "Delete shader cache"]);
+    // Advanced > Troubleshooting.
+    open(&mut state, Page::Advanced);
+    page_has(&state, &["Shader cache", "Delete shader cache", "Load shaders while playing"]);
     // SanctuaryPort: the cache switches the runtime does not read are not offered.
-    let mut ui = settled(&mut state, Page::Graphics, 1280.0, 4000.0);
-    assert!(ui.find("Reuse compiled shaders from disk  ·  restart").is_err());
+    let mut ui = settled(&mut state, Page::Advanced, 1280.0, 4000.0);
+    assert!(ui.find("Reuse compiled shaders from disk  ↻").is_err());
     ui.click("Delete shader cache").unwrap();
     let emitted: Vec<Message> = ui.into_messages().collect();
     // The button asks the same question as the Advanced page's.
@@ -2055,10 +2086,10 @@ fn the_files_buttons_share_one_row_at_its_end() {
         let labels = [
             tr(lang, "Port folder"),
             "sanctuary.ini".to_string(),
-            tr(lang, "Last start log"),
+            tr(lang, "Screenshots"),
         ];
         let mut ui = settled(&mut state, Page::Advanced, 1280.0, 4000.0);
-        let scale = control(&mut ui, &tr(lang, "GUI Scale"));
+        let scale = control(&mut ui, &tr(lang, "Launcher size"));
         let files = control(&mut ui, advanced::FILES_ROW);
         let shown: Vec<iced::Rectangle> = labels
             .iter()

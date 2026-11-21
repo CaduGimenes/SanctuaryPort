@@ -1,12 +1,14 @@
-//! The Graphics page, in four sections: display and frame rate, resolution and sharpness, edge
-//! smoothing, and tools (overlay, screenshots, shader cache).
+//! The Graphics page: display and frame rate, resolution and sharpness, and a closed "More
+//! options" section (dynamic resolution, edge smoothing, texture filtering), so a pad reaches the
+//! common rows first. The shader cache and warm-up are under Advanced > Troubleshooting, the
+//! screenshots folder under Advanced > Files.
 //!
 //! Every hint is one short line. Rows that need a new start of the game end with `↻`, which the
 //! drawer subtitle explains once. FSR 1 and FSR 3 both enlarge a picture rendered below the
 //! window, so one Upscaling choice (Off / FSR 1 / FSR 3) sets both `fsr1` and `temporal_aa`.
 //! `output_res`, `live_resolution` and `object_motion` stay parked.
 
-use iced::widget::{button, column, pick_list, text};
+use iced::widget::{column, pick_list, text};
 use iced::Element;
 
 use crate::core::gpu::{no_msaa_decision, MsaaDecision};
@@ -17,7 +19,8 @@ use crate::ui::pages::controls::ini_number;
 use crate::ui::pages::performance::{aspect_options, select_row, NO_MSAA_HINT};
 use crate::ui::theme;
 use crate::ui::widgets::{
-    checkbox, min_width, row, section, select, slider, toggle_row, SELECT_MIN, SELECT_TEXT,
+    checkbox, min_width, row, section, section_fold, select, slider, toggle_row, SELECT_MIN,
+    SELECT_TEXT,
 };
 
 /// The marker after the name of a row that applies when the game starts.
@@ -31,22 +34,21 @@ pub const FXAA_OFF_HINT: &str = "Not used with FSR 3, which smooths edges itself
 pub const DYNRES_HINT: &str = "Lowers the scene in heavy fights to keep the FPS.";
 /// The note under V-Sync.
 pub const VSYNC_HINT: &str = "Removes tearing; on a 60 Hz screen it caps at 60.";
-/// The shader warm-up switch under Tools (GitHub #63).
-pub const WARMUP_LABEL: &str = "Load shaders while playing";
-pub const WARMUP_HINT: &str = "Off: they all load before the first frame, so the start takes longer. Turn it off if the game closes right at start.";
+/// The folding section with the less used rows (`State::open_sections`).
+pub const MORE_OPTIONS: &str = "graphics_more";
 /// The note under the frame rate limit (also on the first-start page).
 pub const FRAME_RATE_HINT: &str = "Above 60 the camera is smoother, but characters may judder.";
 /// The note under the GTAO quality choice.
 pub const GTAO_HINT: &str =
     "Adds contact shadows in the 3D scene; Low is lighter for integrated GPUs.";
 /// The note under the MSAA samples choice.
-pub const GAME_MSAA_HINT: &str = "The game keeps one sample; a count also averages them.";
+pub const GAME_MSAA_HINT: &str = "2x and 4x smooth edges more; 4x costs about a quarter of the FPS.";
 
 /// The Upscaling choices: (id, English label, hint).
 pub const UPSCALING: [(&str, &str, &str); 3] = [
     ("off", "Off", "A plain stretch when the resolution is below the screen."),
     ("fsr1", "FSR 1", "Enlarges with more detail than a plain stretch."),
-    ("fsr3", "FSR 3 (experimental)", "Also smooths edges; heavy on handhelds."),
+    ("fsr3", "FSR 3", "Also smooths edges; heavy on handhelds."),
 ];
 
 /// The stored Upscaling choice: FSR 3 wins over FSR 1, as in the game.
@@ -105,16 +107,6 @@ fn upscaling<'a>(state: &State, lang: &str) -> Element<'a, Message> {
     min_width(SELECT_MIN, list).into()
 }
 
-/// Delete shader cache, held while the game runs.
-fn delete_cache_button<'a>(state: &State, lang: &str) -> Element<'a, Message> {
-    let delete = button(text(tr(lang, "Delete shader cache"))).style(theme::button_flat);
-    if state.game.is_live() {
-        delete.into()
-    } else {
-        delete.on_press(Message::ClearShaderCache).into()
-    }
-}
-
 /// SanctuaryPort: Diablo III shows only what its runtime reads. Not here: the monitor (the game
 /// opens on the primary one), frame generation (not calibrated for this game), the pipeline paths,
 /// readbacks, stream memory and frames queued (their defaults; the in-game menu has the live ones)
@@ -132,14 +124,6 @@ pub fn view(state: &State) -> Element<'_, Message> {
             .text_size(SELECT_TEXT)
             .style(theme::pick_list_dark),
     );
-    let strength: Element<'_, Message> = if state.store.flag("rcas") {
-        slider("rcas_strength", 0.0, 100.0, "%", ini_number(state, "rcas_strength"))
-    } else {
-        text(tr(lang, "Turn Sharpening on to use this."))
-            .size(SELECT_TEXT)
-            .color(theme::palette::MUTED)
-            .into()
-    };
     let upscaling_hint = UPSCALING
         .iter()
         .find(|(id, _, _)| *id == upscaling_now(state))
@@ -155,16 +139,8 @@ pub fn view(state: &State) -> Element<'_, Message> {
     } else {
         checkbox(state.rtl, "fxaa", "FXAA", state.store.flag("fxaa"), Some(&hint(FXAA_HINT)))
     };
-    let shots = button(text(tr(lang, "Open the screenshots folder")))
-        .style(theme::button_flat)
-        .on_press(Message::OpenFolder(
-            state
-                .paths
-                .user_dir(&state.store.text("user_dir"))
-                .join("screenshots"),
-        ));
 
-    column![
+    let mut page = column![
         section(state.rtl, &tr(lang, "Display and frame rate")),
         row(
             state.rtl,
@@ -185,106 +161,102 @@ pub fn view(state: &State) -> Element<'_, Message> {
             state.store.flag("vertical_sync"),
             Some(&hint(VSYNC_HINT)),
         ),
-        row(
+    ]
+    .spacing(2);
+    // Only a choice with two cards (a laptop), or when one was chosen before.
+    if state.gpus.len() > 1 || !state.store.text("gpu_id").is_empty() {
+        page = page.push(row(
             state.rtl,
             &restart("Graphics card"),
             select_row(state, lang, "gpu_id"),
             Some(&hint("On laptops with two cards, choose the dedicated one.")),
-        ),
-        section(state.rtl, &tr(lang, "Resolution and sharpness")),
-        row(
-            state.rtl,
-            &tr(lang, "Aspect ratio"),
-            aspect.into(),
-            Some(&hint("21:9 and 32:9 show more of the sides.")),
-        ),
-        row(
-            state.rtl,
-            &restart("Render resolution"),
-            select_row(state, lang, "render_resolution"),
-            Some(&hint("Lower runs faster; Native is the sharpest.")),
-        ),
-        checkbox(
-            state.rtl,
-            "dynamic_resolution",
-            &restart("Dynamic resolution"),
-            state.store.flag("dynamic_resolution"),
-            Some(&hint(DYNRES_HINT)),
-        ),
-        row(
-            state.rtl,
-            &tr(lang, "Upscaling"),
-            upscaling(state, lang),
-            Some(&hint(upscaling_hint)),
-        ),
-        checkbox(
-            state.rtl,
-            "rcas",
-            &tr(lang, "Sharpening (RCAS)"),
-            state.store.flag("rcas"),
-            Some(&hint("Makes the picture crisper.")),
-        ),
-        row(state.rtl, &tr(lang, "Sharpening strength"), strength, None),
-        section(state.rtl, &tr(lang, "Edge smoothing")),
-        text(tr(lang, anti_aliasing_now(state)))
-            .size(12)
-            .color(theme::palette::GOLD),
-        row(
-            state.rtl,
-            &restart("Game MSAA (2x)"),
-            select_row(state, lang, "no_msaa"),
-            Some(&hint(NO_MSAA_HINT)),
-        ),
-        row(
-            state.rtl,
-            &restart("MSAA samples"),
-            select("msaa", GAME_MSAA, &ini("msaa"), lang),
-            Some(&hint(GAME_MSAA_HINT)),
-        ),
-        fxaa,
-        row(
-            state.rtl,
-            &restart("Anisotropic filtering"),
-            select("anisotropy", ANISOTROPY, &ini("anisotropy"), lang),
-            Some(&hint("Floors and walls stay sharp in the distance.")),
-        ),
-        section(state.rtl, &tr(lang, "Ambient occlusion")),
-        row(
-            state.rtl,
-            &tr(lang, "GTAO (experimental)"),
-            select("gtao", GTAO_MODES, &ini("gtao"), lang),
-            Some(&hint(GTAO_HINT)),
-        ),
-        section(state.rtl, &tr(lang, "Tools")),
-        checkbox(
+        ));
+    }
+    page = page
+        .push(checkbox(
             state.rtl,
             "show_fps",
             &tr(lang, "Show performance overlay"),
             state.store.flag("show_fps"),
             Some(&hint("Items and corner: in-game menu > Overlay.")),
-        ),
-        row(
+        ))
+        .push(section(state.rtl, &tr(lang, "Resolution and sharpness")))
+        .push(row(
             state.rtl,
-            &tr(lang, "Screenshot key: F12"),
-            shots.into(),
-            Some(&hint("Saved as PNG in the screenshots folder.")),
-        ),
-        row(
+            &tr(lang, "Aspect ratio"),
+            aspect.into(),
+            Some(&hint("21:9 and 32:9 show more of the sides.")),
+        ))
+        .push(row(
             state.rtl,
-            &tr(lang, "Shader cache"),
-            delete_cache_button(state, lang),
-            Some(&hint("Use it if graphics look wrong after an update.")),
-        ),
-        // GitHub #63: loading the cached pipelines on worker threads while the game runs crashed
-        // one AMD driver at start; off, they load before the first frame (SANCTUARY_BACKGROUND_WARMUP=0).
-        checkbox(
+            &restart("Render resolution"),
+            select_row(state, lang, "render_resolution"),
+            Some(&hint("Lower runs faster; Native is the sharpest.")),
+        ))
+        .push(row(
             state.rtl,
-            "background_warmup",
-            &tr(lang, WARMUP_LABEL),
-            state.store.flag("background_warmup"),
-            Some(&hint(WARMUP_HINT)),
-        ),
-    ]
-    .spacing(2)
-    .into()
+            &tr(lang, "Upscaling"),
+            upscaling(state, lang),
+            Some(&hint(upscaling_hint)),
+        ))
+        .push(checkbox(
+            state.rtl,
+            "rcas",
+            &tr(lang, "Sharpening (RCAS)"),
+            state.store.flag("rcas"),
+            Some(&hint("Makes the picture crisper.")),
+        ));
+    // The strength only while Sharpening is on.
+    if state.store.flag("rcas") {
+        page = page.push(row(
+            state.rtl,
+            &tr(lang, "Sharpening strength"),
+            slider("rcas_strength", 0.0, 100.0, "%", ini_number(state, "rcas_strength")),
+            None,
+        ));
+    }
+    page = page.push(row(
+        state.rtl,
+        &tr(lang, "GTAO (experimental)"),
+        select("gtao", GTAO_MODES, &ini("gtao"), lang),
+        Some(&hint(GTAO_HINT)),
+    ));
+
+    let open = state.open_sections.contains(&MORE_OPTIONS);
+    page = page.push(section_fold(state.rtl, &tr(lang, "More options"), open, MORE_OPTIONS));
+    if open {
+        page = page
+            .push(checkbox(
+                state.rtl,
+                "dynamic_resolution",
+                &restart("Dynamic resolution"),
+                state.store.flag("dynamic_resolution"),
+                Some(&hint(DYNRES_HINT)),
+            ))
+            .push(
+                text(tr(lang, anti_aliasing_now(state)))
+                    .size(12)
+                    .color(theme::palette::GOLD),
+            )
+            .push(row(
+                state.rtl,
+                &restart("Game MSAA (2x)"),
+                select_row(state, lang, "no_msaa"),
+                Some(&hint(NO_MSAA_HINT)),
+            ))
+            .push(row(
+                state.rtl,
+                &restart("MSAA samples"),
+                select("msaa", GAME_MSAA, &ini("msaa"), lang),
+                Some(&hint(GAME_MSAA_HINT)),
+            ))
+            .push(fxaa)
+            .push(row(
+                state.rtl,
+                &restart("Anisotropic filtering"),
+                select("anisotropy", ANISOTROPY, &ini("anisotropy"), lang),
+                Some(&hint("Floors and walls stay sharp in the distance.")),
+            ));
+    }
+    page.into()
 }
