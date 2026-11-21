@@ -36,6 +36,10 @@ pub const DYNRES_HINT: &str = "Lowers the scene in heavy fights to keep the FPS.
 pub const VSYNC_HINT: &str = "Removes tearing; on a 60 Hz screen it caps at 60.";
 /// The folding section with the less used rows (`State::open_sections`).
 pub const MORE_OPTIONS: &str = "graphics_more";
+/// The experimental patch that moves characters every frame above 60 FPS (GitHub #24).
+pub const SMOOTH_PATCH: &str = "Experimental: Smooth character motion above 60 FPS";
+pub const SMOOTH_LABEL: &str = "Smooth character motion above 60 FPS (experimental)";
+pub const SMOOTH_HINT: &str = "Above 60 FPS, characters move on every frame instead of every other one.";
 /// The note under the frame rate limit (also on the first-start page).
 pub const FRAME_RATE_HINT: &str = "Above 60 the camera is smoother, but characters may judder.";
 /// The note under the GTAO quality choice.
@@ -107,6 +111,21 @@ fn upscaling<'a>(state: &State, lang: &str) -> Element<'a, Message> {
     min_width(SELECT_MIN, list).into()
 }
 
+/// The smooth motion switch: the game patch, ticked like the offline events; nothing when the
+/// patch file does not have it.
+fn smooth_row<'a>(state: &State, lang: &str) -> Element<'a, Message> {
+    if !state.patches.selectable.iter().any(|m| m.name == SMOOTH_PATCH) {
+        return column![].into();
+    }
+    toggle_row(
+        state.rtl,
+        &format!("{}  {RESTART_MARK}", tr(lang, SMOOTH_LABEL)),
+        state.patches.chosen.contains(SMOOTH_PATCH),
+        Some(|on| Message::PatchToggled(SMOOTH_PATCH.to_string(), on)),
+        Some(&tr(lang, SMOOTH_HINT)),
+    )
+}
+
 /// SanctuaryPort: Diablo III shows only what its runtime reads. Not here: the monitor (the game
 /// opens on the primary one), frame generation (not calibrated for this game), the pipeline paths,
 /// readbacks, stream memory and frames queued (their defaults; the in-game menu has the live ones)
@@ -154,6 +173,7 @@ pub fn view(state: &State) -> Element<'_, Message> {
             select_row(state, lang, "frame_rate"),
             Some(&hint(FRAME_RATE_HINT)),
         ),
+        smooth_row(state, lang),
         checkbox(
             state.rtl,
             "vertical_sync",

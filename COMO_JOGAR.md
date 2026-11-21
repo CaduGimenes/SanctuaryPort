@@ -125,13 +125,20 @@ Nome do jogador (o que o jogo mostra para você, como o nome de usuário do PS4)
 - Idiomas: os que o seu jogo traz. A versão brasileira tem português e espanhol; a americana tem
   inglês, francês e espanhol. Se o idioma escolhido não existir no jogo, o port usa o português
   (ou o primeiro disponível).
-- Taxa de quadros: 30, 60 (padrão do jogo), 120 ou ilimitada em **Gráficos › Taxa de quadros**.
-  A velocidade do jogo não muda; acima de 60 depende de o seu PC aguentar. Em 60 e 120, cada
-  quadro vai para a tela assim que fica pronto, o que combina com telas VRR e com o gamescope.
+- Taxa de quadros: 30, 60 (padrão do jogo), 120 ou 200 (o máximo do próprio jogo) em
+  **Gráficos › Taxa de quadros**. A velocidade do jogo não muda; acima de 60 depende de o seu PC
+  aguentar. De 60 para cima, cada quadro vai para a tela assim que fica pronto, o que combina com
+  telas VRR e com o gamescope. Acima de 60 os personagens podem tremer; a opção experimental
+  *Movimento suave acima de 60 FPS*, logo abaixo da taxa de quadros, corrige isso.
+- Temporadas offline: heróis de temporada sem internet (Temporadas 14 a 40, com a Jornada da
+  Temporada), os eventos de cada temporada e o Escurecimento de Tristram, na aba **Temporadas** do
+  launcher. Precisa da atualização 1.47.
+- Opções de gráficos menos usadas (resolução dinâmica, MSAA, FXAA, filtragem anisotrópica) ficam
+  em **Gráficos › Mais opções**.
 - Somente offline (sem PSN e sem co-op online).
 - Windows 10/11 e Linux (inclusive SteamOS e Steam Deck): jogado pela comunidade em placas NVIDIA,
   AMD e Intel. Cada versão também é testada no Wine antes de sair.
-- Tela ultrawide: em Desempenho, escolha a proporção 21:9 ou 32:9 e a resolução (2560x1080, 3440x1440,
+- Tela ultrawide: em Gráficos, escolha a proporção 21:9 ou 32:9 e a resolução (2560x1080, 3440x1440,
   3840x1600 ou 5120x1440); o jogo amplia a visão para os lados.
 - Em 720p ou menos, alguns nomes de teclas no HUD somem.
 
@@ -141,8 +148,10 @@ A 1.0 sai quando a campanha inteira puder ser jogada no hardware comum sem ajuda
 você jogou, e em qual aparelho, na issue fixada
 [Road to 1.0](https://github.com/CaduGimenes/SanctuaryPort/issues/30).
 
-Para um problema, abra uma issue com o modelo de bug e anexe o `user/last_run.log`. Se for
-engasgo ou queda de FPS, antes ligue em **Avançado → Estatísticas de quadro no log** e jogue no
-mesmo lugar: o log passa a registrar o ritmo dos quadros e cada quadro lento.
+Para um problema, abra uma issue com o modelo de bug e anexe o `user/last_run.log` (o launcher
+abre em **Avançado → Solução de problemas → Log do último início**); depois de um travamento,
+também o `user/last_crash.log`. Se for engasgo ou queda de FPS, abra o launcher com a variável de
+ambiente `SANCTUARY_FRAME_STATS=1` e jogue no mesmo lugar: o log passa a registrar o ritmo dos
+quadros e cada quadro lento.
 
 Detalhes técnicos: [docs/DIABLO3.md](docs/DIABLO3.md).

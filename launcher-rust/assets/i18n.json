@@ -2746,7 +2746,9 @@
    "Diablo 1's dungeon, by the Old Ruins of Tristram (Adventure Mode). Only between the days below.": "A masmorra do Diablo 1, nas Velhas Ruínas de Tristram (Modo Aventura). Só entre os dias abaixo.",
    "MSAA samples": "Amostras de MSAA",
    "The game's own": "Do próprio jogo",
-   "2x and 4x smooth edges more; 4x costs about a quarter of the FPS.": "2x e 4x suavizam mais as bordas; 4x custa cerca de um quarto do FPS."
+   "2x and 4x smooth edges more; 4x costs about a quarter of the FPS.": "2x e 4x suavizam mais as bordas; 4x custa cerca de um quarto do FPS.",
+   "Smooth character motion above 60 FPS (experimental)": "Movimento suave acima de 60 FPS (experimental)",
+   "Above 60 FPS, characters move on every frame instead of every other one.": "Acima de 60 FPS, os personagens se movem a cada quadro, não a cada dois."
   },
   "es": {
    "The launcher cannot write to {}, so it cannot replace itself there. Open the releases page to download the new version by hand?": "El launcher no puede escribir en {}, así que no puede reemplazarse ahí. ¿Abrir la página de releases para descargar la versión nueva a mano?",
@@ -3280,7 +3282,9 @@
    "Diablo 1's dungeon, by the Old Ruins of Tristram (Adventure Mode). Only between the days below.": "La mazmorra de Diablo 1, junto a las Viejas Ruinas de Tristram (modo Aventura). Solo entre los días de abajo.",
    "MSAA samples": "Muestras de MSAA",
    "The game's own": "Las del juego",
-   "2x and 4x smooth edges more; 4x costs about a quarter of the FPS.": "2x y 4x suavizan más los bordes; 4x cuesta cerca de un cuarto de los FPS."
+   "2x and 4x smooth edges more; 4x costs about a quarter of the FPS.": "2x y 4x suavizan más los bordes; 4x cuesta cerca de un cuarto de los FPS.",
+   "Smooth character motion above 60 FPS (experimental)": "Movimiento suave por encima de 60 FPS (experimental)",
+   "Above 60 FPS, characters move on every frame instead of every other one.": "Por encima de 60 FPS, los personajes se mueven en cada fotograma, no en uno de cada dos."
   },
   "pl": {
    "Polish": "Polski",
@@ -3668,7 +3672,9 @@
    "Diablo 1's dungeon, by the Old Ruins of Tristram (Adventure Mode). Only between the days below.": "Loch z Diablo 1, przy Starych Ruinach Tristram (tryb przygodowy). Tylko między dniami poniżej.",
    "MSAA samples": "Próbki MSAA",
    "The game's own": "Własne gry",
-   "2x and 4x smooth edges more; 4x costs about a quarter of the FPS.": "2x i 4x lepiej wygładzają krawędzie; 4x kosztuje około ćwierci FPS."
+   "2x and 4x smooth edges more; 4x costs about a quarter of the FPS.": "2x i 4x lepiej wygładzają krawędzie; 4x kosztuje około ćwierci FPS.",
+   "Smooth character motion above 60 FPS (experimental)": "Płynny ruch postaci powyżej 60 FPS (eksperymentalne)",
+   "Above 60 FPS, characters move on every frame instead of every other one.": "Powyżej 60 FPS postacie poruszają się w każdej klatce, a nie co drugą."
   },
   "fr": {
    "Polish": "Polonais",
@@ -3804,7 +3810,9 @@
    "Diablo 1's dungeon, by the Old Ruins of Tristram (Adventure Mode). Only between the days below.": "Le donjon de Diablo 1, près des Vieilles ruines de Tristram (mode Aventure). Seulement entre les jours ci-dessous.",
    "MSAA samples": "Échantillons MSAA",
    "The game's own": "Ceux du jeu",
-   "2x and 4x smooth edges more; 4x costs about a quarter of the FPS.": "2x et 4x lissent davantage les bords ; 4x coûte environ un quart des FPS."
+   "2x and 4x smooth edges more; 4x costs about a quarter of the FPS.": "2x et 4x lissent davantage les bords ; 4x coûte environ un quart des FPS.",
+   "Smooth character motion above 60 FPS (experimental)": "Mouvement fluide au-delà de 60 FPS (expérimental)",
+   "Above 60 FPS, characters move on every frame instead of every other one.": "Au-delà de 60 FPS, les personnages bougent à chaque image, et non une sur deux."
   },
   "de": {
    "Polish": "Polnisch",
@@ -3931,7 +3939,9 @@
    "Diablo 1's dungeon, by the Old Ruins of Tristram (Adventure Mode). Only between the days below.": "Der Dungeon aus Diablo 1, bei den Alten Ruinen von Tristram (Abenteuermodus). Nur zwischen den Tagen unten.",
    "MSAA samples": "MSAA-Samples",
    "The game's own": "Die des Spiels",
-   "2x and 4x smooth edges more; 4x costs about a quarter of the FPS.": "2x und 4x glätten Kanten stärker; 4x kostet etwa ein Viertel der FPS."
+   "2x and 4x smooth edges more; 4x costs about a quarter of the FPS.": "2x und 4x glätten Kanten stärker; 4x kostet etwa ein Viertel der FPS.",
+   "Smooth character motion above 60 FPS (experimental)": "Flüssige Bewegung über 60 FPS (experimentell)",
+   "Above 60 FPS, characters move on every frame instead of every other one.": "Über 60 FPS bewegen sich Figuren in jedem Bild statt nur in jedem zweiten."
   },
   "it": {
    "Polish": "Polacco",
@@ -4056,7 +4066,9 @@
    "Diablo 1's dungeon, by the Old Ruins of Tristram (Adventure Mode). Only between the days below.": "Il dungeon di Diablo 1, presso le Vecchie Rovine di Tristram (modalità Avventura). Solo tra i giorni qui sotto.",
    "MSAA samples": "Campioni MSAA",
    "The game's own": "Quelli del gioco",
-   "2x and 4x smooth edges more; 4x costs about a quarter of the FPS.": "2x e 4x smussano di più i bordi; 4x costa circa un quarto degli FPS."
+   "2x and 4x smooth edges more; 4x costs about a quarter of the FPS.": "2x e 4x smussano di più i bordi; 4x costa circa un quarto degli FPS.",
+   "Smooth character motion above 60 FPS (experimental)": "Movimento fluido oltre 60 FPS (sperimentale)",
+   "Above 60 FPS, characters move on every frame instead of every other one.": "Oltre 60 FPS i personaggi si muovono a ogni fotogramma, non uno sì e uno no."
   },
   "tr": {
    "Polish": "Lehçe",
@@ -4179,7 +4191,9 @@
    "Diablo 1's dungeon, by the Old Ruins of Tristram (Adventure Mode). Only between the days below.": "Diablo 1'in zindanı, Eski Tristram Harabeleri yakınında (Macera Modu). Yalnızca aşağıdaki günler arasında.",
    "MSAA samples": "MSAA örnekleri",
    "The game's own": "Oyunun kendisi",
-   "2x and 4x smooth edges more; 4x costs about a quarter of the FPS.": "2x ve 4x kenarları daha çok yumuşatır; 4x FPS'nin yaklaşık dörtte birine mal olur."
+   "2x and 4x smooth edges more; 4x costs about a quarter of the FPS.": "2x ve 4x kenarları daha çok yumuşatır; 4x FPS'nin yaklaşık dörtte birine mal olur.",
+   "Smooth character motion above 60 FPS (experimental)": "60 FPS üstünde akıcı karakter hareketi (deneysel)",
+   "Above 60 FPS, characters move on every frame instead of every other one.": "60 FPS üstünde karakterler iki karede bir değil, her karede hareket eder."
   },
   "ar": {
    "Polish": "البولندية",
@@ -4301,7 +4315,9 @@
    "Diablo 1's dungeon, by the Old Ruins of Tristram (Adventure Mode). Only between the days below.": "زنزانة Diablo 1 قرب أطلال تريسترام القديمة (وضع المغامرة). فقط بين اليومين أدناه.",
    "MSAA samples": "عينات MSAA",
    "The game's own": "ما تختاره اللعبة",
-   "2x and 4x smooth edges more; 4x costs about a quarter of the FPS.": "2x و4x تنعّمان الحواف أكثر؛ 4x تكلّف نحو ربع معدل الإطارات."
+   "2x and 4x smooth edges more; 4x costs about a quarter of the FPS.": "2x و4x تنعّمان الحواف أكثر؛ 4x تكلّف نحو ربع معدل الإطارات.",
+   "Smooth character motion above 60 FPS (experimental)": "حركة سلسة للشخصيات فوق 60 إطارًا (تجريبي)",
+   "Above 60 FPS, characters move on every frame instead of every other one.": "فوق 60 إطارًا تتحرك الشخصيات في كل إطار بدلًا من كل إطارين."
   },
   "zh": {
    "Polish": "波兰语",
@@ -4811,7 +4827,9 @@
    "Diablo 1's dungeon, by the Old Ruins of Tristram (Adventure Mode). Only between the days below.": "暗黑破坏神 1 的地下城，位于崔斯特姆旧废墟附近（冒险模式）。仅在下方日期之间开放。",
    "MSAA samples": "MSAA 采样",
    "The game's own": "游戏自带",
-   "2x and 4x smooth edges more; 4x costs about a quarter of the FPS.": "2x 和 4x 让边缘更平滑；4x 约损失四分之一帧率。"
+   "2x and 4x smooth edges more; 4x costs about a quarter of the FPS.": "2x 和 4x 让边缘更平滑；4x 约损失四分之一帧率。",
+   "Smooth character motion above 60 FPS (experimental)": "60 FPS 以上角色移动平滑（实验性）",
+   "Above 60 FPS, characters move on every frame instead of every other one.": "60 FPS 以上，角色每帧都移动，而不是隔帧移动。"
   },
   "ja": {
    "Polish": "ポーランド語",
@@ -4934,7 +4952,9 @@
    "Diablo 1's dungeon, by the Old Ruins of Tristram (Adventure Mode). Only between the days below.": "ディアブロ 1 のダンジョン。トリストラムの旧廃墟の近く（アドベンチャーモード）。下の日付の間だけ。",
    "MSAA samples": "MSAA サンプル",
    "The game's own": "ゲーム標準",
-   "2x and 4x smooth edges more; 4x costs about a quarter of the FPS.": "2x と 4x はエッジをより滑らかにします。4x は FPS が約 4 分の 1 下がります。"
+   "2x and 4x smooth edges more; 4x costs about a quarter of the FPS.": "2x と 4x はエッジをより滑らかにします。4x は FPS が約 4 分の 1 下がります。",
+   "Smooth character motion above 60 FPS (experimental)": "60 FPS 超でキャラクターの動きを滑らかに（実験的）",
+   "Above 60 FPS, characters move on every frame instead of every other one.": "60 FPS を超えると、キャラクターが 1 フレームおきではなく毎フレーム動きます。"
   },
   "ko": {
    "Polish": "폴란드어",
@@ -5057,7 +5077,9 @@
    "Diablo 1's dungeon, by the Old Ruins of Tristram (Adventure Mode). Only between the days below.": "디아블로 1의 던전, 옛 트리스트럼 폐허 근처(모험 모드). 아래 날짜 사이에만.",
    "MSAA samples": "MSAA 샘플",
    "The game's own": "게임 기본값",
-   "2x and 4x smooth edges more; 4x costs about a quarter of the FPS.": "2x와 4x는 가장자리를 더 매끄럽게 합니다. 4x는 FPS가 약 4분의 1 줄어듭니다."
+   "2x and 4x smooth edges more; 4x costs about a quarter of the FPS.": "2x와 4x는 가장자리를 더 매끄럽게 합니다. 4x는 FPS가 약 4분의 1 줄어듭니다.",
+   "Smooth character motion above 60 FPS (experimental)": "60 FPS 이상에서 캐릭터 움직임 부드럽게 (실험적)",
+   "Above 60 FPS, characters move on every frame instead of every other one.": "60 FPS 이상에서 캐릭터가 두 프레임마다가 아니라 매 프레임 움직입니다."
   },
   "id": {
    "Polish": "Polandia",
@@ -5480,7 +5502,9 @@
    "Diablo 1's dungeon, by the Old Ruins of Tristram (Adventure Mode). Only between the days below.": "Dungeon Diablo 1, dekat Reruntuhan Lama Tristram (Mode Petualangan). Hanya di antara tanggal di bawah.",
    "MSAA samples": "Sampel MSAA",
    "The game's own": "Bawaan game",
-   "2x and 4x smooth edges more; 4x costs about a quarter of the FPS.": "2x dan 4x menghaluskan tepi lebih baik; 4x memakan sekitar seperempat FPS."
+   "2x and 4x smooth edges more; 4x costs about a quarter of the FPS.": "2x dan 4x menghaluskan tepi lebih baik; 4x memakan sekitar seperempat FPS.",
+   "Smooth character motion above 60 FPS (experimental)": "Gerakan karakter halus di atas 60 FPS (eksperimental)",
+   "Above 60 FPS, characters move on every frame instead of every other one.": "Di atas 60 FPS, karakter bergerak di setiap frame, bukan setiap dua frame."
   },
   "cs": {
    "Trophies": "Trofeje",
@@ -5962,7 +5986,9 @@
    "Diablo 1's dungeon, by the Old Ruins of Tristram (Adventure Mode). Only between the days below.": "Dungeon z Diabla 1 u Starých ruin Tristramu (režim Dobrodružství). Jen mezi dny níže.",
    "MSAA samples": "Vzorky MSAA",
    "The game's own": "Vlastní hry",
-   "2x and 4x smooth edges more; 4x costs about a quarter of the FPS.": "2x a 4x více vyhlazují hrany; 4x stojí asi čtvrtinu FPS."
+   "2x and 4x smooth edges more; 4x costs about a quarter of the FPS.": "2x a 4x více vyhlazují hrany; 4x stojí asi čtvrtinu FPS.",
+   "Smooth character motion above 60 FPS (experimental)": "Plynulý pohyb postav nad 60 FPS (experimentální)",
+   "Above 60 FPS, characters move on every frame instead of every other one.": "Nad 60 FPS se postavy pohybují v každém snímku, ne jen v každém druhém."
   }
  },
  "ru": {
@@ -6454,7 +6480,9 @@
   "Diablo 1's dungeon, by the Old Ruins of Tristram (Adventure Mode). Only between the days below.": "Подземелье Diablo 1 у Старых руин Тристрама (режим приключений). Только между днями ниже.",
   "MSAA samples": "Сэмплы MSAA",
   "The game's own": "Как в игре",
-  "2x and 4x smooth edges more; 4x costs about a quarter of the FPS.": "2x и 4x сильнее сглаживают края; 4x отнимает около четверти FPS."
+  "2x and 4x smooth edges more; 4x costs about a quarter of the FPS.": "2x и 4x сильнее сглаживают края; 4x отнимает около четверти FPS.",
+  "Smooth character motion above 60 FPS (experimental)": "Плавное движение персонажей выше 60 FPS (экспериментально)",
+  "Above 60 FPS, characters move on every frame instead of every other one.": "Выше 60 FPS персонажи двигаются в каждом кадре, а не через кадр."
  },
  "windows_languages": {
   "25": "ru",

@@ -54,6 +54,47 @@ fn graphics_rows_change_the_right_keys() {
 }
 
 #[test]
+fn the_smooth_motion_switch_picks_its_patch() {
+    // GitHub #24: the experimental patch is ticked on the Graphics page, below the frame rate.
+    use sanctuaryport_launcher::ui::pages::graphics::SMOOTH_PATCH;
+    let dir = tempfile::tempdir().unwrap();
+    let dump = common::dump_with_patches(dir.path());
+    std::fs::write(
+        dir.path().join("patches").join("Diablo_III.xml"),
+        format!(
+            "<Patch><TitleID><ID>CUSA00243</ID></TitleID>\
+             <Metadata Name=\"{SMOOTH_PATCH}\" AppVer=\"01.47\" isEnabled=\"false\"><PatchList/></Metadata></Patch>"
+        ),
+    )
+    .unwrap();
+    let mut state = state(dir.path());
+    common::browsed(&mut state, "game_dir", &dump);
+    open(&mut state, Page::Graphics);
+    assert!(!state.patches.chosen.contains(SMOOTH_PATCH));
+    let clicked: Vec<Message> = {
+        let mut ui = iced_test::simulator::Simulator::with_size(
+            iced::Settings::default(),
+            iced::Size::new(1280.0, 4000.0),
+            app::view(&state),
+        );
+        ui.click("Smooth character motion above 60 FPS (experimental)  ↻").unwrap();
+        ui.into_messages().collect()
+    };
+    for message in clicked {
+        let _ = app::update(&mut state, message);
+    }
+    assert!(state.patches.chosen.contains(SMOOTH_PATCH));
+    let env = game_environment(
+        state.store.app(),
+        &state.paths,
+        "en",
+        &indexmap::IndexMap::new(),
+        true,
+    );
+    assert!(env["SANCTUARY_PATCHES"].split(';').any(|name| name == SMOOTH_PATCH));
+}
+
+#[test]
 fn graphics_more_options_start_closed() {
     use sanctuaryport_launcher::ui::pages::graphics::MORE_OPTIONS;
     let dir = tempfile::tempdir().unwrap();

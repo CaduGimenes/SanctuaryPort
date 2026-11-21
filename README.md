@@ -20,7 +20,7 @@
 SanctuaryPort runs the PlayStation 4 version of **Diablo III** natively on a PC: the Brazilian
 (CUSA00243), US (CUSA00242) and European (CUSA00433/CUSA00434) releases of *Reaper of Souls –
 Ultimate Evil Edition*, with each one's last update (1.47 for the Brazilian and US ones, 1.46 for
-the European one), which is the **Eternal Collection** (2.7.7, with the Necromancer). The game's original x86-64 code runs directly on your
+the European one), which is the **Eternal Collection** (2.7.7, or 2.7.6 for the European 1.46, with the Necromancer). The game's original x86-64 code runs directly on your
 processor, a runtime replaces the PS4 system libraries, and the PS4 GPU commands are translated to
 Vulkan by a video core derived from [shadPS4](https://github.com/shadps4-emu/shadPS4). There is no
 CPU emulator.
@@ -65,11 +65,14 @@ Then follow [Getting your game ready](#getting-your-game-ready) with your own du
 | ✅ Languages | whatever your dump ships, in any region's release (English, French, Spanish, Portuguese, German, Italian, Polish, Russian...) |
 | ✅ **Trophies** | an on-screen notice with the trophy's name as you earn it, the platinum by itself, and a Trophies page in the launcher |
 | ✅ Render resolution 480p–4K, ultrawide 21:9 / 32:9, 16:10 (Steam Deck 1280x800) | resolution patches for the 1.47 and 1.00 executables (the camera widens to the screen); FSR 1 upscaling and RCAS sharpening |
-| 🧪 FSR 3 (experimental) | temporal anti-aliasing, or upscaling to the window with the HUD at full size (Graphics > Anti-aliasing) |
-| ✅ FXAA | cheap anti-aliasing of the 3D picture before the HUD (Graphics > Anti-aliasing), when FSR 3 is off |
+| 🧪 FSR 3 (experimental) | upscaling to the window with temporal anti-aliasing, the HUD at full size (Graphics > Upscaling) |
+| ✅ FXAA | cheap anti-aliasing of the 3D picture before the HUD (Graphics > More options), when FSR 3 is off |
+| 🧪 GTAO | ambient occlusion in place of the game's SSAO, Low or High (Graphics > GTAO) |
 | ✅ **Frame rate 30 / 60 / 120 / 200** | the game's own frame limiter (Graphics > Frame rate; 200 is the game's own maximum); the game's speed stays the same; at 60 and above each frame is shown as soon as it is done (VRR and gamescope friendly) |
-| 🧪 Game MSAA on AMD and Intel (Windows) | off by default there (black lines); On is experimental: its depth is created without compression |
-| 🧪 MSAA 2x / 4x | the game's scene drawn with more samples and averaged into the picture, as on PC (Graphics > MSAA samples); the game's own copy keeps one sample |
+| 🧪 Game MSAA on AMD and Intel (Windows) | off by default there (black lines); On is experimental: its depth is created without compression (Graphics > More options) |
+| 🧪 MSAA 2x / 4x | the game's scene drawn with more samples and averaged into the picture, as on PC; 4x costs about a quarter of the FPS (Graphics > More options > MSAA samples) |
+| 🧪 Smooth character motion above 60 FPS | an experimental game patch, off by default (Graphics, below the frame rate): above 60 FPS the hero and monsters otherwise move every other frame |
+| ✅ **Offline seasons** | seasonal heroes offline (Seasons 14–40, with the Season Journey), the seasons' community events and The Darkening of Tristram (launcher → *Seasons*); needs update 1.47 |
 | ✅ Updates | from their own folder, read over the game in place: nothing is copied, on any drive (microSD cards on the ROG Ally / Steam Deck included); the base game is never changed |
 | ✅ Windows 10 / 11, Linux, SteamOS | played by the community on NVIDIA, AMD and Intel graphics, Steam Deck / Steam Machine and ROG Ally; every release is also tested under Wine |
 | ❌ Online play / PSN | offline only |
@@ -80,12 +83,16 @@ Then follow [Getting your game ready](#getting-your-game-ready) with your own du
 [SpartanPort](https://github.com/FelipePrado0/SpartanPort)'s launcher:
 
 - **Home** with your game's own key art (`sce_sys/pic1.png`, read from your dump; nothing is shipped);
-- **Graphics**: window mode, render resolution, anti-aliasing (the game's MSAA, FSR 3), upscaling (FSR 1) and sharpening, frame limit, graphics card;
+- **Graphics**: display mode, frame rate, V-Sync, render resolution and aspect ratio, upscaling
+  (FSR 1 / FSR 3), sharpening and GTAO; dynamic resolution, MSAA, FXAA and texture filtering under
+  *More options*; the graphics card choice when there are two;
 - **Game**: game folder, language, player name, saves, and **installation from PKG** (base game, update and add-ons);
+- **Seasons**: the offline season, with its events, rotation and the Tristram portal under *Details*;
 - **Trophies**: every trophy with its icon (from your dump), name and description, and which ones you
   have earned with the port;
 - **Controls** (keyboard, mouse and gamepad mapping, button icon style) and **Advanced** (launcher
-  options, shortcuts and the log of the last start).
+  options, shortcuts, files, and *Troubleshooting*: shader cache, shader loading and the log of the
+  last start).
 
 Its interface follows your system language (English, Portuguese and many more), and it works
 with a gamepad alone: **LB / RB** change tab, **A / Start** on Home plays, **B** goes back.
@@ -134,8 +141,8 @@ with MSYS2.
 
 ## Getting your game ready
 
-1. Dump **Diablo III** (the Brazilian CUSA00243 release with its 01.47 update, or the US
-   CUSA00242 *Ultimate Evil Edition*) from your own PS4 as fake PKG files: base game, update and,
+1. Dump **Diablo III** (the Brazilian CUSA00243 or US CUSA00242 release with its 01.47 update, or
+   the European CUSA00433/CUSA00434 with its 01.46 update) from your own PS4 as fake PKG files: base game, update and,
    if you have them, the add-ons. This project does not provide the game or help obtaining it.
 2. Start the launcher (the AppImage, `SanctuaryPort.exe`, or
    `launcher-rust/target/release/sanctuaryport-launcher` from source), open **Game** and
@@ -201,9 +208,11 @@ SANCTUARY_GAME_DIR=~/Games/PS4/CUSA00243 SANCTUARY_PATCH_DIR=~/Games/PS4/CUSA002
 got, and on which device, in the pinned issue
 [Road to 1.0](https://github.com/CaduGimenes/SanctuaryPort/issues/30).
 
-For a problem, open an issue with the bug template and attach `user/last_run.log`. For stutter or
-frame drops, first turn on **Advanced → Frame statistics in the log** and play the same spot: the
-log then records the frame pacing and every long frame.
+For a problem, open an issue with the bug template and attach `user/last_run.log` (the launcher
+opens it from **Advanced → Troubleshooting → Last start log**); after a crash, also
+`user/last_crash.log`. For stutter or frame drops, start the launcher with the environment variable
+`SANCTUARY_FRAME_STATS=1` and play the same spot: the log then records the frame pacing and every
+long frame.
 
 ## How it works
 
