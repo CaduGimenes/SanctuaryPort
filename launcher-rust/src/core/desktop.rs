@@ -285,52 +285,112 @@ pub fn write_linux_shortcut(
 }
 
 /// The shortcut's icon (R92): the port's `launcher/sanctuaryport.ico` when it is there, as the
-/// Python run from source sets it, else the first icon of `exe`.
+/// Python run from source sets it, else `exe` (its first icon).
 fn shortcut_icon(port_dir: &Path, exe: &Path) -> String {
     let ico = port_dir.join("launcher").join("sanctuaryport.ico");
     if ico.is_file() {
         ico.display().to_string()
     } else {
-        format!("{},0", exe.display())
+        exe.display().to_string()
     }
 }
 
-/// The PowerShell that makes `SanctuaryPort.lnk` on the desktop.
-fn windows_shortcut_script(port_dir: &Path, exe: &Path) -> String {
-    format!(
-        "$s=(New-Object -ComObject WScript.Shell).CreateShortcut([Environment]::GetFolderPath(\"Desktop\")\
-         +\"\\SanctuaryPort.lnk\");$s.TargetPath=\"{exe}\";$s.WorkingDirectory=\"{port}\";\
-         $s.IconLocation=\"{icon}\";$s.Save()",
-        exe = exe.display(),
-        port = port_dir.display(),
-        icon = shortcut_icon(port_dir, exe)
-    )
+/// Writes the shell link `lnk` to `exe`, starting in `port_dir`, with the port's icon. The file is
+/// written directly (MS-SHLLINK): no PowerShell or script host is started, which antivirus
+/// programs flag as a dropper.
+pub fn write_shortcut(lnk: &Path, port_dir: &Path, exe: &Path) -> Result<(), String> {
+    let data = shell_link(
+        &exe.display().to_string(),
+        &port_dir.display().to_string(),
+        &shortcut_icon(port_dir, exe),
+    );
+    fs::write(lnk, data).map_err(|e| e.to_string())
 }
 
-/// `SanctuaryPort.lnk` on the desktop, pointing to `exe` and starting in `port_dir`. The error is
-/// what PowerShell said (its first 400 characters).
+/// A shell link (MS-SHLLINK) to the local file `target`: the header, a LinkInfo with the local
+/// path (ANSI and Unicode), and the working folder and icon as Unicode strings.
+fn shell_link(target: &str, working_dir: &str, icon: &str) -> Vec<u8> {
+    const HAS_LINK_INFO: u32 = 0x02;
+    const HAS_WORKING_DIR: u32 = 0x10;
+    const HAS_ICON_LOCATION: u32 = 0x40;
+    const IS_UNICODE: u32 = 0x80;
+    const FILE_ATTRIBUTE_ARCHIVE: u32 = 0x20;
+    const SW_SHOWNORMAL: u32 = 1;
+    let u32le = |out: &mut Vec<u8>, v: u32| out.extend_from_slice(&v.to_le_bytes());
+    let utf16 = |text: &str| -> Vec<u8> { text.encode_utf16().flat_map(u16::to_le_bytes).collect() };
+
+    let mut out = Vec::new();
+    // ShellLinkHeader (0x4C bytes) with the shell link CLSID 00021401-0000-0000-C000-000000000046.
+    u32le(&mut out, 0x4c);
+    out.extend_from_slice(&[
+        0x01, 0x14, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x46,
+    ]);
+    u32le(&mut out, HAS_LINK_INFO | HAS_WORKING_DIR | HAS_ICON_LOCATION | IS_UNICODE);
+    u32le(&mut out, FILE_ATTRIBUTE_ARCHIVE);
+    out.extend_from_slice(&[0; 24]); // creation, access and write times
+    u32le(&mut out, 0); // file size
+    u32le(&mut out, 0); // icon index
+    u32le(&mut out, SW_SHOWNORMAL);
+    out.extend_from_slice(&[0; 2 + 2 + 4 + 4]); // hot key and reserved fields
+
+    // LinkInfo: header (0x24, with the Unicode offsets), VolumeID, the paths.
+    let ansi: Vec<u8> = target
+        .chars()
+        .map(|c| if c.is_ascii() { c as u8 } else { b'?' })
+        .chain([0])
+        .collect();
+    let volume: Vec<u8> = {
+        let mut v = Vec::new();
+        u32le(&mut v, 0x11); // VolumeIDSize
+        u32le(&mut v, 3); // DRIVE_FIXED
+        u32le(&mut v, 0); // serial number
+        u32le(&mut v, 0x10); // label offset
+        v.push(0); // empty label
+        v
+    };
+    let unicode: Vec<u8> = utf16(target).into_iter().chain([0, 0]).collect();
+    let header_size = 0x24u32;
+    let volume_at = header_size;
+    let base_at = volume_at + volume.len() as u32;
+    let suffix_at = base_at + ansi.len() as u32;
+    // The UTF-16 strings start at an even offset (one padding byte when needed).
+    let pad = (suffix_at + 1) % 2;
+    let base_unicode_at = suffix_at + 1 + pad;
+    let suffix_unicode_at = base_unicode_at + unicode.len() as u32;
+    let size = suffix_unicode_at + 2;
+    u32le(&mut out, size);
+    u32le(&mut out, header_size);
+    u32le(&mut out, 1); // VolumeIDAndLocalBasePath
+    u32le(&mut out, volume_at);
+    u32le(&mut out, base_at);
+    u32le(&mut out, 0); // no network path
+    u32le(&mut out, suffix_at);
+    u32le(&mut out, base_unicode_at);
+    u32le(&mut out, suffix_unicode_at);
+    out.extend_from_slice(&volume);
+    out.extend_from_slice(&ansi);
+    out.push(0); // empty common path suffix
+    out.extend(std::iter::repeat_n(0, pad as usize));
+    out.extend_from_slice(&unicode);
+    out.extend_from_slice(&[0, 0]); // empty Unicode suffix
+
+    // StringData: counted UTF-16 strings, in the order of their flags.
+    for text in [working_dir, icon] {
+        out.extend_from_slice(&(text.encode_utf16().count() as u16).to_le_bytes());
+        out.extend_from_slice(&utf16(text));
+    }
+    u32le(&mut out, 0); // TerminalBlock
+    out
+}
+
+/// `SanctuaryPort.lnk` on the desktop, pointing to `exe` and starting in `port_dir`.
 pub fn windows_shortcut(port_dir: &Path, exe: &Path) -> Result<(), String> {
     if !cfg!(windows) {
         return Err("desktop shortcuts of this kind exist only on Windows".to_string());
     }
-    let mut command = Command::new("powershell");
-    command
-        .args([
-            "-NoProfile",
-            "-Command",
-            &windows_shortcut_script(port_dir, exe),
-        ])
-        .stdin(Stdio::null());
-    platform::hide_window(&mut command);
-    let output = command.output().map_err(|e| e.to_string())?;
-    if output.status.success() {
-        Ok(())
-    } else {
-        Err(String::from_utf8_lossy(&output.stderr)
-            .chars()
-            .take(400)
-            .collect())
-    }
+    let desktop = platform::desktop_folder().ok_or("the Desktop folder is unknown")?;
+    write_shortcut(&desktop.join("SanctuaryPort.lnk"), port_dir, exe)
 }
 
 /// Which of the optional Linux integrations this system has.
@@ -392,22 +452,13 @@ pub fn host_environment() -> IndexMap<String, String> {
 
 /// Hands `target` to the desktop's opener, which keeps running on its own.
 fn open_with_desktop(target: &OsStr, is_url: bool) -> io::Result<()> {
-    let mut command;
     if cfg!(windows) {
-        // `os.startfile` for a folder or file; the URL handler runs no shell, so `&` is safe.
-        command = if is_url {
-            let mut c = Command::new("rundll32");
-            c.arg("url.dll,FileProtocolHandler");
-            c
-        } else {
-            Command::new("explorer")
-        };
-        command.arg(target);
-        platform::hide_window(&mut command);
-    } else {
-        command = Command::new("xdg-open");
-        command.arg(target).env_clear().envs(host_environment());
+        // `os.startfile`: the shell opens a folder, file or link itself (no helper program).
+        let _ = is_url;
+        return platform::shell_open(target);
     }
+    let mut command = Command::new("xdg-open");
+    command.arg(target).env_clear().envs(host_environment());
     command
         .stdin(Stdio::null())
         .stdout(Stdio::null())
@@ -953,33 +1004,33 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let exe = dir.path().join("SanctuaryPort.exe");
         let ico = dir.path().join("launcher").join("sanctuaryport.ico");
-        let icon_of = |script: &str| {
-            let start = script.find("$s.IconLocation=\"").unwrap() + "$s.IconLocation=\"".len();
-            script[start..start + script[start..].find('"').unwrap()].to_string()
-        };
-        assert_eq!(
-            icon_of(&windows_shortcut_script(dir.path(), &exe)),
-            format!("{},0", exe.display())
-        );
+        assert_eq!(shortcut_icon(dir.path(), &exe), exe.display().to_string());
         fs::create_dir_all(ico.parent().unwrap()).unwrap();
         fs::write(&ico, b"ico").unwrap();
-        assert_eq!(
-            icon_of(&windows_shortcut_script(dir.path(), &exe)),
-            ico.display().to_string()
-        );
+        assert_eq!(shortcut_icon(dir.path(), &exe), ico.display().to_string());
     }
 
     #[test]
-    fn the_windows_shortcut_script_names_the_target_folder_and_icon() {
-        let script = windows_shortcut_script(
-            Path::new("C:\\Games\\Port"),
-            Path::new("C:\\Games\\Port\\SanctuaryPort.exe"),
-        );
-        assert_eq!(
-            script,
-            "$s=(New-Object -ComObject WScript.Shell).CreateShortcut([Environment]::GetFolderPath(\"Desktop\")+\"\\SanctuaryPort.lnk\");\
-             $s.TargetPath=\"C:\\Games\\Port\\SanctuaryPort.exe\";$s.WorkingDirectory=\"C:\\Games\\Port\";\
-             $s.IconLocation=\"C:\\Games\\Port\\SanctuaryPort.exe,0\";$s.Save()"
-        );
+    fn the_shortcut_is_a_shell_link_written_without_a_script() {
+        // VirusTotal flagged the zip (Trojan-Dropper.JS / Script.Trojan) for the PowerShell
+        // WScript.Shell one-liner that made this shortcut; the link file is now written directly.
+        let dir = tempfile::tempdir().unwrap();
+        let exe = dir.path().join("SanctuaryPort.exe");
+        fs::write(&exe, b"MZ").unwrap();
+        let lnk = dir.path().join("SanctuaryPort.lnk");
+        write_shortcut(&lnk, dir.path(), &exe).unwrap();
+        let bytes = fs::read(&lnk).unwrap();
+        // ShellLinkHeader: size 0x4C and the shell link CLSID.
+        assert_eq!(&bytes[..4], &[0x4c, 0, 0, 0]);
+        assert_eq!(&bytes[4..8], &[0x01, 0x14, 0x02, 0x00]);
+        // The working folder, as the UTF-16 string the link holds.
+        let folder: Vec<u8> = dir
+            .path()
+            .display()
+            .to_string()
+            .encode_utf16()
+            .flat_map(u16::to_le_bytes)
+            .collect();
+        assert!(bytes.windows(folder.len()).any(|w| w == folder.as_slice()));
     }
 }

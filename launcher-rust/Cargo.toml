@@ -1,6 +1,6 @@
 [package]
 name = "sanctuaryport-launcher"
-version = "0.7.2"
+version = "0.7.3"
 edition = "2021"
 rust-version = "1.87"
 # `cargo run` starts the launcher; `fake-game` is a test helper.
@@ -59,6 +59,8 @@ windows-sys = { version = "0.61", features = [
     "Win32_Globalization",
     "Win32_Graphics_Dwm",
     "Win32_Security",
+    "Win32_System_Com",
+    "Win32_System_Diagnostics_ToolHelp",
     "Win32_Storage_FileSystem",
     "Win32_System_Console",
     "Win32_System_IO",
@@ -88,20 +90,7 @@ iced_test = "0.14"
 [profile.dev]
 # Backtraces keep file and line; target/debug stays small.
 debug = "line-tables-only"
-
-[profile.dev.package.tiny-skia]
-opt-level = 3
-[profile.dev.package.tiny-skia-path]
-opt-level = 3
-[profile.dev.package.iced_tiny_skia]
-opt-level = 3
-[profile.dev.package.png]
-opt-level = 3
-[profile.dev.package.fdeflate]
-opt-level = 3
 [profile.dev.package.flate2]
-opt-level = 3
-[profile.dev.package.miniz_oxide]
 opt-level = 3
 [profile.dev.package.crc32fast]
 opt-level = 3

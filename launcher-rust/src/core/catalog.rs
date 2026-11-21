@@ -331,13 +331,13 @@ pub static SETTINGS: &[Setting] = &[
     ),
     ini("fps_limit", Pick(FPS_LIMITS), Text("0"), true, 8),
     // SanctuaryPort: Graphics > Frame rate (the game's own frame limiter; fps_limit is no longer shown).
-    ini("frame_rate", Pick(FRAME_RATES), Text("60"), true, 53),
+    ini("frame_rate", Pick(FRAME_RATES), Text("60"), true, 54),
     // SanctuaryPort: Graphics > V-Sync. A key of its own: `vsync` was saved as 1 by every build while
     // Diablo's profile kept it off, so reading it would turn V-Sync on for almost everyone.
-    ini("vertical_sync", Flag, Bool(false), true, 54),
+    ini("vertical_sync", Flag, Bool(false), true, 55),
     // SanctuaryPort: Graphics > Dynamic resolution; off keeps the scene at 100% (run.py: the game's
     // own fixed scale by a patch, else SANCTUARY_DYNRES).
-    ini("dynamic_resolution", Flag, Bool(true), true, 55),
+    ini("dynamic_resolution", Flag, Bool(true), true, 56),
     ini(
         "engine_fps",
         Pick(ENGINE_FPS_CHOICES),
@@ -358,6 +358,7 @@ pub static SETTINGS: &[Setting] = &[
     ini("cheat_double_jumps", Flag, Bool(false), true, 19),
     ini("cheat_very_hard", Flag, Bool(false), true, 18),
     ini("unlock_cosmetics", Flag, Bool(false), true, 52),
+    ini("unlock_other_platforms", Flag, Bool(false), true, 53),
     seeded("glyph_style", Pick(GLYPH_STYLES), Text("off"), 17),
     ini("mouse_prompt_distance", Kind::Int, Int(48), true, 22),
     ini("mouse_aim_style", Pick(AIM_STYLES), Text("0"), true, 24),
@@ -398,9 +399,9 @@ pub static SETTINGS: &[Setting] = &[
     // FXAA of the finished frame while FSR 3 is off, read by the game from sanctuary.ini.
     ini("fxaa", Flag, Bool(false), true, 34),
     // Opt-in replacement of Diablo III's PS4 SSAO upscale pass (off, low, high).
-    ini("gtao", Pick(GTAO_MODES), Text("off"), true, 56),
+    ini("gtao", Pick(GTAO_MODES), Text("off"), true, 57),
     // Diablo III's scene samples ("" the game's own, 2, 4), read by run.py (Game MSAA patches).
-    ini("msaa", Pick(GAME_MSAA), Text(""), true, 57),
+    ini("msaa", Pick(GAME_MSAA), Text(""), true, 58),
     ini("free_camera", Flag, Bool(false), true, 35),
     // The in-game menu's cheats and multipliers (#1135), read by the game from sanctuary.ini.
     ini("cheat_health", Flag, Bool(false), true, 36),
@@ -570,8 +571,8 @@ mod tests {
     }
 
     #[test]
-    fn shown_ini_keys_are_the_54_controls_of_the_window() {
-        assert_eq!(SHOWN_INI_KEYS.len(), 54); // Includes the GTAO and Game MSAA sample controls.
+    fn shown_ini_keys_are_the_55_controls_of_the_window() {
+        assert_eq!(SHOWN_INI_KEYS.len(), 55); // Includes the GTAO and Game MSAA sample controls.
         for seeded in ["monitor", "hdr", "glyph_style"] {
             assert!(SHOWN_INI_KEYS.contains(&seeded), "{seeded}");
         }

@@ -66,6 +66,7 @@ pub fn open(state: &mut State, page: Page) {
     let fold = match page {
         Page::Graphics => Some(sanctuaryport_launcher::ui::pages::graphics::MORE_OPTIONS),
         Page::Seasons => Some(sanctuaryport_launcher::ui::pages::game::SEASON_DETAILS),
+        Page::Game => Some(sanctuaryport_launcher::ui::pages::game::CHEATS),
         _ => None,
     };
     if let Some(name) = fold.filter(|name| !state.open_sections.contains(name)) {

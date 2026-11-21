@@ -38,7 +38,8 @@
   "game_patches": {
     "CUSA00243": [
       "Skip Intro",
-      "High FPS Wall Seam Fix"
+      "High FPS Wall Seam Fix",
+      "Experimental: Smooth character motion above 60 FPS"
     ]
   },
   "season_mode": "manual",
@@ -60,6 +61,7 @@
   "controls_layout": 5,
   "glyph_style": "off",
   "patches_offered": [
-    "High FPS Wall Seam Fix"
+    "High FPS Wall Seam Fix",
+    "Experimental: Smooth character motion above 60 FPS"
   ]
 }

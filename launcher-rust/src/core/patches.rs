@@ -15,6 +15,9 @@ use super::options::{
 };
 use super::paths::Paths;
 
+/// The cheats ("Cheat: ..." patches): offered on the Game page under Cheats, off unless ticked.
+pub const CHEAT_PREFIX: &str = "Cheat: ";
+
 /// Fixes with nothing to choose: not offered in the launcher and always applied.
 const ALWAYS_ON: &[&str] = &["Bug Fix - Startup Black Screen"];
 

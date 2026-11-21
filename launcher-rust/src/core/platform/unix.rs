@@ -233,3 +233,13 @@ mod tests {
         assert!(std::fs::symlink_metadata(&link).is_err());
     }
 }
+
+/// No Windows Desktop folder here (the Linux shortcuts go through XDG).
+pub fn desktop_folder() -> Option<std::path::PathBuf> {
+    None
+}
+
+/// Windows only; elsewhere the desktop's opener (`xdg-open`) is used.
+pub fn shell_open(_target: &std::ffi::OsStr) -> io::Result<()> {
+    Err(io::Error::other("ShellExecute exists only on Windows"))
+}

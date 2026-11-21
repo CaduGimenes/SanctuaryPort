@@ -23,21 +23,48 @@ class Diablo3PatchTests(unittest.TestCase):
         'Double Treasure Goblins', 'Double Bounty Bags', 'Royal Grandeur', 'Legacy of Nightmares', "Triune's Will",
         'Pandemonium', 'Kanai Powers', 'Trials of Tempests', 'Shadow Clones', "Fourth Kanai's Cube Slot",
         'Ethereal Items', 'Soul Shards', 'Swarm Rifts', 'Sanctified Items', 'Whimsyshire (Easter Egg World)',
-        'Also in non-seasonal games', 'Challenge Rifts', 'The Darkening of Tristram')]
+        'Also in non-seasonal games', 'Challenge Rifts', 'The Darkening of Tristram',
+        'Double Rift Keystones', 'Double Blood Shards')]
     OFFLINE_NAMES = {'Offline Seasons', 'Offline: no sign-in warning', *SEASONS, *EVENTS}
     SMOOTH = 'Experimental: Smooth character motion above 60 FPS'
+    CHEATS = {'Cheat: Movement speed +25%', 'Cheat: Auto pickup', "Cheat: Kanai's Cube keeps materials",
+              'Cheat: Unlock all difficulties'}
+    MYSTIC = 'Mystic only from Act V (story order)'
+    # 1.47 native of the Lua QuestRangeValid (0xa83f10): the QuestRange SNO looked up by name, then -1 checked.
+    MYSTIC_SITE = bytes.fromhex('554889e55350 4889f8 bf3a000000 4889c6 e84affdbff 89c3 83fbff 7438 beffffffff')
     # 1.47 movement interpolation (0x256fc0): the original bytes around its read of the client time.
     SMOOTH_SITE = bytes.fromhex('c5f2589338020000 c5f258b33c020000 0fb793d8010000 89d6 c5fa104060'
                                 '488b80780a0000 c5ea5cd0 c5ca5cc0')
 
-    def test_smooth_motion_patch_is_off_and_found_by_signature(self):
-        # GitHub #24: experimental, never on by default, and skipped (not misapplied) on another eboot.
+    def test_extra_events_go_through_the_second_list(self):
+        # The cave's own list holds 16 events; Double Rift Keystones and Double Blood Shards set a flag
+        # of a second list (0x177ac60) that a stub (0x177ac68) appends, entered from the cave at
+        # 0x177a815 in place of its lea rax,[rsp+0x60], and returning after it (0x177a81a).
+        xml = ROOT / 'patches' / 'Diablo_III.xml'
+        writes = dict(patches.compile_patches(xml, ['Offline Seasons - Season 30', 'Event: Double Rift Keystones',
+                                                    'Event: Double Blood Shards'], '01.47', [(0, 0x1800000)]))
+        base = patches.EBOOT_BASE
+        hook = writes[0x177a815 - base]
+        self.assertEqual(hook[:1], b'\xe9')
+        self.assertEqual(0x177a81a + int.from_bytes(hook[1:5], 'little', signed=True), 0x177ac68)
+        stub = writes[0x177ac68 - base]
+        back = stub.index(bytes.fromhex('488d442460e9')) + 5
+        self.assertEqual(0x177ac68 + back + 5 + int.from_bytes(stub[back + 1:back + 5], 'little', signed=True),
+                         0x177a81a)
+        self.assertIn(b'CommunityBuffDoubleRiftKeystones "1"\n', stub)
+        self.assertIn(b'CommunityBuffDoubleBloodShards "1"\n', stub)
+        self.assertEqual(writes[0x177ac60 - base], b'\x01')
+        self.assertEqual(writes[0x177ac61 - base], b'\x01')
+
+    def test_smooth_motion_patch_is_on_and_found_by_signature(self):
+        # GitHub #24: on by default since players confirmed it at 120 FPS and above, and skipped
+        # (not misapplied) on another eboot.
         xml = ROOT / 'patches' / 'Diablo_III.xml'
         root = ET.parse(xml).getroot()
         (meta,) = [m for m in root.iter('Metadata') if m.get('Name') == self.SMOOTH]
-        self.assertEqual(meta.get('isEnabled'), 'false')
+        self.assertEqual(meta.get('isEnabled'), 'true')
         self.assertEqual(meta.get('AppVer'), '01.47')
-        self.assertNotIn(self.SMOOTH, patches.selected_patches(xml, '01.47', ''))
+        self.assertIn(self.SMOOTH, patches.selected_patches(xml, '01.47', ''))
         targets = {t.get('Name') for t in meta.iter('Target')}
         for target in meta.iter('Target'):
             self.assertTrue(target.get('Pattern'), target.get('Name'))
@@ -66,6 +93,111 @@ class Diablo3PatchTests(unittest.TestCase):
         self.assertEqual(patches.compile_patches(xml, [self.SMOOTH], '01.47', [(0, 0x6000)],
                                                  image=bytes(0x6000), skipped=skipped), [])
         self.assertIn(self.SMOOTH, skipped)
+
+    def cheat(self, name):
+        """The cheat's Metadata, checked to be off by default and found by signature, and its writes
+        compiled at the 1.47 reference Addresses: {eboot offset: bytes}."""
+        xml = ROOT / 'patches' / 'Diablo_III.xml'
+        (meta,) = [m for m in ET.parse(xml).getroot().iter('Metadata') if m.get('Name') == name]
+        self.assertEqual(meta.get('isEnabled'), 'false', name)
+        self.assertEqual(meta.get('AppVer'), '01.47', name)
+        self.assertEqual(meta.get('Author'), 'SanctuaryPort', name)
+        self.assertTrue(meta.get('Note'), name)
+        self.assertNotIn(name, patches.selected_patches(xml, '01.47', ''))
+        targets = {t.get('Name') for t in meta.iter('Target')}
+        for target in meta.iter('Target'):
+            self.assertTrue(target.get('Pattern'), (name, target.get('Name')))
+        for line in meta.iter('Line'):
+            self.assertTrue(line.get('Pattern') or line.get('Target') in targets, (name, line.get('Address')))
+        # Without the patch the game's bytes stay; another build (no signature found) is skipped whole.
+        skipped = {}
+        self.assertEqual(patches.compile_patches(xml, [name], '01.47', [(0, 0x6000)], image=bytes(0x6000),
+                                                 skipped=skipped), [])
+        self.assertIn(name, skipped)
+        return {offset + patches.EBOOT_BASE: data
+                for offset, data in patches.compile_patches(xml, [name], '01.47', [(0, 0x1800000)])}
+
+    def test_cheat_movement_speed(self):
+        # The lea of Movement_Scalar_Total's formula text (0x74dd32) points at a copy in the code
+        # padding (0x177b200) that adds 25% for team 2 (heroes) only.
+        writes = self.cheat('Cheat: Movement speed +25%')
+        self.assertEqual(set(writes), {0xb4dd35, 0x177b200})
+        self.assertEqual(0xb4dd39 + int.from_bytes(writes[0xb4dd35], 'little', signed=True), 0x177b200)
+        formula = writes[0x177b200]
+        self.assertTrue(formula.startswith(b'Movement_Scalar_Capped_Total + Movement_Scalar_Uncapped_Bonus + '))
+        self.assertTrue(formula.endswith(b'0.25 * Pin(TeamID - 1, 0, 1) * Pin(3 - TeamID, 0, 1)\0'))
+        # Its own slot of the code padding: clear of the offline seasons, Challenge Rifts and smooth
+        # motion code, which can all be on with it.
+        xml = ROOT / 'patches' / 'Diablo_III.xml'
+        others = patches.compile_patches(xml, ['Offline Seasons - Season 30', 'Event: Double Blood Shards',
+                                               'Event: Challenge Rifts', self.SMOOTH], '01.47', [(0, 0x1800000)])
+        start, end = 0x177b200, 0x177b200 + len(formula)
+        for offset, data in others:
+            at = offset + patches.EBOOT_BASE
+            self.assertTrue(at + len(data) <= start or at >= end, hex(at))
+
+    def test_cheat_auto_pickup(self):
+        # 0x583940's item branch jumps (0x58396b) to its last test, the item's No_AutoPickup (0x583b29).
+        writes = self.cheat('Cheat: Auto pickup')
+        (site, value), = writes.items()
+        self.assertEqual(site, 0x98396b)
+        self.assertEqual(value[:1], b'\xe9')
+        self.assertEqual(site + 5 + int.from_bytes(value[1:], 'little', signed=True), 0x983b29)
+
+    def test_cheat_cube_keeps_materials(self):
+        # The two currency changes (call 0x4f9f60) of the ingredient commit 0x9c1f00 become 5-byte nops.
+        writes = self.cheat("Cheat: Kanai's Cube keeps materials")
+        self.assertEqual(writes, {0xdc2023: bytes.fromhex('0f1f440000'), 0xdc2183: bytes.fromhex('0f1f440000')})
+        xml = ROOT / 'patches' / 'Diablo_III.xml'
+        meta = ET.parse(xml).getroot().find("Metadata[@Name=\"Cheat: Kanai's Cube keeps materials\"]")
+        for line in meta.iter('Line'):
+            pattern, at = line.get('Pattern').split(), int(line.get('At'))
+            # The call replaced, its reason 0x14 (mov ecx,0x14) and the amount (sub rsi,rax) before it.
+            self.assertEqual(pattern[at:at + 5], ['e8', '??', '??', '??', '??'])
+            self.assertIn('b9 14 00 00 00', line.get('Pattern'))
+            self.assertEqual(pattern[at - 3:at], ['48', '29', 'c6'])
+
+    def test_cheat_unlock_all_difficulties(self):
+        # The difficulty check 0x5b8ba0 returns 1 at once (mov eax,1; ret), the menus' lock check
+        # 0x496370 returns 0 (xor eax,eax; ret).
+        writes = self.cheat('Cheat: Unlock all difficulties')
+        self.assertEqual(writes, {0x9b8ba0: bytes.fromhex('b801000000c3'), 0x896370: bytes.fromhex('31c0c3')})
+    def test_mystic_patch_is_off_and_hides_only_the_act_i_unlock(self):
+        # GitHub #79: off by default; at the 1.47 Addresses the call to the cave replaces the
+        # mov ebx,eax / cmp ebx,-1 after the QuestRange lookup, and the cave turns A1_MysticUnlock
+        # (SNO 430609) into -1 (no such range: false) and nothing else.
+        xml = ROOT / 'patches' / 'Diablo_III.xml'
+        (meta,) = [m for m in ET.parse(xml).getroot().iter('Metadata') if m.get('Name') == self.MYSTIC]
+        self.assertEqual(meta.get('isEnabled'), 'false')
+        self.assertEqual(meta.get('AppVer'), '01.47')
+        self.assertNotIn(self.MYSTIC, patches.selected_patches(xml, '01.47', ''))
+        writes = dict(patches.compile_patches(xml, [self.MYSTIC], '01.47', [(0, 0x1400000)]))
+        cave, call = 0x177b400 - patches.EBOOT_BASE, 0xe83f26 - patches.EBOOT_BASE
+        self.assertEqual(set(writes), {cave, call})
+        self.assertEqual(writes[call][:1], b'\xe8')
+        self.assertEqual(call + 5 + struct.unpack('<i', writes[call][1:])[0], cave)
+        self.assertEqual(writes[cave], bytes.fromhex('89c3 3d11920600 7505 bbffffffff 83fbff c3'))
+        # Found by its signature in a small image; another build is skipped whole.
+        anchor = bytes.fromhex(meta.find('Target').get('Pattern').replace(' ', ''))
+        site_at, anchor_at = 0x1000, 0x3000
+        image = bytearray(0x6000)
+        image[site_at:site_at + len(self.MYSTIC_SITE)] = self.MYSTIC_SITE
+        image[anchor_at:anchor_at + 24] = anchor[:24]
+        found = dict(patches.compile_patches(xml, [self.MYSTIC], '01.47', [(0, len(image))], image=bytes(image)))
+        self.assertEqual(set(found), {anchor_at + 3212, site_at + 22})
+        skipped = {}
+        self.assertEqual(patches.compile_patches(xml, [self.MYSTIC], '01.47', [(0, 0x6000)],
+                                                 image=bytes(0x6000), skipped=skipped), [])
+        self.assertIn(self.MYSTIC, skipped)
+
+    def test_the_mystic_cave_overlaps_no_other_patch(self):
+        xml = ROOT / 'patches' / 'Diablo_III.xml'
+        segments = [(0, 0x2000000)]
+        mine = patches.compile_patches(xml, [self.MYSTIC], '01.47', segments)
+        for name in patches.available_patches(xml, '01.47') - {self.MYSTIC}:
+            for at, data in patches.compile_patches(xml, [name], '01.47', segments):
+                for own_at, own in mine:
+                    self.assertFalse(at < own_at + len(own) and own_at < at + len(data), (name, hex(at)))
 
     def test_offline_patches_find_every_site_by_signature(self):
         # A different eboot is skipped, never overwritten: every Line has a signature, or writes at a
@@ -114,12 +246,12 @@ class Diablo3PatchTests(unittest.TestCase):
                               '1280x800', '1920x1200', '2560x1600')}
         expected |= {f'{graphics_options.LIMITER_PREFIX} - {n}' for n in ('30 FPS', '120 FPS', 'Unlimited')}
         expected.add(f'{graphics_options.MSAA_PREFIX} - 4x')
-        expected |= self.OFFLINE_NAMES | {self.SMOOTH, graphics_options.FIXED_SCALE_PATCH,
-                                          graphics_options.FOREGROUND_CAP_PATCH}
+        expected |= self.OFFLINE_NAMES | self.CHEATS | {self.SMOOTH, self.MYSTIC, graphics_options.FIXED_SCALE_PATCH,
+                                                        graphics_options.FOREGROUND_CAP_PATCH}
         self.assertEqual(names, expected)
         for meta in ET.parse(xml).getroot().iter('Metadata'):
-            if (meta.get('Name') in self.OFFLINE_NAMES | {self.SMOOTH, graphics_options.FIXED_SCALE_PATCH,
-                                                          graphics_options.FOREGROUND_CAP_PATCH}
+            if (meta.get('Name') in self.OFFLINE_NAMES | self.CHEATS
+                    | {self.SMOOTH, self.MYSTIC, graphics_options.FIXED_SCALE_PATCH, graphics_options.FOREGROUND_CAP_PATCH}
                     or meta.get('Name').startswith(graphics_options.MSAA_PREFIX)):
                 continue
             if meta.get('Name').startswith(graphics_options.LIMITER_PREFIX):

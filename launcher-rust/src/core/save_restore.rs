@@ -296,8 +296,10 @@ pub(crate) fn lock(user: &Path) -> io::Result<File> {
 pub fn ensure_game_closed() -> io::Result<()> {
     #[cfg(windows)]
     {
-        let output = process_output("powershell.exe", &["-NoProfile", "-NonInteractive", "-Command", "$ErrorActionPreference='Stop'; if (@(Get-Process | Where-Object {$_.ProcessName -in @('spartanport-probe','sanctuary-probe')}).Count) { Write-Output 'GAME_RUNNING' }"])?;
-        if output.contains("GAME_RUNNING") {
+        // The process list itself (no PowerShell, which antivirus programs flag in a launcher).
+        let running = crate::core::platform::process_running(&["spartanport-probe", "sanctuary-probe"])
+            .map_err(|e| invalid(format!("Could not check the game process: {e}")))?;
+        if running {
             return Err(invalid("Close the game before restoring saves."));
         }
     }
@@ -341,7 +343,7 @@ pub fn ensure_game_closed() -> io::Result<()> {
     Ok(())
 }
 
-#[cfg(not(target_os = "linux"))]
+#[cfg(not(any(target_os = "linux", windows)))]
 fn process_output(program: &str, args: &[&str]) -> io::Result<String> {
     use crate::core::platform::tool::{run_tool, Stderr, ToolCall, Window};
     let output = run_tool(&ToolCall {

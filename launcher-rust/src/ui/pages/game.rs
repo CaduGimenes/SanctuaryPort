@@ -13,7 +13,7 @@ use serde_json::{Map, Value};
 use crate::core::game::game_profile;
 use crate::core::i18n::{tr, tr_fmt};
 use crate::core::options::LANGUAGES;
-use crate::core::patches::{builtin_xml, game_patch_metas, selectable, PatchMeta};
+use crate::core::patches::{builtin_xml, game_patch_metas, selectable, PatchMeta, CHEAT_PREFIX};
 use crate::core::save_backup::{list_backups, restore, KEEP};
 use crate::core::save_restore;
 use crate::core::seasons::{
@@ -35,6 +35,31 @@ pub const LANGUAGE_NOTE: &str = "The language of the game's text and speech, on 
 
 /// The note under the Player name row; the translation tables key on this text.
 pub const PLAYER_NAME_NOTE: &str = "The name the game shows for you, as a PS4 user name: up to 16 characters, read when the game starts. Empty: Player.";
+
+/// The Mystic patch (GitHub #79): Myriam joins the account in Act V again, not in Act I.
+pub const MYSTIC_PATCH: &str = "Mystic only from Act V (story order)";
+/// The note under the Mystic check box; the translation tables key on this text.
+pub const MYSTIC_HINT: &str = "Myriam joins in Act V, as before; Adventure Mode also brings her. An account that already has her keeps her.";
+
+/// The Mystic switch: the game patch, ticked like the offline events; nothing when the patch file
+/// does not have it.
+fn mystic_rows<'a>(state: &State, lang: &str) -> Element<'a, Message> {
+    if !state.patches.selectable.iter().any(|m| m.name == MYSTIC_PATCH) {
+        return column![].into();
+    }
+    column![
+        section(state.rtl, &tr(lang, "Story")),
+        toggle_row(
+            state.rtl,
+            &format!("{}  {}", tr(lang, MYSTIC_PATCH), crate::ui::pages::graphics::RESTART_MARK),
+            state.patches.chosen.contains(MYSTIC_PATCH),
+            Some(|on| Message::PatchToggled(MYSTIC_PATCH.to_string(), on)),
+            Some(&tr(lang, MYSTIC_HINT)),
+        ),
+    ]
+    .spacing(2)
+    .into()
+}
 
 /// Game patches of the current dump.
 #[derive(Debug, Clone, Default)]
@@ -375,7 +400,7 @@ pub fn view(state: &State) -> Element<'_, Message> {
     let default_saves = state.paths.user_dir("").display().to_string();
     // The Python marks a row that needs a new start of the game with a small `restart` note.
 
-    let page = column![
+    let mut page = column![
         install_section(state),
         section(state.rtl, &tr(lang, "Folders")),
         folder_row(
@@ -415,6 +440,17 @@ pub fn view(state: &State) -> Element<'_, Message> {
                 "Every wing, pet, pennant and portrait frame of the game, season rewards included, and every legendary and set item look at the Mystic, in the account saves when the game starts (a backup is kept next to each). Some wings have no icon in the menus but show in game."
             )),
         ),
+        // scripts/cosmetics.py unlock-other: the other console editions' cosmetics that the data
+        // already holds (assets/cosmetics/diablo3.json, other_platforms).
+        checkbox(
+            state.rtl,
+            "unlock_other_platforms",
+            &tr(lang, "Unlock cosmetics of other platform editions"),
+            state.store.flag("unlock_other_platforms"),
+            Some(&hint(
+                "A pet, wings, a portrait frame and a six-piece armor look at the Mystic from other console editions of the game: their data is already in your copy but nothing in it hands them out. Added to the account saves when the game starts (a backup is kept next to each)."
+            )),
+        ),
         section(state.rtl, &tr(lang, "Player")),
         row(
             state.rtl,
@@ -434,11 +470,44 @@ pub fn view(state: &State) -> Element<'_, Message> {
             select_pairs("language", &language_pairs, &shown_language),
             Some(&hint(LANGUAGE_NOTE)),
         ),
-        // No patches or audio settings here: Diablo III keeps its volume in its own options, and
+        mystic_rows(state, lang),
+        // No other patches or audio settings here: Diablo III keeps its volume in its own options, and
         // its render resolution patches follow the Graphics page.
     ];
+    // The cheats ("Cheat: ..." patches), closed at first, one check box each.
+    let cheats: Vec<&PatchMeta> = state
+        .patches
+        .selectable
+        .iter()
+        .filter(|m| m.name.starts_with(CHEAT_PREFIX))
+        .collect();
+    if !cheats.is_empty() {
+        let open = state.open_sections.contains(&CHEATS);
+        page = page.push(section_fold(state.rtl, &tr(lang, "Cheats"), open, CHEATS));
+        if open {
+            page = page.push(text(tr(lang, CHEATS_HINT)).size(12).style(theme::text_muted));
+            for meta in cheats {
+                let name = meta.name.clone();
+                let label = tr(lang, name.strip_prefix(CHEAT_PREFIX).unwrap_or(&name));
+                let checked = state.patches.chosen.contains(&name);
+                page = page.push(toggle_row(
+                    state.rtl,
+                    &label,
+                    checked,
+                    Some(move |on| Message::PatchToggled(name.clone(), on)),
+                    None,
+                ));
+            }
+        }
+    }
     page.spacing(2).into()
 }
+
+/// The folding section of the Game page with the cheats (`State::open_sections`).
+pub const CHEATS: &str = "game_cheats";
+
+/// The line under the Cheats heading; the translation tables key on this text.
+const CHEATS_HINT: &str = "Changes the game. Seasonal heroes keep them in their saves.";
 
 /// The note under the first offline event; the translation tables key on this text.
 const OFFLINE_EVENTS_HINT: &str = "They need a season: Altar of Rites from Season 28, Visions of Enmity from 29.";

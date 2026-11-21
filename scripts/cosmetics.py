@@ -11,7 +11,13 @@ partition's (game mode's) crafter data, over the game's transmog table; only the
 game itself keeps are set. Everything else in the save is copied byte for byte, and
 the file is backed up next to it first. The game keeps the bits when it saves again.
 
-usage: cosmetics.py status|unlock SAVEDATA_DIR
+unlock-other adds the cosmetics and transmog appearances of other console editions (the table's
+"other_platforms"): their items are in this build's data but nothing here grants them, and they
+are not in the bitfield tables, so they go in as explicit gbids (BitPackedGbidArray.elements):
+the cosmetics beside the newer ones the save already keeps that way, the armor appearances in the
+account-wide transmog data, where the game keeps season and promotion sets.
+
+usage: cosmetics.py status|unlock|unlock-other SAVEDATA_DIR
 """
 import json
 import shutil
@@ -26,7 +32,8 @@ ARRAY_FIELD = 1       # CosmeticItemSavedData.cosmetic_items (BitPackedGbidArray
 PARTITIONS_FIELD = 20  # SavedDefinition.partitions (normal, hardcore, seasonal...)
 CRAFTER_FIELD = 4      # AccountPartition.crafter_data (CrafterSavedData: the artisans)
 TRANSMOG_FIELD = 2     # CrafterSavedData.transmog_data (BitPackedGbidArray)
-BITFIELD, LEADING_NULLS = 2, 3
+ACCOUNT_TRANSMOG_FIELD = 23  # SavedDefinition.account_wide_transmog_data (BitPackedGbidArray)
+ELEMENTS, BITFIELD, LEADING_NULLS = 1, 2, 3
 
 
 def decode(data):
@@ -107,6 +114,35 @@ def transmog_bits():
     return [x['bit'] for x in json.loads(TABLE.read_text(encoding='utf-8'))['transmog'] if x['valid']]
 
 
+def other_platform_gbids():
+    """(cosmetic gbids, transmog gbids) of the other console editions' exclusives."""
+    other = json.loads(TABLE.read_text(encoding='utf-8'))['other_platforms']
+    return [x['gbid'] for x in other['cosmetics']], [x['gbid'] for x in other['transmog']]
+
+
+def _gbids(array):
+    """The explicit gbids (elements) of a BitPackedGbidArray, signed as the game stores them."""
+    out = []
+    for number, wire, value, _ in fields(array):
+        if number == ELEMENTS and wire == 5:
+            out.append(int.from_bytes(value, 'little', signed=True))
+        elif number == ELEMENTS and wire == 2:  # packed, should a writer ever use it
+            out += [int.from_bytes(value[i:i + 4], 'little', signed=True) for i in range(0, len(value) - 3, 4)]
+    return out
+
+
+def _with_gbids(array, gbids):
+    """A BitPackedGbidArray with the missing `gbids` added as elements right after its own;
+    every other field is kept as it is."""
+    have = set(_gbids(array))
+    new = b''.join(_put_varint(ELEMENTS << 3 | 5) + g.to_bytes(4, 'little', signed=True)
+                   for g in dict.fromkeys(gbids) if g not in have)
+    parts = fields(array)
+    last = max((i for i, (n, _, _, _) in enumerate(parts) if n == ELEMENTS), default=-1)
+    return (b''.join(raw for _, _, _, raw in parts[:last + 1]) + new
+            + b''.join(raw for _, _, _, raw in parts[last + 1:]))
+
+
 def _bits(array):
     leading, bitfield = 0, b''
     for number, wire, value, _ in fields(array):
@@ -164,6 +200,37 @@ def unlock(plain, bits):
                  lambda data: _edit(data, ARRAY_FIELD, lambda array: _with_bits(array, bits)))
 
 
+def cosmetic_gbids(plain):
+    """The explicit cosmetic gbids of a decoded account save."""
+    for number, wire, value, _ in fields(plain):
+        if number == COSMETICS_FIELD and wire == 2:
+            for n2, w2, v2, _ in fields(value):
+                if n2 == ARRAY_FIELD and w2 == 2:
+                    return set(_gbids(v2))
+    return set()
+
+
+def unlock_gbids(plain, gbids):
+    """The decoded save with `gbids` added to its explicit cosmetics; nothing else changes."""
+    return _edit(plain, COSMETICS_FIELD,
+                 lambda data: _edit(data, ARRAY_FIELD, lambda array: _with_gbids(array, gbids)))
+
+
+def account_transmog_gbids(plain):
+    """The explicit gbids of the account-wide transmog data."""
+    for number, wire, value, _ in fields(plain):
+        if number == ACCOUNT_TRANSMOG_FIELD and wire == 2:
+            return set(_gbids(value))
+    return set()
+
+
+def unlock_account_transmog(plain, gbids):
+    """`gbids` added to the account-wide transmog data. When the game loads a save it keeps there
+    the appearances whose item has flag 0x800000 (account wide: season and promotion sets, eboot
+    0x772150); in a partition's transmog data it drops them."""
+    return _edit(plain, ACCOUNT_TRANSMOG_FIELD, lambda array: _with_gbids(array, gbids))
+
+
 def _partitions(plain):
     return [value for n, wire, value, _ in fields(plain) if n == PARTITIONS_FIELD and wire == 2]
 
@@ -196,14 +263,43 @@ def account_files(savedata):
     return sorted(Path(savedata).glob('*/*/autosave/account.dat'))
 
 
+def _backup(path):
+    backup = path.with_name(f'account.dat.{time.strftime("%Y%m%d-%H%M%S")}.bak')
+    if not backup.exists():  # a second edit in the same second keeps the first, older copy
+        shutil.copy2(path, backup)
+    return backup
+
+
+def unlock_other(files):
+    """Adds the other editions' cosmetics and transmog appearances to each account save."""
+    looks, transmog = other_platform_gbids()
+    for path in files:
+        plain = decode(path.read_bytes())
+        missing = len(set(looks) - cosmetic_gbids(plain))
+        missing_transmog = len(set(transmog) - account_transmog_gbids(plain))
+        if not missing and not missing_transmog:
+            print(f'Cosmetics: {path}: the other editions\' cosmetics are unlocked', flush=True)
+            continue
+        backup = _backup(path)
+        changed = unlock_account_transmog(unlock_gbids(plain, looks), transmog)
+        if set(looks) - cosmetic_gbids(changed) or set(transmog) - account_transmog_gbids(changed):
+            raise SystemExit(f'{path}: the edited save does not read back')
+        path.write_bytes(encode(changed))
+        print(f'Cosmetics: {path}: {missing} cosmetics and {missing_transmog} transmog appearances '
+              f'of other editions unlocked; backup {backup.name}', flush=True)
+
+
 def main(argv):
-    if len(argv) != 3 or argv[1] not in ('status', 'unlock'):
+    if len(argv) != 3 or argv[1] not in ('status', 'unlock', 'unlock-other'):
         print(__doc__.strip().splitlines()[-1])
         return 2
     files = account_files(argv[2])
     if not files:
         print(f'Cosmetics: no account save in {argv[2]} (play once first).', flush=True)
         return 1
+    if argv[1] == 'unlock-other':
+        unlock_other(files)
+        return 0
     wanted, looks = set(unlockable_bits()), set(transmog_bits())
     for path in files:
         plain = decode(path.read_bytes())
@@ -211,8 +307,7 @@ def main(argv):
         partitions = transmog_unlocked(plain)
         missing = sum(len(looks - p) for p in partitions)
         if argv[1] == 'unlock' and (before != wanted or missing):
-            backup = path.with_name(f'account.dat.{time.strftime("%Y%m%d-%H%M%S")}.bak')
-            shutil.copy2(path, backup)
+            backup = _backup(path)
             changed = unlock_transmog(unlock(plain, wanted), looks)
             if unlocked(changed) & wanted != wanted or any(
                     looks - p for p in transmog_unlocked(changed)):

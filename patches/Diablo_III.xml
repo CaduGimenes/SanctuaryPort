@@ -333,7 +333,7 @@
          (W+0x54 * 50 + W+0x38 - W+0x40) / 3000, so f is the accumulator's fraction. Weapons, lights and the
          actor's world matrix follow, since they are built from that position. Off: the game is unchanged.
          Code in the code segment's zero padding, after the offline seasons' code. -->
-    <Metadata Title="Diablo III" Name="Experimental: Smooth character motion above 60 FPS" Note="Experimental. Above 60 FPS the hero and monsters move only on every other frame and look jittery; this places them where they are at the moment of each frame. No change at 60 FPS or below." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+    <Metadata Title="Diablo III" Name="Experimental: Smooth character motion above 60 FPS" Note="Above 60 FPS the hero and monsters move only on every other frame and look jittery; this places them where they are at the moment of each frame. No change at 60 FPS or below." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="true">
         <PatchList>
             <Line Type="bytes" Address="0x177b800" Value="51 8b4854 6bc932 034838 2b4840 c5fa2ac1 c5fa5e0502000000 59 c3 00803b45" Target="smooth_cave"/>
             <Line Type="bytes" Address="0x657022" Value="e8{rel:smooth_cave:0}" Pattern="c5 f2 58 93 38 02 00 00 c5 f2 58 b3 3c 02 00 00 0f b7 93 d8 01 00 00 89 d6 c5 fa 10 40 60 48 8b 80 78 0a 00 00 c5 ea 5c d0 c5 ca 5c c0" At="25"/>
@@ -391,7 +391,9 @@
             <Line Type="bytes" Address="0x44343f" Value="9090" Pattern="4c 8d 35 ?? ?? ?? ?? 31 db 41 83 7e 08 00 74 4f e8" At="14"/>
             <Line Type="bytes" Address="0x926fe6" Value="c7436000000000c7436400000000c7436800000000" Pattern="48 8d 0d 4e 80 fb 00 42 c6 04 38 00 4c 89 7b 40 48 89 13 c7 43 60 01 00 00 00 c7 43 64 01 00 00 00 c7 43 68 01 00 00 00" At="19"/>
             <Line Type="bytes" Address="0x9272cf" Value="c7436000000000c7436400000000c7436800000000" Pattern="48 8d 0d d5 7e fb 00 42 c6 04 38 00 4c 89 7b 40 48 89 13 c7 43 60 01 00 00 00 c7 43 64 01 00 00 00 c7 43 68 01 00 00 00" At="19"/>
-        </PatchList>
+            <Line Type="bytes" Address="0x177a815" Value="e94e040000" Target="ev2_hook"/>
+            <Line Type="bytes" Address="0x177ac68" Value="31d283fa087325488d05eaffffff803c10007414488d051d000000486334d04801c68b4cd004f3a4ffc2ebd6488d442460e97cfbffff669040000000250000006500000023000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000436f6d6d756e69747942756666446f75626c65526966744b657973746f6e6573202231220a436f6d6d756e69747942756666446f75626c65426c6f6f64536861726473202231220a" Target="ev2_stub"/>
+</PatchList>
         <Target Name="cave" Address="0x177a790" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="28"/>
         <Target Name="season_no" Address="0x177a930" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="444"/>
         <Target Name="theme" Address="0x177ac40" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1228"/>
@@ -400,6 +402,8 @@
         <Target Name="flagvar" Address="0x1b02f80" Pattern="00 26 fb 00 00 00 00 00 00 00 00 00 00 00 00 00 ff ff ff ff ff ff ff ff 00 00 00 00 00 00 00 00" At="2817152"/>
         <Target Name="thunk_c" Address="0x451ff0" Pattern="48 8b 03 bf 20 00 00 00 4c 8b 70 70 e8 ?? ?? ?? ?? 48 8d 0d ?? ?? ?? ??" At="20" Ref="1" Tail="0"/>
         <Target Name="thunk_s" Address="0x4520b0" Pattern="c6 01 01 48 8b 03 4c 8b 70 70 e8 ?? ?? ?? ?? 48 8d 0d ?? ?? ?? ??" At="18" Ref="1" Tail="0"/>
+            <Target Name="ev2_hook" Address="0x177a815" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="161"/>
+        <Target Name="ev2_stub" Address="0x177ac68" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1268"/>
     </Metadata>
     <Metadata Title="Diablo III" Name="Offline Seasons - Season 14" Note="Offline seasonal heroes for Season 14, with the Season Journey and the season&#x27;s community event (DoubleGoblins). Tick one season only; it needs no other patch." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false" Base="Offline Seasons">
         <PatchList>
@@ -678,6 +682,18 @@
         </PatchList>
         <Target Name="tbl" Address="0x177ac5e" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1258"/>
     </Metadata>
+    <Metadata Title="Diablo III" Name="Event: Double Rift Keystones" Note="Offline community event: adds CommunityBuffDoubleRiftKeystones &quot;1&quot; to the local Config.txt. Needs an offline season." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x177ac60" Value="01" Target="tbl2"/>
+        </PatchList>
+        <Target Name="tbl2" Address="0x177ac60" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1260"/>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="Event: Double Blood Shards" Note="Offline community event: adds CommunityBuffDoubleBloodShards &quot;1&quot; to the local Config.txt. Needs an offline season." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x177ac61" Value="01" Target="tbl2"/>
+        </PatchList>
+        <Target Name="tbl2" Address="0x177ac61" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1261"/>
+    </Metadata>
     <Metadata Title="Diablo III" Name="Event: Also in non-seasonal games" Note="Offline community event: adds CommunityBuffSeasonOnly &quot;0&quot; to the local Config.txt. Needs an offline season." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x177ac5f" Value="01" Target="tbl"/>
@@ -712,5 +728,89 @@
             <Line Type="bytes" Address="0x8bbff2" Value="9090909090" Pattern="eb 14 31 d2 44 89 e7 44 89 ee e8 ?? ?? ?? ?? 4c 8b 3d ?? ?? ?? ??" At="10"/>
             <Line Type="bytes" Address="0x702a82" Value="b801000000" Pattern="41 bc 01 00 00 00 8b 3b e8 ?? ?? ?? ?? 41 21 c4" At="8"/>
         </PatchList>
+    </Metadata>
+    <!-- Cheats (d3hack's "rare cheats", ported by what each one changes, not by its Switch offsets).
+         Each is off by default and found by its signature, so another eboot skips it. Code and strings
+         they add live in the code segment's zero padding from 0x177b200 (after the offline seasons and the
+         Challenge Rifts cave, which ends at 0x177b181, and before the smooth motion code), each in its own
+         slot.
+         Movement speed: the game builds its attribute table at start-up (eboot 0x749xxx), each attribute
+         with its formula as text that it compiles; Movement_Scalar_Total (attribute 185, the factor every
+         walking/running rate is multiplied by) is "Movement_Scalar_Capped_Total +
+         Movement_Scalar_Uncapped_Bonus", its text loaded by the lea at 0x74dd32. The patch points that lea
+         at a copy with "+ 0.25 * Pin(TeamID - 1, 0, 1) * Pin(3 - TeamID, 0, 1)": +25% on top of the items'
+         capped bonus, only for actors of team 2, the heroes' side (monsters are team 10 and neutral actors
+         team 1, so they keep their speed). Nothing of it is saved: formulas are worked out from the saved
+         attributes each time. Tried in game with +3.00 in place of 0.25: the same half second of the
+         stick took the hero several times farther. -->
+    <Metadata Title="Diablo III" Name="Cheat: Movement speed +25%" Note="The hero runs 25% faster, on top of the movement speed from items." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="utf8" Address="0x177b200" Value="Movement_Scalar_Capped_Total + Movement_Scalar_Uncapped_Bonus + 0.25 * Pin(TeamID - 1, 0, 1) * Pin(3 - TeamID, 0, 1)" Target="ms_formula"/>
+            <Line Type="bytes" Address="0xb4dd35" Value="{rel:ms_formula:0}" Pattern="48 89 05 ae f0 da 00 48 8d 0d b8 0f 91 00 48 8d 05 ef 0f 91 00" At="10"/>
+        </PatchList>
+        <Target Name="ms_formula" Address="0x177b200" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="2700"/>
+    </Metadata>
+    <!-- Auto pickup: 0x583940 answers whether an actor on the ground is picked up by walking over it (the
+         server's pickup sweep at 0x4f5100 asks it for each item near a hero, and the client hides the
+         "pick up" prompt for such items). For an item (game balance type 2 at +0x38) it is true only for
+         three item types (0x31, 0x84 and 0x29, those of gold and the like), and then only when the item's
+         No_AutoPickup attribute (0x71) is 0; an item the hero drops gets No_AutoPickup = 1 (0x5083e2), so
+         it is not picked up again. The patch jumps from the item branch straight to that last test, so
+         every item is picked up unless the hero dropped it. Off: unchanged. -->
+    <Metadata Title="Diablo III" Name="Cheat: Auto pickup" Note="Items are picked up by walking over them, like gold; items you drop yourself stay on the ground." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x98396b" Value="e9b9010000" Pattern="49 8b 5e 38 83 fb 02 0f 85 94 00 00 00 48 c1 eb 20 be 31 00 00 00 89 df e8 ?? ?? ?? ?? 85 c0 0f 85 a6 01 00 00 be 84 00 00 00" At="13"/>
+        </PatchList>
+    </Metadata>
+    <!-- Kanai's Cube does not use up materials: the server's transmute (eboot 0x9bba50, the handler of
+         CMSG_TRY_TRANSMUTE, message 0x167) checks the recipe, then its executor (0x9bc740) works out the
+         ingredients' new amounts and hands them to 0x9c1f00, which commits them: for an item it lowers
+         or removes the stack, for a material (Death's Breath, Forgotten Souls, bounty materials... kept
+         as currencies since 2.7) it calls the currency change (0x4f9f60, reason 0x14) with "new amount -
+         current amount". The patch removes those two calls (one per loop of 0x9c1f00): the materials
+         stay, while the items of the recipe are still used up, so nothing is duplicated. The recipe still
+         asks for the materials it needs. -->
+    <Metadata Title="Diablo III" Name="Cheat: Kanai&#x27;s Cube keeps materials" Note="Kanai&#x27;s Cube recipes do not use up crafting materials (you still need to have them); the items you put in are still used." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0xdc2023" Value="0f1f440000" Pattern="89 de 4c 89 ef e8 ?? ?? ?? ?? 4b 8b 34 26 b9 14 00 00 00 45 31 c0 4c 89 ef 89 da 48 29 c6 e8 ?? ?? ?? ?? e9" At="30"/>
+            <Line Type="bytes" Address="0xdc2183" Value="0f1f440000" Pattern="89 de 4c 89 e7 e8 ?? ?? ?? ?? 4b 8b 34 2e b9 14 00 00 00 45 31 c0 4c 89 e7 89 da 48 29 c6 e8 ?? ?? ?? ?? e9" At="30"/>
+        </PatchList>
+    </Metadata>
+    <!-- Unlock all difficulties: 0x5b8ba0 (d3hack's PlayerCanPlayHandicap) answers whether a hero may play
+         difficulty d: it looks d up in a table of 16-byte entries at 0x10410a0 (Normal to Torment VI: no
+         requirement; Torment VII to XVI: level 70, or level 70 and a greater rift of 30 to 75 with the
+         other flag) and compares the hero's level and rift. The hero check and two server handlers ask
+         it; the patch makes it answer yes (mov eax,1; ret). The difficulty menus (0x49xxxx) ask 0x496370
+         instead, whether difficulty d is locked for a user: below Torment VII it adds its own gates to the
+         one above (a level 1 hero only had Normal and Hard), from Torment VII it looks at the account's
+         heroes. The second site makes it answer no (xor eax,eax; ret), so no card shows a lock. Tried in
+         game with a level 1 hero: without the patch only Normal and Hard were open, with it every card up
+         to Torment XVI, and Torment XIII could be chosen in game. -->
+    <Metadata Title="Diablo III" Name="Cheat: Unlock all difficulties" Note="Every difficulty up to Torment XVI can be chosen, whatever the hero&#x27;s level." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x9b8ba0" Value="b801000000c3" Pattern="48 63 c2 48 c1 e0 04 84 c9 74 10 48 8d 0d ?? ?? ?? ?? 39 7c 08 08 7e 12 31 c0 c3" At="0"/>
+            <Line Type="bytes" Address="0x896370" Value="31c0c3" Pattern="55 48 89 e5 41 57 41 56 41 55 41 54 53 48 81 ec 78 07 00 00 4c 8b 25 ?? ?? ?? ?? 4c 8d 2d ?? ?? ?? ?? 31 db 41 89 f6 41 89 ff 49 8b 04 24 48 89 45 d0 41 f6 45 00 01" At="0"/>
+        </PatchList>
+    </Metadata>
+    <!-- Mystic only from Act V (GitHub #79). The Mystic is an artisan the account unlocks (crafter
+         type 2; its level in the account's crafter data, 0 = locked, is what IsCrafterUnlocked reads:
+         eboot 0x773100, [player + type * 0xa08 + 0x52f4]). In the base game only Act V unlocks her: the
+         Lua script Mystic_Unlock_Automatic (QuestRangeValid "X1_WestmHub_MysticUnlock", from
+         X1_Westm_KillUrzael step 1; the 1.47 data adds GameIsOpenWorld: Adventure Mode) and
+         Mystic_Upgrade_1 (her Act V conversation). The 2.x data added Mystic_Upgrade_Automatic to the
+         New Tristram Mystic's marker: QuestRangeValid "A1_MysticUnlock" (QuestRange SNO 430609, from
+         RescueCain, The Legacy of Cain) and, when she is not unlocked yet, UnlockCrafter: she joins the
+         whole account in Act I. The patch makes that one quest range invalid for the scripts: the
+         Lua binding's native (0xa83f10) looks the name up (SNO group 0x3a) and returns 0 for -1; the
+         call to the cave keeps its mov ebx,eax / cmp ebx,-1 and turns 430609 into -1 first. The
+         quest ranges of markers and the game's other code are not this function's; an account that
+         already has her keeps her (her level is saved), Act V and Adventure Mode still unlock her, and
+         saves are not touched. Code in the code segment's zero padding (0x177b400). -->
+    <Metadata Title="Diablo III" Name="Mystic only from Act V (story order)" Note="Myriam the Mystic (enchanting, transmogrification) joins in Act V, as before Blizzard made her join in Act I after The Legacy of Cain. Adventure Mode still brings her, and an account that already has her keeps her." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x177b400" Value="89c3 3d11920600 7505 bbffffffff 83fbff c3" Target="mystic_cave"/>
+            <Line Type="bytes" Address="0xe83f26" Value="e8{rel:mystic_cave:0}" Pattern="55 48 89 e5 53 50 48 89 f8 bf 3a 00 00 00 48 89 c6 e8 ?? ?? ?? ?? 89 c3 83 fb ff 74 38" At="22"/>
+        </PatchList>
+        <Target Name="mystic_cave" Address="0x177b400" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="3212"/>
     </Metadata>
 </Patch>

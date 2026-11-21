@@ -71,10 +71,13 @@ Then follow [Getting your game ready](#getting-your-game-ready) with your own du
 | ✅ **Frame rate 30 / 60 / 120 / 200** | the game's own frame limiter (Graphics > Frame rate; 200 is the game's own maximum); the game's speed stays the same; at 60 and above each frame is shown as soon as it is done (VRR and gamescope friendly) |
 | 🧪 Game MSAA on AMD and Intel (Windows) | off by default there (black lines); On is experimental: its depth is created without compression (Graphics > More options) |
 | 🧪 MSAA 2x / 4x | the game's scene drawn with more samples and averaged into the picture, as on PC; 4x costs about a quarter of the FPS (Graphics > More options > MSAA samples) |
-| 🧪 Smooth character motion above 60 FPS | an experimental game patch, off by default (Graphics, below the frame rate): above 60 FPS the hero and monsters otherwise move every other frame |
+| ✅ Smooth character motion above 60 FPS | on by default (Graphics, below the frame rate): above 60 FPS the hero and monsters otherwise move every other frame |
 | ✅ **Offline seasons** | seasonal heroes offline (Seasons 14–40, with the Season Journey), the seasons' community events and The Darkening of Tristram (launcher → *Seasons*); needs update 1.47 |
 | ✅ Updates | from their own folder, read over the game in place: nothing is copied, on any drive (microSD cards on the ROG Ally / Steam Deck included); the base game is never changed |
 | ✅ Windows 10 / 11, Linux, SteamOS | played by the community on NVIDIA, AMD and Intel graphics, Steam Deck / Steam Machine and ROG Ally; every release is also tested under Wine |
+| ✅ Cosmetics of other platform editions | optional, on the Game page: wings, pet and portrait frame of another console edition that are already in the PS4 data (your saves are backed up first) |
+| 🧪 Cheats | optional and off by default, on the Game page under *Cheats*: movement speed +25%, auto pickup, Kanai's Cube keeps materials, all difficulties unlocked |
+| ✅ Story order | optional: the Mystic joins only from Act V, as before she became account-wide in Act I (Game page) |
 | ❌ Online play / PSN | offline only |
 
 ## The launcher

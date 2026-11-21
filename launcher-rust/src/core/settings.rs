@@ -81,7 +81,13 @@ pub fn app_defaults(env: &dyn Fn(&str) -> Option<String>) -> Map<String, Value> 
 /// Built-in patches that became on by default after players had saved their list. A saved list
 /// is exact, so each is ticked in it once; `patches_offered` remembers that, and unticking it
 /// later sticks. ponytail: a fixed list, read the XML defaults if more such patches come.
-const NEW_DEFAULT_PATCHES: &[(&str, &str)] = &[("CUSA00243", "High FPS Wall Seam Fix")];
+const NEW_DEFAULT_PATCHES: &[(&str, &str)] = &[
+    ("CUSA00243", "High FPS Wall Seam Fix"),
+    ("CUSA00243", "Experimental: Smooth character motion above 60 FPS"),
+    ("CUSA00242", "Experimental: Smooth character motion above 60 FPS"),
+    ("CUSA00434", "Experimental: Smooth character motion above 60 FPS"),
+    ("CUSA00433", "Experimental: Smooth character motion above 60 FPS"),
+];
 
 fn offered(saved: &Map<String, Value>) -> Vec<Value> {
     match saved.get("patches_offered") {
@@ -338,8 +344,14 @@ mod tests {
             .unwrap()
             .clone();
         offer_new_default_patches(&mut saved);
-        assert_eq!(patches(&saved), ["Skip Intro", "High FPS Wall Seam Fix"]);
-        assert_eq!(saved["patches_offered"], json!(["High FPS Wall Seam Fix"]));
+        assert_eq!(
+            patches(&saved),
+            ["Skip Intro", "High FPS Wall Seam Fix", "Experimental: Smooth character motion above 60 FPS"]
+        );
+        assert_eq!(
+            saved["patches_offered"],
+            json!(["High FPS Wall Seam Fix", "Experimental: Smooth character motion above 60 FPS"])
+        );
         // Unticked by the player afterwards: it stays off.
         saved["game_patches"]["CUSA00243"] = json!(["Skip Intro"]);
         offer_new_default_patches(&mut saved);

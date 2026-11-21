@@ -128,13 +128,17 @@ Nome do jogador (o que o jogo mostra para você, como o nome de usuário do PS4)
 - Taxa de quadros: 30, 60 (padrão do jogo), 120 ou 200 (o máximo do próprio jogo) em
   **Gráficos › Taxa de quadros**. A velocidade do jogo não muda; acima de 60 depende de o seu PC
   aguentar. De 60 para cima, cada quadro vai para a tela assim que fica pronto, o que combina com
-  telas VRR e com o gamescope. Acima de 60 os personagens podem tremer; a opção experimental
-  *Movimento suave acima de 60 FPS*, logo abaixo da taxa de quadros, corrige isso.
+  telas VRR e com o gamescope. Acima de 60 os personagens podem tremer; a opção
+  *Movimento suave acima de 60 FPS*, logo abaixo da taxa de quadros (ligada por padrão), corrige isso.
 - Temporadas offline: heróis de temporada sem internet (Temporadas 14 a 40, com a Jornada da
   Temporada), os eventos de cada temporada e o Escurecimento de Tristram, na aba **Temporadas** do
   launcher. Precisa da atualização 1.47.
 - Opções de gráficos menos usadas (resolução dinâmica, MSAA, FXAA, filtragem anisotrópica) ficam
   em **Gráficos › Mais opções**.
+- Opcionais na página **Jogo**: cosméticos de edições de outras plataformas (asas, mascote e moldura
+  que já estão nos arquivos do PS4), a Mística só a partir do Ato V (ordem da história) e uma seção
+  **Trapaças**, desligada por padrão (velocidade +25%, coleta automática, Cubo de Kanai sem gastar
+  material, todas as dificuldades).
 - Somente offline (sem PSN e sem co-op online).
 - Windows 10/11 e Linux (inclusive SteamOS e Steam Deck): jogado pela comunidade em placas NVIDIA,
   AMD e Intel. Cada versão também é testada no Wine antes de sair.

@@ -8230,5 +8230,48 @@
    "name": "P61_Wand_norm_unique_02",
    "valid": true
   }
- ]
+ ],
+ "other_platforms_note": "Cosmetics and transmog appearances of other console editions that this build's data already holds but never grants: on the PS4 they come with no entitlement (the eboot's license table at 0x1399d70 has no entry for them) and their item records carry no platform flag. The cosmetics are not in the bitfield table above, so they go into the save as explicit gbids (account_wide_cosmetic_item_data elements), as the game keeps its newer cosmetics. The armor appearances (items with flag 0x800000, as season and promotion sets) go to SavedDefinition.account_wide_transmog_data (23) as explicit gbids: when the game loads a save (eboot 0x772150) it moves such gbids into its account-wide list (up to 64) and saves them back there; in a partition's transmog data it drops them. Read from CUSA00243 1.47 at run time (HANDOFF).",
+ "other_platforms": {
+  "cosmetics": [
+   {
+    "gbid": 937125523,
+    "name": "Cosmetic_Pet_Chicken"
+   },
+   {
+    "gbid": -1641453200,
+    "name": "P7_Cosmetic_Wings_Promo"
+   },
+   {
+    "gbid": -154145517,
+    "name": "Cosmetic_PortraitFrame_Triforce"
+   }
+  ],
+  "transmog": [
+   {
+    "gbid": -604756776,
+    "name": "p7_Helm_promo_01"
+   },
+   {
+    "gbid": -1918343200,
+    "name": "p7_shoulderPads_promo_01"
+   },
+   {
+    "gbid": 164868426,
+    "name": "p7_chestArmor_promo_01"
+   },
+   {
+    "gbid": 1091274466,
+    "name": "p7_Gloves_promo_01"
+   },
+   {
+    "gbid": -1510431048,
+    "name": "p7_pants_promo_01"
+   },
+   {
+    "gbid": -258252199,
+    "name": "p7_boots_promo_01"
+   }
+  ]
+ }
 }

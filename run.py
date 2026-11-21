@@ -532,12 +532,15 @@ def main():
         # Launcher › Game › Saves: unlock every cosmetic and transmog appearance
         # (scripts/cosmetics.py) in the account saves, after the backup above; saves without
         # anything new are left untouched.
-        if diablo3 and graphics_ini(env).get('unlock_cosmetics') in ('1', 'true'):
-            import cosmetics
-            try:
-                cosmetics.main(['cosmetics.py', 'unlock', str(user_dir / 'savedata')])
-            except (OSError, ValueError, SystemExit) as error:
-                print(f'Cosmetics: not unlocked ({error}), starting anyway', flush=True)
+        # "Unlock cosmetics of other platform editions" (unlock_other_platforms=1): the other
+        # console editions' cosmetics and transmog looks that the game data already holds.
+        for key, command in (('unlock_cosmetics', 'unlock'), ('unlock_other_platforms', 'unlock-other')):
+            if diablo3 and graphics_ini(env).get(key) in ('1', 'true'):
+                import cosmetics
+                try:
+                    cosmetics.main(['cosmetics.py', command, str(user_dir / 'savedata')])
+                except (OSError, ValueError, SystemExit) as error:
+                    print(f'Cosmetics: not unlocked ({error}), starting anyway', flush=True)
         this = ['--run'] if getattr(sys, 'frozen', False) else [str(Path(__file__).resolve())]
         # Windows: the probe starts the new launch and ends, so it waits for this process. Linux:
         # the probe replaces itself with the new launch while this process still waits for it.

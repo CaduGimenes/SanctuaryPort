@@ -38,10 +38,10 @@ pub const VSYNC_HINT: &str = "Removes tearing; on a 60 Hz screen it caps at 60."
 pub const MORE_OPTIONS: &str = "graphics_more";
 /// The experimental patch that moves characters every frame above 60 FPS (GitHub #24).
 pub const SMOOTH_PATCH: &str = "Experimental: Smooth character motion above 60 FPS";
-pub const SMOOTH_LABEL: &str = "Smooth character motion above 60 FPS (experimental)";
+pub const SMOOTH_LABEL: &str = "Smooth character motion above 60 FPS";
 pub const SMOOTH_HINT: &str = "Above 60 FPS, characters move on every frame instead of every other one.";
 /// The note under the frame rate limit (also on the first-start page).
-pub const FRAME_RATE_HINT: &str = "Above 60 the camera is smoother, but characters may judder.";
+pub const FRAME_RATE_HINT: &str = "Above 60 the camera and characters move more smoothly.";
 /// The note under the GTAO quality choice.
 pub const GTAO_HINT: &str =
     "Adds contact shadows in the 3D scene; Low is lighter for integrated GPUs.";

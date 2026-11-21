@@ -65,6 +65,47 @@ fn a_check_box_sends_a_bool() {
 }
 
 #[test]
+fn other_platform_cosmetics_are_one_switch_off_by_default() {
+    // Game page, right after "Unlock all cosmetics and transmogs"; run.py runs cosmetics.py
+    // unlock-other when it is on. Neutral wording: no other edition's franchise names.
+    let dir = tempfile::tempdir().unwrap();
+    let mut state = common::state(dir.path());
+    assert!(!state.store.flag("unlock_other_platforms"));
+    common::open(&mut state, Page::Game);
+    let label = "Unlock cosmetics of other platform editions";
+    let view = sanctuaryport_launcher::ui::app::view(&state);
+    let mut ui = Simulator::with_size(Settings::default(), Size::new(1280.0, 4000.0), view);
+    let below = ui.find(label).unwrap().bounds();
+    let above = ui.find("Unlock all cosmetics and transmogs").unwrap().bounds();
+    assert!(below.y > above.y, "{below:?} {above:?}");
+    ui.click(label).unwrap();
+    let sent: Vec<_> = ui.into_messages().collect();
+    assert!(
+        sent.iter().any(
+            |message| matches!(message, Message::Set(key, value) if key == "unlock_other_platforms" && *value == json!(true))
+        ),
+        "{sent:?}"
+    );
+    let i18n: Value = serde_json::from_str(include_str!("../assets/i18n.json")).unwrap();
+    let keys = i18n["extra"]["pt"].as_object().unwrap().keys();
+    let hints: Vec<_> = keys.filter(|key| key.starts_with("A pet, wings, a portrait frame")).collect();
+    assert_eq!(hints.len(), 1);
+    let mut texts = vec![label.to_string(), hints[0].clone()];
+    for key in [label, hints[0].as_str()] {
+        for lang in ["pt", "es", "pl", "fr", "de", "it", "tr", "ar", "zh", "ja", "ko", "id", "cs"] {
+            let text = i18n["extra"][lang][key].as_str();
+            texts.push(text.unwrap_or_else(|| panic!("{lang}: {key}")).to_string());
+        }
+        texts.push(i18n["ru"][key].as_str().unwrap_or_else(|| panic!("ru: {key}")).to_string());
+    }
+    for text in texts.iter().map(|text| text.to_lowercase()) {
+        for name in ["nintendo", "switch", "zelda", "ganon", "triforce", "cucco", "gerudo", "amiibo"] {
+            assert!(!text.contains(name), "{name} in {text}");
+        }
+    }
+}
+
+#[test]
 fn a_check_box_sits_at_the_end_of_its_row() {
     // Mockup `.row` with `.cb`: the name first, the box at the row's end; mirrored right to left.
     for rtl in [false, true] {

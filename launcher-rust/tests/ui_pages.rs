@@ -77,7 +77,7 @@ fn the_smooth_motion_switch_picks_its_patch() {
             iced::Size::new(1280.0, 4000.0),
             app::view(&state),
         );
-        ui.click("Smooth character motion above 60 FPS (experimental)  ↻").unwrap();
+        ui.click("Smooth character motion above 60 FPS  ↻").unwrap();
         ui.into_messages().collect()
     };
     for message in clicked {
@@ -92,6 +92,59 @@ fn the_smooth_motion_switch_picks_its_patch() {
         true,
     );
     assert!(env["SANCTUARY_PATCHES"].split(';').any(|name| name == SMOOTH_PATCH));
+}
+
+#[test]
+fn the_mystic_switch_picks_its_patch() {
+    // GitHub #79: off by default, one check box on the Game page that ticks the game patch.
+    use sanctuaryport_launcher::ui::pages::game::{MYSTIC_HINT, MYSTIC_PATCH};
+    let dir = tempfile::tempdir().unwrap();
+    let dump = common::dump_with_patches(dir.path());
+    std::fs::write(
+        dir.path().join("patches").join("Diablo_III.xml"),
+        format!(
+            "<Patch><TitleID><ID>CUSA00243</ID></TitleID>\
+             <Metadata Name=\"{MYSTIC_PATCH}\" AppVer=\"01.47\" isEnabled=\"false\"><PatchList/></Metadata></Patch>"
+        ),
+    )
+    .unwrap();
+    let mut state = state(dir.path());
+    common::browsed(&mut state, "game_dir", &dump);
+    open(&mut state, Page::Game);
+    assert!(!state.patches.chosen.contains(MYSTIC_PATCH));
+    let label = "Mystic only from Act V (story order)  ↻";
+    let clicked: Vec<Message> = {
+        let mut ui = iced_test::simulator::Simulator::with_size(
+            iced::Settings::default(),
+            iced::Size::new(1280.0, 4000.0),
+            app::view(&state),
+        );
+        assert!(ui.find(MYSTIC_HINT).is_ok());
+        ui.click(label).unwrap();
+        ui.into_messages().collect()
+    };
+    assert!(clicked
+        .iter()
+        .any(|m| matches!(m, Message::PatchToggled(name, true) if name == MYSTIC_PATCH)));
+    for message in clicked {
+        let _ = app::update(&mut state, message);
+    }
+    assert!(state.patches.chosen.contains(MYSTIC_PATCH));
+    let env = game_environment(
+        state.store.app(),
+        &state.paths,
+        "en",
+        &indexmap::IndexMap::new(),
+        true,
+    );
+    assert!(env["SANCTUARY_PATCHES"].split(';').any(|name| name == MYSTIC_PATCH));
+    // Translated, with its hint, in every language of the launcher.
+    use sanctuaryport_launcher::core::i18n::tr;
+    for lang in ["pt", "es", "pl", "fr", "de", "it", "tr", "ar", "zh", "ja", "ko", "id", "cs", "ru"] {
+        for en in [MYSTIC_PATCH, MYSTIC_HINT, "Story"] {
+            assert_ne!(tr(lang, en), en, "{lang}: {en}");
+        }
+    }
 }
 
 #[test]
@@ -2757,4 +2810,56 @@ fn diablo_iii_releases_share_their_saves() {
     assert!(game::backup_is_for_another_game("CUSA00243", &titles(&["CUSA12345"])));
     // A backup without a title id says nothing either way.
     assert!(!game::backup_is_for_another_game("CUSA00243", &titles(&[])));
+}
+
+#[test]
+fn game_cheats_start_closed_and_tick_one_patch_each() {
+    // The "Cheat: ..." patches: a closed Cheats section on the Game page, a hint and one check
+    // box each once opened; ticking one chooses that patch.
+    use sanctuaryport_launcher::core::patches::PatchMeta;
+    use sanctuaryport_launcher::ui::pages::game::CHEATS;
+    let dir = tempfile::tempdir().unwrap();
+    let mut state = state(dir.path());
+    let _ = app::update(&mut state, Message::ShowPage(Page::Game));
+    let meta = |name: &str| PatchMeta {
+        name: name.to_string(),
+        author: Some("SanctuaryPort".into()),
+        note: None,
+        enabled_by_default: false,
+    };
+    state.patches.title_id = Some("CUSA00243".into());
+    state.patches.selectable = vec![meta("Cheat: Auto pickup"), meta("Cheat: Unlock all difficulties")];
+    assert!(!state.open_sections.contains(&CHEATS));
+    let mut ui = iced_test::simulator::Simulator::with_size(
+        iced::Settings::default(),
+        iced::Size::new(1280.0, 4000.0),
+        app::view(&state),
+    );
+    assert!(ui.find("Auto pickup").is_err());
+    ui.click("Cheats").unwrap();
+    let clicked: Vec<Message> = ui.into_messages().collect();
+    for message in clicked {
+        let _ = app::update(&mut state, message);
+    }
+    assert!(state.open_sections.contains(&CHEATS));
+    page_has(
+        &state,
+        &[
+            "Changes the game. Seasonal heroes keep them in their saves.",
+            "Auto pickup",
+            "Unlock all difficulties",
+        ],
+    );
+    let mut ui = iced_test::simulator::Simulator::with_size(
+        iced::Settings::default(),
+        iced::Size::new(1280.0, 4000.0),
+        app::view(&state),
+    );
+    ui.click("Auto pickup").unwrap();
+    let clicked: Vec<Message> = ui.into_messages().collect();
+    for message in clicked {
+        let _ = app::update(&mut state, message);
+    }
+    assert!(state.patches.chosen.contains("Cheat: Auto pickup"));
+    assert!(!state.patches.chosen.contains("Cheat: Unlock all difficulties"));
 }

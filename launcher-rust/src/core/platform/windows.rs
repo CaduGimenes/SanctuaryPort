@@ -599,3 +599,84 @@ mod tests {
         assert!(fs::symlink_metadata(&link).is_err());
     }
 }
+
+fn wide_z(text: &std::ffi::OsStr) -> Vec<u16> {
+    text.encode_wide().chain(std::iter::once(0)).collect()
+}
+
+/// The user's Desktop folder (`FOLDERID_Desktop`, which follows a redirection such as OneDrive).
+pub fn desktop_folder() -> Option<std::path::PathBuf> {
+    use windows_sys::Win32::System::Com::CoTaskMemFree;
+    use windows_sys::Win32::UI::Shell::{FOLDERID_Desktop, SHGetKnownFolderPath};
+    let mut path: windows_sys::core::PWSTR = std::ptr::null_mut();
+    // SAFETY: a known folder id, no token; the returned buffer is freed below in every case.
+    let result = unsafe { SHGetKnownFolderPath(&FOLDERID_Desktop, 0, std::ptr::null_mut(), &mut path) };
+    let folder = if result == 0 && !path.is_null() {
+        // SAFETY: a NUL-terminated wide string the shell allocated.
+        let len = (0..).take_while(|&i| unsafe { *path.add(i) } != 0).count();
+        let units = unsafe { std::slice::from_raw_parts(path, len) };
+        Some(std::path::PathBuf::from(std::ffi::OsString::from_wide(units)))
+    } else {
+        None
+    };
+    // SAFETY: null or the shell's allocation.
+    unsafe { CoTaskMemFree(path as *const core::ffi::c_void) };
+    folder
+}
+
+/// Opens a folder, file or link with its default program (`ShellExecuteW` "open"), as Explorer
+/// does: no helper program is started.
+pub fn shell_open(target: &std::ffi::OsStr) -> io::Result<()> {
+    use windows_sys::Win32::UI::Shell::ShellExecuteW;
+    use windows_sys::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
+    let verb = wide_z(std::ffi::OsStr::new("open"));
+    let file = wide_z(target);
+    // SAFETY: NUL-terminated wide strings that outlive the call.
+    let code = unsafe {
+        ShellExecuteW(
+            std::ptr::null_mut(),
+            verb.as_ptr(),
+            file.as_ptr(),
+            std::ptr::null(),
+            std::ptr::null(),
+            SW_SHOWNORMAL,
+        )
+    } as isize;
+    // Values above 32 are success.
+    if code > 32 {
+        Ok(())
+    } else {
+        Err(io::Error::other(format!("ShellExecute failed ({code})")))
+    }
+}
+
+/// Whether a process with one of these executable names (without `.exe`, any case) runs.
+pub fn process_running(names: &[&str]) -> io::Result<bool> {
+    use windows_sys::Win32::System::Diagnostics::ToolHelp::{
+        CreateToolhelp32Snapshot, Process32FirstW, Process32NextW, PROCESSENTRY32W,
+        TH32CS_SNAPPROCESS,
+    };
+    // SAFETY: a snapshot of every process; closed below.
+    let snapshot = unsafe { CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0) };
+    if snapshot == INVALID_HANDLE_VALUE {
+        return Err(io::Error::last_os_error());
+    }
+    let mut entry: PROCESSENTRY32W = unsafe { std::mem::zeroed() };
+    entry.dwSize = std::mem::size_of::<PROCESSENTRY32W>() as u32;
+    let mut found = false;
+    // SAFETY: the entry's size is set; the snapshot is valid.
+    let mut more = unsafe { Process32FirstW(snapshot, &mut entry) } != 0;
+    while more {
+        let len = entry.szExeFile.iter().position(|&c| c == 0).unwrap_or(entry.szExeFile.len());
+        let exe = String::from_utf16_lossy(&entry.szExeFile[..len]).to_ascii_lowercase();
+        let stem = exe.strip_suffix(".exe").unwrap_or(&exe);
+        if names.iter().any(|name| name.eq_ignore_ascii_case(stem)) {
+            found = true;
+            break;
+        }
+        more = unsafe { Process32NextW(snapshot, &mut entry) } != 0;
+    }
+    // SAFETY: the snapshot handle.
+    unsafe { CloseHandle(snapshot) };
+    Ok(found)
+}
