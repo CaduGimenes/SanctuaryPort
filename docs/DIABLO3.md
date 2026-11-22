@@ -429,10 +429,23 @@ bind to that address, and broadcasts go to `127.0.0.2`–`127.0.0.9`:
     SANCTUARY_LAN=1 SANCTUARY_LAN_IP=127.0.0.2 SANCTUARY_DATA_DIR=dataA bash run.sh   # host
     SANCTUARY_LAN=1 SANCTUARY_LAN_IP=127.0.0.3 SANCTUARY_DATA_DIR=dataB SANCTUARY_PLAYER_NAME=Player2 bash run.sh
 
-Linux ↔ Linux and Linux ↔ Windows (the Windows build under Wine) were tested this way; both
-reached the host's world.
+Tested, each time reaching the host's world:
 
-Not done yet:
+- **One machine, two instances** (loopback addresses as above): Linux ↔ Linux, Linux ↔ Windows
+  and Windows ↔ Windows (the Windows build under Wine), seasonal heroes included.
+- **One machine, four instances** (a full party: one host, three clients, `127.0.0.2`–`.5`).
+  Every player exchanges game traffic with every other one, not only with the host, so with more
+  than two machines each one must accept UDP 3074 from all the others.
+- **A real PS4 on the same LAN** (CUSA00242 + 01.47): the PC joined the PS4's game and the PS4
+  joined the PC's. The port puts the console's own packets on the wire, so the two interoperate.
+- **Native Windows** (the same PC, dual-booted): the Windows build's own Winsock path, not only
+  Wine.
 
-- Removing the per-call `Net:` logging.
-- Testing between two real machines (UDP 3074 and 1200 must be open in the firewall).
+Playing with a real PS4: both sides need the same game update, and non-seasonal heroes, because
+offline seasons are a patch of the port that the PS4 does not have. The port's other gameplay
+patches (the cheats) are best left off too.
+
+Between machines, each one's firewall must let in UDP 1200 (discovery) and 3074 (the game).
+
+Not done yet: the `Net:` log is verbose (every socket call and the first 400 packets) and may be
+trimmed once LAN play has seen more testing.

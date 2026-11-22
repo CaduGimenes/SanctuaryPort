@@ -294,7 +294,7 @@ pub static SETTINGS: &[Setting] = &[
     app("check_updates", Flag, Bool(false), None),
     // SanctuaryPort: Game > Player name, the name the game shows for player 1 (GitHub #23).
     app("player_name", Kind::Text, Text(""), env("SANCTUARY_PLAYER_NAME", "")),
-    // SanctuaryPort: Game > LAN play: the game's own LAN Play network mode (src/runtime_net.c).
+    // SanctuaryPort: Game > Player > LAN play (experimental): the game's own LAN Play network mode (src/runtime_net.c).
     // Off is sent as "0", so an inherited SANCTUARY_LAN never turns it on.
     app("lan_play", Flag, Bool(false), env("SANCTUARY_LAN", "")),
     // Derived, not 1:1: `env.rs` builds SANCTUARY_PATCHES and SANCTUARY_KEY_MAP / SANCTUARY_PAD_MAP

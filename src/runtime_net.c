@@ -15,7 +15,8 @@
  * SANCTUARY_LAN_IP=a.b.c.d picks the address to report (default: the machine's LAN IPv4).
  * Testing on one machine: SANCTUARY_LAN_IP=127.0.0.2, 127.0.0.3, ... gives each instance its own
  * loopback address; sockets bind to it and broadcasts go to 127.0.0.2..127.0.0.9.
- * Every call is logged with "Net:" while this is being brought up. */
+ * Socket calls, refusals and the first 400 packets are logged with "Net:", so a LAN problem can be
+ * read from user/last_run.log. */
 #define _GNU_SOURCE
 #include "runtime.h"
 #include <stdio.h>
@@ -732,6 +733,8 @@ static ABI int32_t net_epoll_wait(int32_t eid, GuestEpollEvent *events, int32_t 
     return n;
 }
 #endif
+/* Diablo III never aborts a wait (no call in any LAN session), and a wait still ends at its own
+ * timeout; the call is logged so a game that relies on it shows up. */
 static ABI int32_t net_epoll_abort(int32_t eid, int32_t flags) { printf("Net: epoll abort %d flags %d (ignored)\n",eid,flags); return 0; }
 
 static const RuntimeExport exports[]={
