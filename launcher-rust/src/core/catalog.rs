@@ -402,6 +402,11 @@ pub static SETTINGS: &[Setting] = &[
     ini("gtao", Pick(GTAO_MODES), Text("off"), true, 57),
     // Diablo III's scene samples ("" the game's own, 2, 4), read by run.py (Game MSAA patches).
     ini("msaa", Pick(GAME_MSAA), Text(""), true, 58),
+    // SanctuaryPort: Graphics > Effects (PC render targets, local co-op full effects, PC camera
+    // zoom); eboot patches run.py picks at start.
+    ini("pc_render_targets", Flag, Bool(false), true, 59),
+    ini("coop_full_effects", Flag, Bool(false), true, 60),
+    ini("pc_camera_zoom", Flag, Bool(false), true, 61),
     ini("free_camera", Flag, Bool(false), true, 35),
     // The in-game menu's cheats and multipliers (#1135), read by the game from sanctuary.ini.
     ini("cheat_health", Flag, Bool(false), true, 36),
@@ -565,14 +570,14 @@ mod tests {
                 "cheat_very_hard"
             ]
         );
-        assert_eq!(keys.last(), Some(&"msaa"));
+        assert_eq!(keys.last(), Some(&"pc_camera_zoom"));
         let shown: Vec<_> = rows.iter().filter(|s| s.written).map(|s| s.key).collect();
         assert_eq!(shown, SHOWN_INI_KEYS.iter().copied().collect::<Vec<_>>());
     }
 
     #[test]
-    fn shown_ini_keys_are_the_55_controls_of_the_window() {
-        assert_eq!(SHOWN_INI_KEYS.len(), 55); // Includes the GTAO and Game MSAA sample controls.
+    fn shown_ini_keys_are_the_58_controls_of_the_window() {
+        assert_eq!(SHOWN_INI_KEYS.len(), 58); // Includes GTAO, Game MSAA and the Effects switches.
         for seeded in ["monitor", "hdr", "glyph_style"] {
             assert!(SHOWN_INI_KEYS.contains(&seeded), "{seeded}");
         }

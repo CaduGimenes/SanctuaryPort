@@ -813,4 +813,216 @@
         </PatchList>
         <Target Name="mystic_cave" Address="0x177b400" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="3212"/>
     </Metadata>
+    <!-- PC render target sizes (launcher Graphics > More options > Sharper shadows and reflections, sanctuary.ini
+         pc_render_targets; run.py picks the entries). The console build gives some render targets fixed
+         sizes where the PC 2.8 client derives them from its settings or the screen; these entries write the
+         PC's where it is larger, never a size below the console's own.
+         Shadow map: the shadow setup (eboot 0x1280c0) sets the size to 2048, then to 1536 (movl $0x600 to
+         [rbx+0x10], imm32 at 0x128124) when the platform query returns 4, which it always does on PS4. Every
+         later use reads [rbx+0x10], and the shader is already given 2048 by the ShadowQuality table (tier
+         6); the PC uses 2048 at its highest shadow quality.
+         Water and fog: the same setup creates WaterSimRT (0x128251/0x128257) and right after it
+         InteractiveFogRT (0x128306/0x12830c) at 1408x1408. The PC creates both from one size variable, 1024,
+         or 2048 above 1280 pixels wide. One entry writes both, so an eboot.bin with only one of the two
+         signatures keeps both at 1408 instead of a pair of sizes neither build uses. Up to 1280 pixels wide
+         the console's 1408 stays.
+         PMA RT: 1728x1728 (0xf74a1/0xf74a7). The PC (PostFXGfxInit) starts from 1024, or 2048 above 1280
+         pixels wide; doubles that when the hardware class (the graphics setting at offset 0x90, or a fixed 2,
+         3 or 4 under some start-up flags) is above 4 and the setting at offset 4 of the same block is 0 (MipOffset
+         sits at that offset in the console's layout; the PC's layout differs at 0x90, so the name is a lead);
+         and then caps it at 2048 unless bit 3 of the renderer's capability word is set. What sets that bit,
+         and whether a current PC at its highest settings has a hardware class above 4, was not established.
+         So the entry writes 2048, the PC's size above 1280 pixels wide without the doubling and the value of
+         the cap with it, and only above that width: up to it the PC gives 1024, or 2048 when doubled, so the
+         console's 1728 stays.
+         Reflection: the effect buffer setup (0xf6ee0) creates EFFECTBUFFER_REFLECTION_0/1 (0xf6fc6/0xf6fcc)
+         and the reflection depth (0xf750d/0xf7513) at 800x450 whenever ReflectionQuality is on; the PC at
+         half the screen. One entry per render size whose half is at least 800x450 and larger in one
+         dimension, chosen with the render resolution (a PS4 Pro always renders 3840x2160); smaller sizes keep
+         the console's 800x450.
+         The 1.00 disc executable (C2.0.0.24791) has the same shadow setup at 1.00 eboot 0xcd7a0, with other
+         registers and offsets, so the shadow map and water/fog entries have a second Metadata for it (the
+         first whose signatures are all found is applied): 1536 is movl $0x600 to [r13+0x140] (imm32 at
+         0xcd851), read back for the three shadow targets (0xcd85d, 0xcd8b7, 0xcd910) and for the shadow
+         pass's viewport (0xce562, as 1.47 at 0x128900); its shader constant comes from the same size table
+         (0x181e80, called at 0xcc8e9; 1024, 2048, 512, 1024, 2048 for qualities 2 to 6, as 1.47's 0x209110).
+         WaterSimRT and InteractiveFogRT are 1408x1408 at 0xcdaad/0xcdab3 and 0xcdb00/0xcdb06. No other
+         instruction of the 1.00 code has 1408 or 1536 as an immediate for a size, and nothing in it loads
+         1408.0 or 1536.0. 1.00 has no PMA RT (no such name and no 1728 in its code), and its effect buffer
+         setup (0x97060) already creates the reflection colour (case 4/5 at 0x9735f) and depth (0x97859) at
+         half the render size ([renderer+0x244]/[renderer+0x248] shifted right by one), as the PC; so the
+         PMA and reflection entries have nothing to change there and are skipped (signature not found). -->
+    <Metadata Title="Diablo III" Name="PC Render Targets - Shadow Map 2048" Note="Shadow map 2048x2048 instead of 1536x1536, as the PC game at its highest shadow quality." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x00528124" Value="00080000" Pattern="41 83 fc 04 75 0c be 19 00 00 00 c7 43 10 00 06 00 00 89 75 cc" At="14"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="PC Render Targets - Shadow Map 2048" Note="Shadow map 2048x2048 instead of 1536x1536, as the PC game at its highest shadow quality." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x004cd851" Value="00080000" Pattern="41 83 fc 04 75 10 41 c7 85 40 01 00 00 00 06 00 00 bb 19 00 00 00" At="13"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="PC Render Targets - Water and Fog 2048" Note="WaterSimRT and InteractiveFogRT 2048x2048 instead of 1408x1408, as the PC game above 1280 pixels wide." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x00528251" Value="00080000" Pattern="be 07 00 00 00 b9 80 05 00 00 41 b8 80 05 00 00" At="6"/>
+            <Line Type="bytes" Address="0x00528257" Value="00080000" Pattern="be 07 00 00 00 b9 80 05 00 00 41 b8 80 05 00 00" At="12"/>
+            <Line Type="bytes" Address="0x00528306" Value="00080000" Pattern="83 f8 ff 48 8d 3d ?? ?? ?? ?? b9 80 05 00 00 41 b8 80 05 00 00" At="11"/>
+            <Line Type="bytes" Address="0x0052830c" Value="00080000" Pattern="83 f8 ff 48 8d 3d ?? ?? ?? ?? b9 80 05 00 00 41 b8 80 05 00 00" At="17"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="PC Render Targets - Water and Fog 2048" Note="WaterSimRT and InteractiveFogRT 2048x2048 instead of 1408x1408, as the PC game above 1280 pixels wide." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x004cdaad" Value="00080000" Pattern="be 00 00 00 00 4c 89 fa b9 80 05 00 00 41 b8 80 05 00 00" At="9"/>
+            <Line Type="bytes" Address="0x004cdab3" Value="00080000" Pattern="be 00 00 00 00 4c 89 fa b9 80 05 00 00 41 b8 80 05 00 00" At="15"/>
+            <Line Type="bytes" Address="0x004cdb00" Value="00080000" Pattern="c7 04 24 01 00 00 00 4c 89 fa b9 80 05 00 00 41 b8 80 05 00 00" At="11"/>
+            <Line Type="bytes" Address="0x004cdb06" Value="00080000" Pattern="c7 04 24 01 00 00 00 4c 89 fa b9 80 05 00 00 41 b8 80 05 00 00" At="17"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="PC Render Targets - PMA 2048" Note="PMA RT 2048x2048 instead of 1728x1728, as the PC game above 1280 pixels wide (without its hardware-class doubling)." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x004f74a1" Value="00080000" Pattern="b9 c0 06 00 00 41 b8 c0 06 00 00" At="1"/>
+            <Line Type="bytes" Address="0x004f74a7" Value="00080000" Pattern="b9 c0 06 00 00 41 b8 c0 06 00 00" At="7"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="PC Render Targets - Reflection 960x540" Note="Reflection colour and depth at 960x540 instead of 800x450: half of a 1920x1080 render, as the PC game." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x004f6fc6" Value="c0030000" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="2"/>
+            <Line Type="bytes" Address="0x004f6fcc" Value="1c020000" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="8"/>
+            <Line Type="bytes" Address="0x004f750d" Value="c0030000" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="1"/>
+            <Line Type="bytes" Address="0x004f7513" Value="1c020000" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="7"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="PC Render Targets - Reflection 1280x720" Note="Reflection colour and depth at 1280x720 instead of 800x450: half of a 2560x1440 render, as the PC game." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x004f6fc6" Value="00050000" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="2"/>
+            <Line Type="bytes" Address="0x004f6fcc" Value="d0020000" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="8"/>
+            <Line Type="bytes" Address="0x004f750d" Value="00050000" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="1"/>
+            <Line Type="bytes" Address="0x004f7513" Value="d0020000" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="7"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="PC Render Targets - Reflection 1600x900" Note="Reflection colour and depth at 1600x900 instead of 800x450: half of a 3200x1800 render, as the PC game." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x004f6fc6" Value="40060000" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="2"/>
+            <Line Type="bytes" Address="0x004f6fcc" Value="84030000" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="8"/>
+            <Line Type="bytes" Address="0x004f750d" Value="40060000" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="1"/>
+            <Line Type="bytes" Address="0x004f7513" Value="84030000" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="7"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="PC Render Targets - Reflection 1920x1080" Note="Reflection colour and depth at 1920x1080 instead of 800x450: half of a 3840x2160 render, as the PC game." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x004f6fc6" Value="80070000" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="2"/>
+            <Line Type="bytes" Address="0x004f6fcc" Value="38040000" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="8"/>
+            <Line Type="bytes" Address="0x004f750d" Value="80070000" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="1"/>
+            <Line Type="bytes" Address="0x004f7513" Value="38040000" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="7"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="PC Render Targets - Reflection 1280x540" Note="Reflection colour and depth at 1280x540 instead of 800x450: half of a 2560x1080 render, as the PC game." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x004f6fc6" Value="00050000" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="2"/>
+            <Line Type="bytes" Address="0x004f6fcc" Value="1c020000" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="8"/>
+            <Line Type="bytes" Address="0x004f750d" Value="00050000" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="1"/>
+            <Line Type="bytes" Address="0x004f7513" Value="1c020000" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="7"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="PC Render Targets - Reflection 1720x720" Note="Reflection colour and depth at 1720x720 instead of 800x450: half of a 3440x1440 render, as the PC game." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x004f6fc6" Value="b8060000" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="2"/>
+            <Line Type="bytes" Address="0x004f6fcc" Value="d0020000" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="8"/>
+            <Line Type="bytes" Address="0x004f750d" Value="b8060000" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="1"/>
+            <Line Type="bytes" Address="0x004f7513" Value="d0020000" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="7"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="PC Render Targets - Reflection 1920x800" Note="Reflection colour and depth at 1920x800 instead of 800x450: half of a 3840x1600 render, as the PC game." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x004f6fc6" Value="80070000" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="2"/>
+            <Line Type="bytes" Address="0x004f6fcc" Value="20030000" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="8"/>
+            <Line Type="bytes" Address="0x004f750d" Value="80070000" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="1"/>
+            <Line Type="bytes" Address="0x004f7513" Value="20030000" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="7"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="PC Render Targets - Reflection 2560x720" Note="Reflection colour and depth at 2560x720 instead of 800x450: half of a 5120x1440 render, as the PC game." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x004f6fc6" Value="000a0000" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="2"/>
+            <Line Type="bytes" Address="0x004f6fcc" Value="d0020000" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="8"/>
+            <Line Type="bytes" Address="0x004f750d" Value="000a0000" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="1"/>
+            <Line Type="bytes" Address="0x004f7513" Value="d0020000" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="7"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="PC Render Targets - Reflection 960x600" Note="Reflection colour and depth at 960x600 instead of 800x450: half of a 1920x1200 render, as the PC game." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x004f6fc6" Value="c0030000" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="2"/>
+            <Line Type="bytes" Address="0x004f6fcc" Value="58020000" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="8"/>
+            <Line Type="bytes" Address="0x004f750d" Value="c0030000" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="1"/>
+            <Line Type="bytes" Address="0x004f7513" Value="58020000" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="7"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="PC Render Targets - Reflection 1280x800" Note="Reflection colour and depth at 1280x800 instead of 800x450: half of a 2560x1600 render, as the PC game." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x004f6fc6" Value="00050000" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="2"/>
+            <Line Type="bytes" Address="0x004f6fcc" Value="20030000" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="8"/>
+            <Line Type="bytes" Address="0x004f750d" Value="00050000" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="1"/>
+            <Line Type="bytes" Address="0x004f7513" Value="20030000" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="7"/>
+        </PatchList>
+    </Metadata>
+    <!-- Full effects in local co-op (launcher Graphics > More options > Full effects in local co-op, sanctuary.ini
+         coop_full_effects; run.py adds the entry). When a local player joins, the handler (eboot 0x8ca80)
+         counts the players and, from two on, sets the graphics settings' low-effects field (offset 0x60,
+         setter 0x2097f0: a plain store) to 1. Two routines read it (getter 0x2097e0): the effect filter
+         (0x4017c0) and 0x401870, which repeats the same test inline; with the field set both skip the
+         entries flagged 0x400 and use those flagged 0x1000 instead. When the count drops below two,
+         0x91f80 stores 0 again. The entry turns that 1 (mov esi, 1 after cmp $2 / jb; low byte at
+         0x8cae9) into 0, the value one player has, so the code path stays the same. The PC 2.8 client
+         has no local co-op and no code that sets the field from a player count. Matches 1.47, 1.46
+         (0x8cae9) and 1.25 (0x8b0e9); skipped on 1.00. -->
+    <Metadata Title="Diablo III" Name="Local Co-op Full Effects" Note="Keeps the full effects with two or more local players. The console lowers them then, likely to keep its frame rate: expect a lower frame rate with several players." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x0048cae9" Value="00" Pattern="41 83 7c 24 10 02 72 12 e8 ?? ?? ?? ?? be 01 00 00 00 48 89 c7 e8" At="14"/>
+        </PatchList>
+    </Metadata>
+    <!-- PC camera zoom (launcher Graphics > More options > PC camera zoom, sanctuary.ini pc_camera_zoom;
+         run.py adds the entry). The PS4 archives already ship the PC camera Observer definitions and
+         wire them into GlobalSNO alongside the console ones:
+             1.47/1.46  1.25   1.00   Observer file (SNO)              FOV  Dist   Pitch
+             0x42d      0x3fc  0x37d  consoleObserver.obs (226272)     35   80.01  38.21  (console default)
+             0x42c      0x3fb  0x37c  observer.obs (1541)              35   98.00  42.21  (PC default)
+             0x42f      0x3fe  n/a    consoleObserverRetro.obs(453724) 10  280.00  38.21  (console Retro)
+             0x42e      0x3fd  n/a    observerRetro.obs (453713)       10  350.00  42.21  (PC Retro)
+             0x433      0x402  0x381  console_wide.obs (239276)        35   98.00  42.21  (console wide/co-op)
+             0x431      0x400  0x37f  wide.obs (95468)                 35  129.00  45.00  (PC wide)
+         Only two functions pick the default gameplay observer: CameraManagerGetDefaultObserver
+         (1.47/1.46 0x1efde0, 1.25 0x1e9010, 1.00 0x169890; called by CameraComponent, FixedViewController,
+         CWorldResetForRetro and CWorldLeave) and CameraManagerResetCamera (1.47/1.46 0x1efbb0,
+         1.25 0x1e8de0, 1.00 0x169634). LeftTriggerZoomComponent::Update (1.47 0x4e03db, 1.46 0x4e03fb,
+         1.25 0x4c456b, 1.00 0x3cf991) blends toward the wide observer in zoomed-out scenes and when
+         local co-op players spread apart; pointing it at the PC wide slot lets zoomed-out scenes and
+         co-op zoom out past the new 98.00 default to 129.00. The server's visibility/prefetch frustum
+         (sGetFrustum, 1.47 0x735530) already reads the PC default and PC wide slots, so enemies and
+         scenes at the screen edges activate normally. Three Metadata variants of the same name cover
+         1.47/1.46, 1.25 (2.6.1) and 1.00 (2.0.0, before Retro); the first whose signatures all match
+         is applied. -->
+    <Metadata Title="Diablo III" Name="PC Camera Zoom" Note="Uses the PC version&#x27;s default, Retro and wide camera observers (distance 98 instead of 80, pitch 42.2 deg instead of 38.2 deg)." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x005efe15" Value="2e040000" Pattern="55 48 89 e5 85 ff 75 23 e8 ?? ?? ?? ?? 48 89 c7 e8 ?? ?? ?? ?? 89 c7 e8 ?? ?? ?? ?? 85 c0 74 0b bf 2b 04 00 00 5d e9 ?? ?? ?? ?? e8 ?? ?? ?? ?? 85 c0 74 0b bf 2f 04 00 00 5d e9 ?? ?? ?? ?? bf 2d 04 00 00 5d e9 ?? ?? ?? ??" At="53"/>
+            <Line Type="bytes" Address="0x005efe20" Value="2c040000" Pattern="55 48 89 e5 85 ff 75 23 e8 ?? ?? ?? ?? 48 89 c7 e8 ?? ?? ?? ?? 89 c7 e8 ?? ?? ?? ?? 85 c0 74 0b bf 2b 04 00 00 5d e9 ?? ?? ?? ?? e8 ?? ?? ?? ?? 85 c0 74 0b bf 2f 04 00 00 5d e9 ?? ?? ?? ?? bf 2d 04 00 00 5d e9 ?? ?? ?? ??" At="64"/>
+            <Line Type="bytes" Address="0x005efbd9" Value="2e040000" Pattern="e8 ?? ?? ?? ?? 48 89 c7 e8 ?? ?? ?? ?? 89 c7 e8 ?? ?? ?? ?? 85 c0 74 07 bf 2b 04 00 00 eb 15 e8 ?? ?? ?? ?? 85 c0 74 07 bf 2f 04 00 00 eb 05 bf 2d 04 00 00 e8 ?? ?? ?? ?? 49 63 cf 4c 69" At="41"/>
+            <Line Type="bytes" Address="0x005efbe0" Value="2c040000" Pattern="e8 ?? ?? ?? ?? 48 89 c7 e8 ?? ?? ?? ?? 89 c7 e8 ?? ?? ?? ?? 85 c0 74 07 bf 2b 04 00 00 eb 15 e8 ?? ?? ?? ?? 85 c0 74 07 bf 2f 04 00 00 eb 05 bf 2d 04 00 00 e8 ?? ?? ?? ?? 49 63 cf 4c 69" At="48"/>
+            <Line Type="bytes" Address="0x008e0407" Value="31040000" Pattern="8b 83 d8 00 00 00 89 45 c8 8b 83 dc 00 00 00 89 45 cc 8b 83 e0 00 00 00 89 45 d0 e8 ?? ?? ?? ?? 85 c0 74 07 bf 34 04 00 00 eb 05 bf 33 04 00 00 e8 ?? ?? ?? ?? c4" At="44"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="PC Camera Zoom" Note="Uses the PC version&#x27;s default, Retro and wide camera observers (distance 98 instead of 80, pitch 42.2 deg instead of 38.2 deg)." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x005e9045" Value="fd030000" Pattern="55 48 89 e5 85 ff 75 23 e8 ?? ?? ?? ?? 48 89 c7 e8 ?? ?? ?? ?? 89 c7 e8 ?? ?? ?? ?? 85 c0 74 0b bf fa 03 00 00 5d e9 ?? ?? ?? ?? e8 ?? ?? ?? ?? 85 c0 74 0b bf fe 03 00 00 5d e9 ?? ?? ?? ?? bf fc 03 00 00 5d e9 ?? ?? ?? ??" At="53"/>
+            <Line Type="bytes" Address="0x005e9050" Value="fb030000" Pattern="55 48 89 e5 85 ff 75 23 e8 ?? ?? ?? ?? 48 89 c7 e8 ?? ?? ?? ?? 89 c7 e8 ?? ?? ?? ?? 85 c0 74 0b bf fa 03 00 00 5d e9 ?? ?? ?? ?? e8 ?? ?? ?? ?? 85 c0 74 0b bf fe 03 00 00 5d e9 ?? ?? ?? ?? bf fc 03 00 00 5d e9 ?? ?? ?? ??" At="64"/>
+            <Line Type="bytes" Address="0x005e8e09" Value="fd030000" Pattern="e8 ?? ?? ?? ?? 48 89 c7 e8 ?? ?? ?? ?? 89 c7 e8 ?? ?? ?? ?? 85 c0 74 07 bf fa 03 00 00 eb 15 e8 ?? ?? ?? ?? 85 c0 74 07 bf fe 03 00 00 eb 05 bf fc 03 00 00 e8 ?? ?? ?? ?? 49 63 cf 4c 69" At="41"/>
+            <Line Type="bytes" Address="0x005e8e10" Value="fb030000" Pattern="e8 ?? ?? ?? ?? 48 89 c7 e8 ?? ?? ?? ?? 89 c7 e8 ?? ?? ?? ?? 85 c0 74 07 bf fa 03 00 00 eb 15 e8 ?? ?? ?? ?? 85 c0 74 07 bf fe 03 00 00 eb 05 bf fc 03 00 00 e8 ?? ?? ?? ?? 49 63 cf 4c 69" At="48"/>
+            <Line Type="bytes" Address="0x008c4597" Value="00040000" Pattern="8b 83 d8 00 00 00 89 45 c8 8b 83 dc 00 00 00 89 45 cc 8b 83 e0 00 00 00 89 45 d0 e8 ?? ?? ?? ?? 85 c0 74 07 bf 03 04 00 00 eb 05 bf 02 04 00 00 e8 ?? ?? ?? ?? c4" At="44"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="PC Camera Zoom" Note="Uses the PC version&#x27;s default and wide camera observers (distance 98 instead of 80, pitch 42.2 deg instead of 38.2 deg)." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x005698bc" Value="7c030000" Pattern="55 48 89 e5 85 ff 75 23 e8 ?? ?? ?? ?? 48 89 c7 e8 ?? ?? ?? ?? 89 c7 e8 ?? ?? ?? ?? 85 c0 74 0b bf 7b 03 00 00 5d e9 ?? ?? ?? ?? bf 7d 03 00 00 5d e9 ?? ?? ?? ??" At="44"/>
+            <Line Type="bytes" Address="0x00569654" Value="7c030000" Pattern="e8 ?? ?? ?? ?? 48 89 c7 e8 ?? ?? ?? ?? 89 c7 e8 ?? ?? ?? ?? 85 c0 74 07 bf 7b 03 00 00 eb 05 bf 7d 03 00 00 e8 ?? ?? ?? ?? 89" At="32"/>
+            <Line Type="bytes" Address="0x007cf9b9" Value="7f030000" Pattern="c5 fa 10 83 d8 00 00 00 c5 fa 11 45 d8 c5 fa 10 83 dc 00 00 00 c5 fa 11 45 dc c5 fa 10 83 e0 00 00 00 c5 fa 11 45 e0 bf 81 03 00 00 e8 ?? ?? ?? ?? 48" At="40"/>
+        </PatchList>
+    </Metadata>
 </Patch>

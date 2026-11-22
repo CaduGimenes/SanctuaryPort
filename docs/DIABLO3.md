@@ -273,6 +273,69 @@ than clamping depth, so it does not create the border halos the stock SSAO mask 
 normals/slopes in the evaluate and denoise passes use inward differences on the 1-px border.
 Ambient occlusion off keeps the game's SSAO with its own fade.
 
+## PC render target sizes
+
+The PS4 build gives some render targets fixed sizes where the PC 2.8 client derives them from its
+settings or the screen. `pc_render_targets=1` in sanctuary.ini (launcher Graphics > More options >
+Sharper shadows and reflections; off by default, applied at start) makes `run.py` add the
+"PC Render Targets" patches of `patches/Diablo_III.xml`, each found by its signature. They raise a
+size to the PC's where the PC's is larger and never set one below the console's own:
+
+- Shadow map 2048x2048 instead of 1536x1536 (1.47 eboot `0x128124`; 1.00 `0xcd851`): the shadow
+  setup picks 1536 when the platform query returns 4, always on PS4, while its shader is already
+  given 2048 at the highest `ShadowQuality`; the PC uses 2048 there.
+- `WaterSimRT` and `InteractiveFogRT` (1.47 `0x128251`, `0x128306`; 1.00 `0xcdaad`, `0xcdb00`; one
+  entry, so an eboot.bin with only one of the two signatures keeps both at 1408) and `PMA RT`
+  (1.47 `0xf74a1`, absent in 1.00) at 2048 instead of 1408 and 1728, above 1280 pixels wide. The PC
+  creates water and fog at 1024, or 2048 above that width. For `PMA RT` it starts from the same two
+  sizes, doubles them when its hardware class is above 4 and the setting at offset 4 is 0, and caps
+  the result at 2048 unless a renderer capability bit is set; what sets that bit, and the hardware
+  class of a current PC at its highest settings, was not established, so the entry writes 2048 and
+  only above 1280 pixels wide. Up to that width the console's sizes stay.
+- Reflection colour and depth (`0xf6fc6`, `0xf750d`) at half the render size instead of 800x450,
+  where that half is at least 800x450 and larger in one dimension (1080p and up, 1920x1200,
+  2560x1600 and the ultrawide sizes); 480p, 720p, 900p and 1280x800 keep 800x450. On a PS4 Pro
+  (`SANCTUARY_NEO=1`) the game renders 3840x2160 whatever render resolution is chosen (the
+  resolution patches replace only the base PS4's size), so the option counts 3840x2160 there. The
+  1.00 disc executable (`0x97060`) already creates reflections at half the render size, so the
+  reflection and PMA entries are skipped there.
+
+Each part is its own patch; one whose signature is not found in an `eboot.bin` is skipped alone and
+named in the log while the game keeps that target's console size. A render resolution without a
+Diablo III resolution patch keeps the 800x450 reflection when no matching entry exists.
+
+## Local co-op full effects
+
+When a second local player joins, the PS4 build sets a low-effects field of its graphics settings
+(offset `0x60`, setter `0x2097f0`, getter `0x2097e0`) to 1 (`0x8ca80`), and clears it when one
+player is left (`0x91f80`). Both the effect filter (`0x4017c0`) and `0x401870` skip entries flagged
+`0x400` and take those flagged `0x1000` while it is set. `coop_full_effects=1` in sanctuary.ini
+(launcher Graphics > More options > Full effects in local co-op; off by default, applied at start) makes
+`run.py` add `Local Co-op Full Effects`, which writes 0 instead of 1 at that store (1.47/1.46
+`0x8cae9`, 1.25 `0x8b0e9`), keeping the one-player effects (at a possible FPS cost with several
+players). Skipped on 1.00.
+
+## PC camera zoom
+
+The PS4 archives ship both the console and PC `Observer` definitions (`ClientCommon.cpk` /
+`Patch2_6_0.cpk`), and `GlobalSNO` already maps both sets:
+
+- Default gameplay observer: `consoleObserver.obs` (FOV 35°, distance 80.01, pitch 38.21°) vs PC
+  `observer.obs` (FOV 35°, distance 98.00, pitch 42.21°).
+- Retro (The Darkening of Tristram): `consoleObserverRetro.obs` (FOV 10°, distance 280.00, pitch
+  38.21°) vs PC `observerRetro.obs` (FOV 10°, distance 350.00, pitch 42.21°).
+- Wide / zoomed-out scenes and local co-op spread: `console_wide.obs` (distance 98.00, pitch
+  42.21°) vs PC `wide.obs` (distance 129.00, pitch 45.00°).
+
+`pc_camera_zoom=1` in sanctuary.ini (launcher Graphics > More options > PC camera zoom; off by default,
+applied at start) makes `run.py` add `PC Camera Zoom`, which switches the `GlobalSNOGet` slot
+immediates in `CameraManagerGetDefaultObserver` (`0x1efde0`), `CameraManagerResetCamera`
+(`0x1efbb0`) and `LeftTriggerZoomComponent::Update` (`0x4e03db`) to the PC slots (`0x42c`, `0x42e`,
+`0x431` in 1.47/1.46; `0x3fb`, `0x3fd`, `0x400` in 1.25; `0x37c`, `0x37f` in 1.00, which predates
+Retro). The server's visibility/prefetch frustum (`sGetFrustum`, 1.47 `0x735530`) already uses the
+PC default and wide slots, and local co-op clamping (`LocalPlayerClamping_Logic_UpdateCamera`,
+`0x5cb10`) projects against the active camera. Dedicated menu and boss observers are unchanged.
+
 ## Xbox button icons
 
 The PS4 game ships Blizzard's Xbox One art unused in `CPKs/ClientCommon.cpk`: the button atlas

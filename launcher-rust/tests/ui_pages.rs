@@ -54,6 +54,39 @@ fn graphics_rows_change_the_right_keys() {
 }
 
 #[test]
+fn graphics_more_options_pc_switches_toggle_their_ini_keys() {
+    use sanctuaryport_launcher::ui::pages::graphics::MORE_OPTIONS;
+    let dir = tempfile::tempdir().unwrap();
+    let mut state = state(dir.path());
+    open(&mut state, Page::Graphics);
+    state.open_sections.push(MORE_OPTIONS);
+    let _ = app::update(
+        &mut state,
+        Message::Tick(iced::time::Instant::now() + std::time::Duration::from_secs(1)),
+    );
+    for (key, label) in [
+        ("pc_render_targets", "Sharper shadows and reflections  ↻"),
+        ("coop_full_effects", "Full effects in local co-op  ↻"),
+        ("pc_camera_zoom", "PC camera zoom  ↻"),
+    ] {
+        assert!(!state.store.flag(key), "{key} starts off");
+        let clicked: Vec<Message> = {
+            let mut ui = iced_test::simulator::Simulator::with_size(
+                iced::Settings::default(),
+                iced::Size::new(1280.0, 4000.0),
+                app::view(&state),
+            );
+            ui.click(label).unwrap();
+            ui.into_messages().collect()
+        };
+        for message in clicked {
+            let _ = app::update(&mut state, message);
+        }
+        assert!(state.store.flag(key), "{key} toggled on");
+    }
+}
+
+#[test]
 fn the_smooth_motion_switch_picks_its_patch() {
     // GitHub #24: the experimental patch is ticked on the Graphics page, below the frame rate.
     use sanctuaryport_launcher::ui::pages::graphics::SMOOTH_PATCH;

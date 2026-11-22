@@ -276,6 +276,33 @@ pub fn view(state: &State) -> Element<'_, Message> {
                 &restart("Anisotropic filtering"),
                 select("anisotropy", ANISOTROPY, &ini("anisotropy"), lang),
                 Some(&hint("Floors and walls stay sharp in the distance.")),
+            ))
+            .push(checkbox(
+                state.rtl,
+                "pc_render_targets",
+                &restart("Sharper shadows and reflections"),
+                state.store.flag("pc_render_targets"),
+                Some(&hint(
+                    "The PC game's sizes for shadows, reflections and water.",
+                )),
+            ))
+            .push(checkbox(
+                state.rtl,
+                "coop_full_effects",
+                &restart("Full effects in local co-op"),
+                state.store.flag("coop_full_effects"),
+                Some(&hint(
+                    "The game lowers effects for 2+ local players; this may cost FPS.",
+                )),
+            ))
+            .push(checkbox(
+                state.rtl,
+                "pc_camera_zoom",
+                &restart("PC camera zoom"),
+                state.store.flag("pc_camera_zoom"),
+                Some(&hint(
+                    "Pulls the gameplay camera back to the PC version's distance and angle.",
+                )),
             ));
     }
     page.into()
