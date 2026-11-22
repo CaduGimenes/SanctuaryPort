@@ -336,6 +336,7 @@ America) whose pack is missing with the first one the dump has, Portuguese first
 | Variable | Effect |
 |---|---|
 | `SANCTUARY_FILE_TRACE=1` | log every guest open / stat / read / pread |
+| `SANCTUARY_NET_TRACE=1` | with `SANCTUARY_LAN=1`: log every socket call and the first 400 packets (`Net:`) |
 | `SANCTUARY_TRACE_CALLS=0xA,0xB` | log calls of guest functions that start with `push %rbp` (eboot image offsets) |
 | `SANCTUARY_TRACE_POINTS=0xA,0xB` | log registers at any guest instruction |
 | `SANCTUARY_TRACE_LIMIT=N` | hits logged per call/point (default 12) |
@@ -447,5 +448,6 @@ patches (the cheats) are best left off too.
 
 Between machines, each one's firewall must let in UDP 1200 (discovery) and 3074 (the game).
 
-Not done yet: the `Net:` log is verbose (every socket call and the first 400 packets) and may be
-trimmed once LAN play has seen more testing.
+The log stays short (`Net:`): the LAN address, refused addresses, the first contact with each
+destination, failed binds, and anything the game asks for that cannot be answered. To follow a
+join that fails, `SANCTUARY_NET_TRACE=1` also logs every socket call and the first 400 packets.

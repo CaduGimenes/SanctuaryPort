@@ -15,8 +15,9 @@
  * SANCTUARY_LAN_IP=a.b.c.d picks the address to report (default: the machine's LAN IPv4).
  * Testing on one machine: SANCTUARY_LAN_IP=127.0.0.2, 127.0.0.3, ... gives each instance its own
  * loopback address; sockets bind to it and broadcasts go to 127.0.0.2..127.0.0.9.
- * Socket calls, refusals and the first 400 packets are logged with "Net:", so a LAN problem can be
- * read from user/last_run.log. */
+ * Logged with "Net:" (user/last_run.log): the LAN address, refused addresses, the first contact with
+ * each destination, and anything the game asks for that cannot be answered. SANCTUARY_NET_TRACE=1
+ * also logs every socket call and the first 400 packets, to follow a join that fails. */
 #define _GNU_SOURCE
 #include "runtime.h"
 #include <stdio.h>
@@ -72,6 +73,9 @@ static int lan_enabled(void) {
     if (v<0) { const char *e=getenv("SANCTUARY_LAN"); v=e && e[0]=='1'; if (v) puts("Net: LAN mode on (SANCTUARY_LAN=1)"); }
     return v;
 }
+
+static int net_trace(void) { static int v=-1; if (v<0) { const char *e=getenv("SANCTUARY_NET_TRACE"); v=e && e[0]=='1'; } return v; }
+#define TRACE(...) do { if (net_trace()) printf(__VA_ARGS__); } while (0)
 
 static int32_t guest_net_errno(int e) {
 #ifdef _WIN32
@@ -304,15 +308,15 @@ static ABI int32_t net_socket(const char *name, int32_t family, int32_t type, in
     }
 #endif
     nonblocking[slot(s)]=0;
-    printf("Net: socket '%s' type %d proto %d -> %d\n",name,type,protocol,(int)s);
+    TRACE("Net: socket '%s' type %d proto %d -> %d\n",name,type,protocol,(int)s);
     return (int32_t)s;
 }
 static ABI int32_t net_close(int32_t s) {
-    printf("Net: close %d\n",s);
+    TRACE("Net: close %d\n",s);
     return host_close((HostSocket)s)<0 ? fail(host_error()) : 0;
 }
 static ABI int32_t net_abort(int32_t s, int32_t flags) {
-    printf("Net: abort %d flags %d\n",s,flags);
+    TRACE("Net: abort %d flags %d\n",s,flags);
 #ifdef _WIN32
     shutdown((HostSocket)s,SD_BOTH);
 #else
@@ -338,7 +342,8 @@ static ABI int32_t net_bind(int32_t s, const void *addr, uint32_t size) {
     if (a.sin_addr.s_addr==INADDR_ANY && loopback_mode()) a.sin_addr=lan_ip;
     int r=bind((HostSocket)s,(struct sockaddr *)&a,sizeof(a));
     int e=r<0 ? host_error() : 0;
-    printf("Net: bind %d %s -> %s\n",s,addr_text(&a,t,sizeof(t)),r<0 ? host_error_text(e) : "ok");
+    if (r<0) printf("Net: bind %d %s failed: %s\n",s,addr_text(&a,t,sizeof(t)),host_error_text(e));
+    else TRACE("Net: bind %d %s -> ok\n",s,addr_text(&a,t,sizeof(t)));
     return r<0 ? fail(e) : 0;
 }
 static ABI int32_t net_connect(int32_t s, const void *addr, uint32_t size) {
@@ -351,7 +356,7 @@ static ABI int32_t net_connect(int32_t s, const void *addr, uint32_t size) {
     if (loopback_mode()) bind_local((HostSocket)s);
     int r=connect((HostSocket)s,(struct sockaddr *)&a,sizeof(a));
     int e=r<0 ? host_error() : 0;
-    printf("Net: connect %d %s -> %s\n",s,addr_text(&a,t,sizeof(t)),r<0 ? host_error_text(e) : "ok");
+    TRACE("Net: connect %d %s -> %s\n",s,addr_text(&a,t,sizeof(t)),r<0 ? host_error_text(e) : "ok");
     if (r<0) {
 #ifdef _WIN32
         if (e==WSAEWOULDBLOCK) return fail_guest(G_EINPROGRESS); /* BSD: a connect in progress */
@@ -361,7 +366,7 @@ static ABI int32_t net_connect(int32_t s, const void *addr, uint32_t size) {
     return 0;
 }
 static ABI int32_t net_listen(int32_t s, int32_t backlog) {
-    printf("Net: listen %d\n",s);
+    TRACE("Net: listen %d\n",s);
     return listen((HostSocket)s,backlog)<0 ? fail(host_error()) : 0;
 }
 static ABI int32_t net_accept(int32_t s, void *addr, uint32_t *size) {
@@ -385,7 +390,7 @@ static ABI int32_t net_accept(int32_t s, void *addr, uint32_t *size) {
         return fail_guest(G_ECONNABORTED);
     }
     to_guest_addr(&a,addr,size);
-    printf("Net: accept %d from %s -> %d\n",s,addr_text(&a,t,sizeof(t)),(int)fd);
+    TRACE("Net: accept %d from %s -> %d\n",s,addr_text(&a,t,sizeof(t)),(int)fd);
     return (int32_t)fd;
 }
 static int host_flags(int32_t flags) {
@@ -416,7 +421,7 @@ static void dontwait_end(HostSocket s, int toggled) {
 #endif
 }
 static unsigned traffic_log;
-static int log_traffic(void) { return __atomic_add_fetch(&traffic_log,1,__ATOMIC_RELAXED)<=400; }
+static int log_traffic(void) { return net_trace() && __atomic_add_fetch(&traffic_log,1,__ATOMIC_RELAXED)<=400; }
 static ABI int64_t net_send(int32_t s, const void *data, uint64_t size, int32_t flags) {
     int toggled=dontwait_begin((HostSocket)s,flags);
     int64_t r=send((HostSocket)s,data,(int)size,host_flags(flags));
@@ -476,7 +481,7 @@ static ABI int64_t net_recvfrom(int32_t s, void *data, uint64_t size, int32_t fl
     return r;
 }
 static ABI int32_t net_shutdown(int32_t s, int32_t how) {
-    printf("Net: shutdown %d %d\n",s,how);
+    TRACE("Net: shutdown %d %d\n",s,how);
     return shutdown((HostSocket)s,how)<0 ? fail(host_error()) : 0; /* 0/1/2 on both */
 }
 static ABI int32_t net_getsockname(int32_t s, void *addr, uint32_t *size) {
@@ -536,12 +541,12 @@ static ABI int32_t net_setsockopt(int32_t s, int32_t level, int32_t name, const 
     if (level==0xffff && name==0x1200) { /* SO_NBIO */
         int on=value && size>=4 && *(const int32_t *)value;
         set_nonblocking((HostSocket)s,on);
-        printf("Net: setsockopt %d NBIO %d\n",s,on);
+        TRACE("Net: setsockopt %d NBIO %d\n",s,on);
         return 0;
     }
     int hl,hn;
     if (map_option(level,name,&hl,&hn)<0) {
-        printf("Net: setsockopt %d level 0x%x name 0x%x ignored\n",s,level,name);
+        TRACE("Net: setsockopt %d level 0x%x name 0x%x ignored\n",s,level,name);
         return 0;
     }
     int r;
@@ -562,7 +567,7 @@ static ABI int32_t net_setsockopt(int32_t s, int32_t level, int32_t name, const 
         r=setsockopt((HostSocket)s,hl,hn,value,(socklen_t)size);
     }
     int e=r<0 ? host_error() : 0;
-    printf("Net: setsockopt %d level 0x%x name 0x%x -> %s\n",s,level,name,r<0 ? host_error_text(e) : "ok");
+    TRACE("Net: setsockopt %d level 0x%x name 0x%x -> %s\n",s,level,name,r<0 ? host_error_text(e) : "ok");
     return r<0 ? fail(e) : 0;
 }
 static ABI int32_t net_getsockopt(int32_t s, int32_t level, int32_t name, void *value, uint32_t *size) {
@@ -622,11 +627,11 @@ static ABI int32_t net_epoll_create(const char *name, int32_t flags) {
     if (i<MAX_EPOLL) { memset(&epolls[i],0,sizeof(Epoll)); epolls[i].used=1; }
     pthread_mutex_unlock(&epoll_lock);
     if (i==MAX_EPOLL) return fail_guest(G_EMFILE);
-    printf("Net: epoll '%s' -> %d\n",name ? name : "",EPOLL_BASE+i);
+    TRACE("Net: epoll '%s' -> %d\n",name ? name : "",EPOLL_BASE+i);
     return EPOLL_BASE+i;
 }
 static ABI int32_t net_epoll_destroy(int32_t eid) {
-    printf("Net: epoll destroy %d\n",eid);
+    TRACE("Net: epoll destroy %d\n",eid);
     pthread_mutex_lock(&epoll_lock);
     Epoll *e=epoll_get(eid);
     if (e) e->used=0;
@@ -651,7 +656,7 @@ static ABI int32_t net_epoll_control(int32_t eid, int32_t op, int32_t id, const 
         } else r=fail_guest(G_EINVAL);
     }
     pthread_mutex_unlock(&epoll_lock);
-    printf("Net: epoll %d op %d socket %d events 0x%x -> %s\n",eid,op,id,event ? event->events : 0,r ? "error" : "ok");
+    TRACE("Net: epoll %d op %d socket %d events 0x%x -> %s\n",eid,op,id,event ? event->events : 0,r ? "error" : "ok");
     return r;
 }
 static ABI int32_t net_epoll_wait(int32_t eid, GuestEpollEvent *events, int32_t max, int32_t timeout_us) {
@@ -700,11 +705,11 @@ static ABI int32_t net_epoll_create(const char *name, int32_t flags) {
     pthread_mutex_lock(&epoll_lock);
     if (!epoll_data[fd]) epoll_data[fd]=calloc(1,sizeof(EpollData));
     pthread_mutex_unlock(&epoll_lock);
-    printf("Net: epoll '%s' -> %d\n",name ? name : "",fd);
+    TRACE("Net: epoll '%s' -> %d\n",name ? name : "",fd);
     return fd;
 }
 static ABI int32_t net_epoll_destroy(int32_t eid) {
-    printf("Net: epoll destroy %d\n",eid);
+    TRACE("Net: epoll destroy %d\n",eid);
     return close(eid)<0 ? fail(errno) : 0;
 }
 static ABI int32_t net_epoll_control(int32_t eid, int32_t op, int32_t id, const GuestEpollEvent *event) {
@@ -715,7 +720,7 @@ static ABI int32_t net_epoll_control(int32_t eid, int32_t op, int32_t id, const 
     int host_op=op==1 ? EPOLL_CTL_ADD : op==2 ? EPOLL_CTL_MOD : op==3 ? EPOLL_CTL_DEL : -1;
     if (host_op<0) return fail_guest(G_EINVAL);
     int r=epoll_ctl(eid,host_op,id,&e);
-    printf("Net: epoll %d op %d socket %d events 0x%x -> %s\n",eid,op,id,event ? event->events : 0,r<0 ? strerror(errno) : "ok");
+    TRACE("Net: epoll %d op %d socket %d events 0x%x -> %s\n",eid,op,id,event ? event->events : 0,r<0 ? strerror(errno) : "ok");
     return r<0 ? fail(errno) : 0;
 }
 static ABI int32_t net_epoll_wait(int32_t eid, GuestEpollEvent *events, int32_t max, int32_t timeout_us) {
