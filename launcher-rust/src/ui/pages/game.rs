@@ -36,6 +36,9 @@ pub const LANGUAGE_NOTE: &str = "The language of the game's text and speech, on 
 /// The note under the Player name row; the translation tables key on this text.
 pub const PLAYER_NAME_NOTE: &str = "The name the game shows for you, as a PS4 user name: up to 16 characters, read when the game starts. Empty: Player.";
 
+/// The note under Game > Player > LAN play (experimental); the translation tables key on this text.
+pub const LAN_PLAY_NOTE: &str = "The game's own LAN Play mode (main menu, R3: Network Settings): players on the same local network find each other with Find Game. Nothing goes online and no router port is opened. Read when the game starts.";
+
 /// The Mystic patch (GitHub #79): Myriam joins the account in Act V again, not in Act I.
 pub const MYSTIC_PATCH: &str = "Mystic only from Act V (story order)";
 /// The note under the Mystic check box; the translation tables key on this text.
@@ -462,6 +465,13 @@ pub fn view(state: &State) -> Element<'_, Message> {
                 .style(theme::text_input_dark)
                 .into(),
             Some(&hint(PLAYER_NAME_NOTE)),
+        ),
+        checkbox(
+            state.rtl,
+            "lan_play",
+            &tr(lang, "LAN play (experimental)"),
+            state.store.flag("lan_play"),
+            Some(&hint(LAN_PLAY_NOTE)),
         ),
         section(state.rtl, &tr(lang, "Language")),
         row(
