@@ -197,7 +197,8 @@ SANCTUARY_GAME_DIR=~/Games/PS4/CUSA00243 SANCTUARY_PATCH_DIR=~/Games/PS4/CUSA002
 - **Player profiles:** launcher → *Game* → *Players*. Each profile has its own saves and name, and
   you can make as many as you like. Each controller the launcher has seen (and the keyboard) gets
   the profile it plays, or *Ask*: that player picks a profile (or makes a new one) in the game when
-  their controller joins. Players join in the order they press a button, the first being player 1,
+  their controller joins (with only one profile, nobody is asked). Players join in the order they
+  press a button, the first being player 1,
   so anyone can play solo with their own heroes, and a missing player is simply not there.
 - **Xbox button icons:** launcher → *Controls* → *Gamepad* → *In-game button icons* → *Xbox* (or
   *Match my controller*). Your game files are never changed.

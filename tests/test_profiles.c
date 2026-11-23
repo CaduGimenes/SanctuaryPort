@@ -189,6 +189,18 @@ int main(void) {
     runtime_profile_prompts();
     assert(runtime_profile_seat_ready(1) && !strcmp(dir(1),"12") && !strcmp(name(1),"Tyrael"));
 
+    /* One profile only: a player who would be asked takes it; a second one (it is seated) gets
+     * the list, to make a new profile. */
+    snprintf(path,sizeof path,"%s/profiles.txt",user_dir);
+    f=fopen(path,"wb"); assert(f); fputs("1\tStavros\n",f); fclose(f);
+    pads_env("");
+    reset(); window=1; seated=1u<<1; choice_open=0;
+    runtime_profile_prompts();
+    assert(!choice_open && runtime_profile_seat_ready(1) && !strcmp(name(1),"Stavros"));
+    seated=(1u<<1)|(1u<<2);
+    runtime_profile_prompts();
+    assert(choice_open && choice_count==1 && !strcmp(choice_items[0],"New profile"));
+
     char command[600]; snprintf(command,sizeof command,"rm -rf '%s'",user_dir);
     assert(!system(command));
     puts("profiles test: ok");

@@ -271,6 +271,7 @@ static void open_list(int seat) {
     static char names[MAX_PROFILES][NAME_SIZE];
     int n=0;
     pthread_mutex_lock(&lock);
+    const int total=profile_count;
     for (int i=0;i<profile_count && n<MAX_PROFILES;++i) {
         if (seated_elsewhere(profiles[i].id,0)) continue; /* seat 0: none, so every seated one */
         copy_id(prompt.ids[n],profiles[i].id);
@@ -281,6 +282,12 @@ static void open_list(int seat) {
     items[n]=NEW_PROFILE;
     char title[64]; snprintf(title,sizeof(title),"Player %d: choose a profile",seat);
     prompt.seat=seat; prompt.count=n;
+    /* The only profile there is, and free: nothing to choose (a lone player is not asked). */
+    if (total==1 && n==1) {
+        printf("Runtime: profiles: seat %d takes the only profile\n",seat);
+        resolve(seat,prompt.ids[0]);
+        return;
+    }
     /* SANCTUARY_PROFILE_CHOICE (development, scripted runs): answers the list without showing
      * it, as SANCTUARY_IME_TEXT does the name box: an item's number, or "new:<name>". */
     const char *scripted=getenv("SANCTUARY_PROFILE_CHOICE");

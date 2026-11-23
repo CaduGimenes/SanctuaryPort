@@ -250,6 +250,7 @@ serials may be taken for each other, which the launcher says.
   "Player N") from a list only that controller and the keyboard answer. The other players keep
   playing. Circle gives the seat back. A game dialog (save list, name box) takes the overlay first
   and the list comes back after it. The seat is free again once its controller disconnects.
+  With a single profile, free, the seat takes it without a list (a lone player is not asked).
 
 Without `SANCTUARY_PAD_PROFILES` (`run.sh`, scripted runs) seat n is folder n, and player 1 is the
 first controller SDL lists, as before profiles.
