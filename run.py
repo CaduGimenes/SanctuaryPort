@@ -436,9 +436,15 @@ def main():
                 names.append(graphics_options.FIXED_SCALE_PATCH)
             # Graphics > Game MSAA: the scene's sample count, also from sanctuary.ini alone.
             names = [n for n in names if not n.startswith(graphics_options.MSAA_PREFIX)]
-            msaa = graphics_options.msaa(graphics_options.read_ini(env['SANCTUARY_CONFIG'])) if diablo3 else ''
+            ini = graphics_options.read_ini(env['SANCTUARY_CONFIG']) if diablo3 else {}
+            msaa = graphics_options.msaa(ini) if diablo3 else ''
             if graphics_options.msaa_patch(msaa):
                 names.append(graphics_options.msaa_patch(msaa))
+            # Diablo III: Graphics > Effects (PC render targets, local co-op full effects, PC camera zoom).
+            names = graphics_options.render_target_names(
+                names, ini, graphics['render_resolution'], env.get('SANCTUARY_NEO') == '1')
+            names = graphics_options.coop_effects_names(names, ini)
+            names = graphics_options.pc_camera_zoom_names(names, ini)
             available = patches.available_patches(patch_xml, profile[2])
             frame_rates = any(n.startswith(graphics_options.FPS_PREFIX) for n in available)
             # Diablo III's 200 FPS: the game's second limiter, which follows the limiter chosen above.

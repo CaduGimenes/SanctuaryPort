@@ -42,6 +42,16 @@ FIXED_SCALE_PATCH = 'Dynamic Resolution - Off'
 # Diablo III: sanctuary.ini msaa picks the scene's sample count ('' = the game's own 2, as before).
 MSAA_PREFIX = 'Game MSAA'
 MSAA_CHOICES = ('', '2', '4')
+# Diablo III: sanctuary.ini pc_render_targets gives the console's fixed render targets the PC game's sizes.
+RENDER_TARGETS_PREFIX = 'PC Render Targets'
+# The native render size of a PS4 Pro (SANCTUARY_NEO=1): the renderer picks 3840x2160 instead of 1920x1080.
+PRO_SIZE = (3840, 2160)
+# Diablo III's reflection colour and depth size on the console, the same at every render size.
+CONSOLE_REFLECTION = (800, 450)
+# Diablo III: sanctuary.ini coop_full_effects keeps the full effects with two or more local players.
+COOP_EFFECTS = 'Local Co-op Full Effects'
+# Diablo III: sanctuary.ini pc_camera_zoom uses the PC version's default, Retro and wide camera observers.
+PC_CAMERA_ZOOM = 'PC Camera Zoom'
 
 
 def read_ini(path):
@@ -283,6 +293,57 @@ def msaa_environment(choice):
     samples only smooth edges when the GPU core averages them (SANCTUARY_MSAA_RESOLVE, sanctuary_msaa.h).
     The game's own choice keeps that copy as it is."""
     return {'SANCTUARY_MSAA_RESOLVE': '1'} if choice else {}
+
+
+def reflection_size(width, height):
+    """The reflection size the option gives a render size: half of it, as the PC, where that is at least the
+    console's fixed 800x450 in both dimensions and larger in one; None otherwise (the console's size stays,
+    so the option never makes a target smaller than the console's own)."""
+    half = (width // 2, height // 2)
+    if half[0] >= CONSOLE_REFLECTION[0] and half[1] >= CONSOLE_REFLECTION[1] and half != CONSOLE_REFLECTION:
+        return half
+    return None
+
+
+def render_target_names(names, ini, resolution, pro=False):
+    """The patch list with the PC Render Targets patches for sanctuary.ini pc_render_targets=1, and without
+    them otherwise (a list that names them without the option loses them). `resolution` is the render
+    resolution; on a PS4 Pro (`pro`, SANCTUARY_NEO=1) the game renders 3840x2160 whatever it is (the
+    resolution patches rewrite only the base PS4's size), so the sizes follow 3840x2160. The PC sizes the
+    shadow map 2048 at its highest quality and the water, fog and PMA targets 2048 above 1280 pixels wide (up to it the console's
+    sizes stay), and the reflection at half the render size (reflection_size). Each part is its own patch, so
+    one whose signature an eboot.bin lacks is skipped alone; water and fog are one patch, so an eboot.bin
+    with only one of their signatures keeps both at the console's size."""
+    names = [n for n in names if not n.startswith(RENDER_TARGETS_PREFIX)]
+    if ini.get('pc_render_targets') != '1':
+        return names
+    if pro:
+        width, height = PRO_SIZE
+    else:
+        width, height = resolution_size(resolution) or SIZES['native']
+    names.append(f'{RENDER_TARGETS_PREFIX} - Shadow Map 2048')
+    if width > 1280:
+        names += [f'{RENDER_TARGETS_PREFIX} - Water and Fog 2048', f'{RENDER_TARGETS_PREFIX} - PMA 2048']
+    reflection = reflection_size(width, height)
+    if reflection:
+        names.append(f'{RENDER_TARGETS_PREFIX} - Reflection {reflection[0]}x{reflection[1]}')
+    return names
+
+
+def coop_effects_names(names, ini):
+    """The patch list with the Local Co-op Full Effects patch only for sanctuary.ini coop_full_effects=1
+    (a list that names it without the option loses it): without it the game lowers its effects while
+    two or more local players are in."""
+    names = [n for n in names if n != COOP_EFFECTS]
+    return names + [COOP_EFFECTS] if ini.get('coop_full_effects') == '1' else names
+
+
+def pc_camera_zoom_names(names, ini):
+    """The patch list with the PC Camera Zoom patch only for sanctuary.ini pc_camera_zoom=1
+    (a list that names it without the option loses it): without it the console keeps its closer
+    default, Retro and wide camera observers."""
+    names = [n for n in names if n != PC_CAMERA_ZOOM]
+    return names + [PC_CAMERA_ZOOM] if ini.get('pc_camera_zoom') == '1' else names
 
 
 def restrict_to_available(names, available):

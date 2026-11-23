@@ -2,9 +2,11 @@ import json
 import re
 import tempfile
 import unittest
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import paths  # noqa: F401 (puts scripts/ on sys.path)
+import game_profiles
 import graphics_options as g
 
 
@@ -324,6 +326,82 @@ class GameMsaaTest(unittest.TestCase):
         xml = (Path(__file__).resolve().parent.parent / 'patches' / 'Diablo_III.xml').read_text(encoding='utf-8')
         for value in ('4',):
             self.assertEqual(xml.count(f'Name="{g.msaa_patch(value)}"'), 1, value)
+
+
+class RenderTargetsTest(unittest.TestCase):
+    """Diablo III's Graphics > Effects > Sharper shadows and reflections (sanctuary.ini pc_render_targets)."""
+
+    ON = {'pc_render_targets': '1'}
+    PREFIX = 'PC Render Targets - '
+
+    def test_the_option_decides_the_patches(self):
+        chosen = ['Event: Darkening of Tristram', 'PC Render Targets - Shadow Map 2048']
+        for ini in ({}, {'pc_render_targets': '0'}):
+            self.assertEqual(g.render_target_names(chosen, ini, '4K', pro=True), ['Event: Darkening of Tristram'])
+        chosen.append('PC Render Targets - Reflection 1280x720')
+        self.assertEqual(g.render_target_names(chosen, self.ON, 'native'),
+                         ['Event: Darkening of Tristram', 'PC Render Targets - Shadow Map 2048',
+                          'PC Render Targets - Water and Fog 2048', 'PC Render Targets - PMA 2048',
+                          'PC Render Targets - Reflection 960x540'])
+
+    def test_the_parts_follow_the_render_size(self):
+        def names(size, pro=False):
+            return [n[len(self.PREFIX):] for n in g.render_target_names([], self.ON, size, pro)]
+        self.assertEqual(names('900p'), ['Shadow Map 2048', 'Water and Fog 2048', 'PMA 2048'])
+        self.assertEqual(names('720p'), ['Shadow Map 2048'])
+        self.assertEqual(names('1280x800'), ['Shadow Map 2048'])
+        for size in ('native', '720p', '1440p', '4K', '3440x1440'):
+            self.assertEqual(names(size, pro=True),
+                             ['Shadow Map 2048', 'Water and Fog 2048', 'PMA 2048', 'Reflection 1920x1080'], size)
+        self.assertEqual(names('1440p')[-1], 'Reflection 1280x720')
+
+    def test_no_target_goes_below_the_console_size(self):
+        sizes = [g.resolution_size(name) for name in g.resolutions()] + [g.PRO_SIZE, (1366, 768), (1600, 1000)]
+        for width, height in sizes:
+            names = g.render_target_names([], self.ON, f'{width}x{height}')
+            self.assertEqual(names[0], self.PREFIX + 'Shadow Map 2048')
+            self.assertEqual(self.PREFIX + 'PMA 2048' in names, width > 1280, (width, height))
+            self.assertEqual(self.PREFIX + 'Water and Fog 2048' in names, width > 1280, (width, height))
+            reflections = [n for n in names if n.startswith(self.PREFIX + 'Reflection ')]
+            half = (width // 2, height // 2)
+            larger = half[0] >= 800 and half[1] >= 450 and half != (800, 450)
+            self.assertEqual(reflections, [f'{self.PREFIX}Reflection {half[0]}x{half[1]}'] if larger else [],
+                             (width, height))
+
+    def test_the_file_has_exactly_the_entries_that_can_be_chosen(self):
+        root = ET.parse(paths.ROOT / 'patches' / 'Diablo_III.xml').getroot()
+        in_file = [m.get('Name') for m in root.iter('Metadata') if m.get('Name').startswith(self.PREFIX)]
+        sizes = game_profiles.DIABLO3['env']['SANCTUARY_ALLOWED_RESOLUTIONS'].split(';')
+        chosen = {n for size in sizes for n in g.render_target_names([], self.ON, size)}
+        chosen |= set(g.render_target_names([], self.ON, 'native', pro=True))
+        self.assertEqual(sorted(set(in_file)), sorted(chosen))
+        twice = sorted({n for n in in_file if in_file.count(n) > 1})
+        self.assertEqual(twice, [self.PREFIX + 'Shadow Map 2048', self.PREFIX + 'Water and Fog 2048'])
+        self.assertTrue(all(in_file.count(n) <= 2 for n in in_file))
+
+
+class CoopEffectsTest(unittest.TestCase):
+    """Diablo III's Graphics > Effects > Full effects in local co-op (sanctuary.ini coop_full_effects)."""
+
+    def test_the_option_decides_the_patch(self):
+        chosen = ['Event: Darkening of Tristram', g.COOP_EFFECTS]
+        for ini in ({}, {'coop_full_effects': '0'}):
+            self.assertEqual(g.coop_effects_names(chosen, ini), ['Event: Darkening of Tristram'])
+        self.assertEqual(g.coop_effects_names(chosen, {'coop_full_effects': '1'}),
+                         ['Event: Darkening of Tristram', 'Local Co-op Full Effects'])
+        self.assertEqual(g.coop_effects_names([], {'coop_full_effects': '1'}), ['Local Co-op Full Effects'])
+
+
+class PcCameraZoomTest(unittest.TestCase):
+    """Diablo III's Graphics > Effects > PC camera zoom (sanctuary.ini pc_camera_zoom)."""
+
+    def test_the_option_decides_the_patch(self):
+        chosen = ['Event: Darkening of Tristram', g.PC_CAMERA_ZOOM]
+        for ini in ({}, {'pc_camera_zoom': '0'}):
+            self.assertEqual(g.pc_camera_zoom_names(chosen, ini), ['Event: Darkening of Tristram'])
+        self.assertEqual(g.pc_camera_zoom_names(chosen, {'pc_camera_zoom': '1'}),
+                         ['Event: Darkening of Tristram', 'PC Camera Zoom'])
+        self.assertEqual(g.pc_camera_zoom_names([], {'pc_camera_zoom': '1'}), ['PC Camera Zoom'])
 
 
 class WindowSizeTest(unittest.TestCase):

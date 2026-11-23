@@ -246,13 +246,52 @@ class Diablo3PatchTests(unittest.TestCase):
                               '1280x800', '1920x1200', '2560x1600')}
         expected |= {f'{graphics_options.LIMITER_PREFIX} - {n}' for n in ('30 FPS', '120 FPS', 'Unlimited')}
         expected.add(f'{graphics_options.MSAA_PREFIX} - 4x')
-        expected |= self.OFFLINE_NAMES | self.CHEATS | {self.SMOOTH, self.MYSTIC, graphics_options.FIXED_SCALE_PATCH,
-                                                        graphics_options.FOREGROUND_CAP_PATCH}
+        expected |= {f'{graphics_options.RENDER_TARGETS_PREFIX} - {n}' for n in (
+            'Shadow Map 2048', 'Water and Fog 2048', 'PMA 2048',
+            'Reflection 960x540', 'Reflection 1280x720', 'Reflection 1600x900', 'Reflection 1920x1080',
+            'Reflection 1280x540', 'Reflection 1720x720', 'Reflection 1920x800', 'Reflection 2560x720',
+            'Reflection 960x600', 'Reflection 1280x800')}
+        expected |= self.OFFLINE_NAMES | self.CHEATS | {
+            self.SMOOTH, self.MYSTIC, graphics_options.FIXED_SCALE_PATCH,
+            graphics_options.FOREGROUND_CAP_PATCH, graphics_options.COOP_EFFECTS,
+            graphics_options.PC_CAMERA_ZOOM}
         self.assertEqual(names, expected)
         for meta in ET.parse(xml).getroot().iter('Metadata'):
             if (meta.get('Name') in self.OFFLINE_NAMES | self.CHEATS
-                    | {self.SMOOTH, self.MYSTIC, graphics_options.FIXED_SCALE_PATCH, graphics_options.FOREGROUND_CAP_PATCH}
+                    | {self.SMOOTH, self.MYSTIC, graphics_options.FIXED_SCALE_PATCH,
+                       graphics_options.FOREGROUND_CAP_PATCH}
                     or meta.get('Name').startswith(graphics_options.MSAA_PREFIX)):
+                continue
+            if meta.get('Name') == graphics_options.COOP_EFFECTS:
+                # The 1 the game writes from the second local player on, found by its signature.
+                line = meta.find('PatchList/Line')
+                self.assertEqual(line.get('Pattern').split()[int(line.get('At'))], '01')
+                self.assertEqual(line.get('Value'), '00')
+                continue
+            if meta.get('Name') == graphics_options.PC_CAMERA_ZOOM:
+                # Every write replaces a GlobalSNO observer slot immediate inside `mov edi, imm32` (0xbf).
+                for line in meta.iter('Line'):
+                    pattern, at = line.get('Pattern').split(), int(line.get('At'))
+                    self.assertEqual(pattern[at - 1], 'bf')
+                    old = int.from_bytes(bytes.fromhex(''.join(pattern[at:at + 4])), 'little')
+                    new = int.from_bytes(bytes.fromhex(line.get('Value')), 'little')
+                    self.assertIn(old - new, (1, 2), (hex(old), hex(new)))
+                continue
+            if meta.get('Name').startswith(graphics_options.RENDER_TARGETS_PREFIX):
+                part = meta.get('Name').split(' - ')[1]
+                # Each line replaces a console target size (1536, 1408, 1728, or 800 and 450) with the PC's.
+                lines = list(meta.iter('Line'))
+                for index, line in enumerate(lines):
+                    pattern, at = line.get('Pattern').split(), int(line.get('At'))
+                    old = int.from_bytes(bytes.fromhex(''.join(pattern[at:at + 4])), 'little')
+                    new = int.from_bytes(bytes.fromhex(line.get('Value')), 'little')
+                    if part.startswith('Reflection '):
+                        width, height = map(int, part.split()[1].split('x'))
+                        self.assertEqual((old, new), (800, width) if index % 2 == 0 else (450, height), part)
+                    else:
+                        self.assertEqual(old, {'Shadow Map 2048': 1536, 'Water and Fog 2048': 1408,
+                                               'PMA 2048': 1728}[part], part)
+                        self.assertEqual(new, 2048, part)
                 continue
             if meta.get('Name').startswith(graphics_options.LIMITER_PREFIX):
                 # The frame limiter: one microsecond wait, 16683 (0x412b) in the pattern.
@@ -399,6 +438,47 @@ class Diablo3PatchTests(unittest.TestCase):
         self.assertEqual(patches.compile_patches(xml, ['Game MSAA - 4x'], '01.47', [(0, 0x1000)],
                                                  image=bytes(0x1000), skipped=skipped), [])
         self.assertIn('Game MSAA - 4x', skipped)
+
+    def test_1_00_gets_its_own_render_target_sites(self):
+        # The 1.00 disc executable has the same shadow and water/fog setup with other registers, no PMA
+        # RT and half-size reflections already, so Shadow Map and Water and Fog take their second entry
+        # while PMA and Reflection are skipped.
+        xml = ROOT / 'patches' / 'Diablo_III.xml'
+        shadow = bytes.fromhex('4183fc04751041c7854001000000060000bb19000000')
+        water = bytes.fromhex('be000000004c89fab98005000041b880050000')
+        fog = bytes.fromhex('c70424010000004c89fab98005000041b880050000')
+        image = bytearray(0x200) + shadow + bytearray(0x40) + water + bytearray(0x40) + fog + bytearray(0x200)
+        names = graphics_options.render_target_names([], {'pc_render_targets': '1'}, '1440p')
+        skipped = {}
+        writes = patches.compile_patches(xml, names, '01.47', [(0, len(image))], image=bytes(image), skipped=skipped)
+        self.assertEqual(sorted(skipped), ['PC Render Targets - PMA 2048', 'PC Render Targets - Reflection 1280x720'])
+        self.assertEqual(len(writes), 5)
+        self.assertTrue(all(data == (2048).to_bytes(4, 'little') for _, data in writes))
+
+    def test_pc_camera_zoom_matches_each_build_variant(self):
+        # Three Metadata entries cover 1.47/1.46, 1.25 (2.6.1) and 1.00 (2.0.0, before Retro); an
+        # unrecognised executable is skipped whole.
+        xml = ROOT / 'patches' / 'Diablo_III.xml'
+        metas = [m for m in ET.parse(xml).getroot().iter('Metadata')
+                 if m.get('Name') == graphics_options.PC_CAMERA_ZOOM]
+        self.assertEqual(len(metas), 3)
+        for meta, expected_writes in zip(metas, (5, 5, 3)):
+            seen = {}
+            image = bytearray(0x200)
+            for line in meta.iter('Line'):
+                pat = line.get('Pattern')
+                if pat not in seen:
+                    seen[pat] = len(image)
+                    image += bytes.fromhex(' '.join('5a' if b == '??' else b for b in pat.split())) + bytearray(0x40)
+            skipped = {}
+            writes = patches.compile_patches(xml, [graphics_options.PC_CAMERA_ZOOM], '01.47',
+                                             [(0, len(image))], image=bytes(image), skipped=skipped)
+            self.assertEqual(skipped, {})
+            self.assertEqual(len(writes), expected_writes)
+        skipped = {}
+        self.assertEqual(patches.compile_patches(xml, [graphics_options.PC_CAMERA_ZOOM], '01.47',
+                                                 [(0, 0x400)], image=bytes(0x400), skipped=skipped), [])
+        self.assertEqual(skipped, {graphics_options.PC_CAMERA_ZOOM: 'signature not found'})
 
 
 class GamepadTests(unittest.TestCase):

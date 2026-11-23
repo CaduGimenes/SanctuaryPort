@@ -10,7 +10,8 @@ use serde::{Deserialize, Serialize};
 
 use super::game::GameProfile;
 use super::options::{
-    FIXED_SCALE_PATCH, FRAME_LIMITER_PATCH_PREFIX, FRAME_RATE_PATCH_PREFIX, GAME_MSAA_PATCH_PREFIX,
+    COOP_EFFECTS_PATCH, FIXED_SCALE_PATCH, FRAME_LIMITER_PATCH_PREFIX, FRAME_RATE_PATCH_PREFIX,
+    GAME_MSAA_PATCH_PREFIX, PC_CAMERA_ZOOM_PATCH, RENDER_TARGETS_PATCH_PREFIX,
     RESOLUTION_PATCH_PREFIX,
 };
 use super::paths::Paths;
@@ -170,8 +171,8 @@ pub fn game_patch_metas(xml: &Path, app_version: &str) -> Result<Vec<PatchMeta>,
         .collect())
 }
 
-/// The patches the launcher offers: without the resolution, frame rate, fixed scale and MSAA ones
-/// (they follow the Graphics page) and the always-on fixes.
+/// The patches the launcher offers: without the resolution, frame rate, fixed scale, MSAA and
+/// Effects ones (they follow the Graphics page) and the always-on fixes.
 pub fn selectable(metas: &[PatchMeta]) -> Vec<PatchMeta> {
     metas
         .iter()
@@ -183,6 +184,9 @@ pub fn selectable(metas: &[PatchMeta]) -> Vec<PatchMeta> {
                 || m.name.starts_with(FRAME_LIMITER_PATCH_PREFIX)
                 || m.name == FIXED_SCALE_PATCH
                 || m.name.starts_with(GAME_MSAA_PATCH_PREFIX)
+                || m.name.starts_with(RENDER_TARGETS_PATCH_PREFIX)
+                || m.name == COOP_EFFECTS_PATCH
+                || m.name == PC_CAMERA_ZOOM_PATCH
                 || ALWAYS_ON.contains(&m.name.as_str()))
         })
         .cloned()
@@ -223,8 +227,14 @@ mod tests {
         assert!(offered.iter().all(|meta| !meta.name.starts_with(RESOLUTION_PATCH_PREFIX)
             && !meta.name.starts_with(FRAME_LIMITER_PATCH_PREFIX)
             && meta.name != FIXED_SCALE_PATCH
-            && !meta.name.starts_with(GAME_MSAA_PATCH_PREFIX)));
+            && !meta.name.starts_with(GAME_MSAA_PATCH_PREFIX)
+            && !meta.name.starts_with(RENDER_TARGETS_PATCH_PREFIX)
+            && meta.name != COOP_EFFECTS_PATCH
+            && meta.name != PC_CAMERA_ZOOM_PATCH));
         assert!(metas.iter().any(|meta| meta.name == "Game MSAA - 4x"));
+        assert!(metas.iter().any(|meta| meta.name == "PC Render Targets - Shadow Map 2048"));
+        assert!(metas.iter().any(|meta| meta.name == COOP_EFFECTS_PATCH));
+        assert!(metas.iter().any(|meta| meta.name == PC_CAMERA_ZOOM_PATCH));
         assert!(offered.iter().any(|meta| meta.name.starts_with("Offline Seasons - Season ")));
         assert!(offered.iter().any(|meta| meta.name.starts_with("Event: ")));
         // The raised foreground cap is in the file but follows the 200 FPS frame rate (run.py).

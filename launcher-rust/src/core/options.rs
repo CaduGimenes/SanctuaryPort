@@ -11,6 +11,12 @@ pub const FRAME_LIMITER_PATCH_PREFIX: &str = "Frame Limiter";
 pub const FIXED_SCALE_PATCH: &str = "Dynamic Resolution - Off";
 /// SanctuaryPort: Diablo III's scene samples (Graphics > MSAA samples, run.py).
 pub const GAME_MSAA_PATCH_PREFIX: &str = "Game MSAA";
+/// SanctuaryPort: Diablo III's PC render target sizes (Graphics > Effects, run.py).
+pub const RENDER_TARGETS_PATCH_PREFIX: &str = "PC Render Targets";
+/// SanctuaryPort: Diablo III's full effects in local co-op (Graphics > Effects, run.py).
+pub const COOP_EFFECTS_PATCH: &str = "Local Co-op Full Effects";
+/// SanctuaryPort: Diablo III's PC camera zoom observers (Graphics > Effects, run.py).
+pub const PC_CAMERA_ZOOM_PATCH: &str = "PC Camera Zoom";
 /// The fix a resolution patch replaces: both resize the video arena.
 pub const TEXTURE_FIX_PATCH: &str = "Bug Fix - Texture Corruption Fix";
 /// SanctuaryPort: Diablo III's second frame limiter raised to its maximum, which run.py adds for
