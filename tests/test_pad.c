@@ -19,6 +19,12 @@ static bool SDLCALL record_rumble(void *userdata, uint16_t low, uint16_t high) {
     return true;
 }
 void runtime_user_events(void) {}
+/* Profiles (runtime_profiles.c): every seat has one unless a test says otherwise. */
+static unsigned not_ready, seats_left;
+int runtime_profile_seat_ready(int user) { return !(not_ready & (1u<<user)); }
+void runtime_profile_seat_left(int user) { seats_left|=1u<<user; }
+static int devices_seen;
+void runtime_profile_device(int user, const char *serial, const char *path, const char *guid) { (void)user; (void)serial; (void)path; (void)guid; ++devices_seen; }
 int sanctuarygpu_stick_deadzone_percent(void) { return 0; }
 void sanctuarygpu_request_screenshot(void) {}
 int sanctuarygpu_mouse_prompt_distance(void) { return 0; }

@@ -89,7 +89,7 @@ Then follow [Getting your game ready](#getting-your-game-ready) with your own du
 - **Graphics**: display mode, frame rate, V-Sync, render resolution and aspect ratio, upscaling
   (FSR 1 / FSR 3), sharpening and GTAO; dynamic resolution, MSAA, FXAA and texture filtering under
   *More options*; the graphics card choice when there are two;
-- **Game**: game folder, language, player name, saves, and **installation from PKG** (base game, update and add-ons);
+- **Game**: game folder, language, player profiles, saves, and **installation from PKG** (base game, update and add-ons);
 - **Seasons**: the offline season, with its events, rotation and the Tristram portal under *Details*;
 - **Trophies**: every trophy with its icon (from your dump), name and description, and which ones you
   have earned with the port;
@@ -194,6 +194,12 @@ SANCTUARY_GAME_DIR=~/Games/PS4/CUSA00243 SANCTUARY_PATCH_DIR=~/Games/PS4/CUSA002
   press a button on it, as player 2, 3 or 4 in the order the buttons are pressed (so a device that
   only reports motion, like a DualSense's motion sensors on Linux, never takes a seat). Press the
   bottom face button (A / ✕) on the new gamepad to join.
+- **Player profiles:** launcher → *Game* → *Players*. Each profile has its own saves and name, and
+  you can make as many as you like. Each controller the launcher has seen (and the keyboard) gets
+  the profile it plays, or *Ask*: that player picks a profile (or makes a new one) in the game when
+  their controller joins (with only one profile, nobody is asked). Players join in the order they
+  press a button, the first being player 1,
+  so anyone can play solo with their own heroes, and a missing player is simply not there.
 - **Xbox button icons:** launcher → *Controls* → *Gamepad* → *In-game button icons* → *Xbox* (or
   *Match my controller*). Your game files are never changed.
 - **In-game port menu:** `Insert` (or R3 + L2). **Screenshot:** `F12` (`user/screenshots/`).

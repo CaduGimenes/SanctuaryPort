@@ -81,6 +81,7 @@ std::string choice_title;
 std::vector<std::string> choice_items;
 int choice_index = 0;
 std::atomic<int> choice_result{-1}; // -1 open, -2 cancelled, else the chosen index
+std::atomic<u32> choice_owner{0};    // a joining player's gamepad: only it answers (0: any)
 // Save pictures: decoded by BeginChoice, made textures on the present thread (null = none).
 // Closed lists' textures wait in choice_retired until the backend has destroyed them.
 std::vector<SanctuaryPng::Image> choice_pictures;
@@ -964,6 +965,9 @@ bool HandleChoiceEvent(const SDL_Event& event) {
                  : key == SDLK_ESCAPE || key == SDLK_BACKSPACE                   ? 2
                                                                                  : 0;
     } else if (event.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN) {
+        if (const u32 owner = choice_owner.load(); owner && event.gbutton.which != owner) {
+            return false; // another player's pad: theirs to play with
+        }
         const u8 button = event.gbutton.button;
         move = button == SDL_GAMEPAD_BUTTON_DPAD_UP ? -1 : button == SDL_GAMEPAD_BUTTON_DPAD_DOWN ? 1 : 0;
         finish = button == SDL_GAMEPAD_BUTTON_SOUTH ? 1 : button == SDL_GAMEPAD_BUTTON_EAST ? 2 : 0;
@@ -1148,7 +1152,7 @@ bool Visible() {
 }
 
 bool CapturesInput() {
-    return menu_open || text_entry_active || choice_active;
+    return menu_open || text_entry_active || (choice_active && !choice_owner.load());
 }
 
 void BeginChoice(const std::string& title, const std::vector<std::string>& items,
@@ -1161,11 +1165,26 @@ void BeginChoice(const std::string& title, const std::vector<std::string>& items
     choice_items = items;
     choice_index = focus >= 0 && focus < int(items.size()) ? focus : 0;
     choice_result = -1;
+    choice_owner = 0;
     choice_active = true;
 }
 
 int PollChoice() {
     return choice_result;
+}
+
+void SetChoiceOwner(u32 joystick_id) {
+    choice_owner = joystick_id;
+}
+
+void EndChoice() {
+    std::scoped_lock lock{imgui_mutex};
+    if (!choice_active) {
+        return;
+    }
+    choice_result = -2;
+    choice_active = false;
+    RetireChoiceTextures();
 }
 
 void SetTextEntry(bool active, const std::string& prompt, const std::string& text) {

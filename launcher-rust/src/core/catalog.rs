@@ -292,11 +292,15 @@ pub static SETTINGS: &[Setting] = &[
     // The runner reads SANCTUARY_DISCORD only to switch it off ("0"), so absent has no default.
     app("discord_rpc", Flag, Bool(true), env("SANCTUARY_DISCORD", "")),
     app("check_updates", Flag, Bool(false), None),
-    // SanctuaryPort: Game > Player name, the name the game shows for player 1 (GitHub #23).
+    // SanctuaryPort: the name player 1 had before profiles (GitHub #23); it names profile 1 when
+    // the profile list is first made (`core::profiles`).
     app("player_name", Kind::Text, Text(""), env("SANCTUARY_PLAYER_NAME", "")),
     // SanctuaryPort: Game > Player > LAN play (experimental): the game's own LAN Play network mode (src/runtime_net.c).
     // Off is sent as "0", so an inherited SANCTUARY_LAN never turns it on.
     app("lan_play", Flag, Bool(false), env("SANCTUARY_LAN", "")),
+    // SanctuaryPort: Game > Players (GitHub #93): the controllers the launcher has seen and the
+    // profile each plays (`core::profiles`). Derived: `env.rs` builds SANCTUARY_PAD_PROFILES.
+    app("pad_profiles", Json, Object, None),
     // Derived, not 1:1: `env.rs` builds SANCTUARY_PATCHES and SANCTUARY_KEY_MAP / SANCTUARY_PAD_MAP
     // from the content of these two, so they carry no `env`.
     app("game_patches", Json, Object, None),

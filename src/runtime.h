@@ -98,6 +98,23 @@ extern volatile int runtime_pad_opened; /* the game read the pad 30 times: it go
 int runtime_pad_describe(void);
 unsigned runtime_pad_users(void); /* bit N: user N (2..4) logged in */
 void runtime_user_events(void);
+unsigned runtime_pad_seated(void); /* bit N: seat N (2..4) has a gamepad, with or without its profile */
+uint32_t runtime_pad_seat_device(int user); /* SDL joystick id of seat N's gamepad, 0: none */
+void runtime_pad_unseat(int user); /* seat N's gamepad waits for a button press again */
+int runtime_dialog_busy(void); /* the game's save list or text dialog is open */
+/* Player profiles (runtime_profiles.c): a named save folder per seat (user 1..4). */
+#define RUNTIME_PROFILE_ID_SIZE 16
+#define RUNTIME_PROFILE_NAME_SIZE 17
+size_t runtime_profile_clean_name(const char *in, char *out);
+void runtime_profile_dir(int user, char out[RUNTIME_PROFILE_ID_SIZE]);
+void runtime_profile_name(int user, char out[RUNTIME_PROFILE_NAME_SIZE]);
+int runtime_profile_seat_ready(int user);
+void runtime_profile_seat_left(int user);
+/* A controller took seat `user`: its identity (any may be NULL; the keyboard's guid "keyboard"). */
+void runtime_profile_device(int user, const char *serial, const char *path, const char *guid);
+int runtime_profile_create(const char *name, char out[RUNTIME_PROFILE_ID_SIZE]);
+void runtime_profile_prompts(void);
+void runtime_profile_yield(void);
 unsigned runtime_content_addons_ready(void); /* add-ons listed, once AppContent is up */
 uintptr_t runtime_rtc_resolve(const char *name);
 const char *runtime_file_user_dir(void);

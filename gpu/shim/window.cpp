@@ -141,7 +141,13 @@ void WindowSDL::BeginTextInput(const std::string& initial, const std::string& pr
     text = initial;
     text_prompt = prompt;
     text_state = 0;
+    text_owner = 0;
     text_requested = true;
+}
+
+void WindowSDL::SetTextInputOwner(u32 joystick_id) {
+    std::scoped_lock lock{text_mutex};
+    text_owner = joystick_id;
 }
 
 int WindowSDL::PollTextInput(std::string& out) {
@@ -196,6 +202,9 @@ bool WindowSDL::PollEvents() {
             (event.gbutton.button == SDL_GAMEPAD_BUTTON_SOUTH ||
              event.gbutton.button == SDL_GAMEPAD_BUTTON_EAST)) {
             std::scoped_lock lock{text_mutex};
+            if (text_owner && event.gbutton.which != text_owner) {
+                continue; // a joining player names their profile: other pads do not answer
+            }
             text_state = event.gbutton.button == SDL_GAMEPAD_BUTTON_SOUTH ? 1 : 2;
             text_active = false;
             SDL_StopTextInput(window);

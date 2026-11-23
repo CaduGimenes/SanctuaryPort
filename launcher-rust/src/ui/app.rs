@@ -37,7 +37,7 @@ use crate::ui::lang_menu::{self, LangMenu, LangMessage};
 use crate::ui::pages::advanced;
 use crate::ui::pages::control_center::{self, LivePad};
 use crate::ui::pages::controls::{self, ControlsMessage, ControlsView};
-use crate::ui::pages::game::{self, BackupMessage, PatchesView};
+use crate::ui::pages::game::{self, BackupMessage, PatchesView, ProfileMessage};
 use crate::ui::pages::log::{self, LogMessage};
 use crate::ui::pages::mapper::{self, MapperMessage, MapperState};
 use crate::ui::pages::performance;
@@ -124,6 +124,12 @@ pub struct State {
     /// The backup chosen in the Saves row.
     pub backup_choice: String,
     pub backup_details: Vec<crate::core::save_restore::Snapshot>,
+    /// The player profiles of the saves folder (Game page, GitHub #93).
+    pub profiles: Vec<crate::core::profiles::Profile>,
+    /// The `pad_profiles` keys of the controllers connected now (Game > Players).
+    pub connected_pads: Vec<String>,
+    /// Counts the tab pad's polls of the Game page: the controllers are listed every few.
+    pub pads_scan: u32,
     pub restoring_saves: bool,
     /// The release list, the installed release and the download; its host is a fake in the UI
     /// tests.
@@ -253,6 +259,9 @@ impl State {
             backups: Vec::new(),
             backup_choice: String::new(),
             backup_details: Vec::new(),
+            profiles: Vec::new(),
+            connected_pads: Vec::new(),
+            pads_scan: 0,
             restoring_saves: false,
             updater: Updater::new(host),
             lang_menu: Default::default(),
@@ -326,6 +335,8 @@ pub enum Message {
     SeasonLengthPicked(game::LengthChoice),
     /// Turn off all cheats (Game page): every cheat off, every multiplier 1x (#1135).
     Backup(BackupMessage),
+    /// The player profiles of the Game page.
+    Profile(ProfileMessage),
     /// The monitors the probe listed, in the background.
     MonitorsListed(Vec<Display>),
     /// Opens a file or folder with the desktop's program for it.
@@ -613,6 +624,7 @@ pub fn update(state: &mut State, message: Message) -> Task<Message> {
         Message::SeasonRotateToggled(on) => game::season_rotate_toggled(state, on),
         Message::SeasonLengthPicked(choice) => game::season_length_picked(state, &choice),
         Message::Backup(message) => return game::backup_update(state, message),
+        Message::Profile(message) => return game::profile_update(state, message),
         Message::WindowFocused(focused) => {
             state.focused = focused;
             // As the Python's <FocusOut>: a key box of the Controls page gives up.

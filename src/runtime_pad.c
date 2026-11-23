@@ -72,6 +72,20 @@ static SDL_Gamepad *gamepad, *extra_pad[MAX_PLAYERS+1]; /* [2..MAX_PLAYERS] */
 static SDL_Gamepad *candidate[MAX_CANDIDATES];
 static uint32_t pending_mask[MAX_CANDIDATES]; /* buttons pressed on the candidate since pending_since */
 static uint64_t pending_since[MAX_CANDIDATES];
+static uint32_t ignored_mask[MAX_CANDIDATES]; /* held when it left its seat: not a press until released */
+/* Seat 1 whose profile is chosen in the game ("ask", runtime_profiles.c): no gamepad is player 1
+ * until one presses a button; the first press, on a gamepad or the keyboard, takes seat 1 and
+ * shows its list. The game hears nothing from player 1 meanwhile, so it reads no save before. */
+static int player1_pressed, player1_release; /* release: the cancelling press must end first */
+static int seat_one_waits(void) { return !runtime_profile_seat_ready(1); }
+static uint32_t pressed_buttons(SDL_Gamepad *g);
+/* A gamepad took seat `user`: the profile module looks up the profile the launcher gave it, by
+ * serial, device path or model (guid). Called under lock. */
+static void seat_taken(int user, SDL_Gamepad *g) {
+    char guid[33]="";
+    SDL_GUIDToString(SDL_GetGamepadGUIDForID(SDL_GetGamepadID(g)),guid,(int)sizeof(guid));
+    runtime_profile_device(user,SDL_GetGamepadSerial(g),SDL_GetGamepadPath(g),guid);
+}
 static uint64_t first_down_us[32];            /* when each button was last seen down on player 1's pad */
 static size_t reads;
 static uint8_t connected_count;
@@ -140,6 +154,30 @@ static SDL_Gamepad *current_gamepad(void) {
         printf("Runtime: gamepad of player 1 disconnected\n");
         SDL_CloseGamepad(gamepad); gamepad=NULL;
     }
+    if (!gamepad && seat_one_waits()) {
+        /* The first gamepad no other player holds to press a button is player 1's. */
+        int count=0;
+        SDL_JoystickID *ids=SDL_GetGamepads(&count);
+        for (int i=0;ids && i<count;++i) {
+            int held=0;
+            for (int u=2;u<=MAX_PLAYERS && !held;++u) held=extra_pad[u] && SDL_GetGamepadID(extra_pad[u])==ids[i];
+            for (int c=0;c<MAX_CANDIDATES && !held;++c) held=candidate[c] && SDL_GetGamepadID(candidate[c])==ids[i];
+            for (int c=0;c<MAX_CANDIDATES && !held;++c)
+                if (!candidate[c] && (candidate[c]=SDL_OpenGamepad(ids[i]))) { pending_mask[c]=0; ignored_mask[c]=0; held=1; }
+        }
+        SDL_free(ids);
+        for (int c=0;c<MAX_CANDIDATES && !gamepad;++c) {
+            if (!candidate[c]) continue;
+            const uint32_t held=pressed_buttons(candidate[c]);
+            ignored_mask[c]&=held;
+            if (!(held & ~ignored_mask[c])) continue;
+            gamepad=candidate[c]; candidate[c]=NULL; pending_mask[c]=0;
+            ++connected_count; player1_pressed=1;
+            printf("Runtime: gamepad pressed first, player 1: %s\n",SDL_GetGamepadName(gamepad));
+            seat_taken(1,gamepad);
+        }
+        return gamepad;
+    }
     if (!gamepad) {
         /* Player 1 takes the first gamepad no other player holds. Taking any gamepad, a player 1
          * whose controller dropped (Bluetooth) took player 2's: one controller then drove both
@@ -188,6 +226,7 @@ static void refresh_extra_pads(void) {
         if (extra_pad[u] && !SDL_GamepadConnected(extra_pad[u])) {
             printf("Runtime: gamepad of player %d disconnected\n",u);
             SDL_CloseGamepad(extra_pad[u]); extra_pad[u]=NULL;
+            runtime_profile_seat_left(u);
         }
     for (int c=0;c<MAX_CANDIDATES;++c)
         if (candidate[c] && (!SDL_GamepadConnected(candidate[c]) || seated(SDL_GetGamepadID(candidate[c]),first))) {
@@ -205,7 +244,7 @@ static void refresh_extra_pads(void) {
             if (!candidate[c] && (candidate[c]=SDL_OpenGamepad(ids[i]))) {
                 printf("Runtime: gamepad found: %s, %04x:%04x (press a button on it to join)\n",
                        SDL_GetGamepadName(candidate[c]),SDL_GetGamepadVendor(candidate[c]),SDL_GetGamepadProduct(candidate[c]));
-                pending_mask[c]=0; known=1;
+                pending_mask[c]=0; ignored_mask[c]=0; known=1;
             }
     }
     SDL_free(ids);
@@ -214,7 +253,9 @@ static void refresh_extra_pads(void) {
     for (int b=0;b<32;++b) if (first_buttons & (1u<<b)) first_down_us[b]=now;
     for (int c=0;c<MAX_CANDIDATES;++c) {
         if (!candidate[c]) continue;
-        const uint32_t pressed=pressed_buttons(candidate[c]);
+        const uint32_t held=pressed_buttons(candidate[c]);
+        ignored_mask[c]&=held;
+        const uint32_t pressed=held & ~ignored_mask[c];
         if (pressed & ~pending_mask[c]) {
             if (!pending_mask[c]) pending_since[c]=now;
             pending_mask[c]|=pressed;
@@ -233,6 +274,7 @@ static void refresh_extra_pads(void) {
             extra_pad[u]=candidate[c]; candidate[c]=NULL;
             printf("Runtime: gamepad joined as player %d: %s, %04x:%04x\n",u,SDL_GetGamepadName(extra_pad[u]),
                    SDL_GetGamepadVendor(extra_pad[u]),SDL_GetGamepadProduct(extra_pad[u]));
+            seat_taken(u,extra_pad[u]);
             break;
         }
     }
@@ -663,6 +705,19 @@ static int hold_after_capture;
 static void sample(PadData *d) {
     sample_host(d);
     if (sanctuarygpu_overlay_captures_input()) { hold_after_capture=1; click.side=-1; return; }
+    if (seat_one_waits()) { /* player 1 is choosing a profile, or has not pressed a button yet */
+        read_inject(); /* a scripted press (SANCTUARY_PAD_FILE) counts too */
+        const uint32_t pressed=(d->buttons|injected.buttons) & ~(CLICK_LEFT|CLICK_RIGHT);
+        if (player1_release && !pressed) player1_release=0;
+        if (pressed && !player1_release && !player1_pressed) {
+            player1_pressed=1; puts("Runtime: player 1 pressed a key first");
+            runtime_profile_device(1,NULL,NULL,"keyboard");
+        }
+        const uint8_t connected=d->connected; const uint64_t timestamp=d->timestamp;
+        neutral(d); d->connected=connected; d->timestamp=timestamp;
+        hold_after_capture=1; click.side=-1;
+        return;
+    }
     record_sample(d); /* the click sources as they are: a replay plays them again */
     read_inject();
     replay_sample(d);
@@ -697,16 +752,55 @@ static void sample_extra(int user, PadData *d) {
     uint8_t *axes[4]={&d->left_x,&d->left_y,&d->right_x,&d->right_y};
     for (int i=0;i<4;++i) if (in->stick[i]>=0) *axes[i]=(uint8_t)in->stick[i];
 }
-/* Users 2..4 logged in, as bit N for user N: each is while its gamepad is connected, or while the
+/* Seats 2..4 taken, as bit N for seat N: each is while its gamepad is connected, or while the
  * pad file has its pN tokens. */
-unsigned runtime_pad_users(void) {
-    pthread_mutex_lock(&lock);
+static unsigned seated_mask(void) {
     if (sdl_ready>0 || SDL_WasInit(SDL_INIT_VIDEO)) refresh_extra_pads(); /* never the first SDL init */
     read_inject();
-    unsigned mask=0;
+    unsigned mask=player1_pressed && seat_one_waits() ? 1u<<1 : 0;
     for (int u=2;u<=MAX_PLAYERS;++u) if (extra_pad[u] || injected_seen[u]) mask|=1u<<u;
+    return mask;
+}
+unsigned runtime_pad_seated(void) {
+    pthread_mutex_lock(&lock);
+    const unsigned mask=seated_mask();
     pthread_mutex_unlock(&lock);
     return mask;
+}
+/* Users 2..4 logged in: seats taken whose player has a profile (runtime_profiles.c), so the
+ * game mounts no save for a player still choosing one. */
+unsigned runtime_pad_users(void) {
+    pthread_mutex_lock(&lock);
+    unsigned mask=seated_mask() & ~(1u<<1);
+    for (int u=2;u<=MAX_PLAYERS;++u) if ((mask & (1u<<u)) && !runtime_profile_seat_ready(u)) mask&=~(1u<<u);
+    pthread_mutex_unlock(&lock);
+    return mask;
+}
+uint32_t runtime_pad_seat_device(int user) {
+    pthread_mutex_lock(&lock);
+    SDL_Gamepad *g=user==1 ? gamepad : user>=2 && user<=MAX_PLAYERS ? extra_pad[user] : NULL;
+    const uint32_t id=g ? (uint32_t)SDL_GetGamepadID(g) : 0;
+    pthread_mutex_unlock(&lock);
+    return id;
+}
+/* The player cancelled the profile list: the gamepad leaves the seat and joins again with its
+ * next press (not the Circle that cancelled, still held). Seat 1 waits for a first press again,
+ * from any gamepad or the keyboard. */
+void runtime_pad_unseat(int user) {
+    pthread_mutex_lock(&lock);
+    SDL_Gamepad **seat=user==1 ? &gamepad : user>=2 && user<=MAX_PLAYERS ? &extra_pad[user] : NULL;
+    if (user==1) { player1_pressed=0; player1_release=1; }
+    if (seat && *seat) {
+        int c=0;
+        while (c<MAX_CANDIDATES && candidate[c]) ++c;
+        if (c<MAX_CANDIDATES) {
+            candidate[c]=*seat; pending_mask[c]=0;
+            ignored_mask[c]=pressed_buttons(candidate[c]) | 1u<<SDL_GAMEPAD_BUTTON_EAST;
+        } else SDL_CloseGamepad(*seat);
+        *seat=NULL;
+        if (user>=2) runtime_profile_seat_left(user);
+    }
+    pthread_mutex_unlock(&lock);
 }
 
 static int valid(int32_t handle) { return handle>=1 && handle<=MAX_PLAYERS && opened_user[handle]; }

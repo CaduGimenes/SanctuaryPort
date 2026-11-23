@@ -36,6 +36,7 @@
   "check_updates": false,
   "player_name": "",
   "lan_play": false,
+  "pad_profiles": {},
   "game_patches": {
     "CUSA00243": [
       "Skip Intro"

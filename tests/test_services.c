@@ -22,6 +22,12 @@ int runtime_savedata_param(int32_t user, const char *dir, void *param) { (void)u
 int runtime_savedata_icon(int32_t user, const char *dir, char *out, size_t size) { (void)user; (void)dir; (void)out; (void)size; return -1; }
 static unsigned pad_users; /* bit N: user N's gamepad is connected */
 unsigned runtime_pad_users(void) { return pad_users; }
+/* Profiles (runtime_profiles.c, tested in test_profiles.c): each seat's name, and the calls. */
+static char profile_names[5][RUNTIME_PROFILE_NAME_SIZE]={"","Player","Player 2","Player 3","Player 4"};
+static int prompt_calls, yields;
+void runtime_profile_name(int user, char out[RUNTIME_PROFILE_NAME_SIZE]) { snprintf(out,RUNTIME_PROFILE_NAME_SIZE,"%s",profile_names[user]); }
+void runtime_profile_prompts(void) { ++prompt_calls; }
+void runtime_profile_yield(void) { ++yields; }
 static unsigned addons_ready;
 unsigned runtime_content_addons_ready(void) { return addons_ready; }
 static struct { int count; int32_t event[2]; } heard;
@@ -69,6 +75,8 @@ int main(void) {
     list[52]=1; list[56]=2; memcpy(list+72,&items_ptr,8);
     memcpy(out+16,&chosen_ptr,8);
     assert(save_init()==0 && save_open(list)==0 && save_status()==DIALOG_RUNNING);
+    /* The save list takes the overlay from a joining player's profile list, which waits. */
+    assert(yields>0 && runtime_dialog_busy());
     choice_next=2; /* entries: New save, SAVE0001, SAVE0002 */
     assert(save_status()==DIALOG_FINISHED && save_result(out)==0 && !strcmp(chosen,"SAVE0002"));
     memcpy(&value,out+4,4); assert(value==0);
@@ -145,9 +153,12 @@ int main(void) {
     assert(user_event(event)==USER_NO_EVENT);
     assert(user_list(ids)==0 && ids[1]==2 && ids[2]==-1);
     assert(user_name(2,name,sizeof name)==0 && !strcmp(name,"Player 2"));
-    /* #23: player 1's name from the launcher, 16 bytes at most, cut between characters. */
-    setenv("SANCTUARY_PLAYER_NAME","  Ação Bárbaro Supremo",1);
+    /* #23, #86: each user is named as the profile in its seat. */
+    snprintf(profile_names[1],sizeof profile_names[1],"Ação Bárbaro");
+    snprintf(profile_names[2],sizeof profile_names[2],"Leah");
     assert(user_name(USER_ID,name,sizeof name)==0 && !strcmp(name,"Ação Bárbaro"));
+    assert(user_name(2,name,sizeof name)==0 && !strcmp(name,"Leah"));
+    assert(user_name(2,name,4)==(int32_t)0x8096000a);
     pad_users|=(1u<<3)|(1u<<4); /* two more at once: one event each, lowest first */
     assert(user_event(event)==0 && event[0]==0 && event[1]==3);
     assert(user_event(event)==0 && event[0]==0 && event[1]==4);
@@ -164,7 +175,9 @@ int main(void) {
     /* The callback hears the same, from player 1's pad reads (every 30th). */
     assert(user_register_callback(heard_event,&heard)==0);
     pad_users=1u<<2;
+    prompt_calls=0;
     for (int i=0;i<30;++i) runtime_user_events();
+    assert(prompt_calls==30); /* a joining player's profile list follows every read */
     assert(heard.count==1 && heard.event[0]==0 && heard.event[1]==2);
     for (int i=0;i<60;++i) runtime_user_events();
     assert(heard.count==1);

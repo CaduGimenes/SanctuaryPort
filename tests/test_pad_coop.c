@@ -11,6 +11,12 @@
 int sanctuarygpu_overlay_captures_input(void) { return 0; }
 int sanctuarygpu_vibration_percent(void) { return 100; }
 void runtime_user_events(void) {}
+/* Profiles (runtime_profiles.c): every seat has one unless a test says otherwise. */
+static unsigned not_ready, seats_left;
+int runtime_profile_seat_ready(int user) { return !(not_ready & (1u<<user)); }
+void runtime_profile_seat_left(int user) { seats_left|=1u<<user; }
+static int devices_seen;
+void runtime_profile_device(int user, const char *serial, const char *path, const char *guid) { (void)user; (void)serial; (void)path; (void)guid; ++devices_seen; }
 int sanctuarygpu_stick_deadzone_percent(void) { return 0; }
 void sanctuarygpu_request_screenshot(void) {}
 int sanctuarygpu_mouse_prompt_distance(void) { return 0; }
@@ -113,6 +119,58 @@ int main(void) {
     assert(runtime_pad_users()==(1u<<2));     /* still players 1 and 2 only */
     assert(pad_read_state(2,&d)==0);
     assert(!(d.buttons & BTN_CROSS));
+
+    /* #93: while player 2 chooses a profile the seat is taken but not logged in. */
+    not_ready=1u<<2;
+    assert(runtime_pad_seated()==(1u<<2) && runtime_pad_users()==0);
+    assert(runtime_pad_seat_device(2)==SDL_GetJoystickID(second) && runtime_pad_seat_device(3)==0);
+    /* Cancelled with Circle: the gamepad leaves the seat; the Circle still held is no new press. */
+    assert(SDL_SetJoystickVirtualButton(second,SDL_GAMEPAD_BUTTON_EAST,true));
+    pump();
+    runtime_pad_unseat(2);
+    assert(seats_left==(1u<<2));
+    pump(); runtime_pad_seated();
+    usleep(270000);
+    pump();
+    assert(runtime_pad_seated()==0 && runtime_pad_users()==0);
+    assert(SDL_SetJoystickVirtualButton(second,SDL_GAMEPAD_BUTTON_EAST,false));
+    pump(); runtime_pad_seated();
+    /* Its next press takes the seat again; with a profile it logs in. */
+    assert(SDL_SetJoystickVirtualButton(second,SDL_GAMEPAD_BUTTON_START,true));
+    pump(); runtime_pad_seated();
+    usleep(270000);
+    pump();
+    assert(runtime_pad_seated()==(1u<<2) && runtime_pad_users()==0);
+    not_ready=0;
+    assert(runtime_pad_users()==(1u<<2));
+    assert(SDL_SetJoystickVirtualButton(second,SDL_GAMEPAD_BUTTON_START,false));
+
+    /* Seat 1 that asks: player 1 cancelled its list. Its gamepad is free again, the button it
+     * still holds is no press, and the game hears nothing from player 1 meanwhile. */
+    not_ready=1u<<1;
+    runtime_pad_unseat(1);
+    pump();
+    assert(pad_read_state(1,&d)==0 && !d.buttons);
+    assert(runtime_pad_seated()==(1u<<2) && runtime_pad_seat_device(1)==0);
+    assert(SDL_SetJoystickVirtualButton(back,SDL_GAMEPAD_BUTTON_SOUTH,false));
+    pump();
+    assert(pad_read_state(1,&d)==0);
+    /* Its next press takes seat 1 (player 2's gamepad stays player 2's). */
+    assert(SDL_SetJoystickVirtualButton(back,SDL_GAMEPAD_BUTTON_START,true));
+    pump();
+    assert(pad_read_state(1,&d)==0 && !d.buttons);  /* choosing: the game hears nothing */
+    assert(runtime_pad_seated()==((1u<<1)|(1u<<2)) && runtime_pad_users()==(1u<<2));
+    assert(runtime_pad_seat_device(1)==SDL_GetJoystickID(back));
+    /* Chosen: player 1 plays; the held press stays hidden until released. */
+    not_ready=0;
+    assert(runtime_pad_seated()==(1u<<2));
+    assert(pad_read_state(1,&d)==0 && !d.buttons);
+    assert(SDL_SetJoystickVirtualButton(back,SDL_GAMEPAD_BUTTON_START,false));
+    pump();
+    assert(pad_read_state(1,&d)==0);
+    assert(SDL_SetJoystickVirtualButton(back,SDL_GAMEPAD_BUTTON_SOUTH,true));
+    pump();
+    assert(pad_read_state(1,&d)==0 && (d.buttons & BTN_CROSS));
 
     SDL_Quit();
     puts("pad co-op test: ok");

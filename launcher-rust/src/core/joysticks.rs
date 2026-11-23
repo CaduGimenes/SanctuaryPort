@@ -27,6 +27,10 @@ pub struct Device {
     pub hats: usize,
     /// Whether SDL already has a gamepad mapping for it.
     pub mapped: bool,
+    /// SanctuaryPort: what tells this controller apart from another of its model on the next
+    /// start (Game > Players): its serial number and device path, empty when SDL has none.
+    pub serial: String,
+    pub path: String,
 }
 
 #[derive(Debug, Error)]
@@ -297,6 +301,8 @@ sdl_api! {
     is_gamepad: "SDL_IsGamepad": fn(u32) -> bool;
     get_joystick_name_for_id: "SDL_GetJoystickNameForID": fn(u32) -> *const c_char;
     get_joystick_guid_for_id: "SDL_GetJoystickGUIDForID": fn(u32) -> Guid;
+    get_joystick_path_for_id: "SDL_GetJoystickPathForID": fn(u32) -> *const c_char;
+    get_joystick_serial: "SDL_GetJoystickSerial": fn(*mut c_void) -> *const c_char;
     get_gamepad_mapping_for_guid: "SDL_GetGamepadMappingForGUID": fn(Guid) -> *mut c_char;
     open_joystick: "SDL_OpenJoystick": fn(u32) -> *mut c_void;
     close_joystick: "SDL_CloseJoystick": fn(*mut c_void);
@@ -434,6 +440,8 @@ impl Sdl3 {
                 axes: count((self.api.get_num_joystick_axes)(pad)),
                 hats: count((self.api.get_num_joystick_hats)(pad)),
                 mapped: (self.api.is_gamepad)(id),
+                serial: text((self.api.get_joystick_serial)(pad)).unwrap_or_default(),
+                path: text((self.api.get_joystick_path_for_id)(id)).unwrap_or_default(),
             }
         };
         // SAFETY: `pad` was opened above (SDL counts the opens of one device).

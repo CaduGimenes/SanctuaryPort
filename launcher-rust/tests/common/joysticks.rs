@@ -75,6 +75,8 @@ pub fn pad(id: u32, guid: &str) -> Device {
         axes: 6,
         hats: 1,
         mapped: false,
+        serial: String::new(),
+        path: String::new(),
     }
 }
 

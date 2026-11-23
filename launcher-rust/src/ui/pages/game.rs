@@ -14,6 +14,7 @@ use crate::core::game::game_profile;
 use crate::core::i18n::{tr, tr_fmt};
 use crate::core::options::LANGUAGES;
 use crate::core::patches::{builtin_xml, game_patch_metas, selectable, PatchMeta, CHEAT_PREFIX};
+use crate::core::profiles::{self, PadRecord, Profile, ASK, KEYBOARD, PADS_KEY};
 use crate::core::save_backup::{list_backups, restore, KEEP};
 use crate::core::save_restore;
 use crate::core::seasons::{
@@ -33,8 +34,10 @@ use crate::ui::widgets::{
 /// The note under the Game language row; the translation tables key on this text.
 pub const LANGUAGE_NOTE: &str = "The language of the game's text and speech, on every start. Only the languages your dump ships are listed: each release has its own.";
 
-/// The note under the Player name row; the translation tables key on this text.
-pub const PLAYER_NAME_NOTE: &str = "The name the game shows for you, as a PS4 user name: up to 16 characters, read when the game starts. Empty: Player.";
+/// The note under the controllers; the translation tables key on this text.
+pub const PADS_NOTE: &str = "Players join in the order they press a button; the first is player 1. Each controller plays its own profile. Ask: that player chooses a profile, or makes a new one, in the game. A controller shows here once the launcher has seen it.";
+/// The note under the profiles; the translation tables key on this text.
+pub const PROFILES_NOTE: &str = "Each profile has its own saves and the name the game shows for its player (up to 16 characters). Profiles made in the game show here once it closes.";
 
 /// The note under Game > Player > LAN play (experimental); the translation tables key on this text.
 pub const LAN_PLAY_NOTE: &str = "The game's own LAN Play mode (main menu, R3: Network Settings): players on the same local network find each other with Find Game. Nothing goes online and no router port is opened. Read when the game starts.";
@@ -103,6 +106,247 @@ pub fn browse_prompt(key: &str) -> &'static str {
 
 fn user_dir(state: &State) -> PathBuf {
     state.paths.user_dir(&state.store.text("user_dir"))
+}
+
+// --- Players: profiles and the controllers that play them (GitHub #93, #86) ---
+
+#[derive(Debug, Clone)]
+pub enum ProfileMessage {
+    /// A profile's name field: its id and the text typed.
+    Rename(String, String),
+    Add,
+    /// Delete…: the profile's id (asks first).
+    Delete(String),
+    DeleteConfirmed(String),
+    /// A controller's profile: its record key and a profile id or `ask`.
+    Assign(String, String),
+    /// Forget a controller that is not connected: its record key.
+    Forget(String),
+}
+
+fn pad_records(state: &State) -> Vec<(String, PadRecord)> {
+    profiles::pad_records(state.store.json(PADS_KEY).unwrap_or(&Value::Null))
+}
+
+fn set_pad_records(state: &mut State, records: &[(String, PadRecord)]) {
+    state.store.set(PADS_KEY, profiles::pad_value(records));
+}
+
+/// The controllers SDL lists now (the tab pad's, while the Game page shows): each is remembered,
+/// a new one asking, and marked as connected.
+pub fn pads_seen(state: &mut State, devices: &[crate::core::joysticks::Device]) {
+    let mut records = pad_records(state);
+    let mut changed = false;
+    let mut taken = Vec::new();
+    for device in devices.iter().filter(|device| device.mapped) {
+        let (new, i) = profiles::remember(
+            &mut records,
+            &device.name,
+            &device.guid,
+            &device.serial,
+            &device.path,
+            &taken,
+        );
+        changed |= new;
+        taken.push(i);
+    }
+    if changed {
+        set_pad_records(state, &records);
+    }
+    state.connected_pads = taken.iter().map(|&i| records[i].0.clone()).collect();
+}
+
+/// Reads the profile list of the saves folder (making it from the saves there are, the first
+/// time).
+pub(crate) fn refresh_profiles(state: &mut State) {
+    let player_name = state.store.text("player_name");
+    state.profiles = match profiles::read(&user_dir(state), &player_name) {
+        Ok(list) => list,
+        Err(e) => {
+            state.log.push_text(&format!("Profiles: {e}\n"));
+            Vec::new()
+        }
+    };
+}
+
+/// The profile list changed on disk: tell when writing it failed.
+fn profiles_written(state: &mut State, result: std::io::Result<()>) {
+    if let Err(e) = result {
+        state.modal = Some(Modal::error(format!(
+            "{}\n\n{e}",
+            tr(&state.lang, "The profile list could not be saved.")
+        )));
+    }
+}
+
+pub fn profile_update(state: &mut State, message: ProfileMessage) -> Task<Message> {
+    // The game adds to the list while it runs: the launcher leaves it alone until it closes.
+    if state.game.is_live() {
+        return Task::none();
+    }
+    let user = user_dir(state);
+    match message {
+        ProfileMessage::Rename(id, name) => {
+            let result = profiles::rename(&user, &mut state.profiles, &id, &name);
+            profiles_written(state, result);
+        }
+        ProfileMessage::Add => {
+            let result = profiles::add(&user, &mut state.profiles, "").map(|_| ());
+            profiles_written(state, result);
+        }
+        ProfileMessage::Delete(id) => {
+            let Some(profile) = state.profiles.iter().find(|p| p.id == id) else {
+                return Task::none();
+            };
+            state.modal = Some(Modal::confirm(
+                tr_fmt(
+                    &state.lang,
+                    "Delete the profile {} and its saves? This cannot be undone; the save backups are kept.",
+                    &[&profile.shown_name()],
+                ),
+                Message::Profile(ProfileMessage::DeleteConfirmed(id)),
+            ));
+        }
+        ProfileMessage::DeleteConfirmed(id) => {
+            state.modal = None;
+            let result = profiles::delete(&user, &mut state.profiles, &id);
+            profiles_written(state, result);
+            // A controller that played it asks now.
+            let mut records = pad_records(state);
+            if records.iter().any(|(_, r)| r.profile == id) {
+                for (_, record) in records.iter_mut().filter(|(_, r)| r.profile == id) {
+                    record.profile = ASK.to_string();
+                }
+                set_pad_records(state, &records);
+            }
+        }
+        ProfileMessage::Assign(key, profile) => {
+            let mut records = pad_records(state);
+            if let Some((_, record)) = records.iter_mut().find(|(k, _)| *k == key) {
+                record.profile = profile;
+                set_pad_records(state, &records);
+            }
+        }
+        ProfileMessage::Forget(key) => {
+            let mut records = pad_records(state);
+            records.retain(|(k, _)| *k != key || k == KEYBOARD);
+            set_pad_records(state, &records);
+        }
+    }
+    Task::none()
+}
+
+/// A profile's label in the slot lists: its name, with its id when another has the same name.
+fn profile_label(profile: &Profile, list: &[Profile]) -> String {
+    let name = profile.shown_name();
+    if list.iter().filter(|p| p.shown_name() == name).count() > 1 {
+        format!("{name} ({})", profile.id)
+    } else {
+        name
+    }
+}
+
+fn players_section<'a>(state: &State, lang: &str) -> Element<'a, Message> {
+    let live = state.game.is_live();
+    let mut body = column![section(state.rtl, &tr(lang, "Players"))].spacing(2);
+    let pairs: Vec<(String, String)> = state
+        .profiles
+        .iter()
+        .map(|p| (p.id.clone(), profile_label(p, &state.profiles)))
+        .collect();
+    let mut choices = vec![(ASK.to_string(), tr(lang, "Ask"))];
+    choices.extend(pairs.iter().cloned());
+    let records = pad_records(state);
+    let last = records.len().saturating_sub(1);
+    for (i, (key, record)) in records.iter().enumerate() {
+        let connected = key == KEYBOARD || state.connected_pads.contains(key);
+        let label = if key == KEYBOARD {
+            tr(lang, "Keyboard and mouse")
+        } else if connected {
+            record.name.clone()
+        } else {
+            tr_fmt(lang, "{} (not connected)", &[&record.name])
+        };
+        let labels: Vec<String> = choices.iter().map(|(_, l)| l.clone()).collect();
+        let selected = choices
+            .iter()
+            .find(|(value, _)| *value == record.profile)
+            .map(|(_, l)| l.clone());
+        let (pick_key, pick_choices) = (key.clone(), choices.clone());
+        let pick = min_width(
+            SELECT_MIN,
+            pick_list(labels, selected, move |chosen: String| {
+                pick_choices
+                    .iter()
+                    .find(|(_, l)| *l == chosen)
+                    .map(|(value, _)| Message::Profile(ProfileMessage::Assign(pick_key.clone(), value.clone())))
+                    .unwrap_or(Message::Noop)
+            })
+            .text_size(SELECT_TEXT)
+            .style(theme::pick_list_dark),
+        );
+        let mut control = layout![pick].spacing(6).align_y(Center);
+        if !connected {
+            control = control.push(
+                button(text(tr(lang, "Forget")))
+                    .style(theme::button_flat)
+                    .on_press(Message::Profile(ProfileMessage::Forget(key.clone()))),
+            );
+        }
+        let mut notes = Vec::new();
+        if key != KEYBOARD && profiles::may_mix_up(&records, i) {
+            notes.push(tr(lang, "Another controller of this model has no serial number either: the two may be taken for each other."));
+        }
+        if record.profile != ASK
+            && records[..i].iter().any(|(_, r)| r.profile == record.profile)
+        {
+            notes.push(tr(lang, "Another controller has this profile: the later one to join asks."));
+        }
+        if i == last {
+            notes.push(tr(lang, PADS_NOTE));
+        }
+        let note = (!notes.is_empty()).then(|| notes.join(" "));
+        body = body.push(row(state.rtl, &label, control.into(), note.as_deref()));
+    }
+    body = body.push(section(state.rtl, &tr(lang, "Profiles")));
+    let last = state.profiles.len().saturating_sub(1);
+    for (i, profile) in state.profiles.iter().enumerate() {
+        let id = profile.id.clone();
+        let mut field = text_input(&format!("Player {}", profile.id), &profile.name)
+            .padding([6, 10])
+            .width(SELECT_MIN)
+            .style(theme::text_input_dark);
+        let mut delete = button(text(tr(lang, "Delete"))).style(theme::button_flat);
+        if !live {
+            let rename_id = id.clone();
+            field = field.on_input(move |name| {
+                Message::Profile(ProfileMessage::Rename(rename_id.clone(), name))
+            });
+            // The last profile stays: slot 1 needs one.
+            if state.profiles.len() > 1 {
+                delete = delete.on_press(Message::Profile(ProfileMessage::Delete(id.clone())));
+            }
+        }
+        let note = (i == last).then(|| tr(lang, PROFILES_NOTE));
+        body = body.push(row(
+            state.rtl,
+            &tr_fmt(lang, "Profile {}", &[&profile.id]),
+            layout![field, delete].spacing(6).align_y(Center).into(),
+            note.as_deref(),
+        ));
+    }
+    let mut add = button(text(tr(lang, "Add profile"))).style(theme::button_flat);
+    if !live && state.profiles.len() < 64 {
+        add = add.on_press(Message::Profile(ProfileMessage::Add));
+    }
+    body = body.push(row(
+        state.rtl,
+        "",
+        add.into(),
+        live.then(|| tr(lang, "Close the game to change the profiles."))
+            .as_deref(),
+    ));
+    body.into()
 }
 
 // --- Save backups ---
@@ -454,18 +698,7 @@ pub fn view(state: &State) -> Element<'_, Message> {
                 "A pet, wings, a portrait frame and a six-piece armor look at the Mystic from other console editions of the game: their data is already in your copy but nothing in it hands them out. Added to the account saves when the game starts (a backup is kept next to each)."
             )),
         ),
-        section(state.rtl, &tr(lang, "Player")),
-        row(
-            state.rtl,
-            &tr(lang, "Player name"),
-            text_input("Player", &state.store.text("player_name"))
-                .on_input(|name| Message::Set("player_name".to_string(), Value::String(name)))
-                .padding([6, 10])
-                .width(SELECT_MIN)
-                .style(theme::text_input_dark)
-                .into(),
-            Some(&hint(PLAYER_NAME_NOTE)),
-        ),
+        players_section(state, lang),
         checkbox(
             state.rtl,
             "lan_play",

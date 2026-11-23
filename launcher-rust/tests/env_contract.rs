@@ -15,6 +15,7 @@ const DERIVED: &[(&str, &str)] = &[
     ("SANCTUARY_PATCHES", "game_patches"),
     ("SANCTUARY_KEY_MAP", "controls"),
     ("SANCTUARY_PAD_MAP", "controls"),
+    ("SANCTUARY_PAD_PROFILES", "pad_profiles"),
 ];
 
 /// Switches the launcher parks: whatever the setting says, the game gets this value. None now: the

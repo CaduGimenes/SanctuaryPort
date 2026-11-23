@@ -396,6 +396,14 @@ pub fn nav_poll(state: &mut State) -> Option<Message> {
         state.nav_failed = true;
         return None;
     }
+    // Game > Players: the controllers connected now, remembered with their profiles.
+    if state.page == Page::Game {
+        if state.pads_scan.is_multiple_of(SCAN_POLLS) {
+            let devices = nav.joysticks.devices().unwrap_or_default();
+            crate::ui::pages::game::pads_seen(state, &devices);
+        }
+        state.pads_scan = state.pads_scan.wrapping_add(1);
+    }
     let mut step = None;
     if nav.device.is_some() {
         let fresh = nav.read();

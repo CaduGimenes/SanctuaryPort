@@ -1,7 +1,9 @@
 /* libSceSaveData on host directories:
- *   <user>/savedata/<user id>/<title id>/<dir name>/        files the game writes
- *   <user>/savedata/<user id>/<title id>/<dir name>.sce_sys/ param.bin, icon0.png
- *   <user>/savedata/<user id>/<title id>.memory/memory.dat  SaveDataMemory
+ *   <user>/savedata/<profile>/<title id>/<dir name>/        files the game writes
+ *   <user>/savedata/<profile>/<title id>/<dir name>.sce_sys/ param.bin, icon0.png
+ *   <user>/savedata/<profile>/<title id>.memory/memory.dat  SaveDataMemory
+ * <profile> is the profile in the user's seat (runtime_profiles.c): the user id itself unless
+ * the launcher assigns profiles.
  * A mounted directory appears to the guest as /savedata0../savedata15.
  * Metadata lives beside the directory so the guest's own files are untouched. */
 #define _GNU_SOURCE
@@ -81,7 +83,9 @@ static int make_dirs(const char *path) {
     return mkdir(buffer,0755) && errno!=EEXIST ? -1 : 0;
 }
 static void root(int32_t user, const char *title, char *out, size_t size) {
-    snprintf(out,size,"%s/savedata/%d/%s",runtime_file_user_dir(),user,title && *title ? title : title_id);
+    char profile[RUNTIME_PROFILE_ID_SIZE];
+    runtime_profile_dir(user,profile);
+    snprintf(out,size,"%s/savedata/%s/%s",runtime_file_user_dir(),profile,title && *title ? title : title_id);
 }
 static int valid_name(const char *name, size_t max) {
     size_t n=strnlen(name,max);

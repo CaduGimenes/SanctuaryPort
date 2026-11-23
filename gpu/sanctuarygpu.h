@@ -33,6 +33,14 @@ int sanctuarygpu_text_input_poll(char *out_utf8, uint64_t size);
  * poll: -1 while open, -2 cancelled, else the chosen index. */
 int sanctuarygpu_choice_begin(const char *title, const char *const *items, const char *const *images, int count, int focus);
 int sanctuarygpu_choice_poll(void);
+/* After begin: only this gamepad (SDL joystick id) and the keyboard answer the list, and the
+ * game's input is not held while it is open (a joining player chooses; the others play on).
+ * 0: any input, the game held (the default of every begin). */
+void sanctuarygpu_choice_set_owner(uint32_t joystick_id);
+/* Closes the list as cancelled (its owner's gamepad left). */
+void sanctuarygpu_choice_end(void);
+/* After text_input_begin: only this gamepad's Cross/Circle (and the keyboard) finish the text. */
+void sanctuarygpu_text_input_set_owner(uint32_t joystick_id);
 /* libScePngDec: PNG data decoded to RGBA8 rows `pitch` bytes apart in out (out_size bytes).
  * 1 with the size in width/height; 0 when the data is not a PNG or out is too small. */
 int sanctuarygpu_png_decode(const void *png, uint64_t size, void *out, uint64_t out_size, uint32_t pitch,
