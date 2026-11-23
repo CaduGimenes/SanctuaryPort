@@ -81,6 +81,14 @@ int main(void) {
     assert(!strcmp(name(1),"Stavros") && !strcmp(name(2),"Player 2") && !strcmp(name(3),"Player 3"));
     assert(runtime_profile_seat_ready(2));
 
+    /* A list with no profile left in it (emptied by hand) is made again: player 1 has one. */
+    char empty_path[512]; snprintf(empty_path,sizeof empty_path,"%s/profiles.txt",user_dir);
+    FILE *empty=fopen(empty_path,"wb"); assert(empty); fputs("bad line\n",empty); fclose(empty);
+    reset();
+    assert(!strcmp(name(1),"Stavros") && profile_count==3);
+    read_list(list,sizeof list);
+    assert(!strcmp(list,"1\tStavros\n3\tPlayer 3\n12\tPlayer 12\n"));
+
     /* The launcher's list is read as it is; names changed there show in the game (#86). */
     char path[512]; snprintf(path,sizeof path,"%s/profiles.txt",user_dir);
     FILE *f=fopen(path,"wb"); assert(f);

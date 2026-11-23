@@ -122,17 +122,20 @@ pub fn first_list(user_dir: &Path, player_name: &str) -> Vec<Profile> {
     list
 }
 
-/// The list of the saves folder; made (and written) from the saves there are when missing.
+/// The list of the saves folder; made (and written) from the saves there are when missing or
+/// when none is left in it (emptied by hand), so there is always a profile for player 1.
 pub fn read(user_dir: &Path, player_name: &str) -> io::Result<Vec<Profile>> {
-    match fs::read_to_string(list_path(user_dir)) {
-        Ok(text) => Ok(parse(&text)),
-        Err(e) if e.kind() == io::ErrorKind::NotFound => {
-            let list = first_list(user_dir, player_name);
-            write(user_dir, &list)?;
-            Ok(list)
-        }
-        Err(e) => Err(e),
+    let listed = match fs::read_to_string(list_path(user_dir)) {
+        Ok(text) => parse(&text),
+        Err(e) if e.kind() == io::ErrorKind::NotFound => Vec::new(),
+        Err(e) => return Err(e),
+    };
+    if !listed.is_empty() {
+        return Ok(listed);
     }
+    let list = first_list(user_dir, player_name);
+    write(user_dir, &list)?;
+    Ok(list)
 }
 
 /// Writes the list (through a temporary file, so the game never reads half of it).
@@ -393,6 +396,20 @@ mod tests {
         assert_eq!(list.len(), 3);
         // Read again: the file as it is, the old name no longer used.
         assert_eq!(read(dir.path(), "Other").unwrap(), list);
+    }
+
+    #[test]
+    fn an_empty_list_is_made_again() {
+        let dir = dir();
+        fs::create_dir_all(dir.path().join("savedata/2")).unwrap();
+        fs::write(list_path(dir.path()), "bad line\n").unwrap();
+        let list = read(dir.path(), "Stavros").unwrap();
+        let ids: Vec<&str> = list.iter().map(|p| p.id.as_str()).collect();
+        assert_eq!(ids, ["1", "2"]);
+        assert_eq!(
+            fs::read_to_string(list_path(dir.path())).unwrap(),
+            "1\tStavros\n2\tPlayer 2\n"
+        );
     }
 
     #[test]

@@ -126,7 +126,10 @@ static void load(void) {
             if (valid_id(line)) add(line,tab+1);
         }
         fclose(f);
-    } else first_list();
+    }
+    /* No list, or none left in it (emptied by hand): made again from the saves, so there is
+     * always a profile for player 1. */
+    if (!profile_count) first_list();
     const char *list=getenv("SANCTUARY_PAD_PROFILES");
     configured=list!=NULL;
     for (const char *line=list; line && *line && pad_count<MAX_PADS;) {
