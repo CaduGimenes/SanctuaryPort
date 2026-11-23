@@ -336,9 +336,9 @@
     <Metadata Title="Diablo III" Name="Experimental: Smooth character motion above 60 FPS" Note="Above 60 FPS the hero and monsters move only on every other frame and look jittery; this places them where they are at the moment of each frame. No change at 60 FPS or below." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="true">
         <PatchList>
             <Line Type="bytes" Address="0x177b800" Value="51 8b4854 6bc932 034838 2b4840 c5fa2ac1 c5fa5e0502000000 59 c3 00803b45" Target="smooth_cave"/>
-            <Line Type="bytes" Address="0x657022" Value="e8{rel:smooth_cave:0}" Pattern="c5 f2 58 93 38 02 00 00 c5 f2 58 b3 3c 02 00 00 0f b7 93 d8 01 00 00 89 d6 c5 fa 10 40 60 48 8b 80 78 0a 00 00 c5 ea 5c d0 c5 ca 5c c0" At="25"/>
+            <Line Type="bytes" Address="0x657022" Value="e8{rel:smooth_cave:0}" Pattern="c5 f2 58 93 38 02 00 00 c5 f2 58 b3 3c 02 00 00 0f b7 93 d8 01 00 00 89 d6 c5 fa 10 40 60 48 8b 80 ?? 0a 00 00 c5 ea 5c d0 c5 ca 5c c0" At="25"/>
         </PatchList>
-        <Target Name="smooth_cave" Address="0x177b800" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="4236"/>
+        <Target Name="smooth_cave" Address="0x177b800" Pad="code" At="0x1070"/>
     </Metadata>
     <!-- Dynamic resolution off (Graphics > Dynamic resolution, run.py). The scaler's update (1.47 eboot
          0x26e80) averages its last eight GPU times and steps the scene's scale [obj+0x18] by 0.05 between
@@ -372,38 +372,39 @@
          online pubfile service for Seasons.txt and Config.txt; offline the answer never comes. The base patch
          "Offline Seasons" hooks the per-user lobby update (eboot 0x43528) and feeds both files once to the
          game's own handlers, skips the server-time check (0x42b9e), forces the season state to in progress
-         (0x42c0b), confirms the season at hero creation (0x2f97f0) and validates seasonal heroes (0x144020).
+         (0x42c0b), confirms the season at hero creation (0x2f97e8) and validates seasonal heroes (0x144020).
          Each "Offline Seasons - Season N" is that base (Base=) plus the season number and the community events
          of its theme. Each "Event: ..." sets one flag of the event table. The code lives in the unused zero
-         padding that ends the code segment (last used byte 0x137a78b, padding to the segment's end 0x13847ec);
-         its variables in the unused rest of the last data page (0x1702f80). Every site, and the cave itself,
-         is found by a signature, so another eboot is skipped, never overwritten. Needs the FILETIME fix of
-         src/runtime_rtc.c. -->
+         padding that ends the code segment (Pad="code", 16-byte aligned after its last non-zero byte:
+         0x137a790 in 1.47, 0x137a520 in clean 1.46, or after any appended stub like dlcldr.prx); its variables
+         in the unused rest of the last data page (Pad="bss"). The two 1.47 default-on Altar/Visions clear
+         writes (0x926fe6, 0x9272cf) are Optional="true" because 1.46 (2.7.6) and earlier seasonal builds do
+         not hardcode those buffs on by default. Needs the FILETIME fix of src/runtime_rtc.c. -->
     <Metadata Title="Diablo III" Name="Offline Seasons" Note="Shared part of the offline seasons (choose one &#x27;Offline Seasons - Season N&#x27;): answers the Seasons.txt and Config.txt requests locally, skips the server-time check and validates seasonal heroes. Code in the unused zero padding at the end of the code segment." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x177a790" Value="803d{rel:flagvar:1}000f8595000000c605{rel:flagvar:1}01574881ec60040000488d057501000048c7c157000000e87b000000e8{rel:thunk_s:0}488d7c2460488d35af01000048c7c1bd000000f3a431d281fa100000007332488d0566040000803c1000750d488d0549040000803c10007414488d05a4000000486334d04801c68b4cd004f3a4ffc2ebc6488d4424604889f94829c1e815000000e8{rel:thunk_c:0}4881c4600400005f4889fb498b0424c3c744240800000000488944242048894c242848894c243048c744243800000000c74424400000004048c74424480000000048c744245000000000488d4424204889442410488d4424384889442418488b8424680400004889442458488d7c2458488d742408488d542410c30f1f00940100001f000000b301000022000000d50100001f000000f401000024000000180200001d000000350200001d000000520200001d0000006f02000022000000910200001e000000af02000026000000d50200001f000000f40200001c000000100300001c0000002c030000210000004d030000200000006d0300001c0000005b536561736f6e2034305d0a537461727420225361742c2030392046656220323032352030303a30303a303020474d54220a456e6420225475652c2030392046656220323033362030313a30303a303020474d54220a0a436f6d6d756e69747942756666537461727420223f3f3f2c2031362053657020323032332030303a30303a303020474d54220a436f6d6d756e69747942756666456e6420223f3f3f2c2030312046656220323033362030313a30303a303020474d54220a436f6d6d756e69747942756666536561736f6e4f6e6c79202231220a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a436f6d6d756e69747942756666446f75626c65476f626c696e73202231220a436f6d6d756e69747942756666446f75626c65426f756e747942616773202231220a436f6d6d756e69747942756666526f79616c4772616e64657572202231220a436f6d6d756e697479427566664c65676163794f664e696768746d61726573202231220a436f6d6d756e69747942756666547269756e657357696c6c202231220a436f6d6d756e6974794275666650616e64656d6f6e69756d202231220a436f6d6d756e697479427566664b616e6169506f77657273202231220a436f6d6d756e69747942756666547269616c734f6654656d7065737473202231220a436f6d6d756e69747942756666536861646f77436c6f6e6573202231220a436f6d6d756e69747942756666466f757274684b616e61697343756265536c6f74202231220a436f6d6d756e69747942756666457468657265616c4974656d73202231220a436f6d6d756e69747942756666536f756c536861726473202231220a436f6d6d756e69747942756666537761726d5269667473202231220a436f6d6d756e6974794275666653616e637469666965644974656d73202231220a436f6d6d756e69747942756666456173746572456767576f726c64202231220a436f6d6d756e69747942756666536561736f6e4f6e6c79202230220a66662e0f1f8400000000000f1f4000" Target="cave"/>
-            <Line Type="bytes" Address="0x443528" Value="e8{rel:cave:0}9090" Pattern="4c 8b 25 ?? ?? ?? ?? 48 89 fb 49 8b 04 24 48 89 45 d0 e8 08 a7 ff ff 41 89 c6 48 8b 03 48 89 df ff 50 18" At="7"/>
+            <Line Type="bytes" Address="0x443528" Value="e8{rel:cave:0}9090" Pattern="4c 8b 25 ?? ?? ?? ?? 48 89 fb 49 8b 04 24 48 89 45 d0 e8 ?? ?? ?? ?? 41 89 c6 48 8b 03 48 89 df ff 50 18" At="7"/>
             <Line Type="bytes" Address="0x442b9e" Value="909090909090" Pattern="48 8d 1d ?? ?? ?? ?? 83 7b 08 00 0f 84 60 02 00 00 48 8d 05" At="11"/>
             <Line Type="bytes" Address="0x442c0b" Value="bf01000000" Pattern="48 85 f6 74 0a bf 02 00 00 00 49 39 f0 7d 1b 4c 3b 40 f8 bf 01 00 00 00" At="5"/>
-            <Line Type="bytes" Address="0x6f97f0" Value="e9db00000090" Pattern="8b 05 ?? ?? ?? ?? 85 c0 0f 85 da 00 00 00 48 8d bd 08 ff ff ff e8" At="8"/>
-            <Line Type="bytes" Address="0x544020" Value="31c0c390" Pattern="55 48 89 e5 41 57 41 56 41 55 41 54 53 48 81 ec d8 00 00 00 4c 8b 3d 8d" At="0"/>
-            <Line Type="bytes" Address="0x5404f1" Value="31db" Pattern="e8 cf 63 f2 ff 89 c3 85 db 0f 84 a9 04 00 00 89 d8 83 c8 08" At="5"/>
+            <Line Type="bytes" Address="0x6f97e8" Value="b80100000090" Pattern="8b 05 ?? ?? ?? ?? 85 c0 0f 85 ?? ?? 00 00 48 8d bd 08 ff ff ff e8" At="0"/>
+            <Line Type="bytes" Address="0x544020" Value="31c0c390" Pattern="55 48 89 e5 41 57 41 56 41 55 41 54 53 48 81 ec d8 00 00 00 4c 8b 3d ?? ?? ?? ?? 49 89 fe 49 8b 07 48 89 45 d0 41 80 be ?? 01 00 00 00 74 09 4d 8d a6 ?? 01 00 00 eb 03" At="0"/>
+            <Line Type="bytes" Address="0x5404ec" Value="31c0909090" Pattern="bf 01 00 00 00 e8 ?? ?? ?? ?? 89 c3 85 db 0f 84 ?? ?? 00 00 89 d8 83 c8 08 | bf 01 00 00 00 e8 ?? ?? ?? ?? 41 89 c5 45 85 ed 0f 84 ?? ?? 00 00 44 89 e8 83 c8 08" At="5"/>
             <Line Type="bytes" Address="0x44343f" Value="9090" Pattern="4c 8d 35 ?? ?? ?? ?? 31 db 41 83 7e 08 00 74 4f e8" At="14"/>
-            <Line Type="bytes" Address="0x926fe6" Value="c7436000000000c7436400000000c7436800000000" Pattern="48 8d 0d 4e 80 fb 00 42 c6 04 38 00 4c 89 7b 40 48 89 13 c7 43 60 01 00 00 00 c7 43 64 01 00 00 00 c7 43 68 01 00 00 00" At="19"/>
-            <Line Type="bytes" Address="0x9272cf" Value="c7436000000000c7436400000000c7436800000000" Pattern="48 8d 0d d5 7e fb 00 42 c6 04 38 00 4c 89 7b 40 48 89 13 c7 43 60 01 00 00 00 c7 43 64 01 00 00 00 c7 43 68 01 00 00 00" At="19"/>
+            <Line Type="bytes" Address="0x926fe6" Value="c7436000000000c7436400000000c7436800000000" Optional="true" Pattern="48 8d 0d ?? ?? ?? ?? 42 c6 04 38 00 4c 89 7b 40 48 89 13 c7 43 60 01 00 00 00 c7 43 64 01 00 00 00 c7 43 68 01 00 00 00 48 89 4b 70 48 83 7d 90 00 78 09 48 8b 7d 80 e8 ?? ?? ?? ?? 48 83 7d b8 00 78 09 48 8b 7d a8 e8 ?? ?? ?? ?? 48 8b 85 c8 fe ff ff 48 8b b8 a0 00 00 00" At="19"/>
+            <Line Type="bytes" Address="0x9272cf" Value="c7436000000000c7436400000000c7436800000000" Optional="true" Pattern="48 8d 0d ?? ?? ?? ?? 42 c6 04 38 00 4c 89 7b 40 48 89 13 c7 43 60 01 00 00 00 c7 43 64 01 00 00 00 c7 43 68 01 00 00 00 48 89 4b 70 48 83 7d 90 00 78 09 48 8b 7d 80 e8 ?? ?? ?? ?? 48 83 7d b8 00 78 09 48 8b 7d a8 e8 ?? ?? ?? ?? 48 8b 85 c8 fe ff ff 48 8b b8 b0 00 00 00" At="19"/>
             <Line Type="bytes" Address="0x177a815" Value="e94e040000" Target="ev2_hook"/>
             <Line Type="bytes" Address="0x177ac68" Value="31d283fa087325488d05eaffffff803c10007414488d051d000000486334d04801c68b4cd004f3a4ffc2ebd6488d442460e97cfbffff669040000000250000006500000023000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000436f6d6d756e69747942756666446f75626c65526966744b657973746f6e6573202231220a436f6d6d756e69747942756666446f75626c65426c6f6f64536861726473202231220a" Target="ev2_stub"/>
-</PatchList>
-        <Target Name="cave" Address="0x177a790" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="28"/>
-        <Target Name="season_no" Address="0x177a930" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="444"/>
-        <Target Name="theme" Address="0x177ac40" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1228"/>
-        <Target Name="altar" Address="0x177a9ff" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="651"/>
-        <Target Name="visions" Address="0x177aa1c" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="680"/>
-        <Target Name="flagvar" Address="0x1b02f80" Pattern="00 26 fb 00 00 00 00 00 00 00 00 00 00 00 00 00 ff ff ff ff ff ff ff ff 00 00 00 00 00 00 00 00" At="2817152"/>
+        </PatchList>
+        <Target Name="cave" Address="0x177a790" Pad="code" At="0x0"/>
+        <Target Name="season_no" Address="0x177a930" Pad="code" At="0x1a0"/>
+        <Target Name="theme" Address="0x177ac40" Pad="code" At="0x4b0"/>
+        <Target Name="altar" Address="0x177a9ff" Pad="code" At="0x26f"/>
+        <Target Name="visions" Address="0x177aa1c" Pad="code" At="0x28c"/>
+        <Target Name="flagvar" Address="0x1b02f80" Pad="bss" At="0x0"/>
         <Target Name="thunk_c" Address="0x451ff0" Pattern="48 8b 03 bf 20 00 00 00 4c 8b 70 70 e8 ?? ?? ?? ?? 48 8d 0d ?? ?? ?? ??" At="20" Ref="1" Tail="0"/>
         <Target Name="thunk_s" Address="0x4520b0" Pattern="c6 01 01 48 8b 03 4c 8b 70 70 e8 ?? ?? ?? ?? 48 8d 0d ?? ?? ?? ??" At="18" Ref="1" Tail="0"/>
-            <Target Name="ev2_hook" Address="0x177a815" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="161"/>
-        <Target Name="ev2_stub" Address="0x177ac68" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1268"/>
+        <Target Name="ev2_hook" Address="0x177a815" Pad="code" At="0x85"/>
+        <Target Name="ev2_stub" Address="0x177ac68" Pad="code" At="0x4d8"/>
     </Metadata>
     <Metadata Title="Diablo III" Name="Offline Seasons - Season 14" Note="Offline seasonal heroes for Season 14, with the Season Journey and the season&#x27;s community event (DoubleGoblins). Tick one season only; it needs no other patch." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false" Base="Offline Seasons">
         <PatchList>
@@ -596,117 +597,135 @@
         <PatchList>
             <Line Type="bytes" Address="0x177ac50" Value="01" Target="tbl"/>
         </PatchList>
-        <Target Name="tbl" Address="0x177ac50" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1244"/>
+        <Target Name="tbl" Address="0x177ac50" Pad="code" At="0x4c0"/>
+        <Target Name="seasons" Address="0x443528" Pattern="4c 8b 25 ?? ?? ?? ?? 48 89 fb 49 8b 04 24 48 89 45 d0 e8 ?? ?? ?? ?? 41 89 c6 48 8b 03 48 89 df ff 50 18" At="7"/>
     </Metadata>
     <Metadata Title="Diablo III" Name="Event: Double Bounty Bags" Note="Offline community event: adds CommunityBuffDoubleBountyBags &quot;1&quot; to the local Config.txt. Needs an offline season." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x177ac51" Value="01" Target="tbl"/>
         </PatchList>
-        <Target Name="tbl" Address="0x177ac51" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1245"/>
+        <Target Name="tbl" Address="0x177ac51" Pad="code" At="0x4c1"/>
+        <Target Name="seasons" Address="0x443528" Pattern="4c 8b 25 ?? ?? ?? ?? 48 89 fb 49 8b 04 24 48 89 45 d0 e8 ?? ?? ?? ?? 41 89 c6 48 8b 03 48 89 df ff 50 18" At="7"/>
     </Metadata>
     <Metadata Title="Diablo III" Name="Event: Royal Grandeur" Note="Offline community event: adds CommunityBuffRoyalGrandeur &quot;1&quot; to the local Config.txt. Needs an offline season." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x177ac52" Value="01" Target="tbl"/>
         </PatchList>
-        <Target Name="tbl" Address="0x177ac52" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1246"/>
+        <Target Name="tbl" Address="0x177ac52" Pad="code" At="0x4c2"/>
+        <Target Name="seasons" Address="0x443528" Pattern="4c 8b 25 ?? ?? ?? ?? 48 89 fb 49 8b 04 24 48 89 45 d0 e8 ?? ?? ?? ?? 41 89 c6 48 8b 03 48 89 df ff 50 18" At="7"/>
     </Metadata>
     <Metadata Title="Diablo III" Name="Event: Legacy of Nightmares" Note="Offline community event: adds CommunityBuffLegacyOfNightmares &quot;1&quot; to the local Config.txt. Needs an offline season." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x177ac53" Value="01" Target="tbl"/>
         </PatchList>
-        <Target Name="tbl" Address="0x177ac53" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1247"/>
+        <Target Name="tbl" Address="0x177ac53" Pad="code" At="0x4c3"/>
+        <Target Name="seasons" Address="0x443528" Pattern="4c 8b 25 ?? ?? ?? ?? 48 89 fb 49 8b 04 24 48 89 45 d0 e8 ?? ?? ?? ?? 41 89 c6 48 8b 03 48 89 df ff 50 18" At="7"/>
     </Metadata>
     <Metadata Title="Diablo III" Name="Event: Triune&#x27;s Will" Note="Offline community event: adds CommunityBuffTriunesWill &quot;1&quot; to the local Config.txt. Needs an offline season." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x177ac54" Value="01" Target="tbl"/>
         </PatchList>
-        <Target Name="tbl" Address="0x177ac54" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1248"/>
+        <Target Name="tbl" Address="0x177ac54" Pad="code" At="0x4c4"/>
+        <Target Name="seasons" Address="0x443528" Pattern="4c 8b 25 ?? ?? ?? ?? 48 89 fb 49 8b 04 24 48 89 45 d0 e8 ?? ?? ?? ?? 41 89 c6 48 8b 03 48 89 df ff 50 18" At="7"/>
     </Metadata>
     <Metadata Title="Diablo III" Name="Event: Pandemonium" Note="Offline community event: adds CommunityBuffPandemonium &quot;1&quot; to the local Config.txt. Needs an offline season." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x177ac55" Value="01" Target="tbl"/>
         </PatchList>
-        <Target Name="tbl" Address="0x177ac55" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1249"/>
+        <Target Name="tbl" Address="0x177ac55" Pad="code" At="0x4c5"/>
+        <Target Name="seasons" Address="0x443528" Pattern="4c 8b 25 ?? ?? ?? ?? 48 89 fb 49 8b 04 24 48 89 45 d0 e8 ?? ?? ?? ?? 41 89 c6 48 8b 03 48 89 df ff 50 18" At="7"/>
     </Metadata>
     <Metadata Title="Diablo III" Name="Event: Kanai Powers" Note="Offline community event: adds CommunityBuffKanaiPowers &quot;1&quot; to the local Config.txt. Needs an offline season." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x177ac56" Value="01" Target="tbl"/>
         </PatchList>
-        <Target Name="tbl" Address="0x177ac56" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1250"/>
+        <Target Name="tbl" Address="0x177ac56" Pad="code" At="0x4c6"/>
+        <Target Name="seasons" Address="0x443528" Pattern="4c 8b 25 ?? ?? ?? ?? 48 89 fb 49 8b 04 24 48 89 45 d0 e8 ?? ?? ?? ?? 41 89 c6 48 8b 03 48 89 df ff 50 18" At="7"/>
     </Metadata>
     <Metadata Title="Diablo III" Name="Event: Trials of Tempests" Note="Offline community event: adds CommunityBuffTrialsOfTempests &quot;1&quot; to the local Config.txt. Needs an offline season." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x177ac57" Value="01" Target="tbl"/>
         </PatchList>
-        <Target Name="tbl" Address="0x177ac57" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1251"/>
+        <Target Name="tbl" Address="0x177ac57" Pad="code" At="0x4c7"/>
+        <Target Name="seasons" Address="0x443528" Pattern="4c 8b 25 ?? ?? ?? ?? 48 89 fb 49 8b 04 24 48 89 45 d0 e8 ?? ?? ?? ?? 41 89 c6 48 8b 03 48 89 df ff 50 18" At="7"/>
     </Metadata>
     <Metadata Title="Diablo III" Name="Event: Shadow Clones" Note="Offline community event: adds CommunityBuffShadowClones &quot;1&quot; to the local Config.txt. Needs an offline season." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x177ac58" Value="01" Target="tbl"/>
         </PatchList>
-        <Target Name="tbl" Address="0x177ac58" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1252"/>
+        <Target Name="tbl" Address="0x177ac58" Pad="code" At="0x4c8"/>
+        <Target Name="seasons" Address="0x443528" Pattern="4c 8b 25 ?? ?? ?? ?? 48 89 fb 49 8b 04 24 48 89 45 d0 e8 ?? ?? ?? ?? 41 89 c6 48 8b 03 48 89 df ff 50 18" At="7"/>
     </Metadata>
     <Metadata Title="Diablo III" Name="Event: Fourth Kanai&#x27;s Cube Slot" Note="Offline community event: adds CommunityBuffFourthKanaisCubeSlot &quot;1&quot; to the local Config.txt. Needs an offline season." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x177ac59" Value="01" Target="tbl"/>
         </PatchList>
-        <Target Name="tbl" Address="0x177ac59" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1253"/>
+        <Target Name="tbl" Address="0x177ac59" Pad="code" At="0x4c9"/>
+        <Target Name="seasons" Address="0x443528" Pattern="4c 8b 25 ?? ?? ?? ?? 48 89 fb 49 8b 04 24 48 89 45 d0 e8 ?? ?? ?? ?? 41 89 c6 48 8b 03 48 89 df ff 50 18" At="7"/>
     </Metadata>
     <Metadata Title="Diablo III" Name="Event: Ethereal Items" Note="Offline community event: adds CommunityBuffEtherealItems &quot;1&quot; to the local Config.txt. Needs an offline season." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x177ac5a" Value="01" Target="tbl"/>
         </PatchList>
-        <Target Name="tbl" Address="0x177ac5a" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1254"/>
+        <Target Name="tbl" Address="0x177ac5a" Pad="code" At="0x4ca"/>
+        <Target Name="seasons" Address="0x443528" Pattern="4c 8b 25 ?? ?? ?? ?? 48 89 fb 49 8b 04 24 48 89 45 d0 e8 ?? ?? ?? ?? 41 89 c6 48 8b 03 48 89 df ff 50 18" At="7"/>
     </Metadata>
     <Metadata Title="Diablo III" Name="Event: Soul Shards" Note="Offline community event: adds CommunityBuffSoulShards &quot;1&quot; to the local Config.txt. Needs an offline season." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x177ac5b" Value="01" Target="tbl"/>
         </PatchList>
-        <Target Name="tbl" Address="0x177ac5b" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1255"/>
+        <Target Name="tbl" Address="0x177ac5b" Pad="code" At="0x4cb"/>
+        <Target Name="seasons" Address="0x443528" Pattern="4c 8b 25 ?? ?? ?? ?? 48 89 fb 49 8b 04 24 48 89 45 d0 e8 ?? ?? ?? ?? 41 89 c6 48 8b 03 48 89 df ff 50 18" At="7"/>
     </Metadata>
     <Metadata Title="Diablo III" Name="Event: Swarm Rifts" Note="Offline community event: adds CommunityBuffSwarmRifts &quot;1&quot; to the local Config.txt. Needs an offline season." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x177ac5c" Value="01" Target="tbl"/>
         </PatchList>
-        <Target Name="tbl" Address="0x177ac5c" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1256"/>
+        <Target Name="tbl" Address="0x177ac5c" Pad="code" At="0x4cc"/>
+        <Target Name="seasons" Address="0x443528" Pattern="4c 8b 25 ?? ?? ?? ?? 48 89 fb 49 8b 04 24 48 89 45 d0 e8 ?? ?? ?? ?? 41 89 c6 48 8b 03 48 89 df ff 50 18" At="7"/>
     </Metadata>
     <Metadata Title="Diablo III" Name="Event: Sanctified Items" Note="Offline community event: adds CommunityBuffSanctifiedItems &quot;1&quot; to the local Config.txt. Needs an offline season." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x177ac5d" Value="01" Target="tbl"/>
         </PatchList>
-        <Target Name="tbl" Address="0x177ac5d" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1257"/>
+        <Target Name="tbl" Address="0x177ac5d" Pad="code" At="0x4cd"/>
+        <Target Name="seasons" Address="0x443528" Pattern="4c 8b 25 ?? ?? ?? ?? 48 89 fb 49 8b 04 24 48 89 45 d0 e8 ?? ?? ?? ?? 41 89 c6 48 8b 03 48 89 df ff 50 18" At="7"/>
     </Metadata>
     <Metadata Title="Diablo III" Name="Event: Whimsyshire (Easter Egg World)" Note="Offline community event: adds CommunityBuffEasterEggWorld &quot;1&quot; to the local Config.txt. Needs an offline season." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x177ac5e" Value="01" Target="tbl"/>
         </PatchList>
-        <Target Name="tbl" Address="0x177ac5e" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1258"/>
+        <Target Name="tbl" Address="0x177ac5e" Pad="code" At="0x4ce"/>
+        <Target Name="seasons" Address="0x443528" Pattern="4c 8b 25 ?? ?? ?? ?? 48 89 fb 49 8b 04 24 48 89 45 d0 e8 ?? ?? ?? ?? 41 89 c6 48 8b 03 48 89 df ff 50 18" At="7"/>
     </Metadata>
     <Metadata Title="Diablo III" Name="Event: Double Rift Keystones" Note="Offline community event: adds CommunityBuffDoubleRiftKeystones &quot;1&quot; to the local Config.txt. Needs an offline season." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x177ac60" Value="01" Target="tbl2"/>
         </PatchList>
-        <Target Name="tbl2" Address="0x177ac60" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1260"/>
+        <Target Name="tbl2" Address="0x177ac60" Pad="code" At="0x4d0"/>
+        <Target Name="seasons" Address="0x443528" Pattern="4c 8b 25 ?? ?? ?? ?? 48 89 fb 49 8b 04 24 48 89 45 d0 e8 ?? ?? ?? ?? 41 89 c6 48 8b 03 48 89 df ff 50 18" At="7"/>
     </Metadata>
     <Metadata Title="Diablo III" Name="Event: Double Blood Shards" Note="Offline community event: adds CommunityBuffDoubleBloodShards &quot;1&quot; to the local Config.txt. Needs an offline season." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x177ac61" Value="01" Target="tbl2"/>
         </PatchList>
-        <Target Name="tbl2" Address="0x177ac61" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1261"/>
+        <Target Name="tbl2" Address="0x177ac61" Pad="code" At="0x4d1"/>
+        <Target Name="seasons" Address="0x443528" Pattern="4c 8b 25 ?? ?? ?? ?? 48 89 fb 49 8b 04 24 48 89 45 d0 e8 ?? ?? ?? ?? 41 89 c6 48 8b 03 48 89 df ff 50 18" At="7"/>
     </Metadata>
     <Metadata Title="Diablo III" Name="Event: Also in non-seasonal games" Note="Offline community event: adds CommunityBuffSeasonOnly &quot;0&quot; to the local Config.txt. Needs an offline season." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x177ac5f" Value="01" Target="tbl"/>
         </PatchList>
-        <Target Name="tbl" Address="0x177ac5f" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1259"/>
+        <Target Name="tbl" Address="0x177ac5f" Pad="code" At="0x4cf"/>
+        <Target Name="seasons" Address="0x443528" Pattern="4c 8b 25 ?? ?? ?? ?? 48 89 fb 49 8b 04 24 48 89 45 d0 e8 ?? ?? ?? ?? 41 89 c6 48 8b 03 48 89 df ff 50 18" At="7"/>
     </Metadata>
     <Metadata Title="Diablo III" Name="Event: Challenge Rifts" Note="Offline Challenge Rifts: the game reads challengerift_config.dat and challengerift_N.dat from user/data/pubfiles (you supply the files; see patches/challenge_rift_data/README.md), with a new challenge number each launch." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x177af90" Value="488d05cb01000031c9448a04084584c0740e443a040e0f85ab010000ffc1ebe9554889e55341544155415641574881ec1802000048893c244989f44989d5488dbc2400010000488d3594010000ac84c07403aaebf84c89e6b9f0000000acaa84c07405e2f8c60700488dbc240001000031f631d2ff15{rel:got_open:0}85c00f882a01000089c389df31f6ba02000000ff15{rel:got_lseek:0}4989c689df31f631d2ff15{rel:got_lseek:0}4d85f60f8ef9000000498d7e10e8{rel:newobj:0}4989c789df4c89fe4c89f2ff15{rel:got_read:0}4989c689dfff15{rel:got_close:0}4d85f60f8ed300000041807c240e63753c6641813f088175348b05{rel:chalnum:0}85c075140f3131d2b984030000f7f18d420a8905{rel:chalnum:0}89c183e17f81c98000000041884f01c1e80741884702bf40000000e8{rel:newobj:0}4889c34c893b4c8973084c89731048c743180000000048c7432000000000c7432800000040c7432c0000004048c743300000000048c7433800000000c74424080000000048895c2410488d43204889442418498b45004885c07410488d7818488d742408488d542410ff104881c418020000415f415e415d415c5b5dc389dfff15{rel:got_close:0}488b3c244c89e64c89ea4881c418020000415f415e415d415c5b5d554889e54157e9{rel:orig_next:0}6368616c6c656e6765726966745f002f646174612f70756266696c65732f00" Target="cr_cave"/>
             <Line Type="bytes" Address="0x448590" Value="e9{rel:cr_cave:0}90" Pattern="ff 60 18 90 90 90 90 90 90 90 90 90 90 90 90 55 48 89 e5 41 57 41 56 41 55 41 54 53" At="15"/>
         </PatchList>
-        <Target Name="cr_cave" Address="0x177af90" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="2076"/>
-        <Target Name="chalnum" Address="0x1b02f84" Pattern="00 26 fb 00 00 00 00 00 00 00 00 00 00 00 00 00 ff ff ff ff ff ff ff ff 00 00 00 00 00 00 00 00" At="2817156"/>
+        <Target Name="cr_cave" Address="0x177af90" Pad="code" At="0x800"/>
+        <Target Name="chalnum" Address="0x1b02f84" Pad="bss" At="0x4"/>
         <Target Name="got_close" Address="0x1809a60" Pattern="68 1a 00 00 00 e9 ?? ?? ?? ?? ff 25 ?? ?? ?? ??" At="12" Ref="1" Tail="0"/>
         <Target Name="got_lseek" Address="0x1809a88" Pattern="68 1f 00 00 00 e9 ?? ?? ?? ?? ff 25 ?? ?? ?? ??" At="12" Ref="1" Tail="0"/>
         <Target Name="got_open" Address="0x1809a98" Pattern="68 21 00 00 00 e9 ?? ?? ?? ?? ff 25 ?? ?? ?? ??" At="12" Ref="1" Tail="0"/>
@@ -746,9 +765,9 @@
     <Metadata Title="Diablo III" Name="Cheat: Movement speed +25%" Note="The hero runs 25% faster, on top of the movement speed from items." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="utf8" Address="0x177b200" Value="Movement_Scalar_Capped_Total + Movement_Scalar_Uncapped_Bonus + 0.25 * Pin(TeamID - 1, 0, 1) * Pin(3 - TeamID, 0, 1)" Target="ms_formula"/>
-            <Line Type="bytes" Address="0xb4dd35" Value="{rel:ms_formula:0}" Pattern="48 89 05 ae f0 da 00 48 8d 0d b8 0f 91 00 48 8d 05 ef 0f 91 00" At="10"/>
+            <Line Type="bytes" Address="0xb4dd35" Value="{rel:ms_formula:0}" Pattern="48 89 05 ?? ?? ?? ?? 48 8d 0d b8 0f 91 00 48 8d 05 ef 0f 91 00" At="10"/>
         </PatchList>
-        <Target Name="ms_formula" Address="0x177b200" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="2700"/>
+        <Target Name="ms_formula" Address="0x177b200" Pad="code" At="0xa70"/>
     </Metadata>
     <!-- Auto pickup: 0x583940 answers whether an actor on the ground is picked up by walking over it (the
          server's pickup sweep at 0x4f5100 asks it for each item near a hero, and the client hides the
@@ -811,7 +830,7 @@
             <Line Type="bytes" Address="0x177b400" Value="89c3 3d11920600 7505 bbffffffff 83fbff c3" Target="mystic_cave"/>
             <Line Type="bytes" Address="0xe83f26" Value="e8{rel:mystic_cave:0}" Pattern="55 48 89 e5 53 50 48 89 f8 bf 3a 00 00 00 48 89 c6 e8 ?? ?? ?? ?? 89 c3 83 fb ff 74 38" At="22"/>
         </PatchList>
-        <Target Name="mystic_cave" Address="0x177b400" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="3212"/>
+        <Target Name="mystic_cave" Address="0x177b400" Pad="code" At="0xc70"/>
     </Metadata>
     <!-- PC render target sizes (launcher Graphics > More options > Sharper shadows and reflections, sanctuary.ini
          pc_render_targets; run.py picks the entries). The console build gives some render targets fixed

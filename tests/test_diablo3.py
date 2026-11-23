@@ -67,17 +67,16 @@ class Diablo3PatchTests(unittest.TestCase):
         self.assertIn(self.SMOOTH, patches.selected_patches(xml, '01.47', ''))
         targets = {t.get('Name') for t in meta.iter('Target')}
         for target in meta.iter('Target'):
-            self.assertTrue(target.get('Pattern'), target.get('Name'))
+            self.assertTrue(target.get('Pattern') or target.get('Pad'), target.get('Name'))
         for line in meta.iter('Line'):
             self.assertTrue(line.get('Pattern') or line.get('Target') in targets, line.get('Address'))
-        # A small image: the site, and the zero padding that ends the code (the offline seasons' anchor).
-        anchor = bytes.fromhex(next(t for t in meta.iter('Target')).get('Pattern').replace(' ', ''))
-        site_at, anchor_at = 0x1000, 0x3000
+        # A small image: the site, and trailing zero padding at the end of the code segment.
+        site_at, tail_end = 0x1000, 0x3000
         image = bytearray(0x6000)
         image[site_at:site_at + len(self.SMOOTH_SITE)] = self.SMOOTH_SITE
-        image[anchor_at:anchor_at + 24] = anchor[:24]
+        image[tail_end - 1] = 0xff  # last non-zero byte -> pad base 0x3000
         writes = dict(patches.compile_patches(xml, [self.SMOOTH], '01.47', [(0, len(image))], image=bytes(image)))
-        cave = anchor_at + 4236
+        cave = tail_end + 0x1070
         call = site_at + 25
         self.assertEqual(set(writes), {cave, call})
         self.assertEqual(writes[call][:1], b'\xe8')
@@ -106,7 +105,7 @@ class Diablo3PatchTests(unittest.TestCase):
         self.assertNotIn(name, patches.selected_patches(xml, '01.47', ''))
         targets = {t.get('Name') for t in meta.iter('Target')}
         for target in meta.iter('Target'):
-            self.assertTrue(target.get('Pattern'), (name, target.get('Name')))
+            self.assertTrue(target.get('Pattern') or target.get('Pad'), (name, target.get('Name')))
         for line in meta.iter('Line'):
             self.assertTrue(line.get('Pattern') or line.get('Target') in targets, (name, line.get('Address')))
         # Without the patch the game's bytes stay; another build (no signature found) is skipped whole.
@@ -178,13 +177,12 @@ class Diablo3PatchTests(unittest.TestCase):
         self.assertEqual(call + 5 + struct.unpack('<i', writes[call][1:])[0], cave)
         self.assertEqual(writes[cave], bytes.fromhex('89c3 3d11920600 7505 bbffffffff 83fbff c3'))
         # Found by its signature in a small image; another build is skipped whole.
-        anchor = bytes.fromhex(meta.find('Target').get('Pattern').replace(' ', ''))
-        site_at, anchor_at = 0x1000, 0x3000
+        site_at, tail_end = 0x1000, 0x3000
         image = bytearray(0x6000)
         image[site_at:site_at + len(self.MYSTIC_SITE)] = self.MYSTIC_SITE
-        image[anchor_at:anchor_at + 24] = anchor[:24]
+        image[tail_end - 1] = 0xff
         found = dict(patches.compile_patches(xml, [self.MYSTIC], '01.47', [(0, len(image))], image=bytes(image)))
-        self.assertEqual(set(found), {anchor_at + 3212, site_at + 22})
+        self.assertEqual(set(found), {tail_end + 0xc70, site_at + 22})
         skipped = {}
         self.assertEqual(patches.compile_patches(xml, [self.MYSTIC], '01.47', [(0, 0x6000)],
                                                  image=bytes(0x6000), skipped=skipped), [])
@@ -201,7 +199,7 @@ class Diablo3PatchTests(unittest.TestCase):
 
     def test_offline_patches_find_every_site_by_signature(self):
         # A different eboot is skipped, never overwritten: every Line has a signature, or writes at a
-        # Target that has one; the season entries are the shared base plus their own values.
+        # Target that has one (or Pad); the season entries are the shared base plus their own values.
         root = ET.parse(ROOT / 'patches' / 'Diablo_III.xml').getroot()
         metas = {m.get('Name'): m for m in root.iter('Metadata') if m.get('Name') in self.OFFLINE_NAMES}
         self.assertEqual(set(metas), self.OFFLINE_NAMES)
@@ -209,22 +207,30 @@ class Diablo3PatchTests(unittest.TestCase):
             own = patches.with_base(meta, list(root.iter('Metadata')))
             targets = {t.get('Name') for t in own.iter('Target')}
             for target in own.iter('Target'):
-                self.assertTrue(target.get('Pattern'), (name, target.get('Name')))
+                self.assertTrue(target.get('Pattern') or target.get('Pad'), (name, target.get('Name')))
             for line in own.iter('Line'):
                 self.assertTrue(line.get('Pattern') or line.get('Target') in targets, (name, line.get('Address')))
             self.assertNotIn('Claude', meta.get('Author'))
             self.assertNotIn('Local mod', meta.get('Note'))
         base = metas['Offline Seasons']
+        # The two 1.47 Altar/Visions default-on clear lines are optional for 1.46/1.25 builds.
+        optional = [l for l in base.iter('Line') if l.get('Optional') == 'true']
+        self.assertEqual([l.get('Address') for l in optional], ['0x926fe6', '0x9272cf'])
         for name in self.SEASONS:
             self.assertEqual(metas[name].get('Base'), 'Offline Seasons')
             self.assertLess(len(ET.tostring(metas[name])), len(ET.tostring(base)) // 4, name)
+        # Community events require the seasons hook so a non-seasonal build (e.g. 1.00) skips them.
+        skipped = {}
+        image = bytearray(0x4000)
+        image[0x100] = 0xff
+        self.assertEqual(patches.compile_patches(ROOT / 'patches' / 'Diablo_III.xml', ['Event: Sanctified Items'],
+                                                 '01.47', [(0, len(image))], image=bytes(image), skipped=skipped), [])
+        self.assertEqual(skipped, {'Event: Sanctified Items': 'signature not found'})
 
     def test_a_season_is_the_base_with_its_number_and_theme(self):
         xml = ROOT / 'patches' / 'Diablo_III.xml'
-        # A tiny image whose zero padding is found through the base's anchor (the 24 bytes before it).
         base = ET.parse(xml).getroot().find("Metadata[@Name='Offline Seasons']")
-        anchor = bytes.fromhex(next(base.iter('Target')).get('Pattern').replace(' ', '').replace('??', '00'))
-        self.assertEqual(anchor[24:], bytes(32))
+        self.assertEqual(next(base.iter('Target')).get('Pad'), 'code')
         merged = patches.with_base(
             ET.parse(xml).getroot().find("Metadata[@Name='Offline Seasons - Season 22']"),
             list(ET.parse(xml).getroot().iter('Metadata')))

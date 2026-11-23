@@ -70,18 +70,66 @@ def find_pattern(image, pattern, limit=2):
 
 
 def locate(image, element, prefix=''):
-    """Image offset of a Line's or Target's site: its Pattern (unique) plus At, else Address."""
+    """Image offset of a Line's or Target's site: its Pattern (unique, or '|'-separated
+    alternatives tried in order) plus At, else Address."""
     pattern=element.get(prefix+'Pattern')
     if not pattern:
         return int(element.get('Address'),0)-EBOOT_BASE
-    found=find_pattern(image,parse_pattern(pattern))
-    if len(found)!=1:
-        raise LookupError('signature not found' if not found else 'signature found more than once')
-    return found[0]+int(element.get(prefix+'At','0'),0)
+    at=int(element.get(prefix+'At','0'),0)
+    hits=[]
+    for alt in pattern.split('|'):
+        for pos in find_pattern(image,parse_pattern(alt),limit=2):
+            if pos not in hits:
+                hits.append(pos)
+            if len(hits)>1:
+                raise LookupError('signature found more than once')
+    if not hits:
+        raise LookupError('signature not found')
+    return hits[0]+at
 
 
-def resolve_targets(image, meta, sites):
-    """Image offsets of a patch's named Targets: a site (Pattern/At), or the address a rip-relative
+def locate_pad(image, segments, kind, at):
+    """Image offset at `at` inside the unused padding of a PT_LOAD segment:
+    - 'code': trailing zero padding at the end of the first PT_LOAD segment, 16-byte aligned after
+      its last non-zero byte (clears any stub appended there, such as dlcldr.prx).
+    - 'bss': spare bytes at the end of the last PT_LOAD segment's final 4 KiB page, 16-byte
+      aligned after memsz (zero-initialised and writable at run time; referenced by rip-rel)."""
+    if not segments:
+        raise LookupError(f'no {kind} padding')
+    if kind=='code':
+        start,end=segments[0]
+        end=min(end,len(image))
+        hi,last=end,start-1
+        while hi>start:
+            lo=max(start,hi-65536)
+            stripped=image[lo:hi].rstrip(b'\0')
+            if stripped:
+                last=lo+len(stripped)-1
+                break
+            hi=lo
+        if last<start:
+            raise LookupError('no code padding')
+        base=(last+1+15)&~15
+        pos=base+at
+        if pos<base or pos>=end:
+            raise LookupError('not enough code padding')
+        return pos
+    if kind=='bss':
+        if len(segments)<2:
+            raise LookupError('no bss padding')
+        _,end=segments[-1]
+        page_end=(end+0xfff)&~0xfff
+        base=(end+15)&~15
+        pos=base+at
+        if pos<base or pos+8>page_end:
+            raise LookupError('not enough bss padding')
+        return pos
+    raise ValueError(f'unsupported pad kind {kind!r}')
+
+
+def resolve_targets(image, meta, sites, segments=None):
+    """Image offsets of a patch's named Targets: a site (Pattern/At), a segment padding slot
+    (Pad="code" or "bss", with At offset from the padding start), or the address a rip-relative
     or rel32 operand points to (Ref: the operand's offset in its Pattern; Tail: the instruction's
     bytes after the operand)."""
     targets={}
@@ -89,6 +137,10 @@ def resolve_targets(image, meta, sites):
         name=target.get('Name')
         if target.get('Line'):
             targets[name]=sites[int(target.get('Line'))]
+            continue
+        pad=target.get('Pad')
+        if pad:
+            targets[name]=locate_pad(image,segments,pad,int(target.get('At','0'),0))
             continue
         at=locate(image,target)
         if target.get('Ref'):
@@ -142,7 +194,8 @@ def compile_patches(xml, names, app_version, segments, image=None, skipped=None)
     """Writes of the named patches. With the game's image, each site is found by its signature
     (any build); without it, at the reference build's Address. A Line with a Target writes at that
     Target instead: data the code points to, such as a .bss variable (no bytes of its own to find).
-    A patch whose sites are not all found is left out whole, with the reason in skipped[name].
+    A Line with Optional="true" is left out when its signature is not found in this build.
+    A patch whose required sites are not all found is left out whole, with the reason in skipped[name].
     A patch may have several Metadata of the same Name, one per build of the game (Diablo III
     1.00 and 1.47): the first whose sites are all found is used. app_version None: any version."""
     found={}
@@ -159,11 +212,31 @@ def compile_patches(xml, names, app_version, segments, image=None, skipped=None)
         for meta in found[name] if image is not None else found[name][:1]:
             lines=list(meta.iter('Line'))
             try:
-                sites=[locate(image,line) if image is not None else int(line.get('Address'),0)-EBOOT_BASE
-                       for line in lines]
-                targets=(resolve_targets(image,meta,sites) if image is not None else
+                active_lines,sites=[],[]
+                for line in lines:
+                    if image is None:
+                        sites.append(int(line.get('Address'),0)-EBOOT_BASE)
+                        active_lines.append(line)
+                        continue
+                    try:
+                        sites.append(locate(image,line))
+                        active_lines.append(line)
+                    except LookupError as error:
+                        if line.get('Optional','false').lower()=='true' and str(error)=='signature not found':
+                            continue
+                        raise
+                lines=active_lines
+                targets=(resolve_targets(image,meta,sites,segments) if image is not None else
                          {t.get('Name'):int(t.get('Address'),0)-EBOOT_BASE for t in meta.iter('Target')})
                 sites=[targets[line.get('Target')] if line.get('Target') else site for line,site in zip(lines,sites)]
+                pad_targets={t.get('Name') for t in meta.iter('Target') if t.get('Pad')=='code'}
+                if image is not None and pad_targets:
+                    code_end=min(segments[0][1],len(image))
+                    for line,offset in zip(lines,sites):
+                        if line.get('Target') in pad_targets:
+                            data=fill(line.get('Value'),offset,targets) if '{' in line.get('Value','') else encode(line)
+                            if offset+len(data)>code_end:
+                                raise LookupError('not enough code padding')
             except LookupError as error:
                 last_error=error
                 continue

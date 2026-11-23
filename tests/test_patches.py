@@ -94,6 +94,20 @@ class SignatureTests(unittest.TestCase):
     <PatchList><Line Type="bytes32" Address="0x402000" Target="variable" Value="0x2"/></PatchList>
     <Target Name="variable" Address="0x402000" Pattern="44 89 35 ?? ?? ?? ?? c6" At="3" Ref="1"/>
   </Metadata>
+  <Metadata Name="Cave" AppVer="01.47">
+    <PatchList>
+      <Line Type="bytes" Address="0x403000" Value="803d{rel:flag:1}00c3" Target="cave"/>
+      <Line Type="bytes" Address="0x401010" Value="e8{rel:cave:0}" Pattern="aa bb cc dd ee" At="0"/>
+    </PatchList>
+    <Target Name="cave" Address="0x403000" Pad="code" At="0x20"/>
+    <Target Name="flag" Address="0x404080" Pad="bss" At="0x0"/>
+  </Metadata>
+  <Metadata Name="Flex" AppVer="01.47">
+    <PatchList>
+      <Line Type="bytes" Address="0x401000" Value="90" Pattern="de ad be ef | ca fe ba be" At="1"/>
+      <Line Type="bytes" Address="0x401020" Value="00" Optional="true" Pattern="fe ed fa ce" At="0"/>
+    </PatchList>
+  </Metadata>
 </Patch>"""
 
     def setUp(self):
@@ -125,6 +139,48 @@ class SignatureTests(unittest.TestCase):
         self.assertEqual(writes, [(0x301, b'\x90\x90'), (0x302, b'1')])
         with self.assertRaises(ValueError):
             compile_patches(self.xml, ['Orphan'], None, [(0, 0x400)], bytes(image))
+
+    def test_optional_lines_and_alternative_patterns(self):
+        # Alternative pattern ('|') matches the second form; missing Optional="true" line is omitted.
+        image = bytearray(self.image)
+        image[0x320:0x324] = bytes.fromhex('cafebabe')
+        self.assertEqual(compile_patches(self.xml, ['Flex'], None, [(0, 0x400)], bytes(image)),
+                         [(0x321, b'\x90')])
+        # When the optional site is present it is written; if ambiguous the patch is still skipped.
+        image[0x340:0x344] = bytes.fromhex('feedface')
+        self.assertEqual(compile_patches(self.xml, ['Flex'], None, [(0, 0x400)], bytes(image)),
+                         [(0x321, b'\x90'), (0x340, b'\x00')])
+        image[0x350:0x354] = bytes.fromhex('feedface')
+        skipped = {}
+        self.assertEqual(compile_patches(self.xml, ['Flex'], None, [(0, 0x400)], bytes(image), skipped), [])
+        self.assertEqual(skipped, {'Flex': 'signature found more than once'})
+        # Both alternatives matching in the same image is also ambiguous and skipped.
+        image[0x350:0x354] = b'\0\0\0\0'
+        image[0x300:0x304] = bytes.fromhex('deadbeef')
+        skipped = {}
+        self.assertEqual(compile_patches(self.xml, ['Flex'], None, [(0, 0x400)], bytes(image), skipped), [])
+        self.assertEqual(skipped, {'Flex': 'signature found more than once'})
+
+    def test_pad_targets_use_trailing_code_zeros_and_last_bss_page(self):
+        # Code padding starts 16-byte aligned after the last non-zero byte (skipping any appended stub),
+        # and bss padding sits 16-byte aligned after memsz inside the last 4 KiB page.
+        image = bytearray(self.image)
+        image[0x290:0x295] = b'stub!'  # last non-zero byte at 0x294 -> aligned base 0x2a0
+        segments = [(0, 0x400), (0x1000, 0x1e68)]
+        writes = dict(compile_patches(self.xml, ['Cave'], None, segments, bytes(image), {}))
+        cave, flag = 0x2a0 + 0x20, 0x1e70
+        self.assertEqual(set(writes), {cave, 0x80})
+        self.assertEqual(0x85 + struct.unpack('<i', writes[0x80][1:])[0], cave)
+        self.assertEqual(cave + 7 + struct.unpack('<i', writes[cave][2:6])[0], flag)
+        # Not enough trailing code zeros or no spare bytes in the final bss page: skipped whole.
+        skipped = {}
+        self.assertEqual(compile_patches(self.xml, ['Cave'], None, [(0, 0x2c4), (0x1000, 0x1e68)],
+                                         bytes(image), skipped), [])
+        self.assertEqual(skipped, {'Cave': 'not enough code padding'})
+        skipped = {}
+        self.assertEqual(compile_patches(self.xml, ['Cave'], None, [(0, 0x400), (0x1000, 0x2000)],
+                                         bytes(image), skipped), [])
+        self.assertEqual(skipped, {'Cave': 'not enough bss padding'})
 
     def test_ambiguous_signature_is_skipped(self):
         image = bytearray(self.image)
