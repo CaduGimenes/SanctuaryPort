@@ -449,6 +449,9 @@ def main():
             frame_rates = any(n.startswith(graphics_options.FPS_PREFIX) for n in available)
             # Diablo III's 200 FPS: the game's second limiter, which follows the limiter chosen above.
             names = graphics_options.foreground_cap_names(names)
+            # Diablo III: text at render heights it has no fonts for (#77 below 1080 lines, #75 above).
+            if diablo3:
+                names = graphics_options.text_size_names(names, graphics['render_resolution'])
             names = graphics_options.restrict_to_available(names, available)
             env['SANCTUARY_PATCHES'] = ';'.join(names)
             env['SANCTUARY_PATCHES_ONLY'] = '1'

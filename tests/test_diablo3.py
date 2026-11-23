@@ -56,6 +56,27 @@ class Diablo3PatchTests(unittest.TestCase):
         self.assertEqual(writes[0x177ac60 - base], b'\x01')
         self.assertEqual(writes[0x177ac61 - base], b'\x01')
 
+    def test_a_new_seasonal_hero_takes_the_season_number_itself(self):
+        # GitHub #83: the hero digest's season_created came from the hero screen's copy (0x14bc984),
+        # which only the answer to a per-player server request fills; players 2..4 got 0, a regular
+        # hero. The creation (0x2f85f8) now calls a cave (0x177b500) that reads the season number
+        # (0x8250f0) and keeps rcx, the digest flags, which the next instruction uses.
+        xml = ROOT / 'patches' / 'Diablo_III.xml'
+        segments = [(0, 0x2000000)]
+        writes = dict(patches.compile_patches(xml, ['Offline Seasons - Season 30'], '01.47', segments))
+        base = patches.EBOOT_BASE
+        site = writes[0x6f85f8 - base]
+        self.assertEqual(len(site), 6)  # it replaces mov eax,[rip+disp32] whole
+        self.assertEqual(site[:1] + site[5:], b'\xe8\x90')
+        self.assertEqual(0x6f85fd + int.from_bytes(site[1:5], 'little', signed=True), 0x177b500)
+        cave = writes[0x177b500 - base]
+        self.assertEqual(cave[:2] + cave[6:], b'\x51\xe8\x59\xc3')  # push rcx; call; pop rcx; ret
+        self.assertEqual(0x177b506 + int.from_bytes(cave[2:6], 'little', signed=True), 0xc250f0)
+        for name in patches.available_patches(xml, '01.47') - set(self.OFFLINE_NAMES):
+            for at, data in patches.compile_patches(xml, [name], '01.47', segments):
+                self.assertFalse(at < 0x177b500 - base + len(cave) and 0x177b500 - base < at + len(data),
+                                 (name, hex(at)))
+
     def test_smooth_motion_patch_is_on_and_found_by_signature(self):
         # GitHub #24: on by default since players confirmed it at 120 FPS and above, and skipped
         # (not misapplied) on another eboot.
@@ -135,6 +156,29 @@ class Diablo3PatchTests(unittest.TestCase):
         for offset, data in others:
             at = offset + patches.EBOOT_BASE
             self.assertTrue(at + len(data) <= start or at >= end, hex(at))
+
+    def test_challenge_rifts_number_is_the_week(self):
+        # GitHub #99: the game rewards a Challenge Rift only above the last rewarded challenge number,
+        # so the number the cave writes into challengerift_config.dat must grow: the week since 1970
+        # from the game's clock (0x191f0 FILETIME, 0x189f0 Unix seconds), not a random one per launch.
+        xml = ROOT / 'patches' / 'Diablo_III.xml'
+        writes = {offset + patches.EBOOT_BASE: data for offset, data in
+                  patches.compile_patches(xml, ['Event: Challenge Rifts'], '01.47', [(0, 0x1800000)])}
+        cave = writes[0x177af90]
+        self.assertNotIn(b'\x0f\x31', cave)  # rdtsc
+        week = cave.index(bytes.fromhex('4889c7')) - 5
+        self.assertEqual(cave[week], 0xe8)
+        self.assertEqual(0x177af90 + week + 5 + int.from_bytes(cave[week + 1:week + 5], 'little', signed=True),
+                         0x4191f0)
+        self.assertEqual(cave[week + 8], 0xe8)
+        self.assertEqual(0x177af90 + week + 13 + int.from_bytes(cave[week + 9:week + 13], 'little', signed=True),
+                         0x4189f0)
+        self.assertEqual(cave[week + 13:week + 22], bytes.fromhex('31d2 b9803a0900 f7f1'))  # / 604800
+        # The rip-relative leas still find the cave's strings, and the cave ends before the cheats' slot.
+        for lea, text in ((0, b'challengerift_\0'), (0x46, b'/data/pubfiles/\0')):
+            to = lea + 7 + int.from_bytes(cave[lea + 3:lea + 7], 'little', signed=True)
+            self.assertEqual(cave[to:to + len(text)], text)
+        self.assertLessEqual(0x177af90 + len(cave), 0x177b200)
 
     def test_cheat_auto_pickup(self):
         # 0x583940's item branch jumps (0x58396b) to its last test, the item's No_AutoPickup (0x583b29).
@@ -244,7 +288,7 @@ class Diablo3PatchTests(unittest.TestCase):
                     for n in ('480p', '720p', '900p', '1440p', '1800p', '4K',
                               '2560x1080', '3440x1440', '3840x1600', '5120x1440',
                               '1280x800', '1920x1200', '2560x1600')}
-        expected |= {f'{graphics_options.LIMITER_PREFIX} - {n}' for n in ('30 FPS', '120 FPS', 'Unlimited')}
+        expected |= {f'{graphics_options.LIMITER_PREFIX} - {n}' for n in ('30 FPS', '90 FPS', '120 FPS', 'Unlimited')}
         expected.add(f'{graphics_options.MSAA_PREFIX} - 4x')
         expected |= {f'{graphics_options.RENDER_TARGETS_PREFIX} - {n}' for n in (
             'Shadow Map 2048', 'Water and Fog 2048', 'PMA 2048',
@@ -254,12 +298,12 @@ class Diablo3PatchTests(unittest.TestCase):
         expected |= self.OFFLINE_NAMES | self.CHEATS | {
             self.SMOOTH, self.MYSTIC, graphics_options.FIXED_SCALE_PATCH,
             graphics_options.FOREGROUND_CAP_PATCH, graphics_options.COOP_EFFECTS,
-            graphics_options.PC_CAMERA_ZOOM}
+            graphics_options.PC_CAMERA_ZOOM, *self.TEXT_PATCHES}
         self.assertEqual(names, expected)
         for meta in ET.parse(xml).getroot().iter('Metadata'):
             if (meta.get('Name') in self.OFFLINE_NAMES | self.CHEATS
                     | {self.SMOOTH, self.MYSTIC, graphics_options.FIXED_SCALE_PATCH,
-                       graphics_options.FOREGROUND_CAP_PATCH}
+                       graphics_options.FOREGROUND_CAP_PATCH, *self.TEXT_PATCHES}
                     or meta.get('Name').startswith(graphics_options.MSAA_PREFIX)):
                 continue
             if meta.get('Name') == graphics_options.COOP_EFFECTS:
@@ -322,6 +366,75 @@ class Diablo3PatchTests(unittest.TestCase):
                 self.assertEqual(len(lines), 3, size)
                 aspect = struct.unpack('<f', bytes.fromhex(lines[2].get('Value')))[0]
                 self.assertAlmostEqual(aspect, width / height, places=5, msg=size)
+
+    TEXT_PATCHES = (graphics_options.TEXT_LAYOUT_PATCH, graphics_options.TEXT_BOTH_SETS_PATCH)
+
+    def test_text_is_drawn_at_the_size_its_layout_measured(self):
+        # GitHub #77: 0x201ee0 picks the font size to draw: the first one above the request when none
+        # matches; the layout (0x202000) measures the largest one below it. The patch makes the draw
+        # keep the size below (the smallest when there is none), in the same 43 bytes.
+        root = ET.parse(ROOT / 'patches' / 'Diablo_III.xml').getroot()
+        (meta,) = [m for m in root.iter('Metadata') if m.get('Name') == graphics_options.TEXT_LAYOUT_PATCH]
+        self.assertEqual(meta.get('isEnabled'), 'false')
+        (line,) = meta.iter('Line')
+        pattern = bytes.fromhex(line.get('Pattern').replace(' ', ''))
+        at, value = int(line.get('At')), bytes.fromhex(line.get('Value'))
+        code = pattern[:at] + value + pattern[at + len(value):]
+        self.assertEqual(len(code), len(pattern))
+        # The loop starts at 6 (test [rax+0x20], ebx); "xor eax, eax" and the flag check follow it unchanged.
+        self.assertEqual(code[6:9], bytes.fromhex('855820'))
+        self.assertEqual(at + len(value), len(pattern) - 2)
+        self.assertEqual(code[-2:], bytes.fromhex('31c0'))
+
+        def target(offset):  # short jump at offset -> its target
+            return offset + 2 + struct.unpack('b', code[offset + 1:offset + 2])[0]
+
+        self.assertEqual(code[9], 0x74)                 # mask mismatch -> next entry
+        self.assertEqual(code[target(9):target(9) + 2], bytes.fromhex('ffc2'))
+        self.assertEqual(code[20], 0x72)                 # size above the request
+        bigger = target(20)
+        # rsi (the size below) kept, else this one: test rsi, rsi; cmovz rsi, rax.
+        self.assertEqual(code[bigger:bigger + 7], bytes.fromhex('4885f6480f44f0'))
+        self.assertEqual(code[26:28], bytes.fromhex('7326'))  # an exact size still returns at once
+        self.assertEqual(code[28:31], bytes.fromhex('4889c6'))  # a size below is remembered
+        loop_end = code.index(bytes.fromhex('72dd'))
+        self.assertEqual(target(loop_end), 6)
+        self.assertEqual(target(loop_end + 2), len(code) - 2)
+
+    def test_between_1080_and_2160_lines_both_font_sets_are_loaded(self):
+        # GitHub #75: the four font set choices take mask 0x18 (1080p and 2160p fonts) where they took 8.
+        root = ET.parse(ROOT / 'patches' / 'Diablo_III.xml').getroot()
+        (meta,) = [m for m in root.iter('Metadata') if m.get('Name') == graphics_options.TEXT_BOTH_SETS_PATCH]
+        self.assertEqual(meta.get('isEnabled'), 'false')
+        lines = list(meta.iter('Line'))
+        self.assertEqual(len(lines), 4)
+        for line in lines:
+            pattern, at = line.get('Pattern').split(), int(line.get('At'))
+            self.assertEqual(line.get('Value'), '18')
+            # mov <mask>, 8; cmp eax, 1079: the choice for 1080 to 2159 lines.
+            self.assertEqual(pattern[at:at + 6], ['08', '00', '00', '00', '3d', '37'])
+            self.assertIn(pattern[at - 1], ('a8', 'b8', 'bb'))
+
+    @unittest.skipUnless((ROOT / 'out' / 'eboot.elf').is_file(), 'needs the decrypted 1.47 eboot (run.sh)')
+    def test_text_size_patches_find_their_sites_in_the_game(self):
+        elf = (ROOT / 'out' / 'eboot.elf').read_bytes()
+        image = patches.eboot_image(elf)
+        if image[0x201fa0:0x201fa5] != bytes.fromhex('855820741a'):
+            self.skipTest('not the 1.47 eboot')
+        writes = dict(patches.compile_patches(ROOT / 'patches' / 'Diablo_III.xml', list(self.TEXT_PATCHES), '01.47',
+                                              patches.eboot_segments(elf), image=image))
+        self.assertEqual(sorted(writes), [0x2015cb, 0x201ae6, 0x201f22, 0x201fa3, 0x202042])
+        self.assertTrue(all(image[a] == 8 for a in (0x2015cb, 0x201ae6, 0x201f22, 0x202042)))
+
+    def test_text_size_patches_follow_the_render_height(self):
+        both = [graphics_options.TEXT_LAYOUT_PATCH, graphics_options.TEXT_BOTH_SETS_PATCH]
+        for resolution, expected in (('native', []), ('4K', []), ('2560x1080', []), ('720p', both[:1]),
+                                     ('1280x800', both[:1]), ('1440p', both), ('1920x1200', both),
+                                     ('3840x1600', both), ('5120x2160', []), ('bogus', [])):
+            self.assertEqual(graphics_options.text_size_names(['Other'], resolution), ['Other'] + expected,
+                             resolution)
+        # Whatever the list named: a stale choice from another resolution is dropped.
+        self.assertEqual(graphics_options.text_size_names(both, 'native'), [])
 
     def test_the_fps_cap_patch_asks_the_second_limiter_for_200(self):
         # The game's second limiter waits (n + 2000) / (2 * n) whole ms for the setting n (150: 7 ms,

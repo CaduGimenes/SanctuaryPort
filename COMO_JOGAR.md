@@ -139,7 +139,7 @@ Nome do jogador (o que o jogo mostra para você, como o nome de usuário do PS4)
   *Movimento suave acima de 60 FPS*, logo abaixo da taxa de quadros (ligada por padrão), corrige isso.
 - Temporadas offline: heróis de temporada sem internet (Temporadas 14 a 40, com a Jornada da
   Temporada), os eventos de cada temporada e o Escurecimento de Tristram, na aba **Temporadas** do
-  launcher. Precisa da atualização 1.47.
+  launcher.
 - Opções de gráficos menos usadas (resolução dinâmica, MSAA, FXAA, filtragem anisotrópica) ficam
   em **Gráficos › Mais opções**.
 - Opcionais na página **Jogo**: cosméticos de edições de outras plataformas (asas, mascote e moldura

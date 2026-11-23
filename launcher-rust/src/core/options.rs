@@ -103,6 +103,7 @@ pub static FPS_LIMITS: &[Choice] = &[
 pub static FRAME_RATES: &[Choice] = &[
     c("30", "30 FPS"),
     c("60", "60 FPS (the game's own)"),
+    c("90", "90 FPS"),
     c("120", "120 FPS"),
     c("0", "200 FPS (the game's maximum)"),
 ];

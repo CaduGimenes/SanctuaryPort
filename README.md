@@ -64,7 +64,7 @@ Then follow [Getting your game ready](#getting-your-game-ready) with your own du
 | ✅ Install straight from your PKG files | in the launcher, no external tools |
 | ✅ Languages | whatever your dump ships, in any region's release (English, French, Spanish, Portuguese, German, Italian, Polish, Russian...) |
 | ✅ **Trophies** | an on-screen notice with the trophy's name as you earn it, the platinum by itself, and a Trophies page in the launcher |
-| ✅ Render resolution 480p–4K, ultrawide 21:9 / 32:9, 16:10 (Steam Deck 1280x800) | resolution patches for the 1.47 and 1.00 executables (the camera widens to the screen); FSR 1 upscaling and RCAS sharpening |
+| ✅ Render resolution 480p–4K, ultrawide 21:9 / 32:9, 16:10 (Steam Deck 1280x800) | resolution patches (the camera widens to the screen); FSR 1 upscaling and RCAS sharpening |
 | 🧪 FSR 3 (experimental) | upscaling to the window with temporal anti-aliasing, the HUD at full size (Graphics > Upscaling) |
 | ✅ FXAA | cheap anti-aliasing of the 3D picture before the HUD (Graphics > More options), when FSR 3 is off |
 | 🧪 GTAO | ambient occlusion in place of the game's SSAO, Low or High (Graphics > GTAO) |
@@ -72,7 +72,7 @@ Then follow [Getting your game ready](#getting-your-game-ready) with your own du
 | 🧪 Game MSAA on AMD and Intel (Windows) | off by default there (black lines); On is experimental: its depth is created without compression (Graphics > More options) |
 | 🧪 MSAA 2x / 4x | the game's scene drawn with more samples and averaged into the picture, as on PC; 4x costs about a quarter of the FPS (Graphics > More options > MSAA samples) |
 | ✅ Smooth character motion above 60 FPS | on by default (Graphics, below the frame rate): above 60 FPS the hero and monsters otherwise move every other frame |
-| ✅ **Offline seasons** | seasonal heroes offline (Seasons 14–40, with the Season Journey), the seasons' community events and The Darkening of Tristram (launcher → *Seasons*); needs update 1.47 |
+| ✅ **Offline seasons** | seasonal heroes offline (Seasons 14–40, with the Season Journey), the seasons' community events and The Darkening of Tristram (launcher → *Seasons*) |
 | ✅ Updates | from their own folder, read over the game in place: nothing is copied, on any drive (microSD cards on the ROG Ally / Steam Deck included); the base game is never changed |
 | ✅ Windows 10 / 11, Linux, SteamOS | played by the community on NVIDIA, AMD and Intel graphics, Steam Deck / Steam Machine and ROG Ally; every release is also tested under Wine |
 | ✅ Cosmetics of other platform editions | optional, on the Game page: wings, pet and portrait frame of another console edition that are already in the PS4 data (your saves are backed up first) |

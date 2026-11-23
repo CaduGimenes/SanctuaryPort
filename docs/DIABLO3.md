@@ -81,6 +81,21 @@ at 720p, 800 or 900 lines the HUD bars and icons stayed and every text (menus, t
 names) was gone, without any error (PR #15). The resolution patches under 1080 lines turn the `ja`
 after `cmp $1079` into `jmp`, so the game uses its 1080p fonts and scales them like the rest of the
 UI. Found by comparing frame captures: the font shaders (vs/ps f405edba/0ed7c8fb) were never drawn.
+Those fonts come in fixed sizes (1080p set 12..90, 2160p set 24..180 for the main font, and only
+two sizes per set for some), and the size the UI asks for is the style's size times the UI scale
+(screen height / 720, `0x2f35c0`). The layout (1.47 eboot 0x202000) measures the largest size at
+or below it; the draw (0x201ee0) took the first one above it, or the largest one when none is above.
+At 1080 and 2160 lines the sizes match. At 800 and 900 lines text came out larger than its box: the
+button labels under the action bar went past the bottom of the window at 1280x800 (GitHub #77).
+Between them the 1080p set has no size large enough for some fonts: at 1440p the quest dialog
+subtitles above the speakers' heads were three quarters of their 1080p size, at 1800p 60% (#75).
+run.py adds two patches by render height: "Text Size - Layout Size" (every height but 1080 and
+2160) rewrites the draw's loop (0x201fa3, same 43 bytes) to take the layout's size, the smallest one
+when none is below; "Text Size - Both Font Sets" (above 1080, below 2160) makes the four font set
+choices load mask 0x18 (both sets) where they loaded 8, so 1440p finds the 2160p sizes. Checked:
+the subtitles at 1440p match 1080p (1800p: 1.2x, the size the game asks for), the labels fit at
+1280x800, 1920x1200 and 2560x1600, the pause menu is unchanged. Separate patches, so an eboot
+without these sites keeps its resolution patch.
 
 Frame rate 200 FPS, the top choice (`frame_rate=0`, the value of the former Unlimited, so existing
 sanctuary.ini files keep it): with the "Frame Limiter - Unlimited" patch the limiter above does not

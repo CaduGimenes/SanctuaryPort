@@ -2787,7 +2787,13 @@
    "Forget": "Esquecer",
    "Another controller of this model has no serial number either: the two may be taken for each other.": "Outro controle deste modelo também não tem número de série: os dois podem ser confundidos.",
    "Another controller has this profile: the later one to join asks.": "Outro controle tem este perfil: o que entrar depois pergunta.",
-   "Players join in the order they press a button; the first is player 1. Each controller plays its own profile. Ask: that player chooses a profile, or makes a new one, in the game. A controller shows here once the launcher has seen it.": "Os jogadores entram na ordem em que apertam um botão; o primeiro é o jogador 1. Cada controle joga com o seu perfil. Perguntar: esse jogador escolhe um perfil, ou cria um novo, no jogo. Um controle aparece aqui depois que o launcher o viu."
+   "Players join in the order they press a button; the first is player 1. Each controller plays its own profile. Ask: that player chooses a profile, or makes a new one, in the game. A controller shows here once the launcher has seen it.": "Os jogadores entram na ordem em que apertam um botão; o primeiro é o jogador 1. Cada controle joga com o seu perfil. Perguntar: esse jogador escolhe um perfil, ou cria um novo, no jogo. Um controle aparece aqui depois que o launcher o viu.",
+   "Sharper shadows and reflections": "Sombras e reflexos mais nítidos",
+   "The PC game's sizes for shadows, reflections and water.": "Os tamanhos do jogo de PC para sombras, reflexos e água.",
+   "Full effects in local co-op": "Efeitos completos no co-op local",
+   "The game lowers effects for 2+ local players; this may cost FPS.": "O jogo reduz os efeitos com 2+ jogadores locais; isso pode custar FPS.",
+   "PC camera zoom": "Zoom de câmera do PC",
+   "Pulls the gameplay camera back to the PC version's distance and angle.": "Afasta a câmera para a distância e o ângulo da versão de PC."
   },
   "es": {
    "The launcher cannot write to {}, so it cannot replace itself there. Open the releases page to download the new version by hand?": "El launcher no puede escribir en {}, así que no puede reemplazarse ahí. ¿Abrir la página de releases para descargar la versión nueva a mano?",
@@ -3373,7 +3379,13 @@
    "Forget": "Olvidar",
    "Another controller of this model has no serial number either: the two may be taken for each other.": "Otro mando de este modelo tampoco tiene número de serie: los dos pueden confundirse.",
    "Another controller has this profile: the later one to join asks.": "Otro mando tiene este perfil: el que se una después pregunta.",
-   "Players join in the order they press a button; the first is player 1. Each controller plays its own profile. Ask: that player chooses a profile, or makes a new one, in the game. A controller shows here once the launcher has seen it.": "Los jugadores se unen en el orden en que pulsan un botón; el primero es el jugador 1. Cada mando juega con su propio perfil. Preguntar: ese jugador elige un perfil, o crea uno nuevo, en el juego. Un mando aparece aquí cuando el launcher lo ha visto."
+   "Players join in the order they press a button; the first is player 1. Each controller plays its own profile. Ask: that player chooses a profile, or makes a new one, in the game. A controller shows here once the launcher has seen it.": "Los jugadores se unen en el orden en que pulsan un botón; el primero es el jugador 1. Cada mando juega con su propio perfil. Preguntar: ese jugador elige un perfil, o crea uno nuevo, en el juego. Un mando aparece aquí cuando el launcher lo ha visto.",
+   "Sharper shadows and reflections": "Sombras y reflejos más nítidos",
+   "The PC game's sizes for shadows, reflections and water.": "Los tamaños del juego de PC para sombras, reflejos y agua.",
+   "Full effects in local co-op": "Efectos completos en cooperativo local",
+   "The game lowers effects for 2+ local players; this may cost FPS.": "El juego reduce los efectos con 2+ jugadores locales; puede costar FPS.",
+   "PC camera zoom": "Zoom de cámara de PC",
+   "Pulls the gameplay camera back to the PC version's distance and angle.": "Aleja la cámara a la distancia y el ángulo de la versión de PC."
   },
   "pl": {
    "Polish": "Polski",
@@ -3813,7 +3825,13 @@
    "Forget": "Zapomnij",
    "Another controller of this model has no serial number either: the two may be taken for each other.": "Inny pad tego modelu też nie ma numeru seryjnego: oba mogą zostać pomylone.",
    "Another controller has this profile: the later one to join asks.": "Inny pad ma ten profil: ten, który dołączy później, zapyta.",
-   "Players join in the order they press a button; the first is player 1. Each controller plays its own profile. Ask: that player chooses a profile, or makes a new one, in the game. A controller shows here once the launcher has seen it.": "Gracze dołączają w kolejności naciśnięcia przycisku; pierwszy to gracz 1. Każdy pad gra swoim profilem. Pytaj: ten gracz wybiera profil lub tworzy nowy w grze. Pad pojawia się tutaj, gdy launcher go zobaczy."
+   "Players join in the order they press a button; the first is player 1. Each controller plays its own profile. Ask: that player chooses a profile, or makes a new one, in the game. A controller shows here once the launcher has seen it.": "Gracze dołączają w kolejności naciśnięcia przycisku; pierwszy to gracz 1. Każdy pad gra swoim profilem. Pytaj: ten gracz wybiera profil lub tworzy nowy w grze. Pad pojawia się tutaj, gdy launcher go zobaczy.",
+   "Sharper shadows and reflections": "Ostrzejsze cienie i odbicia",
+   "The PC game's sizes for shadows, reflections and water.": "Rozmiary z wersji PC dla cieni, odbić i wody.",
+   "Full effects in local co-op": "Pełne efekty w lokalnej kooperacji",
+   "The game lowers effects for 2+ local players; this may cost FPS.": "Gra obniża efekty przy 2+ lokalnych graczach; może to kosztować FPS.",
+   "PC camera zoom": "Zoom kamery z PC",
+   "Pulls the gameplay camera back to the PC version's distance and angle.": "Odsuwa kamerę na odległość i kąt z wersji PC."
   },
   "fr": {
    "Polish": "Polonais",
@@ -4002,7 +4020,13 @@
    "Forget": "Oublier",
    "Another controller of this model has no serial number either: the two may be taken for each other.": "Une autre manette de ce modèle n'a pas non plus de numéro de série : les deux peuvent être confondues.",
    "Another controller has this profile: the later one to join asks.": "Une autre manette a ce profil : la dernière à rejoindre demande.",
-   "Players join in the order they press a button; the first is player 1. Each controller plays its own profile. Ask: that player chooses a profile, or makes a new one, in the game. A controller shows here once the launcher has seen it.": "Les joueurs rejoignent dans l'ordre où ils appuient sur un bouton ; le premier est le joueur 1. Chaque manette joue avec son propre profil. Demander : ce joueur choisit un profil, ou en crée un, dans le jeu. Une manette apparaît ici une fois que le launcher l'a vue."
+   "Players join in the order they press a button; the first is player 1. Each controller plays its own profile. Ask: that player chooses a profile, or makes a new one, in the game. A controller shows here once the launcher has seen it.": "Les joueurs rejoignent dans l'ordre où ils appuient sur un bouton ; le premier est le joueur 1. Chaque manette joue avec son propre profil. Demander : ce joueur choisit un profil, ou en crée un, dans le jeu. Une manette apparaît ici une fois que le launcher l'a vue.",
+   "Sharper shadows and reflections": "Ombres et reflets plus nets",
+   "The PC game's sizes for shadows, reflections and water.": "Les tailles du jeu PC pour les ombres, les reflets et l'eau.",
+   "Full effects in local co-op": "Effets complets en coop locale",
+   "The game lowers effects for 2+ local players; this may cost FPS.": "Le jeu réduit les effets à 2+ joueurs locaux ; cela peut coûter des FPS.",
+   "PC camera zoom": "Zoom de caméra PC",
+   "Pulls the gameplay camera back to the PC version's distance and angle.": "Recule la caméra à la distance et à l'angle de la version PC."
   },
   "de": {
    "Polish": "Polnisch",
@@ -4182,7 +4206,13 @@
    "Forget": "Vergessen",
    "Another controller of this model has no serial number either: the two may be taken for each other.": "Ein anderer Controller dieses Modells hat ebenfalls keine Seriennummer: die beiden können verwechselt werden.",
    "Another controller has this profile: the later one to join asks.": "Ein anderer Controller hat dieses Profil: der später Beitretende fragt.",
-   "Players join in the order they press a button; the first is player 1. Each controller plays its own profile. Ask: that player chooses a profile, or makes a new one, in the game. A controller shows here once the launcher has seen it.": "Die Spieler treten in der Reihenfolge bei, in der sie eine Taste drücken; der erste ist Spieler 1. Jeder Controller spielt sein eigenes Profil. Fragen: dieser Spieler wählt im Spiel ein Profil oder legt ein neues an. Ein Controller erscheint hier, sobald der Launcher ihn gesehen hat."
+   "Players join in the order they press a button; the first is player 1. Each controller plays its own profile. Ask: that player chooses a profile, or makes a new one, in the game. A controller shows here once the launcher has seen it.": "Die Spieler treten in der Reihenfolge bei, in der sie eine Taste drücken; der erste ist Spieler 1. Jeder Controller spielt sein eigenes Profil. Fragen: dieser Spieler wählt im Spiel ein Profil oder legt ein neues an. Ein Controller erscheint hier, sobald der Launcher ihn gesehen hat.",
+   "Sharper shadows and reflections": "Schärfere Schatten und Spiegelungen",
+   "The PC game's sizes for shadows, reflections and water.": "Die Größen des PC-Spiels für Schatten, Spiegelungen und Wasser.",
+   "Full effects in local co-op": "Volle Effekte im lokalen Koop",
+   "The game lowers effects for 2+ local players; this may cost FPS.": "Das Spiel senkt die Effekte ab 2 lokalen Spielern; das kann FPS kosten.",
+   "PC camera zoom": "PC-Kamerazoom",
+   "Pulls the gameplay camera back to the PC version's distance and angle.": "Zieht die Spielkamera auf Abstand und Winkel der PC-Version zurück."
   },
   "it": {
    "Polish": "Polacco",
@@ -4360,7 +4390,13 @@
    "Forget": "Dimentica",
    "Another controller of this model has no serial number either: the two may be taken for each other.": "Anche un altro controller di questo modello non ha un numero di serie: i due potrebbero essere scambiati.",
    "Another controller has this profile: the later one to join asks.": "Un altro controller ha questo profilo: quello che entra dopo chiede.",
-   "Players join in the order they press a button; the first is player 1. Each controller plays its own profile. Ask: that player chooses a profile, or makes a new one, in the game. A controller shows here once the launcher has seen it.": "I giocatori entrano nell'ordine in cui premono un pulsante; il primo è il giocatore 1. Ogni controller gioca con il proprio profilo. Chiedi: quel giocatore sceglie un profilo, o ne crea uno nuovo, nel gioco. Un controller compare qui una volta che il launcher lo ha visto."
+   "Players join in the order they press a button; the first is player 1. Each controller plays its own profile. Ask: that player chooses a profile, or makes a new one, in the game. A controller shows here once the launcher has seen it.": "I giocatori entrano nell'ordine in cui premono un pulsante; il primo è il giocatore 1. Ogni controller gioca con il proprio profilo. Chiedi: quel giocatore sceglie un profilo, o ne crea uno nuovo, nel gioco. Un controller compare qui una volta che il launcher lo ha visto.",
+   "Sharper shadows and reflections": "Ombre e riflessi più nitidi",
+   "The PC game's sizes for shadows, reflections and water.": "Le dimensioni del gioco PC per ombre, riflessi e acqua.",
+   "Full effects in local co-op": "Effetti completi in cooperativa locale",
+   "The game lowers effects for 2+ local players; this may cost FPS.": "Il gioco riduce gli effetti con 2+ giocatori locali; può costare FPS.",
+   "PC camera zoom": "Zoom della telecamera PC",
+   "Pulls the gameplay camera back to the PC version's distance and angle.": "Allontana la telecamera alla distanza e all'angolo della versione PC."
   },
   "tr": {
    "Polish": "Lehçe",
@@ -4536,7 +4572,13 @@
    "Forget": "Unut",
    "Another controller of this model has no serial number either: the two may be taken for each other.": "Bu modelin başka bir kolunun da seri numarası yok: ikisi birbirine karışabilir.",
    "Another controller has this profile: the later one to join asks.": "Başka bir kolun bu profili var: sonra katılan sorar.",
-   "Players join in the order they press a button; the first is player 1. Each controller plays its own profile. Ask: that player chooses a profile, or makes a new one, in the game. A controller shows here once the launcher has seen it.": "Oyuncular bir tuşa bastıkları sırayla katılır; ilki 1. oyuncudur. Her kol kendi profilini oynar. Sor: o oyuncu oyunda bir profil seçer ya da yenisini oluşturur. Bir kol, launcher onu gördükten sonra burada görünür."
+   "Players join in the order they press a button; the first is player 1. Each controller plays its own profile. Ask: that player chooses a profile, or makes a new one, in the game. A controller shows here once the launcher has seen it.": "Oyuncular bir tuşa bastıkları sırayla katılır; ilki 1. oyuncudur. Her kol kendi profilini oynar. Sor: o oyuncu oyunda bir profil seçer ya da yenisini oluşturur. Bir kol, launcher onu gördükten sonra burada görünür.",
+   "Sharper shadows and reflections": "Daha keskin gölgeler ve yansımalar",
+   "The PC game's sizes for shadows, reflections and water.": "Gölgeler, yansımalar ve su için PC oyununun boyutları.",
+   "Full effects in local co-op": "Yerel ortak oyunda tam efektler",
+   "The game lowers effects for 2+ local players; this may cost FPS.": "Oyun 2+ yerel oyuncuda efektleri düşürür; bu FPS'e mal olabilir.",
+   "PC camera zoom": "PC kamera yakınlaştırması",
+   "Pulls the gameplay camera back to the PC version's distance and angle.": "Oyun kamerasını PC sürümünün mesafesine ve açısına çeker."
   },
   "ar": {
    "Polish": "البولندية",
@@ -4711,7 +4753,13 @@
    "Forget": "نسيان",
    "Another controller of this model has no serial number either: the two may be taken for each other.": "ذراع تحكم آخر من هذا الطراز ليس له رقم تسلسلي أيضًا: قد يُخلط بين الاثنين.",
    "Another controller has this profile: the later one to join asks.": "ذراع تحكم آخر لديه هذا الملف الشخصي: الذي ينضم لاحقًا يسأل.",
-   "Players join in the order they press a button; the first is player 1. Each controller plays its own profile. Ask: that player chooses a profile, or makes a new one, in the game. A controller shows here once the launcher has seen it.": "ينضم اللاعبون بالترتيب الذي يضغطون فيه على زر؛ الأول هو اللاعب 1. كل ذراع تحكم يلعب بملفه الشخصي. اسأل: يختار ذلك اللاعب ملفًا شخصيًا، أو ينشئ ملفًا جديدًا، داخل اللعبة. يظهر ذراع التحكم هنا بمجرد أن يراه المشغّل."
+   "Players join in the order they press a button; the first is player 1. Each controller plays its own profile. Ask: that player chooses a profile, or makes a new one, in the game. A controller shows here once the launcher has seen it.": "ينضم اللاعبون بالترتيب الذي يضغطون فيه على زر؛ الأول هو اللاعب 1. كل ذراع تحكم يلعب بملفه الشخصي. اسأل: يختار ذلك اللاعب ملفًا شخصيًا، أو ينشئ ملفًا جديدًا، داخل اللعبة. يظهر ذراع التحكم هنا بمجرد أن يراه المشغّل.",
+   "Sharper shadows and reflections": "ظلال وانعكاسات أوضح",
+   "The PC game's sizes for shadows, reflections and water.": "أحجام لعبة الحاسوب للظلال والانعكاسات والماء.",
+   "Full effects in local co-op": "تأثيرات كاملة في اللعب التعاوني المحلي",
+   "The game lowers effects for 2+ local players; this may cost FPS.": "تخفض اللعبة التأثيرات مع لاعبَين محليين أو أكثر؛ قد يكلف ذلك إطارات.",
+   "PC camera zoom": "تقريب كاميرا الحاسوب",
+   "Pulls the gameplay camera back to the PC version's distance and angle.": "يبعد كاميرا اللعب إلى مسافة وزاوية نسخة الحاسوب."
   },
   "zh": {
    "Polish": "波兰语",
@@ -5273,7 +5321,13 @@
    "Forget": "忘记",
    "Another controller of this model has no serial number either: the two may be taken for each other.": "这款手柄的另一个手柄也没有序列号：两者可能会被混淆。",
    "Another controller has this profile: the later one to join asks.": "另一个手柄使用了此档案：后加入的那个会询问。",
-   "Players join in the order they press a button; the first is player 1. Each controller plays its own profile. Ask: that player chooses a profile, or makes a new one, in the game. A controller shows here once the launcher has seen it.": "玩家按下按键的先后顺序加入；第一个是玩家 1。每个手柄使用各自的档案。询问：该玩家在游戏中选择档案，或新建一个。启动器见过某个手柄后，它才会显示在这里。"
+   "Players join in the order they press a button; the first is player 1. Each controller plays its own profile. Ask: that player chooses a profile, or makes a new one, in the game. A controller shows here once the launcher has seen it.": "玩家按下按键的先后顺序加入；第一个是玩家 1。每个手柄使用各自的档案。询问：该玩家在游戏中选择档案，或新建一个。启动器见过某个手柄后，它才会显示在这里。",
+   "Sharper shadows and reflections": "更清晰的阴影和反射",
+   "The PC game's sizes for shadows, reflections and water.": "采用 PC 版的阴影、反射和水面尺寸。",
+   "Full effects in local co-op": "本地合作时保持完整特效",
+   "The game lowers effects for 2+ local players; this may cost FPS.": "2 名以上本地玩家时游戏会降低特效；开启可能降低帧率。",
+   "PC camera zoom": "PC 镜头缩放",
+   "Pulls the gameplay camera back to the PC version's distance and angle.": "将游戏镜头拉远到 PC 版的距离和角度。"
   },
   "ja": {
    "Polish": "ポーランド語",
@@ -5449,7 +5503,13 @@
    "Forget": "削除",
    "Another controller of this model has no serial number either: the two may be taken for each other.": "このモデルの別のゲームパッドにもシリアル番号がありません。2つが取り違えられる可能性があります。",
    "Another controller has this profile: the later one to join asks.": "別のゲームパッドがこのプロフィールを使っています。後から参加する方が確認します。",
-   "Players join in the order they press a button; the first is player 1. Each controller plays its own profile. Ask: that player chooses a profile, or makes a new one, in the game. A controller shows here once the launcher has seen it.": "プレイヤーはボタンを押した順に参加し、最初がプレイヤー1です。各ゲームパッドはそれぞれのプロフィールでプレイします。確認：そのプレイヤーがゲーム内でプロフィールを選ぶか、新しく作ります。ゲームパッドはランチャーが認識するとここに表示されます。"
+   "Players join in the order they press a button; the first is player 1. Each controller plays its own profile. Ask: that player chooses a profile, or makes a new one, in the game. A controller shows here once the launcher has seen it.": "プレイヤーはボタンを押した順に参加し、最初がプレイヤー1です。各ゲームパッドはそれぞれのプロフィールでプレイします。確認：そのプレイヤーがゲーム内でプロフィールを選ぶか、新しく作ります。ゲームパッドはランチャーが認識するとここに表示されます。",
+   "Sharper shadows and reflections": "よりシャープな影と反射",
+   "The PC game's sizes for shadows, reflections and water.": "影・反射・水に PC 版のサイズを使います。",
+   "Full effects in local co-op": "ローカル協力プレイでもフルエフェクト",
+   "The game lowers effects for 2+ local players; this may cost FPS.": "ローカル 2 人以上でゲームはエフェクトを下げます。オンにすると FPS が下がる場合があります。",
+   "PC camera zoom": "PC 版のカメラズーム",
+   "Pulls the gameplay camera back to the PC version's distance and angle.": "ゲームカメラを PC 版の距離と角度まで引きます。"
   },
   "ko": {
    "Polish": "폴란드어",
@@ -5625,7 +5685,13 @@
    "Forget": "삭제",
    "Another controller of this model has no serial number either: the two may be taken for each other.": "이 모델의 다른 게임패드도 일련번호가 없습니다. 둘이 서로 바뀔 수 있습니다.",
    "Another controller has this profile: the later one to join asks.": "다른 게임패드가 이 프로필을 사용 중입니다. 나중에 참가하는 쪽이 묻습니다.",
-   "Players join in the order they press a button; the first is player 1. Each controller plays its own profile. Ask: that player chooses a profile, or makes a new one, in the game. A controller shows here once the launcher has seen it.": "플레이어는 버튼을 누른 순서대로 참가하며, 첫 번째가 플레이어 1입니다. 각 게임패드는 자신의 프로필로 플레이합니다. 묻기: 해당 플레이어가 게임에서 프로필을 고르거나 새로 만듭니다. 게임패드는 런처가 인식한 뒤 여기에 표시됩니다."
+   "Players join in the order they press a button; the first is player 1. Each controller plays its own profile. Ask: that player chooses a profile, or makes a new one, in the game. A controller shows here once the launcher has seen it.": "플레이어는 버튼을 누른 순서대로 참가하며, 첫 번째가 플레이어 1입니다. 각 게임패드는 자신의 프로필로 플레이합니다. 묻기: 해당 플레이어가 게임에서 프로필을 고르거나 새로 만듭니다. 게임패드는 런처가 인식한 뒤 여기에 표시됩니다.",
+   "Sharper shadows and reflections": "더 선명한 그림자와 반사",
+   "The PC game's sizes for shadows, reflections and water.": "그림자, 반사, 물에 PC 버전 크기를 사용합니다.",
+   "Full effects in local co-op": "로컬 협동에서 전체 효과",
+   "The game lowers effects for 2+ local players; this may cost FPS.": "로컬 2인 이상이면 게임이 효과를 낮춥니다. FPS가 줄 수 있습니다.",
+   "PC camera zoom": "PC 카메라 줌",
+   "Pulls the gameplay camera back to the PC version's distance and angle.": "게임 카메라를 PC 버전의 거리와 각도로 뒤로 뺍니다."
   },
   "id": {
    "Polish": "Polandia",
@@ -6100,7 +6166,13 @@
    "Forget": "Lupakan",
    "Another controller of this model has no serial number either: the two may be taken for each other.": "Gamepad lain dari model ini juga tidak punya nomor seri: keduanya bisa tertukar.",
    "Another controller has this profile: the later one to join asks.": "Gamepad lain memakai profil ini: yang bergabung belakangan akan bertanya.",
-   "Players join in the order they press a button; the first is player 1. Each controller plays its own profile. Ask: that player chooses a profile, or makes a new one, in the game. A controller shows here once the launcher has seen it.": "Pemain bergabung sesuai urutan menekan tombol; yang pertama adalah pemain 1. Setiap gamepad memainkan profilnya sendiri. Tanya: pemain itu memilih profil, atau membuat yang baru, di dalam game. Gamepad muncul di sini setelah launcher melihatnya."
+   "Players join in the order they press a button; the first is player 1. Each controller plays its own profile. Ask: that player chooses a profile, or makes a new one, in the game. A controller shows here once the launcher has seen it.": "Pemain bergabung sesuai urutan menekan tombol; yang pertama adalah pemain 1. Setiap gamepad memainkan profilnya sendiri. Tanya: pemain itu memilih profil, atau membuat yang baru, di dalam game. Gamepad muncul di sini setelah launcher melihatnya.",
+   "Sharper shadows and reflections": "Bayangan dan pantulan lebih tajam",
+   "The PC game's sizes for shadows, reflections and water.": "Ukuran versi PC untuk bayangan, pantulan, dan air.",
+   "Full effects in local co-op": "Efek penuh di co-op lokal",
+   "The game lowers effects for 2+ local players; this may cost FPS.": "Game menurunkan efek dengan 2+ pemain lokal; ini bisa mengurangi FPS.",
+   "PC camera zoom": "Zoom kamera PC",
+   "Pulls the gameplay camera back to the PC version's distance and angle.": "Menarik kamera ke jarak dan sudut versi PC."
   },
   "cs": {
    "Trophies": "Trofeje",
@@ -6634,7 +6706,13 @@
    "Forget": "Zapomenout",
    "Another controller of this model has no serial number either: the two may be taken for each other.": "Další gamepad tohoto modelu také nemá sériové číslo: oba mohou být zaměněny.",
    "Another controller has this profile: the later one to join asks.": "Jiný gamepad má tento profil: ten, který se připojí později, se zeptá.",
-   "Players join in the order they press a button; the first is player 1. Each controller plays its own profile. Ask: that player chooses a profile, or makes a new one, in the game. A controller shows here once the launcher has seen it.": "Hráči se připojují v pořadí, v jakém stisknou tlačítko; první je hráč 1. Každý gamepad hraje se svým profilem. Zeptat se: tento hráč si ve hře vybere profil nebo vytvoří nový. Gamepad se zde zobrazí, jakmile ho launcher uvidí."
+   "Players join in the order they press a button; the first is player 1. Each controller plays its own profile. Ask: that player chooses a profile, or makes a new one, in the game. A controller shows here once the launcher has seen it.": "Hráči se připojují v pořadí, v jakém stisknou tlačítko; první je hráč 1. Každý gamepad hraje se svým profilem. Zeptat se: tento hráč si ve hře vybere profil nebo vytvoří nový. Gamepad se zde zobrazí, jakmile ho launcher uvidí.",
+   "Sharper shadows and reflections": "Ostřejší stíny a odrazy",
+   "The PC game's sizes for shadows, reflections and water.": "Velikosti z PC verze pro stíny, odrazy a vodu.",
+   "Full effects in local co-op": "Plné efekty v místní kooperaci",
+   "The game lowers effects for 2+ local players; this may cost FPS.": "Hra snižuje efekty při 2+ místních hráčích; může to stát FPS.",
+   "PC camera zoom": "Zoom kamery z PC",
+   "Pulls the gameplay camera back to the PC version's distance and angle.": "Oddálí kameru na vzdálenost a úhel PC verze."
   }
  },
  "ru": {
@@ -7178,7 +7256,13 @@
   "Forget": "Забыть",
   "Another controller of this model has no serial number either: the two may be taken for each other.": "У другого геймпада этой модели тоже нет серийного номера: их можно перепутать.",
   "Another controller has this profile: the later one to join asks.": "У другого геймпада этот профиль: тот, кто войдёт позже, спросит.",
-  "Players join in the order they press a button; the first is player 1. Each controller plays its own profile. Ask: that player chooses a profile, or makes a new one, in the game. A controller shows here once the launcher has seen it.": "Игроки входят в том порядке, в котором нажимают кнопку; первый — игрок 1. Каждый геймпад играет со своим профилем. Спрашивать: этот игрок выбирает профиль или создаёт новый в игре. Геймпад появляется здесь, когда лаунчер его увидел."
+  "Players join in the order they press a button; the first is player 1. Each controller plays its own profile. Ask: that player chooses a profile, or makes a new one, in the game. A controller shows here once the launcher has seen it.": "Игроки входят в том порядке, в котором нажимают кнопку; первый — игрок 1. Каждый геймпад играет со своим профилем. Спрашивать: этот игрок выбирает профиль или создаёт новый в игре. Геймпад появляется здесь, когда лаунчер его увидел.",
+  "Sharper shadows and reflections": "Более чёткие тени и отражения",
+  "The PC game's sizes for shadows, reflections and water.": "Размеры из версии для ПК для теней, отражений и воды.",
+  "Full effects in local co-op": "Полные эффекты в локальном кооперативе",
+  "The game lowers effects for 2+ local players; this may cost FPS.": "Игра снижает эффекты при 2+ локальных игроках; это может стоить FPS.",
+  "PC camera zoom": "Камера как на ПК",
+  "Pulls the gameplay camera back to the PC version's distance and angle.": "Отодвигает игровую камеру на расстояние и угол версии для ПК."
  },
  "windows_languages": {
   "25": "ru",

@@ -14,7 +14,10 @@
      three more sites in 1.47, 0x17b47c and three more in 1.00: >2159, >1079, >899, >719 lines...),
      but the PS4 build only ships the 1080p and 2160p sets, so below 1080 lines no text was drawn
      (PR #15: the UI "disappears" at 720p/800p). The sizes below 1080 turn the ja after cmp $1079
-     into jmp: the 1080p fonts, which the game scales to the screen. The 16:10 sizes write the
+     into jmp: the 1080p fonts, which the game scales to the screen. Those have no size for every
+     scale: the layout measures the largest size at or below the one asked for (0x202000), the draw
+     took the first above it (0x201ee0). run.py adds the "Text Size" patches below by render height
+     (GitHub #77, #75). The 16:10 sizes write the
      camera's aspect ratio like the ultrawide ones.
      Frame Limiter: after each frame the game waits until [obj+0xce0] microseconds have passed
      (1.47 eboot 0xbef87, set at 0xbda8a from the video output's refresh rate: 16683 for 59.94 Hz,
@@ -293,6 +296,19 @@
         </PatchList>
         <Target Name="limiter" Address="0x0063550d" Pattern="0f 4f cb 8d 81 d0 07 00 00 01 c9 99 f7 f9 89 c3" At="0"/>
     </Metadata>
+    <Metadata Title="Diablo III" Name="Text Size - Layout Size" Note="Text is drawn at the font size its layout measured: the largest one at or below the size asked for (the game drew the next larger one, so at 800 or 900 lines text overflowed its box). Applied by run.py at render resolutions other than 1080 and 2160 lines." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x00601fa3" Value="7414c5fa105054c5f82ec27215c5f82ed173264889c6ffc24883c05839ca72ddeb094885f6480f44f06690" Pattern="66 0f 1f 44 00 00 85 58 20 74 1a c5 fa 10 50 54 c5 f8 2e c2 72 06 c5 f8 2e d1 73 26 48 89 c6 c5 f8 2e d0 73 0c ff c2 48 83 c0 58 39 ca 72 d7 eb 03 48 89 c6 31 c0" At="9"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="Text Size - Both Font Sets" Note="Between 1080 and 2160 lines the game loads its 2160p fonts with its 1080p ones, so text keeps its size (it had only the 1080p sizes: at 1440p the quest dialog subtitles were three quarters of their size). Applied by run.py with Text Size - Layout Size." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x006015cb" Value="18" Pattern="c7 45 a8 08 00 00 00 3d 37 04 00 00 77 2e" At="3"/>
+            <Line Type="bytes" Address="0x00601ae6" Value="18" Pattern="37 41 b8 08 00 00 00 3d 37 04 00 00 77 2a" At="3"/>
+            <Line Type="bytes" Address="0x00601f22" Value="18" Pattern="0e 03 00 8b 45 c8 bb 10 00 00 00 3d 6f 08 00 00 77 33 bb 08 00 00 00 3d 37 04 00 00 77 27" At="19"/>
+            <Line Type="bytes" Address="0x00602042" Value="18" Pattern="0d 03 00 8b 45 c8 bb 10 00 00 00 3d 6f 08 00 00 77 33 bb 08 00 00 00 3d 37 04 00 00 77 27" At="19"/>
+        </PatchList>
+    </Metadata>
     <Metadata Title="Diablo III" Name="Frame Limiter - 30 FPS" Note="The game's frame limiter waits 33367 us (30 FPS) instead of 16683 us per frame." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x004bda91" Value="57820000" Pattern="49 c7 87 e0 0c 00 00 2b 41 00 00 eb 18 49 c7 87 e0 0c 00 00 e5 a2 00 00" At="7"/>
@@ -301,6 +317,16 @@
     <Metadata Title="Diablo III" Name="Frame Limiter - 30 FPS" Note="The game's frame limiter waits 33367 us (30 FPS) instead of 16683 us per frame." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x0077c3b9" Value="57820000" Pattern="49 c7 86 a8 0b 00 00 2b 41 00 00 41 c7 86 f8 0b" At="7"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="Frame Limiter - 90 FPS" Note="The game's frame limiter waits 11122 us (90 FPS) instead of 16683 us per frame." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x004bda91" Value="722b0000" Pattern="49 c7 87 e0 0c 00 00 2b 41 00 00 eb 18 49 c7 87 e0 0c 00 00 e5 a2 00 00" At="7"/>
+        </PatchList>
+    </Metadata>
+    <Metadata Title="Diablo III" Name="Frame Limiter - 90 FPS" Note="The game's frame limiter waits 11122 us (90 FPS) instead of 16683 us per frame." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x0077c3b9" Value="722b0000" Pattern="49 c7 86 a8 0b 00 00 2b 41 00 00 41 c7 86 f8 0b" At="7"/>
         </PatchList>
     </Metadata>
     <Metadata Title="Diablo III" Name="Frame Limiter - 120 FPS" Note="The game's frame limiter waits 8341 us (120 FPS) instead of 16683 us per frame." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
@@ -373,6 +399,10 @@
          "Offline Seasons" hooks the per-user lobby update (eboot 0x43528) and feeds both files once to the
          game's own handlers, skips the server-time check (0x42b9e), forces the season state to in progress
          (0x42c0b), confirms the season at hero creation (0x2f97f0) and validates seasonal heroes (0x144020).
+         A new seasonal hero takes its season from the season number itself (0x2f85f8, through a few
+         bytes at 0x177b500), not from the hero screen's copy, which only the answer to a per-player
+         server request fills: players 2 to 4, whose request may not be answered yet, got season 0, a
+         regular hero (GitHub #83).
          Each "Offline Seasons - Season N" is that base (Base=) plus the season number and the community events
          of its theme. Each "Event: ..." sets one flag of the event table. The code lives in the unused zero
          padding that ends the code segment (last used byte 0x137a78b, padding to the segment's end 0x13847ec);
@@ -393,6 +423,8 @@
             <Line Type="bytes" Address="0x9272cf" Value="c7436000000000c7436400000000c7436800000000" Pattern="48 8d 0d d5 7e fb 00 42 c6 04 38 00 4c 89 7b 40 48 89 13 c7 43 60 01 00 00 00 c7 43 64 01 00 00 00 c7 43 68 01 00 00 00" At="19"/>
             <Line Type="bytes" Address="0x177a815" Value="e94e040000" Target="ev2_hook"/>
             <Line Type="bytes" Address="0x177ac68" Value="31d283fa087325488d05eaffffff803c10007414488d051d000000486334d04801c68b4cd004f3a4ffc2ebd6488d442460e97cfbffff669040000000250000006500000023000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000436f6d6d756e69747942756666446f75626c65526966744b657973746f6e6573202231220a436f6d6d756e69747942756666446f75626c65426c6f6f64536861726473202231220a" Target="ev2_stub"/>
+            <Line Type="bytes" Address="0x177b500" Value="51 e8{rel:season_cvar:0} 59 c3" Target="season_cave"/>
+            <Line Type="bytes" Address="0x6f85f8" Value="e8{rel:season_cave:0}90" Pattern="8b 05 ?? ?? ?? ?? 81 c9 00 00 41 00 41 89 4f 10 41 89 87 90 00 00 00" At="0"/>
 </PatchList>
         <Target Name="cave" Address="0x177a790" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="28"/>
         <Target Name="season_no" Address="0x177a930" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="444"/>
@@ -404,6 +436,8 @@
         <Target Name="thunk_s" Address="0x4520b0" Pattern="c6 01 01 48 8b 03 4c 8b 70 70 e8 ?? ?? ?? ?? 48 8d 0d ?? ?? ?? ??" At="18" Ref="1" Tail="0"/>
             <Target Name="ev2_hook" Address="0x177a815" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="161"/>
         <Target Name="ev2_stub" Address="0x177ac68" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1268"/>
+        <Target Name="season_cave" Address="0x177b500" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="3468"/>
+        <Target Name="season_cvar" Address="0xc250f0" Pattern="89 35 ?? ?? ?? ?? c6 05 ?? ?? ?? ?? 00 e8 ?? ?? ?? ?? 89 05" At="14" Ref="1" Tail="0"/>
     </Metadata>
     <Metadata Title="Diablo III" Name="Offline Seasons - Season 14" Note="Offline seasonal heroes for Season 14, with the Season Journey and the season&#x27;s community event (DoubleGoblins). Tick one season only; it needs no other patch." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false" Base="Offline Seasons">
         <PatchList>
@@ -700,9 +734,20 @@
         </PatchList>
         <Target Name="tbl" Address="0x177ac5f" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1259"/>
     </Metadata>
-    <Metadata Title="Diablo III" Name="Event: Challenge Rifts" Note="Offline Challenge Rifts: the game reads challengerift_config.dat and challengerift_N.dat from user/data/pubfiles (you supply the files; see patches/challenge_rift_data/README.md), with a new challenge number each launch." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+    <!-- Challenge Rifts (GitHub #99): the cave answers the pubfile requests for challengerift_config.dat and
+         challengerift_N.dat from user/data/pubfiles and writes the challenge number into the config (its first
+         field, a 2-byte varint); the game loads challengerift_<number % 10>.dat. The number is the week since
+         1970 (Thursday 00:00 UTC), from the game's own clock (0x191f0 FILETIME, 0x189f0 to Unix seconds, the
+         pair the reward code at 0x342bd uses), so it grows by one each week. The game gives the cache only for
+         a challenge above the last one rewarded: the server (0x8a4620) gives status 2, "already earned", when
+         the player's last rewarded challenge (account digest challenge_rift_account_data
+         .last_challenge_reward_earned) is at or above the current number, and the client (0x341e0) drops a
+         reward whose number is not above it. A random number each launch (10..909, as before) thus left the
+         town's "Challenge Rift Reward" box (gizmo group 86, claim 0x8a4e90, pure local code) with nothing to
+         give once a high number had been rewarded. Week numbers (2900 and up) are above every old random one. -->
+    <Metadata Title="Diablo III" Name="Event: Challenge Rifts" Note="Offline Challenge Rifts: the game reads challengerift_config.dat and challengerift_N.dat from user/data/pubfiles (you supply the files; see patches/challenge_rift_data/README.md), with the challenge number of the current week, so the Challenge Rift cache can be earned once a week and claimed in town." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
-            <Line Type="bytes" Address="0x177af90" Value="488d05cb01000031c9448a04084584c0740e443a040e0f85ab010000ffc1ebe9554889e55341544155415641574881ec1802000048893c244989f44989d5488dbc2400010000488d3594010000ac84c07403aaebf84c89e6b9f0000000acaa84c07405e2f8c60700488dbc240001000031f631d2ff15{rel:got_open:0}85c00f882a01000089c389df31f6ba02000000ff15{rel:got_lseek:0}4989c689df31f631d2ff15{rel:got_lseek:0}4d85f60f8ef9000000498d7e10e8{rel:newobj:0}4989c789df4c89fe4c89f2ff15{rel:got_read:0}4989c689dfff15{rel:got_close:0}4d85f60f8ed300000041807c240e63753c6641813f088175348b05{rel:chalnum:0}85c075140f3131d2b984030000f7f18d420a8905{rel:chalnum:0}89c183e17f81c98000000041884f01c1e80741884702bf40000000e8{rel:newobj:0}4889c34c893b4c8973084c89731048c743180000000048c7432000000000c7432800000040c7432c0000004048c743300000000048c7433800000000c74424080000000048895c2410488d43204889442418498b45004885c07410488d7818488d742408488d542410ff104881c418020000415f415e415d415c5b5dc389dfff15{rel:got_close:0}488b3c244c89e64c89ea4881c418020000415f415e415d415c5b5d554889e54157e9{rel:orig_next:0}6368616c6c656e6765726966745f002f646174612f70756266696c65732f00" Target="cr_cave"/>
+            <Line Type="bytes" Address="0x177af90" Value="488d05d301000031c9448a04084584c0740e443a040e0f85b3010000ffc1ebe9554889e55341544155415641574881ec1802000048893c244989f44989d5488dbc2400010000488d359c010000ac84c07403aaebf84c89e6b9f0000000acaa84c07405e2f8c60700488dbc240001000031f631d2ff15{rel:got_open:0}85c00f883201000089c389df31f6ba02000000ff15{rel:got_lseek:0}4989c689df31f631d2ff15{rel:got_lseek:0}4d85f60f8e01010000498d7e10e8{rel:newobj:0}4989c789df4c89fe4c89f2ff15{rel:got_read:0}4989c689dfff15{rel:got_close:0}4d85f60f8edb00000041807c240e6375446641813f0881753c8b05{rel:chalnum:0}85c0751ce8{rel:filetime:0}4889c7e8{rel:unixtime:0}31d2b9803a0900f7f18905{rel:chalnum:0}89c183e17f81c98000000041884f01c1e80741884702bf40000000e8{rel:newobj:0}4889c34c893b4c8973084c89731048c743180000000048c7432000000000c7432800000040c7432c0000004048c743300000000048c7433800000000c74424080000000048895c2410488d43204889442418498b45004885c07410488d7818488d742408488d542410ff104881c418020000415f415e415d415c5b5dc389dfff15{rel:got_close:0}488b3c244c89e64c89ea4881c418020000415f415e415d415c5b5d554889e54157e9{rel:orig_next:0}6368616c6c656e6765726966745f002f646174612f70756266696c65732f00" Target="cr_cave"/>
             <Line Type="bytes" Address="0x448590" Value="e9{rel:cr_cave:0}90" Pattern="ff 60 18 90 90 90 90 90 90 90 90 90 90 90 90 55 48 89 e5 41 57 41 56 41 55 41 54 53" At="15"/>
         </PatchList>
         <Target Name="cr_cave" Address="0x177af90" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="2076"/>
@@ -712,6 +757,8 @@
         <Target Name="got_open" Address="0x1809a98" Pattern="68 21 00 00 00 e9 ?? ?? ?? ?? ff 25 ?? ?? ?? ??" At="12" Ref="1" Tail="0"/>
         <Target Name="got_read" Address="0x1809ab0" Pattern="68 24 00 00 00 e9 ?? ?? ?? ?? ff 25 ?? ?? ?? ??" At="12" Ref="1" Tail="0"/>
         <Target Name="newobj" Address="0xfacd50" Pattern="bf 02 01 00 00 e8 ?? ?? ?? ?? bf 00 00 20 00 e8 ?? ?? ?? ??" At="16" Ref="1" Tail="0"/>
+        <Target Name="filetime" Address="0x4191f0" Pattern="e8 ?? ?? ?? ?? 48 89 c7 e8 ?? ?? ?? ?? 41 80 4e 10 04 44 89 e7 41 89 46 34" At="1" Ref="1" Tail="0"/>
+        <Target Name="unixtime" Address="0x4189f0" Pattern="e8 ?? ?? ?? ?? 48 89 c7 e8 ?? ?? ?? ?? 41 80 4e 10 04 44 89 e7 41 89 46 34" At="9" Ref="1" Tail="0"/>
         <Target Name="orig_next" Address="0x448596" Pattern="ff 60 18 90 90 90 90 90 90 90 90 90 90 90 90 55 48 89 e5 41 57 41 56 41 55 41 54 53" At="21"/>
     </Metadata>
     <Metadata Title="Diablo III" Name="Event: The Darkening of Tristram" Note="Offline anniversary event: the portal to the Diablo 1 dungeon in the Old Ruins of Tristram is open (Adventure Mode). The game decides the event from the date; this makes it answer &quot;open&quot; (status 1) for the three places that ask. Works in any game, season or not. Experimental." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
@@ -732,7 +779,7 @@
     <!-- Cheats (d3hack's "rare cheats", ported by what each one changes, not by its Switch offsets).
          Each is off by default and found by its signature, so another eboot skips it. Code and strings
          they add live in the code segment's zero padding from 0x177b200 (after the offline seasons and the
-         Challenge Rifts cave, which ends at 0x177b181, and before the smooth motion code), each in its own
+         Challenge Rifts cave, which ends at 0x177b189, and before the smooth motion code), each in its own
          slot.
          Movement speed: the game builds its attribute table at start-up (eboot 0x749xxx), each attribute
          with its formula as text that it compiles; Movement_Scalar_Total (attribute 185, the factor every

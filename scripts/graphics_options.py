@@ -31,7 +31,7 @@ FPS_PREFIX = 'Frame Rate Patch'
 TEXTURE_FIX = 'Bug Fix - Texture Corruption Fix'
 # Diablo III: sanctuary.ini frame_rate picks the game's own frame limiter (patches/Diablo_III.xml).
 LIMITER_PREFIX = 'Frame Limiter'
-FRAME_RATES = ('30', '60', '120', '0')  # 0 = 200 FPS
+FRAME_RATES = ('30', '60', '90', '120', '0')  # 0 = 200 FPS
 # Diablo III's frame rate 0 is the launcher's 200 FPS (the stored value of the former Unlimited, so
 # existing sanctuary.ini files keep it; 200 is read as 0): no wait in the Frame Limiter, and the
 # game's own second limiter (the PC game's Max Foreground FPS, 150 by default: about 143 FPS) asked
@@ -39,6 +39,11 @@ FRAME_RATES = ('30', '60', '120', '0')  # 0 = 200 FPS
 FOREGROUND_CAP_PATCH = 'Max Foreground FPS - 200'
 # Diablo III: sanctuary.ini dynamic_resolution=0 picks the game's own fixed 100% scene scale.
 FIXED_SCALE_PATCH = 'Dynamic Resolution - Off'
+# Diablo III: the font sizes for render resolutions the game has no font set of their own for
+# (GitHub #77, #75): text drawn at the size its layout measured, and between 1080 and 2160 lines both
+# font sets, so the text keeps its size.
+TEXT_LAYOUT_PATCH = 'Text Size - Layout Size'
+TEXT_BOTH_SETS_PATCH = 'Text Size - Both Font Sets'
 # Diablo III: sanctuary.ini msaa picks the scene's sample count ('' = the game's own 2, as before).
 MSAA_PREFIX = 'Game MSAA'
 MSAA_CHOICES = ('', '2', '4')
@@ -203,7 +208,7 @@ def patch_names(names, options, texture_fix_available=True):
 
 
 def frame_rate(ini):
-    """Diablo III's frame rate choice (sanctuary.ini frame_rate): 30, 60, 120 or 0 (200 FPS)."""
+    """Diablo III's frame rate choice (sanctuary.ini frame_rate): 30, 60, 90, 120 or 0 (200 FPS)."""
     value = ini.get('frame_rate')
     if value is None and ini.get('fps_limit') == '30':
         return '30'  # the old Frame rate limit row's 30
@@ -215,7 +220,8 @@ def frame_rate(ini):
 def limiter_patch(rate):
     """The Frame Limiter patch for a frame_rate choice; None for 60, the game's own. The 200 FPS choice
     (0) takes the one that does not wait, still named Unlimited."""
-    return {'30': f'{LIMITER_PREFIX} - 30 FPS', '120': f'{LIMITER_PREFIX} - 120 FPS',
+    return {'30': f'{LIMITER_PREFIX} - 30 FPS', '90': f'{LIMITER_PREFIX} - 90 FPS',
+            '120': f'{LIMITER_PREFIX} - 120 FPS',
             '0': f'{LIMITER_PREFIX} - Unlimited'}.get(rate)
 
 
@@ -229,6 +235,9 @@ def limiter_environment(applied):
     of the display's (VRR, gamescope at 116 Hz). Only 30 FPS keeps the 60 Hz vblank. Either way the
     rate is this choice alone: the in-game menu's frame limit (fps_limit) is not used."""
     for name in applied:
+        if name == f'{LIMITER_PREFIX} - 90 FPS':
+            # GitHub #94: the Steam Deck OLED's and other 90 Hz screens.
+            return {'SANCTUARY_VBLANK_HZ': '0', 'SANCTUARY_FPS_LIMIT': '90'}
         if name == f'{LIMITER_PREFIX} - 120 FPS':
             return {'SANCTUARY_VBLANK_HZ': '0', 'SANCTUARY_FPS_LIMIT': '120'}
         if name == f'{LIMITER_PREFIX} - Unlimited':
@@ -251,6 +260,20 @@ def fixed_scale_fallback(status):
     if FIXED_SCALE_PATCH in status.get('applied', []):
         return None
     return status.get('skipped', {}).get(FIXED_SCALE_PATCH, 'not applied')
+
+
+def text_size_names(names, resolution):
+    """The patch list with Diablo III's text size patches for a render resolution, whatever the list
+    named: none at 1080 and 2160 lines (the game's own font sets) or for an unknown size; both
+    between them; the layout size alone below 1080 and above 2160."""
+    names = [n for n in names if n not in (TEXT_LAYOUT_PATCH, TEXT_BOTH_SETS_PATCH)]
+    size = resolution_size(resolution)
+    if size is None or size[1] in (1080, 2160):
+        return names
+    names.append(TEXT_LAYOUT_PATCH)
+    if 1080 < size[1] < 2160:
+        names.append(TEXT_BOTH_SETS_PATCH)
+    return names
 
 
 def foreground_cap_names(names):

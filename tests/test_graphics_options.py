@@ -239,6 +239,7 @@ class FrameLimiterTest(unittest.TestCase):
         self.assertEqual(g.frame_rate({'fps_limit': '30', 'frame_rate': '0'}), '0')
         self.assertIsNone(g.limiter_patch('60'))
         self.assertEqual(g.limiter_patch('30'), 'Frame Limiter - 30 FPS')
+        self.assertEqual(g.limiter_patch('90'), 'Frame Limiter - 90 FPS')
         self.assertEqual(g.limiter_patch('120'), 'Frame Limiter - 120 FPS')
         self.assertEqual(g.limiter_patch('0'), 'Frame Limiter - Unlimited')
 
@@ -246,6 +247,9 @@ class FrameLimiterTest(unittest.TestCase):
         # The game's own 60: immediate flips held to 60, not the 60 Hz vblank tick (GitHub #29).
         self.assertEqual(g.limiter_environment([]), {'SANCTUARY_VBLANK_HZ': '0', 'SANCTUARY_FPS_LIMIT': '60'})
         self.assertEqual(g.limiter_environment(['Frame Limiter - 30 FPS']), {'SANCTUARY_FPS_LIMIT': '0'})
+        # GitHub #94: 90 Hz screens (Steam Deck OLED).
+        self.assertEqual(g.limiter_environment(['Frame Limiter - 90 FPS']),
+                         {'SANCTUARY_VBLANK_HZ': '0', 'SANCTUARY_FPS_LIMIT': '90'})
         self.assertEqual(g.limiter_environment(['Resolution Patch - 4K', 'Frame Limiter - 120 FPS']),
                          {'SANCTUARY_VBLANK_HZ': '0', 'SANCTUARY_FPS_LIMIT': '120'})
         # 200 FPS (Frame Limiter - Unlimited): immediate flips too, up to one per 480 Hz tick as before (0 would wait for the tick).
