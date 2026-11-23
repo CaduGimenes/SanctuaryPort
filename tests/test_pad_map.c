@@ -7,6 +7,12 @@ int sanctuarygpu_overlay_captures_input(void) { return 0; }
 int sanctuarygpu_vibration_percent(void) { return 100; }
 void sanctuarygpu_request_screenshot(void) {}
 void runtime_user_events(void) {}
+/* Profiles (runtime_profiles.c): every seat has one unless a test says otherwise. */
+static unsigned not_ready, seats_left;
+int runtime_profile_seat_ready(int user) { return !(not_ready & (1u<<user)); }
+void runtime_profile_seat_left(int user) { seats_left|=1u<<user; }
+static int devices_seen;
+void runtime_profile_device(int user, const char *serial, const char *path, const char *guid) { (void)user; (void)serial; (void)path; (void)guid; ++devices_seen; }
 static int pause_keys;
 void sanctuarygpu_mouse_pause_key(void) { ++pause_keys; }
 static int aim_style;

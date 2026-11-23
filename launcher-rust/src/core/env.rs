@@ -162,11 +162,22 @@ pub fn environment(
             ui_language
         },
     );
-    // Game > Player name (GitHub #23): the runtime reads it for player 1; empty keeps "Player".
+    // The old Player name (GitHub #23): the runtime names profile 1 with it when it makes the
+    // profile list itself; empty keeps "Player".
     let player_name = settings.text("player_name");
     if !player_name.trim().is_empty() {
         env.insert(var("player_name").into(), player_name);
     }
+    // Game > Players (GitHub #93): always written, so the runtime seats players by controller.
+    let pads = crate::core::profiles::pad_records(
+        settings
+            .get(crate::core::profiles::PADS_KEY)
+            .unwrap_or(&serde_json::Value::Null),
+    );
+    env.insert(
+        "SANCTUARY_PAD_PROFILES".into(),
+        crate::core::profiles::pads_env(&pads),
+    );
     // On by default (R91), also in a file without the key.
     put_switch(&mut env, settings, "discord_rpc");
     // Always written (#980): the runner copies it into the ini once, as `0` too.
@@ -401,6 +412,21 @@ mod tests {
         let (off, paths, _dir) = setup(json!({"discord_rpc": false}));
         let env = game_environment(&off, &paths, "en", &IndexMap::new(), true);
         assert_eq!(env["SANCTUARY_DISCORD"], "0");
+    }
+
+    #[test]
+    fn every_controller_gets_its_profile() {
+        // #93: written even with none, so every controller asks; one with a profile plays it.
+        let (settings, paths, _dir) = setup(json!({}));
+        let env = game_environment(&settings, &paths, "en", &IndexMap::new(), true);
+        assert_eq!(env["SANCTUARY_PAD_PROFILES"], "");
+        let (chosen, paths, _dir) = setup(json!({"pad_profiles": {
+            "serial:S1": {"name": "DualSense", "guid": "g1", "serial": "S1", "path": "/dev/a", "profile": "3"},
+            "path:/dev/b": {"name": "Xbox", "guid": "g2", "path": "/dev/b", "profile": "ask"},
+            "keyboard": {"name": "Keyboard and mouse", "guid": "keyboard", "profile": "1"}
+        }}));
+        let env = game_environment(&chosen, &paths, "en", &IndexMap::new(), true);
+        assert_eq!(env["SANCTUARY_PAD_PROFILES"], "3\tg1\tS1\t/dev/a\n1\tkeyboard\t\t");
     }
 
     #[test]

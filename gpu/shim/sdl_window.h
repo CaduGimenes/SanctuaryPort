@@ -38,6 +38,8 @@ public:
     void BeginTextInput(const std::string& initial, const std::string& prompt);
     /// 0 while typing, 1 confirmed (Enter), 2 cancelled (Escape); text is UTF-8.
     int PollTextInput(std::string& text);
+    /// Only this gamepad's Cross/Circle finish the text (0: any; every BeginTextInput resets it).
+    void SetTextInputOwner(u32 joystick_id);
 
 private:
     std::atomic<s32> width, height;
@@ -49,6 +51,7 @@ private:
     bool cursor_shown = false; ///< the system cursor is visible (window thread)
     void ApplyDisplayMode(int mode);
     int text_state{};
+    u32 text_owner{};
     std::string text, text_prompt, base_title;
     void UpdateTextTitle();
     SDL_Window* window{};

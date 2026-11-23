@@ -55,5 +55,10 @@ void SetTextEntry(bool active, const std::string& prompt, const std::string& tex
 void BeginChoice(const std::string& title, const std::vector<std::string>& items,
                  std::vector<SanctuaryPng::Image> pictures, int focus);
 int PollChoice();
+/// Only this gamepad (SDL joystick id) and the keyboard answer the open list, and the game's
+/// input is not held for it (0: any input; every BeginChoice starts at 0).
+void SetChoiceOwner(u32 joystick_id);
+/// Closes the open list as cancelled.
+void EndChoice();
 
 } // namespace SanctuaryOverlay

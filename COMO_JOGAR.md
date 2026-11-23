@@ -85,6 +85,13 @@ nele, virando o jogador 2, 3 ou 4 na ordem em que os botões forem apertados. Co
 aperte o botão de baixo (A no Xbox, ✕ no PlayStation) no controle novo para entrar: o Diablo abre
 a criação ou a escolha de herói daquele jogador.
 
+**Perfis de jogador:** no launcher, **Jogo → Jogadores**. Cada perfil tem os próprios saves e o
+próprio nome, e você pode criar quantos quiser. Cada controle que o launcher já viu (e o teclado)
+recebe o perfil que joga, ou **Perguntar**: o jogador escolhe um perfil (ou cria um novo) no jogo
+quando o controle dele entra. Os jogadores entram na ordem em que apertam um botão, e o primeiro é
+o jogador 1; assim qualquer um joga sozinho com os próprios heróis, e quem não veio simplesmente
+não entra.
+
 ## Botões do Xbox no jogo
 
 No launcher: **Controles → Controle → Ícones dos botões no jogo → Xbox** (ou **Igual ao meu

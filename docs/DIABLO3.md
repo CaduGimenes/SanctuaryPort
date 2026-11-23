@@ -224,6 +224,37 @@ A press that player 1's pad holds too is taken for a Steam Input mirror of playe
 LOGIN/LOGOUT events and `sceUserServiceGetLoginUserIdList`. The game itself does the rest: the
 new player presses the bottom face button and gets hero creation or selection.
 
+### Player profiles (GitHub #93, #86)
+
+`src/runtime_profiles.c`: a profile is a named save folder, `<user>/savedata/<id>/`, listed in
+`<user>/profiles.txt` as `id<TAB>name` lines (ids are numbers; at most 64 profiles). The launcher
+(Game > Players, `launcher-rust/src/core/profiles.rs`) and the runtime both read the list, and both
+make it the first time from the saves already there: profile 1 named after the old Player name
+(`SANCTUARY_PLAYER_NAME`), and each other numbered save folder as "Player N". So the saves of users
+1..4 from before profiles are profiles 1..4, unmoved.
+
+The game's users 1..4 are seats, taken in the order controllers press a button. The launcher
+remembers every controller it has seen (setting `pad_profiles`) with the profile it plays, and
+passes them as `SANCTUARY_PAD_PROFILES`: one `profile<TAB>guid<TAB>serial<TAB>path` line per
+controller with a profile (the keyboard's guid is `keyboard`). A controller is known again by its
+serial (SDL's, from HIDAPI or evdev), else by its device path when either has no serial, else by
+its model (guid) when it is the only one of that model listed; two identical controllers without
+serials may be taken for each other, which the launcher says.
+
+- Seat 1 has no controller until one presses a button: the first controller (or the keyboard) to
+  press is player 1. The game hears nothing from player 1 until it has a profile (Diablo III reads
+  no save before its "Press any button").
+- A controller that takes a seat plays its own profile (`runtime_profile_device`). Without one, or
+  when another seat holds it, the seat is taken but not logged in: `runtime_pad_users()` leaves it
+  out until the player chooses a profile (or makes one, named with the keyboard; Cross accepts
+  "Player N") from a list only that controller and the keyboard answer. The other players keep
+  playing. Circle gives the seat back. A game dialog (save list, name box) takes the overlay first
+  and the list comes back after it. The seat is free again once its controller disconnects.
+
+Without `SANCTUARY_PAD_PROFILES` (`run.sh`, scripted runs) seat n is folder n, and player 1 is the
+first controller SDL lists, as before profiles.
+`sceUserServiceGetUserName` gives the profile's name. Trophies stay shared by all profiles.
+
 ## FXAA
 
 `fxaa=1` in sanctuary.ini (launcher Graphics > Anti-aliasing, in-game menu Image) runs
@@ -343,6 +374,7 @@ America) whose pack is missing with the first one the dump has, Portuguese first
 | `SANCTUARY_FAULT_WAIT=1` | on a guest fault, stop and print a `gdb -p PID` line |
 | `SANCTUARY_LAUNCH_PREFIX="gdb --args"` | start the loader under a wrapper |
 | `SANCTUARY_IME_TEXT=Name` | answer the name dialog without typing |
+| `SANCTUARY_PROFILE_CHOICE=1` / `new:Name` | answer a player's profile list without showing it: an item's number, or a new profile (with `SANCTUARY_PAD_FILE`, a scripted press also counts as player 1's first press) |
 | `SANCTUARY_PAD_FILE=<file>` | scripted input (button names, `lx=`..`ry=`, `shot`, `p2`/`p3`/`p4` for other players) |
 | `SANCTUARY_VIRTUAL_PAD=1` | attach an SDL virtual gamepad (scripted runs that need a connected controller) |
 | `SANCTUARY_DEBUGGABLE=1` | let other processes read the game's memory (`/proc/PID/mem`, gdb without root) |

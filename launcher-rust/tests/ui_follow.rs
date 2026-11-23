@@ -64,11 +64,12 @@ fn change(state: &mut State, key: &str, value: Value) {
 }
 
 /// Every view, in the table's order.
-const VIEWS: [View; 6] = [
+const VIEWS: [View; 7] = [
     View::Installation,
     View::Home,
     View::Patches,
     View::Backups,
+    View::Profiles,
     View::Aspect,
     View::Trophies,
 ];
@@ -102,6 +103,7 @@ fn look(state: &State, view: View) -> String {
         ),
         // The choice too: listing the backups again chooses the newest.
         View::Backups => format!("{:?} chosen {:?}", state.backups, state.backup_choice),
+        View::Profiles => format!("{:?}", state.profiles),
         View::Aspect => state.aspect.clone(),
         View::Trophies => format!(
             "{} {:?}",
@@ -187,6 +189,17 @@ fn case(view: View) -> Case {
             // moves the choice to the newest.
             outside: ("game_dir", |_, dir| folder(&dir.join("other-game"))),
             // The same saves folder, spelled out.
+            inside: ("user_dir", |state, _| folder(&state.paths.user_dir(""))),
+        },
+        View::Profiles => Case {
+            setup: nothing,
+            // The game made a profile while it ran.
+            disk: |state, _| {
+                let list = state.paths.user_dir("").join("profiles.txt");
+                std::fs::create_dir_all(list.parent().unwrap()).unwrap();
+                std::fs::write(&list, "1\tPlayer\n2\tLeah\n").unwrap();
+            },
+            outside: ("game_dir", |_, dir| folder(&dir.join("other-game"))),
             inside: ("user_dir", |state, _| folder(&state.paths.user_dir(""))),
         },
         View::Aspect => Case {

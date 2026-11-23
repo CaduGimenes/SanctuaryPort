@@ -425,6 +425,18 @@ extern "C" int sanctuarygpu_choice_poll(void) {
     return SanctuaryOverlay::PollChoice();
 }
 
+extern "C" void sanctuarygpu_choice_set_owner(uint32_t joystick_id) {
+    SanctuaryOverlay::SetChoiceOwner(joystick_id);
+}
+
+extern "C" void sanctuarygpu_choice_end(void) {
+    SanctuaryOverlay::EndChoice();
+}
+
+extern "C" void sanctuarygpu_text_input_set_owner(uint32_t joystick_id) {
+    if (g_window) g_window->SetTextInputOwner(joystick_id);
+}
+
 extern "C" int sanctuarygpu_png_decode(const void* png, uint64_t size, void* out, uint64_t out_size, uint32_t pitch,
                                   uint32_t* width, uint32_t* height) {
     SanctuaryPng::Image image;

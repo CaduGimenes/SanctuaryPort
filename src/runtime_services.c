@@ -20,7 +20,6 @@
 #endif
 
 #define USER_ID 1
-#define USER_NAME "Player"
 #define MAX_USER_ID 4 /* local co-op players 2..4 are logged in per runtime_pad_users() */
 #define ORBIS_OK 0
 #define USER_INVALID_ARGUMENT ((int32_t)0x80960005)
@@ -81,8 +80,9 @@ static int user_changed(int *login) {
     return user;
 }
 /* The game learns about logins from a callback (sceUserServiceRegisterEventCallback). The pad
- * module calls runtime_user_events from player 1's pad read, about twice a second, and the
- * callback runs there, on that game thread. */
+ * module calls runtime_user_events from player 1's pad read; logins are checked about twice a
+ * second, and the callback runs there, on that game thread. A joining player's profile list
+ * (runtime_profiles.c) is driven from there on every read. */
 typedef ABI void (*UserEventCallback)(const int32_t *event,void *arg);
 static UserEventCallback user_callback;
 static void *user_callback_arg;
@@ -99,6 +99,7 @@ void runtime_user_events(void) {
     pthread_mutex_lock(&lock);
     UserEventCallback callback=user_callback; void *arg=user_callback_arg;
     pthread_mutex_unlock(&lock);
+    runtime_profile_prompts();
     if (!callback || ++calls%30) return;
     int login, user;
     while ((user=user_changed(&login))) {
@@ -106,28 +107,12 @@ void runtime_user_events(void) {
         callback(event,arg);
     }
 }
-/* Player 1's name: SANCTUARY_PLAYER_NAME (the launcher's Game > Player name, GitHub #23), at most
- * 16 bytes of UTF-8 as a PS4 user name, cut at a character boundary; "Player" when empty. */
-static const char *player_name(void) {
-    static char name[17]; static int ready;
-    if (!ready) {
-        const char *env=getenv("SANCTUARY_PLAYER_NAME");
-        if (!env) env="";
-        while (*env==' ') ++env;
-        size_t n=0;
-        while (env[n] && n<16) ++n;
-        while (n>0 && env[n] && ((unsigned char)env[n]&0xc0)==0x80) --n;
-        memcpy(name,env,n); name[n]=0;
-        while (n>0 && name[n-1]==' ') name[--n]=0;
-        if (!n) strcpy(name,USER_NAME);
-        ready=1;
-    }
-    return name;
-}
+/* Each user's name is that of the profile in its seat (runtime_profiles.c; the launcher's
+ * Player section, GitHub #23, #86, #93): at most 16 bytes of UTF-8, as a PS4 user name. */
 static ABI int32_t user_name(int32_t id,char *name,uint64_t size) {
     if (id<USER_ID || id>MAX_USER_ID || !name) return USER_INVALID_ARGUMENT;
-    char text[17];
-    if (id==USER_ID) strcpy(text,player_name()); else snprintf(text,sizeof text,"Player %d",id);
+    char text[RUNTIME_PROFILE_NAME_SIZE];
+    runtime_profile_name(id,text);
     if (strlen(text)+1>size) return (int32_t)0x8096000a; /* BUFFER_TOO_SHORT */
     strcpy(name,text); return 0;
 }
@@ -381,6 +366,7 @@ static ABI int32_t save_init(void) { return dialog_init(2); }
 static ABI int32_t save_open(const unsigned char *p) {
     if (!p) return DIALOG_ARG_NULL;
     if (!dialogs[2].initialized) return DIALOG_NOT_INITIALIZED;
+    runtime_profile_yield(); /* a joining player's profile list gives the overlay to the game */
     memset(&save_dialog,0,sizeof(save_dialog));
     memcpy(&save_dialog.mode,p+52,4);
     memcpy(&save_dialog.user_data,p+112,8);
@@ -496,6 +482,7 @@ static ABI int32_t ime_init(const ImeParam *param, const void *extended) {
     (void)extended;
     if (!param || !param->buffer || !param->max_length) return (int32_t)0x80BC0004; /* IME INVALID_ADDRESS */
     if (ime.running) return (int32_t)0x80BC0003;                                  /* BUSY */
+    runtime_profile_yield();
     memset(&ime,0,sizeof(ime));
     ime.buffer=param->buffer; ime.max_length=param->max_length; ime.running=1;
     char initial[512], prompt[256];
@@ -505,7 +492,9 @@ static ABI int32_t ime_init(const ImeParam *param, const void *extended) {
     if (preset) { ime_complete(0,preset); return 0; }
     /* An empty field starts with the user name: a controller alone can accept it (the port
      * has no on-screen keyboard). */
-    const char *start=initial[0] ? initial : player_name();
+    char name[RUNTIME_PROFILE_NAME_SIZE];
+    runtime_profile_name(param->user>=USER_ID && param->user<=MAX_USER_ID ? param->user : USER_ID,name);
+    const char *start=initial[0] ? initial : name;
     if (!sanctuarygpu_text_input_begin(start,prompt[0] ? prompt : "Text")) ime_complete(0,start);
     else printf("Runtime: ImeDialog opened: shown on screen; keyboard Enter or Cross accepts, Esc or Circle cancels\n");
     return 0;
@@ -524,6 +513,7 @@ static ABI int32_t ime_result(uint32_t *result) {
     return 0;
 }
 static ABI int32_t ime_term(void) { memset(&ime,0,sizeof(ime)); return 0; }
+int runtime_dialog_busy(void) { return save_dialog.choosing || ime.running; }
 
 /* ---- Trophies: unlocks are kept in <user>/trophies.txt ("id unix-time" per line; older files
  * have the id alone) and shown on screen.
