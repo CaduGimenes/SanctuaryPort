@@ -313,6 +313,14 @@ class Diablo3PatchTests(unittest.TestCase):
                 self.assertEqual(line.get('Value'), '00')
                 continue
             if meta.get('Name') == graphics_options.PC_CAMERA_ZOOM:
+                if meta.get('PatchVer') == '1.2':
+                    # 1.47/1.46: the camera update's one call to LookAt goes through camdolly first.
+                    sites = [line for line in meta.iter('Line') if line.get('Pattern')]
+                    self.assertEqual(len(sites), 1)
+                    pattern, at = sites[0].get('Pattern').split(), int(sites[0].get('At'))
+                    self.assertEqual(pattern[at - 1], 'e8')
+                    self.assertEqual(sites[0].get('Value'), '{rel:camdolly:0}')
+                    continue
                 # Every write replaces a GlobalSNO observer slot immediate inside `mov edi, imm32` (0xbf).
                 for line in meta.iter('Line'):
                     pattern, at = line.get('Pattern').split(), int(line.get('At'))
@@ -575,14 +583,15 @@ class Diablo3PatchTests(unittest.TestCase):
         metas = [m for m in ET.parse(xml).getroot().iter('Metadata')
                  if m.get('Name') == graphics_options.PC_CAMERA_ZOOM]
         self.assertEqual(len(metas), 3)
-        for meta, expected_writes in zip(metas, (5, 5, 3)):
+        for meta, expected_writes in zip(metas, (3, 5, 3)):
             seen = {}
             image = bytearray(0x200)
-            for line in meta.iter('Line'):
+            for line in [*meta.iter('Line'), *meta.iter('Target')]:
                 pat = line.get('Pattern')
-                if pat not in seen:
+                if pat and pat not in seen:
                     seen[pat] = len(image)
-                    image += bytes.fromhex(' '.join('5a' if b == '??' else b for b in pat.split())) + bytearray(0x40)
+                    # Room after each signature: the code cave's targets lie up to 0x1940 past theirs.
+                    image += bytes.fromhex(' '.join('5a' if b == '??' else b for b in pat.split())) + bytearray(0x1a00)
             skipped = {}
             writes = patches.compile_patches(xml, [graphics_options.PC_CAMERA_ZOOM], '01.47',
                                              [(0, len(image))], image=bytes(image), skipped=skipped)

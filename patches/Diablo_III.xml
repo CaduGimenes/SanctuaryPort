@@ -1047,14 +1047,27 @@
          scenes at the screen edges activate normally. Three Metadata variants of the same name cover
          1.47/1.46, 1.25 (2.6.1) and 1.00 (2.0.0, before Retro); the first whose signatures all match
          is applied. -->
-    <Metadata Title="Diablo III" Name="PC Camera Zoom" Note="Uses the PC version&#x27;s default, Retro and wide camera observers (distance 98 instead of 80, pitch 42.2 deg instead of 38.2 deg)." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+    <!-- PC Camera Zoom, 1.47/1.46 (thanosdk28), after d3hack's ViewDolly: the game's own camera is left as it is
+         (observers, follow, teleports) and only the eye is moved back along the view direction, where the camera
+         builds its view matrix. LookAt (0x234990: rdi matrix, rsi eye, rdx view direction, rcx up, r8d 0 = negate
+         the direction) has one caller, the camera update (0x1eeb0b, eye = camera+0x18). camdolly runs first: when the
+         direction is the gameplay camera's (|x| = |y| within 0.03, |x| 0.45-0.70, |z| 0.45-0.75; menus, portraits and
+         the trigger zoom look elsewhere) it adds |direction| * 18 to the eye (the camera always sits at +x, +y, +z
+         from what it looks at), about the PC version's 98 for the console's 80, then goes on to LookAt. -->
+    <Metadata Title="Diablo III" Name="PC Camera Zoom" Note="Pulls the gameplay camera back along its view (d3hack's ViewDolly, 18 units: about the PC version's distance), leaving the game's camera and its follow as they are." Author="SanctuaryPort" PatchVer="1.2" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
-            <Line Type="bytes" Address="0x005efe15" Value="2e040000" Pattern="55 48 89 e5 85 ff 75 23 e8 ?? ?? ?? ?? 48 89 c7 e8 ?? ?? ?? ?? 89 c7 e8 ?? ?? ?? ?? 85 c0 74 0b bf 2b 04 00 00 5d e9 ?? ?? ?? ?? e8 ?? ?? ?? ?? 85 c0 74 0b bf 2f 04 00 00 5d e9 ?? ?? ?? ?? bf 2d 04 00 00 5d e9 ?? ?? ?? ??" At="53"/>
-            <Line Type="bytes" Address="0x005efe20" Value="2c040000" Pattern="55 48 89 e5 85 ff 75 23 e8 ?? ?? ?? ?? 48 89 c7 e8 ?? ?? ?? ?? 89 c7 e8 ?? ?? ?? ?? 85 c0 74 0b bf 2b 04 00 00 5d e9 ?? ?? ?? ?? e8 ?? ?? ?? ?? 85 c0 74 0b bf 2f 04 00 00 5d e9 ?? ?? ?? ?? bf 2d 04 00 00 5d e9 ?? ?? ?? ??" At="64"/>
-            <Line Type="bytes" Address="0x005efbd9" Value="2e040000" Pattern="e8 ?? ?? ?? ?? 48 89 c7 e8 ?? ?? ?? ?? 89 c7 e8 ?? ?? ?? ?? 85 c0 74 07 bf 2b 04 00 00 eb 15 e8 ?? ?? ?? ?? 85 c0 74 07 bf 2f 04 00 00 eb 05 bf 2d 04 00 00 e8 ?? ?? ?? ?? 49 63 cf 4c 69" At="41"/>
-            <Line Type="bytes" Address="0x005efbe0" Value="2c040000" Pattern="e8 ?? ?? ?? ?? 48 89 c7 e8 ?? ?? ?? ?? 89 c7 e8 ?? ?? ?? ?? 85 c0 74 07 bf 2b 04 00 00 eb 15 e8 ?? ?? ?? ?? 85 c0 74 07 bf 2f 04 00 00 eb 05 bf 2d 04 00 00 e8 ?? ?? ?? ?? 49 63 cf 4c 69" At="48"/>
-            <Line Type="bytes" Address="0x008e0407" Value="31040000" Pattern="8b 83 d8 00 00 00 89 45 c8 8b 83 dc 00 00 00 89 45 cc 8b 83 e0 00 00 00 89 45 d0 e8 ?? ?? ?? ?? 85 c0 74 07 bf 34 04 00 00 eb 05 bf 33 04 00 00 e8 ?? ?? ?? ?? c4" At="44"/>
+            <Line Type="bytes" Address="0x177c000" Value="c5fa1002 c5fa104a04 c5fa105208 c5fa103d{rel:dl_abs:0} c5f854c7 c5f054cf c5e854d7 c5fa5cd9 c5e054df c5f82f1d{rel:dl_k003:0} 7358 c5f82f05{rel:dl_k045:0} 764e c5f82f05{rel:dl_k070:0} 7344 c5f82f15{rel:dl_k045:0} 763a c5f82f15{rel:dl_k075:0} 7330 c5fa103d{rel:dl_d:0} c5fa59c7 c5f259cf c5ea59d7 c5fa5806 c5f2584e04 c5ea585608 c5fa1106 c5fa114e04 c5fa115608 e9{rel:lookat:0}" Target="camdolly"/>
+            <Line Type="bytes" Address="0x177c0a0" Value="ffffff7f 8fc2f53c 6666e63e 3333333f 0000403f 00009041" Target="dl_abs"/>
+            <Line Type="bytes" Address="0x005eeb0c" Value="{rel:camdolly:0}" Pattern="c5 fa 11 65 cc c5 fa 11 45 d0 e8 ?? ?? ?? ?? 8b 45 d8 48 8d b3 fc 00 00 00 48 8d bb 5c 01 00 00" At="11"/>
         </PatchList>
+        <Target Name="camdolly" Address="0x177c000" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="6284"/>
+        <Target Name="dl_abs" Address="0x177c0a0" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="6444"/>
+        <Target Name="dl_k003" Address="0x177c0a4" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="6448"/>
+        <Target Name="dl_k045" Address="0x177c0a8" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="6452"/>
+        <Target Name="dl_k070" Address="0x177c0ac" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="6456"/>
+        <Target Name="dl_k075" Address="0x177c0b0" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="6460"/>
+        <Target Name="dl_d" Address="0x177c0b4" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="6464"/>
+        <Target Name="lookat" Address="0x634990" Pattern="c5 fa 11 65 cc c5 fa 11 45 d0 e8 ?? ?? ?? ?? 8b 45 d8 48 8d b3 fc 00 00 00 48 8d bb 5c 01 00 00" At="11" Ref="1" Tail="0"/>
     </Metadata>
     <Metadata Title="Diablo III" Name="PC Camera Zoom" Note="Uses the PC version&#x27;s default, Retro and wide camera observers (distance 98 instead of 80, pitch 42.2 deg instead of 38.2 deg)." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
