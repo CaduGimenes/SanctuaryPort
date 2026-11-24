@@ -50,7 +50,47 @@ pub fn resolution_options(state: &State) -> Vec<(String, String)> {
         .iter()
         .filter(|name| DIABLO_III_RESOLUTIONS.contains(name))
         .map(|name| (name.to_string(), shown_label(&state.lang, name, true)));
-    builtin.collect()
+    let mut options: Vec<(String, String)> = builtin.collect();
+    // A size given freely in sanctuary.ini or with --set (render_resolution=1700x956, run.py
+    // graphics_options.custom_resolution) is listed too, so the box shows it.
+    let stored = state.store.text("render_resolution");
+    if let Some(label) = free_resolution_label(&stored) {
+        if !options.iter().any(|(value, _)| *value == stored) {
+            options.push((stored, label));
+        }
+    }
+    options
+}
+
+/// The label of a render size no list has, when run.py accepts it (even numbers, 640x360 to
+/// 7680x4320, aspect ratio 1 to 4); None otherwise.
+pub fn free_resolution_label(name: &str) -> Option<String> {
+    let (w, h) = crate::core::options::resolution_size(name)?;
+    let valid = name.contains('x')
+        && w % 2 == 0
+        && h % 2 == 0
+        && (640..=7680).contains(&w)
+        && (360..=4320).contains(&h)
+        && (1.0..=4.0).contains(&(w as f64 / h as f64));
+    valid.then(|| resolution_label(name, true))
+}
+
+/// The frame rate choices, with a rate given freely in sanctuary.ini or with --set (frame_rate=144:
+/// any whole number from 30 to 199, run.py graphics_options.frame_rate) when it is stored.
+pub fn frame_rate_pairs(state: &State, lang: &str) -> Vec<(String, String)> {
+    let mut pairs = choice_pairs(FRAME_RATES, lang);
+    let stored = state.store.text("frame_rate");
+    if let Some(rate) = free_frame_rate(&stored) {
+        if !pairs.iter().any(|(value, _)| *value == stored) {
+            pairs.push((stored, format!("{rate} FPS")));
+        }
+    }
+    pairs
+}
+
+/// A stored frame rate run.py takes as it is: a whole number from 30 to 199.
+pub fn free_frame_rate(stored: &str) -> Option<u32> {
+    stored.parse::<u32>().ok().filter(|rate| (30..200).contains(rate))
 }
 
 fn resolution_values(state: &State) -> Vec<String> {
@@ -177,7 +217,7 @@ pub fn rows(state: &State, lang: &str) -> Vec<SelectRow> {
         ),
         row(
             "frame_rate",
-            choice_pairs(FRAME_RATES, lang),
+            frame_rate_pairs(state, lang),
             stored("frame_rate"),
         ),
         row(

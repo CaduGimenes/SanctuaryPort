@@ -131,6 +131,8 @@ private:
     std::vector<vk::ImageView> images_view;
     std::vector<vk::Semaphore> image_acquired;
     std::vector<vk::Semaphore> present_ready;
+    /// sanctuary: signaled with image_acquired; the present thread waits for it on the CPU (GitHub #103).
+    std::vector<vk::Fence> image_acquired_fences;
     u32 width = 0;
     u32 height = 0;
     u32 image_count = 0;

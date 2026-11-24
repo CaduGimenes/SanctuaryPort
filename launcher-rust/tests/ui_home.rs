@@ -158,8 +158,14 @@ fn the_settings_line_names_the_frame_rate_choice() {
     for (stored, shown) in [
         ("30", "30 FPS"),
         ("60", "60 FPS"),
+        ("90", "90 FPS"),
         ("120", "120 FPS"),
         ("0", "200 FPS"),
+        // Rates given in sanctuary.ini or with --set (any from 30 to 200); others are the game's 60.
+        ("144", "144 FPS"),
+        ("200", "200 FPS"),
+        ("29", "60 FPS"),
+        ("fast", "60 FPS"),
     ] {
         state.store.set("frame_rate", json!(stored));
         assert_eq!(home::quick_segments(&state)[2].0, shown, "{stored}");

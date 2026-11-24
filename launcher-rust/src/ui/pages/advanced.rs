@@ -57,6 +57,10 @@ fn restart(lang: &str, english: &str) -> String {
 pub const WARMUP_LABEL: &str = "Load shaders while playing";
 pub const WARMUP_HINT: &str = "Off: a slower start that avoids some crashes at launch.";
 
+/// The run log switch under Troubleshooting (off by default).
+pub const SAVE_LOG_LABEL: &str = "Save a log of each start";
+pub const SAVE_LOG_HINT: &str = "For bug reports: writes last_run.log. Off: nothing is written while you play.";
+
 /// Delete shader cache, held while the game runs.
 fn delete_cache_button<'a>(state: &State, lang: &str) -> Element<'a, Message> {
     let delete = button(text(tr(lang, "Delete shader cache"))).style(theme::button_flat);
@@ -374,11 +378,18 @@ pub fn view(state: &State) -> Element<'_, Message> {
             state.store.flag("background_warmup"),
             Some(&hint(WARMUP_HINT)),
         ))
+        .push(checkbox(
+            state.rtl,
+            "save_log",
+            &tr(lang, SAVE_LOG_LABEL),
+            state.store.flag("save_log"),
+            Some(&hint(SAVE_LOG_HINT)),
+        ))
         .push(row(
             state.rtl,
             &tr(lang, "Last start log"),
             flat(tr(lang, "Open"), Message::ShowPage(Page::Log)),
-            Some(&hint("To report a problem, attach last_run.log from the port folder.")),
+            Some(&hint("To report a problem: turn on the switch above, play until it happens, attach last_run.log.")),
         ))
         .push(section(state.rtl, &tr(lang, "Files")))
         .push(actions(

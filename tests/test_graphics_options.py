@@ -8,6 +8,7 @@ from pathlib import Path
 import paths  # noqa: F401 (puts scripts/ on sys.path)
 import game_profiles
 import graphics_options as g
+import patches
 
 
 class GraphicsOptionsTest(unittest.TestCase):
@@ -166,8 +167,11 @@ class GraphicsOptionsTest(unittest.TestCase):
         # A mod's "Resolution Patch - <size>" is a render resolution only while its mod is on.
         self.assertEqual(g.resolutions(), g.RESOLUTIONS)
         self.assertEqual(g.resolutions(['3840x1080', '4K']), g.RESOLUTIONS + ('3840x1080',))
+        # Without its mod a size is still a free render size when custom_resolution accepts it (run.py
+        # applies it where the game has the parameterised Resolution Patch); an odd one is native.
         ini = {'render_resolution': '3840x1080', 'engine_fps': '60'}
-        self.assertEqual(g.startup_options(ini)['render_resolution'], 'native')
+        self.assertEqual(g.startup_options(ini)['render_resolution'], '3840x1080')
+        self.assertEqual(g.startup_options({'render_resolution': '3841x1080'})['render_resolution'], 'native')
         options = g.startup_options(ini, ['3840x1080'])
         self.assertEqual(options['render_resolution'], '3840x1080')
         self.assertEqual(g.patch_names(['Bug Fix - Texture Corruption Fix'], options), ['Resolution Patch - 3840x1080'])
@@ -233,7 +237,11 @@ class FrameLimiterTest(unittest.TestCase):
     def test_choice_and_patch(self):
         self.assertEqual(g.frame_rate({}), '60')
         self.assertEqual(g.frame_rate({'frame_rate': '120'}), '120')
-        self.assertEqual(g.frame_rate({'frame_rate': '144'}), '60')
+        self.assertEqual(g.frame_rate({'frame_rate': '144'}), '144')  # any rate from 30 to 199
+        self.assertEqual(g.frame_rate({'frame_rate': '29'}), '60')
+        self.assertEqual(g.frame_rate({'frame_rate': 'fast'}), '60')
+        self.assertEqual(g.limiter_patch('144'), 'Frame Limiter - 144 FPS')
+        self.assertEqual(g.limiter_patch('045'), 'Frame Limiter - 45 FPS')
         self.assertEqual(g.frame_rate({'fps_limit': '30'}), '30')  # the old row's 30
         self.assertEqual(g.frame_rate({'fps_limit': '0'}), '60')
         self.assertEqual(g.frame_rate({'fps_limit': '30', 'frame_rate': '0'}), '0')
@@ -257,10 +265,10 @@ class FrameLimiterTest(unittest.TestCase):
                          {'SANCTUARY_VBLANK_HZ': '0', 'SANCTUARY_FPS_LIMIT': '480'})
 
     def test_each_choice_has_a_patch_for_both_executables(self):
-        xml = (Path(__file__).resolve().parent.parent / 'patches' / 'Diablo_III.xml').read_text(encoding='utf-8')
-        for rate in ('30', '120', '0'):
+        found = patches.preset_patches(Path(__file__).resolve().parent.parent / 'patches' / 'Diablo_III.xml', '01.47')
+        for rate in ('30', '90', '120', '0'):
             name = g.limiter_patch(rate)
-            self.assertEqual(xml.count(f'Name="{name}"'), 2, name)
+            self.assertEqual(len(found[name]), 2, name)
 
     def test_200_fps_is_the_limiter_that_does_not_wait_plus_the_raised_foreground_cap(self):
         cap, top = g.FOREGROUND_CAP_PATCH, ['Event: Pandemonium', g.limiter_patch('0')]
@@ -292,6 +300,71 @@ class FrameLimiterTest(unittest.TestCase):
         # An eboot.bin without the cap's signature: the game's own 150 setting still limits it.
         self.assertEqual(g.frame_rate_label(['Frame Limiter - Unlimited']),
                          f'about 143 FPS ({cap} not found in this eboot.bin)')
+
+
+class FreeValuesTest(unittest.TestCase):
+    """Any frame rate from 30 to 200 and any sane render size in sanctuary.ini or --set: the parameterised
+    Frame Limiter and Resolution Patch take values worked out by the same formulas as the presets."""
+
+    XML = Path(__file__).resolve().parent.parent / 'patches' / 'Diablo_III.xml'
+
+    def test_custom_resolution_limits(self):
+        self.assertEqual(g.custom_resolution('1700x956'), (1700, 956))
+        self.assertEqual(g.custom_resolution('7680x4320'), (7680, 4320))
+        for bad in ('1701x956', '1700x957', '638x360', '640x358', '7682x4320', '1000x2000', '5000x1000',
+                    'native', '1440p', 'x', '1700x', '1700x956x2', '-1700x956', ' 1700x956', None):
+            self.assertIsNone(g.custom_resolution(bad), bad)
+
+    def test_free_rate(self):
+        presets = patches.preset_choices(self.XML, '01.47')
+        names, values, chosen_as = g.with_values(['Frame Limiter - 144 FPS', 'Event: Pandemonium'], presets)
+        self.assertEqual(names, ['Frame Limiter', 'Event: Pandemonium'])
+        self.assertEqual(values, {'frame_wait': str(16683 * 60 // 144)})
+        self.assertEqual(chosen_as, {'Frame Limiter': 'Frame Limiter - 144 FPS'})
+        # The presets keep their own values (30 FPS: 33367).
+        self.assertEqual(g.with_values(['Frame Limiter - 30 FPS'], presets)[1], {'frame_wait': '33367'})
+        self.assertEqual(g.free_value_names(['Frame Limiter - 144 FPS', 'Frame Limiter - 120 FPS',
+                                             'Frame Limiter - 250 FPS', 'Frame Limiter - 29 FPS'], presets),
+                         {'Frame Limiter - 144 FPS'})
+        self.assertEqual(g.limiter_environment(['Frame Limiter - 144 FPS']),
+                         {'SANCTUARY_VBLANK_HZ': '0', 'SANCTUARY_FPS_LIMIT': '144'})
+        self.assertEqual(g.limiter_environment(['Frame Limiter - 45 FPS']),
+                         {'SANCTUARY_VBLANK_HZ': '0', 'SANCTUARY_FPS_LIMIT': '45'})
+        self.assertEqual(g.frame_rate_label(['Frame Limiter - 144 FPS']), '144 FPS')
+        # Above 120 the game's second limiter (about 143 FPS) is raised too.
+        cap = g.FOREGROUND_CAP_PATCH
+        self.assertEqual(g.foreground_cap_names(['Frame Limiter - 144 FPS']), ['Frame Limiter - 144 FPS', cap])
+        self.assertEqual(g.foreground_cap_names(['Frame Limiter - 100 FPS', cap]), ['Frame Limiter - 100 FPS'])
+
+    def test_free_size(self):
+        presets = patches.preset_choices(self.XML, '01.47')
+        names, values, chosen_as = g.with_values(['Resolution Patch - 1700x956'], presets)
+        self.assertEqual(names, ['Resolution Patch'])
+        self.assertEqual(values['render_width'], '1700')
+        self.assertEqual(values['render_height'], '956')
+        self.assertEqual(values['camera_aspect'], '0')  # 1.778: 16:9
+        self.assertEqual(values['small_fonts'], '1')
+        self.assertEqual(values['big_heap'], '1')
+        # Near 16:9 but not it: the camera gets its own ratio.
+        self.assertEqual(g.resolution_values('1800x1000')['camera_aspect'], '1')
+        # Every preset still gets the values it names.
+        for preset, (patch, preset_values) in presets.items():
+            if patch == g.RESOLUTION_PATCH:
+                self.assertEqual(g.with_values([preset], presets)[1], preset_values, preset)
+        self.assertEqual(g.free_value_names(['Resolution Patch - 1700x956', 'Resolution Patch - 1701x956',
+                                             'Resolution Patch - 1440p'], presets),
+                         {'Resolution Patch - 1700x956'})
+        # A file without the parameterised patch (another game's) offers no free size.
+        self.assertEqual(g.free_value_names(['Resolution Patch - 1700x956', 'Frame Limiter - 144 FPS'], {}), set())
+        # The PC render targets follow it: the reflection at half the size is a free value too.
+        targets = g.render_target_names([], {'pc_render_targets': '1'}, '1700x956')
+        self.assertIn('PC Render Targets - Reflection 850x478', targets)
+        names, values, _ = g.with_values(targets, presets)
+        self.assertIn(g.REFLECTION_PATCH, names)
+        self.assertEqual((values['reflection_width'], values['reflection_height']), ('850', '478'))
+        # The text size and render target patches follow the size.
+        self.assertEqual(g.text_size_names([], '1700x956'), [g.TEXT_LAYOUT_PATCH])
+        self.assertEqual(g.text_size_names([], '2000x1200'), [g.TEXT_LAYOUT_PATCH, g.TEXT_BOTH_SETS_PATCH])
 
 
 class FixedScaleTest(unittest.TestCase):
@@ -374,7 +447,11 @@ class RenderTargetsTest(unittest.TestCase):
 
     def test_the_file_has_exactly_the_entries_that_can_be_chosen(self):
         root = ET.parse(paths.ROOT / 'patches' / 'Diablo_III.xml').getroot()
-        in_file = [m.get('Name') for m in root.iter('Metadata') if m.get('Name').startswith(self.PREFIX)]
+        in_file = [m.get('Name') for m in root.iter('Metadata')
+                   if m.get('Name').startswith(self.PREFIX) and not m.get('Params')]
+        in_file += [name for name, found in patches.preset_patches(paths.ROOT / 'patches' / 'Diablo_III.xml',
+                                                                     '01.47').items()
+                    if name.startswith(self.PREFIX) for _ in found]
         sizes = game_profiles.DIABLO3['env']['SANCTUARY_ALLOWED_RESOLUTIONS'].split(';')
         chosen = {n for size in sizes for n in g.render_target_names([], self.ON, size)}
         chosen |= set(g.render_target_names([], self.ON, 'native', pro=True))

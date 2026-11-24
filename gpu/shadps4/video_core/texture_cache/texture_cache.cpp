@@ -26,6 +26,7 @@
 #include "video_core/renderer_vulkan/vk_scheduler.h"
 #include "video_core/renderer_vulkan/vk_wait_diagnostics.h"
 #include "video_core/texture_cache/aliasing.h"
+#include "video_core/texture_cache/gc_marks.h"
 #include "video_core/texture_cache/host_compatibility.h"
 #include "video_core/texture_cache/texture_cache.h"
 #include <vulkan/vulkan_format_traits.hpp>
@@ -1863,29 +1864,44 @@ void TextureCache::UntrackImageTail(ImageId image_id) {
 
 void TextureCache::GarbageCollectImages() {
     SanctuaryStats::Timer gc_timer{SanctuaryStats::t_gc};
+    // total_used_memory: the bytes of the registered images (RegisterImage), what this collector
+    // can free.
     if (instance.CanReportMemoryUsage()) {
-        total_used_memory = instance.GetDeviceMemoryUsage();
+        const u64 usage = instance.GetDeviceMemoryUsage();
         // sanctuary: on integrated GPUs (Steam Deck) the usage covers system-memory heaps holding
         // much more than images (buffers backing guest memory), and the startup budget left
-        // ~1 GB after its 8 GB system reserve: usage stayed above the critical mark, so the
-        // collector evicted images used two or three frames ago on every submission and wrote
-        // GPU-written ones back. Compare with the driver's current budget instead.
-        // SANCTUARY_GC_BUDGET_MB=N: this rule with a fixed budget on any GPU (tests on a desktop).
+        // ~1 GB after its 8 GB system reserve. Discrete GPUs too (GitHub #29): the startup formula
+        // pressed at 40% of the budget. So the marks follow the driver's current budget, minus
+        // what the rest of the process holds (GitHub #61), with margins scaled to the card
+        // (GcMarks::Compute).
+        // SANCTUARY_GC_BUDGET_MB=N: a fixed budget on any GPU (tests of a small card on a desktop).
         static const u64 forced_budget = [] {
             const char* env = std::getenv("SANCTUARY_GC_BUDGET_MB");
             return env ? std::strtoull(env, nullptr, 10) << 20 : 0;
         }();
-        // Discrete GPUs too (GitHub #29): the startup formula pressed at 40% of the budget (2.4 of
-        // ~5.9 GB on an 8 GB RX 7600M). At 4K the game holds ~2.9 GB of images, so the cache
-        // evicted 20-80 images every few seconds and created them again, a sawtooth of frame
-        // times at the same places. Their memory cannot spill as freely as an integrated GPU's,
-        // so the marks are lower: 65 / 80 / 90%.
         const u64 budget = forced_budget ? forced_budget : instance.GetDeviceMemoryBudgetNow();
         if (budget != 0) {
-            const bool shared = instance.IsIntegrated() || forced_budget;
-            trigger_gc_memory = budget / 100 * (shared ? 70 : 65);
-            pressure_gc_memory = budget / 100 * (shared ? 85 : 80);
-            critical_gc_memory = budget / 100 * (shared ? 95 : 90);
+            const auto marks = GcMarks::Compute(budget, usage, total_used_memory);
+            trigger_gc_memory = marks.trigger;
+            pressure_gc_memory = marks.pressure;
+            critical_gc_memory = marks.critical;
+        }
+        // SANCTUARY_VRAM_REPORT=1: every 5 s, where the device memory goes.
+        static const bool vram_report = std::getenv("SANCTUARY_VRAM_REPORT") != nullptr;
+        if (vram_report) {
+            const auto now = std::chrono::steady_clock::now();
+            if (now - vram_report_time >= std::chrono::seconds(5)) {
+                vram_report_time = now;
+                std::printf("VRAM: device usage %llu MiB of budget %llu MiB; images %llu MiB "
+                            "(marks %llu/%llu/%llu), buffer arenas %llu MiB, BDA table %llu KiB\n",
+                            (unsigned long long)(usage >> 20), (unsigned long long)(budget >> 20),
+                            (unsigned long long)(total_used_memory >> 20),
+                            (unsigned long long)(trigger_gc_memory >> 20),
+                            (unsigned long long)(pressure_gc_memory >> 20),
+                            (unsigned long long)(critical_gc_memory >> 20),
+                            (unsigned long long)(buffer_cache.ResidentBytes() >> 20),
+                            (unsigned long long)(buffer_cache.BdaPageTableBytes() >> 10));
+            }
         }
     }
     if (total_used_memory < trigger_gc_memory) {
@@ -1957,7 +1973,7 @@ void TextureCache::GarbageCollectImages() {
     if (pressured || gc_downloads != 0) {
         const auto now = std::chrono::steady_clock::now();
         if (now - gc_report_time >= std::chrono::seconds(5)) {
-            std::printf("Texture cache: memory pressure, %llu of %llu MiB (critical %llu): "
+            std::printf("Texture cache: memory pressure, images %llu MiB, mark %llu MiB (critical %llu): "
                         "%llu images evicted, %llu written back since the last report\n",
                         (unsigned long long)(total_used_memory >> 20),
                         (unsigned long long)(pressure_gc_memory >> 20),

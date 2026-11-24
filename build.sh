@@ -137,4 +137,5 @@ if [[ ${1:-} == --test ]]; then
     out/isa-stub-test tests/data/isa_fixture.bin
     ninja -C out/gpu settings-keep-test >> out/gpu-build.log 2>&1 && (cd out && gpu/settings-keep-test)
     ninja -C out/gpu no-msaa-test >> out/gpu-build.log 2>&1 && out/gpu/no-msaa-test
+    ninja -C out/gpu gc-marks-test >> out/gpu-build.log 2>&1 && out/gpu/gc-marks-test
 fi

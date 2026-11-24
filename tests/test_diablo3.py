@@ -1,7 +1,9 @@
+import os
 import sys
 import tempfile
 import struct
 import unittest
+from unittest import mock
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
@@ -38,44 +40,50 @@ class Diablo3PatchTests(unittest.TestCase):
 
     def test_extra_events_go_through_the_second_list(self):
         # The cave's own list holds 16 events; Double Rift Keystones and Double Blood Shards set a flag
-        # of a second list (0x177ac60) that a stub (0x177ac68) appends, entered from the cave at
-        # 0x177a815 in place of its lea rax,[rsp+0x60], and returning after it (0x177a81a).
+        # of a second list (seasons_cave+0x4d0) that a stub (+0x4d8) appends, entered from the cave at
+        # +0x85 in place of its lea rax,[rsp+0x60], and returning after it (+0x8a).
         xml = ROOT / 'patches' / 'Diablo_III.xml'
-        writes = dict(patches.compile_patches(xml, ['Offline Seasons - Season 30', 'Event: Double Rift Keystones',
-                                                    'Event: Double Blood Shards'], '01.47', [(0, 0x1800000)]))
-        base = patches.EBOOT_BASE
-        hook = writes[0x177a815 - base]
+        caves = {}
+        writes = self.image_of(patches.compile_patches(
+            xml, ['Offline Seasons - Season 30', 'Event: Double Rift Keystones', 'Event: Double Blood Shards'],
+            '01.47', [(0, 0x1800000)], caves=caves))
+        cave = caves['seasons_cave']
+        hook = writes[cave + 0x85:cave + 0x8a]
         self.assertEqual(hook[:1], b'\xe9')
-        self.assertEqual(0x177a81a + int.from_bytes(hook[1:5], 'little', signed=True), 0x177ac68)
-        stub = writes[0x177ac68 - base]
+        self.assertEqual(cave + 0x8a + int.from_bytes(hook[1:5], 'little', signed=True), cave + 0x4d8)
+        stub = writes[cave + 0x4d8:cave + 0x598]
         back = stub.index(bytes.fromhex('488d442460e9')) + 5
-        self.assertEqual(0x177ac68 + back + 5 + int.from_bytes(stub[back + 1:back + 5], 'little', signed=True),
-                         0x177a81a)
+        self.assertEqual(0x4d8 + back + 5 + int.from_bytes(stub[back + 1:back + 5], 'little', signed=True), 0x8a)
         self.assertIn(b'CommunityBuffDoubleRiftKeystones "1"\n', stub)
         self.assertIn(b'CommunityBuffDoubleBloodShards "1"\n', stub)
-        self.assertEqual(writes[0x177ac60 - base], b'\x01')
-        self.assertEqual(writes[0x177ac61 - base], b'\x01')
+        self.assertEqual(writes[cave + 0x4d0:cave + 0x4d2], b'\x01\x01')
+
+    @staticmethod
+    def image_of(writes, size=0x1800000):
+        """The writes put into a zero image (eboot offsets)."""
+        image = bytearray(size)
+        for offset, data in writes:
+            image[offset:offset + len(data)] = data
+        return image
 
     def test_a_new_seasonal_hero_takes_the_season_number_itself(self):
         # GitHub #83: the hero digest's season_created came from the hero screen's copy (0x14bc984),
         # which only the answer to a per-player server request fills; players 2..4 got 0, a regular
-        # hero. The creation (0x2f85f8) now calls a cave (0x177b500) that reads the season number
-        # (0x8250f0) and keeps rcx, the digest flags, which the next instruction uses.
+        # hero. The creation (0x2f85f8) now calls a cave that reads the season number (0x8250f0) and
+        # keeps rcx, the digest flags, which the next instruction uses.
         xml = ROOT / 'patches' / 'Diablo_III.xml'
-        segments = [(0, 0x2000000)]
-        writes = dict(patches.compile_patches(xml, ['Offline Seasons - Season 30'], '01.47', segments))
+        caves = {}
+        writes = dict(patches.compile_patches(xml, ['Offline Seasons - Season 30'], '01.47', [(0, 0x2000000)],
+                                              caves=caves))
         base = patches.EBOOT_BASE
         site = writes[0x6f85f8 - base]
         self.assertEqual(len(site), 6)  # it replaces mov eax,[rip+disp32] whole
         self.assertEqual(site[:1] + site[5:], b'\xe8\x90')
-        self.assertEqual(0x6f85fd + int.from_bytes(site[1:5], 'little', signed=True), 0x177b500)
-        cave = writes[0x177b500 - base]
+        at = caves['season_number_cave']
+        self.assertEqual(0x6f85fd - base + int.from_bytes(site[1:5], 'little', signed=True), at)
+        cave = writes[at]
         self.assertEqual(cave[:2] + cave[6:], b'\x51\xe8\x59\xc3')  # push rcx; call; pop rcx; ret
-        self.assertEqual(0x177b506 + int.from_bytes(cave[2:6], 'little', signed=True), 0xc250f0)
-        for name in patches.available_patches(xml, '01.47') - set(self.OFFLINE_NAMES):
-            for at, data in patches.compile_patches(xml, [name], '01.47', segments):
-                self.assertFalse(at < 0x177b500 - base + len(cave) and 0x177b500 - base < at + len(data),
-                                 (name, hex(at)))
+        self.assertEqual(at + 6 + int.from_bytes(cave[2:6], 'little', signed=True), 0xc250f0 - base)
 
     def test_smooth_motion_patch_is_on_and_found_by_signature(self):
         # GitHub #24: on by default since players confirmed it at 120 FPS and above, and skipped
@@ -86,19 +94,17 @@ class Diablo3PatchTests(unittest.TestCase):
         self.assertEqual(meta.get('isEnabled'), 'true')
         self.assertEqual(meta.get('AppVer'), '01.47')
         self.assertIn(self.SMOOTH, patches.selected_patches(xml, '01.47', ''))
-        targets = {t.get('Name') for t in meta.iter('Target')}
-        for target in meta.iter('Target'):
-            self.assertTrue(target.get('Pattern'), target.get('Name'))
-        for line in meta.iter('Line'):
-            self.assertTrue(line.get('Pattern') or line.get('Target') in targets, line.get('Address'))
-        # A small image: the site, and the zero padding that ends the code (the offline seasons' anchor).
-        anchor = bytes.fromhex(next(t for t in meta.iter('Target')).get('Pattern').replace(' ', ''))
-        site_at, anchor_at = 0x1000, 0x3000
+        self.assert_found_by_signature(meta, self.SMOOTH)
+        # A small image: the site, then the zero padding that ends the code, where the cave goes.
+        site_at, used = 0x1000, 0x3005
         image = bytearray(0x6000)
         image[site_at:site_at + len(self.SMOOTH_SITE)] = self.SMOOTH_SITE
-        image[anchor_at:anchor_at + 24] = anchor[:24]
-        writes = dict(patches.compile_patches(xml, [self.SMOOTH], '01.47', [(0, len(image))], image=bytes(image)))
-        cave = anchor_at + 4236
+        image[used - 1] = 0xc3
+        caves = {}
+        writes = dict(patches.compile_patches(xml, [self.SMOOTH], '01.47', [(0, len(image))], image=bytes(image),
+                                              caves=caves))
+        cave = caves['smooth_cave']
+        self.assertEqual(cave, 0x3010)  # the first 16-byte boundary after the last byte in use
         call = site_at + 25
         self.assertEqual(set(writes), {cave, call})
         self.assertEqual(writes[call][:1], b'\xe8')
@@ -115,6 +121,14 @@ class Diablo3PatchTests(unittest.TestCase):
                                                  image=bytes(0x6000), skipped=skipped), [])
         self.assertIn(self.SMOOTH, skipped)
 
+    def assert_found_by_signature(self, meta, name):
+        """Every Line of the patch has a signature, or writes at a Target that has one or at a cave."""
+        targets = {t.get('Name') for t in meta.iter('Target')} | {c.get('Name') for c in meta.iter('Cave')}
+        for target in meta.iter('Target'):
+            self.assertTrue(target.get('Pattern') or target.get('Cave'), (name, target.get('Name')))
+        for line in meta.iter('Line'):
+            self.assertTrue(line.get('Pattern') or line.get('Target') in targets, (name, line.get('Address')))
+
     def cheat(self, name):
         """The cheat's Metadata, checked to be off by default and found by signature, and its writes
         compiled at the 1.47 reference Addresses: {eboot offset: bytes}."""
@@ -125,60 +139,52 @@ class Diablo3PatchTests(unittest.TestCase):
         self.assertEqual(meta.get('Author'), 'SanctuaryPort', name)
         self.assertTrue(meta.get('Note'), name)
         self.assertNotIn(name, patches.selected_patches(xml, '01.47', ''))
-        targets = {t.get('Name') for t in meta.iter('Target')}
-        for target in meta.iter('Target'):
-            self.assertTrue(target.get('Pattern'), (name, target.get('Name')))
-        for line in meta.iter('Line'):
-            self.assertTrue(line.get('Pattern') or line.get('Target') in targets, (name, line.get('Address')))
+        self.assert_found_by_signature(meta, name)
         # Without the patch the game's bytes stay; another build (no signature found) is skipped whole.
         skipped = {}
         self.assertEqual(patches.compile_patches(xml, [name], '01.47', [(0, 0x6000)], image=bytes(0x6000),
                                                  skipped=skipped), [])
         self.assertIn(name, skipped)
-        return {offset + patches.EBOOT_BASE: data
-                for offset, data in patches.compile_patches(xml, [name], '01.47', [(0, 0x1800000)])}
+        caves = {}
+        writes = {offset + patches.EBOOT_BASE: data
+                  for offset, data in patches.compile_patches(xml, [name], '01.47', [(0, 0x1800000)], caves=caves)}
+        self.caves = {cave: offset + patches.EBOOT_BASE for cave, offset in caves.items()}
+        return writes
 
     def test_cheat_movement_speed(self):
         # The lea of Movement_Scalar_Total's formula text (0x74dd32) points at a copy in the code
-        # padding (0x177b200) that adds 25% for team 2 (heroes) only.
+        # padding that adds 25% for team 2 (heroes) only.
         writes = self.cheat('Cheat: Movement speed +25%')
-        self.assertEqual(set(writes), {0xb4dd35, 0x177b200})
-        self.assertEqual(0xb4dd39 + int.from_bytes(writes[0xb4dd35], 'little', signed=True), 0x177b200)
-        formula = writes[0x177b200]
+        formula_at = self.caves['ms_formula']
+        self.assertEqual(set(writes), {0xb4dd35, formula_at})
+        self.assertEqual(0xb4dd39 + int.from_bytes(writes[0xb4dd35], 'little', signed=True), formula_at)
+        formula = writes[formula_at]
         self.assertTrue(formula.startswith(b'Movement_Scalar_Capped_Total + Movement_Scalar_Uncapped_Bonus + '))
         self.assertTrue(formula.endswith(b'0.25 * Pin(TeamID - 1, 0, 1) * Pin(3 - TeamID, 0, 1)\0'))
-        # Its own slot of the code padding: clear of the offline seasons, Challenge Rifts and smooth
-        # motion code, which can all be on with it.
-        xml = ROOT / 'patches' / 'Diablo_III.xml'
-        others = patches.compile_patches(xml, ['Offline Seasons - Season 30', 'Event: Double Blood Shards',
-                                               'Event: Challenge Rifts', self.SMOOTH], '01.47', [(0, 0x1800000)])
-        start, end = 0x177b200, 0x177b200 + len(formula)
-        for offset, data in others:
-            at = offset + patches.EBOOT_BASE
-            self.assertTrue(at + len(data) <= start or at >= end, hex(at))
 
     def test_challenge_rifts_number_is_the_week(self):
         # GitHub #99: the game rewards a Challenge Rift only above the last rewarded challenge number,
         # so the number the cave writes into challengerift_config.dat must grow: the week since 1970
         # from the game's clock (0x191f0 FILETIME, 0x189f0 Unix seconds), not a random one per launch.
         xml = ROOT / 'patches' / 'Diablo_III.xml'
+        caves = {}
         writes = {offset + patches.EBOOT_BASE: data for offset, data in
-                  patches.compile_patches(xml, ['Event: Challenge Rifts'], '01.47', [(0, 0x1800000)])}
-        cave = writes[0x177af90]
+                  patches.compile_patches(xml, ['Event: Challenge Rifts'], '01.47', [(0, 0x1800000)], caves=caves)}
+        at = caves['cr_cave'] + patches.EBOOT_BASE
+        cave = writes[at]
         self.assertNotIn(b'\x0f\x31', cave)  # rdtsc
         week = cave.index(bytes.fromhex('4889c7')) - 5
         self.assertEqual(cave[week], 0xe8)
-        self.assertEqual(0x177af90 + week + 5 + int.from_bytes(cave[week + 1:week + 5], 'little', signed=True),
+        self.assertEqual(at + week + 5 + int.from_bytes(cave[week + 1:week + 5], 'little', signed=True),
                          0x4191f0)
         self.assertEqual(cave[week + 8], 0xe8)
-        self.assertEqual(0x177af90 + week + 13 + int.from_bytes(cave[week + 9:week + 13], 'little', signed=True),
+        self.assertEqual(at + week + 13 + int.from_bytes(cave[week + 9:week + 13], 'little', signed=True),
                          0x4189f0)
         self.assertEqual(cave[week + 13:week + 22], bytes.fromhex('31d2 b9803a0900 f7f1'))  # / 604800
-        # The rip-relative leas still find the cave's strings, and the cave ends before the cheats' slot.
+        # The rip-relative leas still find the cave's strings.
         for lea, text in ((0, b'challengerift_\0'), (0x46, b'/data/pubfiles/\0')):
             to = lea + 7 + int.from_bytes(cave[lea + 3:lea + 7], 'little', signed=True)
             self.assertEqual(cave[to:to + len(text)], text)
-        self.assertLessEqual(0x177af90 + len(cave), 0x177b200)
 
     def test_cheat_auto_pickup(self):
         # 0x583940's item branch jumps (0x58396b) to its last test, the item's No_AutoPickup (0x583b29).
@@ -207,70 +213,247 @@ class Diablo3PatchTests(unittest.TestCase):
         writes = self.cheat('Cheat: Unlock all difficulties')
         self.assertEqual(writes, {0x9b8ba0: bytes.fromhex('b801000000c3'), 0x896370: bytes.fromhex('31c0c3')})
     def test_mystic_patch_is_off_and_hides_only_the_act_i_unlock(self):
-        # GitHub #79: off by default; at the 1.47 Addresses the call to the cave replaces the
-        # mov ebx,eax / cmp ebx,-1 after the QuestRange lookup, and the cave turns A1_MysticUnlock
-        # (SNO 430609) into -1 (no such range: false) and nothing else.
+        # GitHub #79: off by default; the call to the cave replaces the mov ebx,eax / cmp ebx,-1 after
+        # the QuestRange lookup, and the cave turns A1_MysticUnlock's SNO into -1 (no such range:
+        # false) and nothing else. The SNO is looked up by name (test_mystic_cave_runs below).
         xml = ROOT / 'patches' / 'Diablo_III.xml'
         (meta,) = [m for m in ET.parse(xml).getroot().iter('Metadata') if m.get('Name') == self.MYSTIC]
         self.assertEqual(meta.get('isEnabled'), 'false')
         self.assertEqual(meta.get('AppVer'), '01.47')
         self.assertNotIn(self.MYSTIC, patches.selected_patches(xml, '01.47', ''))
-        writes = dict(patches.compile_patches(xml, [self.MYSTIC], '01.47', [(0, 0x1400000)]))
-        cave, call = 0x177b400 - patches.EBOOT_BASE, 0xe83f26 - patches.EBOOT_BASE
+        self.assert_found_by_signature(meta, self.MYSTIC)
+        caves = {}
+        writes = dict(patches.compile_patches(xml, [self.MYSTIC], '01.47', [(0, 0x1400000)], caves=caves))
+        cave, call = caves['mystic_cave'], 0xe83f26 - patches.EBOOT_BASE
         self.assertEqual(set(writes), {cave, call})
         self.assertEqual(writes[call][:1], b'\xe8')
         self.assertEqual(call + 5 + struct.unpack('<i', writes[call][1:])[0], cave)
-        self.assertEqual(writes[cave], bytes.fromhex('89c3 3d11920600 7505 bbffffffff 83fbff c3'))
-        # Found by its signature in a small image; another build is skipped whole.
-        anchor = bytes.fromhex(meta.find('Target').get('Pattern').replace(' ', ''))
-        site_at, anchor_at = 0x1000, 0x3000
+        self.assertEqual(writes[cave][63:], b'A1_MysticUnlock\0')
+        self.assertNotIn(struct.pack('<I', 430609), writes[cave])
+        # Its cached SNO is a variable in the data region.
+        lo, hi = patches.REFERENCE_CAVE_REGIONS['data']
+        self.assertTrue(lo <= caves['mystic_sno'] < hi)
+        # Found by its signature in a small image, the cave in its zero end; another build is skipped whole.
+        site_at = 0x1000
         image = bytearray(0x6000)
         image[site_at:site_at + len(self.MYSTIC_SITE)] = self.MYSTIC_SITE
-        image[anchor_at:anchor_at + 24] = anchor[:24]
-        found = dict(patches.compile_patches(xml, [self.MYSTIC], '01.47', [(0, len(image))], image=bytes(image)))
-        self.assertEqual(set(found), {anchor_at + 3212, site_at + 22})
+        segments = [(0, 0x5000), (0x5000, 0x5800)]
+        found = dict(patches.compile_patches(xml, [self.MYSTIC], '01.47', segments, image=bytes(image)))
+        self.assertEqual(set(found), {patches.align(site_at + len(self.MYSTIC_SITE)), site_at + 22})
         skipped = {}
-        self.assertEqual(patches.compile_patches(xml, [self.MYSTIC], '01.47', [(0, 0x6000)],
+        self.assertEqual(patches.compile_patches(xml, [self.MYSTIC], '01.47', segments,
                                                  image=bytes(0x6000), skipped=skipped), [])
         self.assertIn(self.MYSTIC, skipped)
 
-    def test_the_mystic_cave_overlaps_no_other_patch(self):
+    def test_offline_season_dates_reach_far_ahead(self):
+        # The community buffs are on only while the clock is between CommunityBuffStart and End
+        # (eboot 0x43470); the dates are fixed, the end far ahead (the parse is 64-bit FILETIME).
+        xml = ROOT / 'patches' / 'Diablo_III.xml'
+        writes = patches.compile_patches(xml, ['Offline Seasons - Season 30'], '01.47', [(0, 0x1800000)])
+        text = b''.join(value for _, value in writes)
+        self.assertIn(b'Start "Sat, 09 Feb 2025 00:00:00 GMT"', text)
+        self.assertIn(b'\nEnd "Thu, 31 Dec 2099 01:00:00 GMT"', text)
+        self.assertIn(b'CommunityBuffStart "???, 16 Sep 2023 00:00:00 GMT"', text)
+        self.assertIn(b'CommunityBuffEnd "???, 31 Dec 2099 01:00:00 GMT"', text)
+        self.assertNotIn(b'2036', text)
+
+    @unittest.skipUnless(sys.platform == 'linux' and os.uname().machine == 'x86_64', 'runs x86-64 code')
+    def test_mystic_cave_runs(self):
+        # The patched 1.47 native, run: its lookup is a stand-in that gives the name's SNO; the cave
+        # looks A1_MysticUnlock up once (group 0x3a, through the native's own call target), keeps it
+        # and hides that SNO only.
+        import ctypes
+        import mmap
+        xml = ROOT / 'patches' / 'Diablo_III.xml'
+        site, fake, data = 0x1000, 0x3000, 0x4000  # code, the stand-in lookup, its variables
+        count, group, result = data, data + 4, data + 8
+        image = bytearray(0x6000)
+        image[site:site + len(self.MYSTIC_SITE)] = self.MYSTIC_SITE
+        caves = {}
+        segments = [(0, 0x5000), (0x5000, 0x5800)]
+        regions = {'code': (0x2000, 0x2800), 'data': (0x5800, 0x6000)}
+        writes = patches.compile_patches(xml, [self.MYSTIC], '01.47', segments, image=bytes(image),
+                                         regions=regions, caves=caves)
+        for offset, value in writes:
+            image[offset:offset + len(value)] = value
+        memory = mmap.mmap(-1, len(image), prot=mmap.PROT_READ | mmap.PROT_WRITE | mmap.PROT_EXEC)
+        base = ctypes.addressof(ctypes.c_char.from_buffer(memory))
+        rel = lambda at, end, target: struct.pack('<i', target - end)
+        # The native's call (site + 17) goes to the stand-in; after the cave: return ebx, or 0 (je).
+        image[site + 18:site + 22] = rel(site + 18, site + 22, fake)
+        image[site + 0x1d:site + 0x26] = bytes.fromhex('89d8 4883c408 5b 5d c3')
+        image[site + 0x55:site + 0x5e] = bytes.fromhex('31c0 4883c408 5b 5d c3')
+        mystic_sno, name_ptr = 430609, base + caves['mystic_cave'] + 63
+        stub = bytearray()
+        stub += b'\xff\x05' + rel(0, 0, 0)                     # inc dword [count]
+        stub[2:6] = rel(fake + 2, fake + 6, count)
+        stub += b'\x89\x3d' + rel(fake + 6, fake + 12, group)  # mov [group], edi
+        stub += b'\x48\xb8' + struct.pack('<Q', name_ptr)      # movabs rax, name
+        stub += bytes.fromhex('4839c6 7506') + b'\xb8' + struct.pack('<I', mystic_sno) + b'\xc3'
+        stub += b'\x8b\x05' + rel(0, 0, 0) + b'\xc3'           # mov eax, [result]; ret
+        stub[-5:-1] = rel(0, fake + len(stub) - 1, result)
+        image[fake:fake + len(stub)] = stub
+        memory[:] = bytes(image)
+        native = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_char_p)(base + site)
+        value = lambda at: struct.unpack_from('<i', memory, at)[0]
+        def call(sno):
+            struct.pack_into('<i', memory, result, sno)
+            return native(b'X1_WestmHub_MysticUnlock')
+        self.assertEqual(call(1234), 1234)
+        self.assertEqual(value(count), 2)  # the native's lookup, then the cave's own
+        self.assertEqual(value(group), 0x3a)
+        self.assertEqual(value(caves['mystic_sno']), mystic_sno)
+        self.assertEqual(call(mystic_sno), 0)  # hidden: no such range
+        self.assertEqual(call(-1), 0)
+        self.assertEqual(call(77), 77)
+        self.assertEqual(value(count), 5)  # looked up once
+        del native
+        memory.close()
+
+    def test_every_patch_together_overlaps_no_other_and_its_caves_are_zero_padding(self):
+        # All the built-in patches at once, with the 1.47 reference image when this checkout has it
+        # (out/eboot.elf, or SANCTUARY_EBOOT_ELF; else at the reference Addresses): no two writes overlap, every cave lies in the zero padding
+        # that ends the code (or the rest of the last data page), and nothing else writes there.
+        # Patches that write the same sites are alternatives (one resolution, one season...): each
+        # round takes the next of each such group.
+        xml = ROOT / 'patches' / 'Diablo_III.xml'
+        names = sorted(patches.available_patches(xml, '01.47'))
+        elf_path = Path(os.environ.get('SANCTUARY_EBOOT_ELF') or ROOT / 'out' / 'eboot.elf')
+        if elf_path.is_file():
+            elf = elf_path.read_bytes()
+            image, segments, regions = patches.eboot_image(elf), patches.eboot_segments(elf), patches.cave_regions(elf)
+        else:
+            image, segments, regions = None, [(0, 0x1800000)], patches.REFERENCE_CAVE_REGIONS
+        found, find = {}, patches.find_pattern  # each signature searched once in the 20 MB image
+        def find_once(image, pattern, limit=2):
+            key = (tuple(pattern), limit)
+            if key not in found:
+                found[key] = find(image, pattern, limit)
+            return found[key]
+        self.enterContext(mock.patch.object(patches, 'find_pattern', find_once))
+        alone = {}
+        for name in names:
+            writes = patches.compile_patches(xml, [name], '01.47', segments, image, {}, regions)
+            alone[name] = [(o, d) for o, d in writes if not any(s <= o < e for s, e in regions.values())]
+        groups = []
+        for name in names:
+            group = next((g for g in groups if any(self.overlap(alone[name], alone[other]) for other in g)), None)
+            if group is None:
+                groups.append([name])
+            else:
+                group.append(name)
+        self.assertIn('Offline Seasons - Season 30', next(g for g in groups if 'Offline Seasons - Season 14' in g))
+        for round_ in range(max(len(g) for g in groups)):
+            chosen = [g[round_ % len(g)] for g in groups]
+            caves, skipped = {}, {}
+            writes = patches.compile_patches(xml, chosen, '01.47', segments, image, skipped, regions, caves)
+            self.assertEqual(skipped, {})
+            self.assertGreater(len(caves), 5)  # compile_patches raised if two writes overlapped
+            meta_caves = {c.get('Name'): int(c.get('Size'), 0) for c in ET.parse(xml).getroot().iter('Cave')}
+            blocks = [(at, at + meta_caves[name]) for name, at in caves.items()]
+            for start, end in blocks:
+                self.assertTrue(any(s <= start and end <= e for s, e in regions.values()), hex(start))
+                if image is not None and start < len(image):
+                    self.assertEqual(image[start:end], bytes(end - start))
+            for offset, data in writes:
+                if any(s <= offset < e for s, e in regions.values()):
+                    self.assertTrue(any(s <= offset and offset + len(data) <= e for s, e in blocks), hex(offset))
+
+    def test_two_patches_that_write_the_same_bytes_are_refused(self):
+        # Two seasons write different numbers into the one offline seasons cave; their base, chosen
+        # with a season, is part of it.
         xml = ROOT / 'patches' / 'Diablo_III.xml'
         segments = [(0, 0x2000000)]
-        mine = patches.compile_patches(xml, [self.MYSTIC], '01.47', segments)
-        for name in patches.available_patches(xml, '01.47') - {self.MYSTIC}:
-            for at, data in patches.compile_patches(xml, [name], '01.47', segments):
-                for own_at, own in mine:
-                    self.assertFalse(at < own_at + len(own) and own_at < at + len(data), (name, hex(at)))
+        with self.assertRaisesRegex(ValueError, 'Season 30 writes .* which Offline Seasons - Season 29 also writes'):
+            patches.compile_patches(xml, ['Offline Seasons - Season 29', 'Offline Seasons - Season 30'], '01.47',
+                                    segments)
+        self.assertEqual(patches.compile_patches(xml, ['Offline Seasons', 'Offline Seasons - Season 30'], '01.47',
+                                                 segments),
+                         patches.compile_patches(xml, ['Offline Seasons - Season 30'], '01.47', segments))
+
+    @staticmethod
+    def overlap(writes, others):
+        return any(o < p + len(e) and p < o + len(d) for o, d in writes for p, e in others)
 
     def test_offline_patches_find_every_site_by_signature(self):
         # A different eboot is skipped, never overwritten: every Line has a signature, or writes at a
-        # Target that has one; the season entries are the shared base plus their own values.
+        # Target that has one or at a cave; the season entries are the shared base plus their own values.
         root = ET.parse(ROOT / 'patches' / 'Diablo_III.xml').getroot()
         metas = {m.get('Name'): m for m in root.iter('Metadata') if m.get('Name') in self.OFFLINE_NAMES}
+        # The seasons are the Presets of one parameterised patch, each as the entry it stands for.
+        metas.update({name: entries[0] for name, entries in
+                      patches.preset_patches(ROOT / 'patches' / 'Diablo_III.xml', '01.47').items()
+                      if name in self.OFFLINE_NAMES})
         self.assertEqual(set(metas), self.OFFLINE_NAMES)
         for name, meta in metas.items():
-            own = patches.with_base(meta, list(root.iter('Metadata')))
-            targets = {t.get('Name') for t in own.iter('Target')}
-            for target in own.iter('Target'):
-                self.assertTrue(target.get('Pattern'), (name, target.get('Name')))
-            for line in own.iter('Line'):
-                self.assertTrue(line.get('Pattern') or line.get('Target') in targets, (name, line.get('Address')))
+            self.assert_found_by_signature(patches.with_base(meta, list(root.iter('Metadata'))), name)
             self.assertNotIn('Claude', meta.get('Author'))
             self.assertNotIn('Local mod', meta.get('Note'))
-        base = metas['Offline Seasons']
-        for name in self.SEASONS:
-            self.assertEqual(metas[name].get('Base'), 'Offline Seasons')
-            self.assertLess(len(ET.tostring(metas[name])), len(ET.tostring(base)) // 4, name)
+        # GitHub #100: the two clears of the buffs 1.47 turns on by default are Optional (older builds
+        # have not got them); each standalone event needs the seasons hook, so a build without
+        # seasons (1.00) skips it rather than writing a cave nothing reads.
+        optional = [l.get('Address') for l in metas['Offline Seasons'].iter('Line') if l.get('Optional') == 'true']
+        self.assertEqual(optional, ['0x926fe6', '0x9272cf'])
+        hook = next(l for l in metas['Offline Seasons'].iter('Line') if l.get('Address') == '0x443528')
+        for name in self.EVENTS:
+            if any(t.get('Cave') == 'seasons_cave' for t in metas[name].iter('Target')):
+                guard = metas[name].find("Target[@Name='seasons']")
+                self.assertEqual((guard.get('Pattern'), guard.get('At')), (hook.get('Pattern'), hook.get('At')), name)
+        image = bytearray(0x4000)
+        image[0x100] = 0xff
+        skipped = {}
+        self.assertEqual(patches.compile_patches(ROOT / 'patches' / 'Diablo_III.xml', ['Event: Sanctified Items'],
+                                                 '01.47', [(0, len(image))], image=bytes(image), skipped=skipped), [])
+        self.assertEqual(skipped, {'Event: Sanctified Items': 'signature not found'})
+
+    def offline_image(self, names, older=False):
+        """A small image with every signature of these patches (?? as 0), one per 0x100 bytes, then
+        zero padding: as 1.47 has them, or older (the 1.46 / 1.25 forms: the second '|' form, no
+        Optional site)."""
+        xml = ROOT / 'patches' / 'Diablo_III.xml'
+        every = list(ET.parse(xml).getroot().iter('Metadata'))
+        presets = patches.preset_patches(xml, '01.47')
+        forms = []
+        for name in names:
+            meta = presets[name][0] if name in presets else next(m for m in every if m.get('Name') == name)
+            for element in [*patches.with_base(meta, every).iter('Line'), *patches.with_base(meta, every).iter('Target')]:
+                pattern = element.get('Pattern')
+                if not pattern or (older and element.get('Optional') == 'true'):
+                    continue
+                pattern = pattern.split('|')[-1 if older else 0].strip()
+                if pattern not in forms:
+                    forms.append(pattern)
+        image = bytearray(0x100 * (len(forms) + 1) + 0x2000)
+        for i, pattern in enumerate(forms):
+            data = bytes.fromhex(pattern.replace('??', '00'))
+            image[0x100 * i:0x100 * i + len(data)] = data
+        return bytes(image), forms
+
+    def test_offline_seasons_on_older_builds(self):
+        # GitHub #100 (1.46 = 2.7.6, 1.25 = 2.6.1): no Altar/Visions clears, and the online-state
+        # check keeps the call's result in r13d. The season is applied without the clears; its
+        # writes in 1.47's form are the same with them.
+        name = 'Offline Seasons - Season 30'
+        xml = ROOT / 'patches' / 'Diablo_III.xml'
+        for older in (False, True):
+            image, forms = self.offline_image([name, 'Event: Double Rift Keystones'], older)
+            segments = [(0, len(image)), (len(image) + 0x1000, len(image) + 0x1100)]
+            skipped = {}
+            writes = dict(patches.compile_patches(xml, [name, 'Event: Double Rift Keystones'], '01.47', segments,
+                                                  image, skipped))
+            self.assertEqual(skipped, {})
+            clears = [w for w in writes.values() if w == bytes.fromhex('c7436000000000c7436400000000c7436800000000')]
+            self.assertEqual(len(clears), 0 if older else 2)
+            check = next(i for i, f in enumerate(forms) if f.startswith('bf 01 00 00 00 e8'))
+            self.assertEqual(writes[0x100 * check + 5], bytes.fromhex('31c0909090'))  # the call: xor eax,eax
+            self.assertEqual(writes[0x100 * forms.index(next(f for f in forms if f.startswith('8b 05 ?? ?? ?? ?? 85 c0')))],
+                             bytes.fromhex('b80100000090'))  # mov eax,1: the season is confirmed
 
     def test_a_season_is_the_base_with_its_number_and_theme(self):
         xml = ROOT / 'patches' / 'Diablo_III.xml'
-        # A tiny image whose zero padding is found through the base's anchor (the 24 bytes before it).
         base = ET.parse(xml).getroot().find("Metadata[@Name='Offline Seasons']")
-        anchor = bytes.fromhex(next(base.iter('Target')).get('Pattern').replace(' ', '').replace('??', '00'))
-        self.assertEqual(anchor[24:], bytes(32))
         merged = patches.with_base(
-            ET.parse(xml).getroot().find("Metadata[@Name='Offline Seasons - Season 22']"),
+            patches.preset_patches(xml, '01.47')['Offline Seasons - Season 22'][0],
             list(ET.parse(xml).getroot().iter('Metadata')))
         lines = list(merged.iter('Line'))
         base_lines = list(base.iter('Line'))
@@ -300,7 +483,11 @@ class Diablo3PatchTests(unittest.TestCase):
             graphics_options.FOREGROUND_CAP_PATCH, graphics_options.COOP_EFFECTS,
             graphics_options.PC_CAMERA_ZOOM, *self.TEXT_PATCHES}
         self.assertEqual(names, expected)
-        for meta in ET.parse(xml).getroot().iter('Metadata'):
+        # The sizes, frame limits and reflection sizes are Presets of parameterised patches: each is
+        # checked as the entries (1.47, 1.00) it stands for.
+        entries = [m for m in ET.parse(xml).getroot().iter('Metadata') if not m.get('Params')]
+        entries += [m for found in patches.preset_patches(xml, '01.47').values() for m in found]
+        for meta in entries:
             if (meta.get('Name') in self.OFFLINE_NAMES | self.CHEATS
                     | {self.SMOOTH, self.MYSTIC, graphics_options.FIXED_SCALE_PATCH,
                        graphics_options.FOREGROUND_CAP_PATCH, *self.TEXT_PATCHES}
@@ -313,6 +500,15 @@ class Diablo3PatchTests(unittest.TestCase):
                 self.assertEqual(line.get('Value'), '00')
                 continue
             if meta.get('Name') == graphics_options.PC_CAMERA_ZOOM:
+                if meta.get('PatchVer') == '1.2':
+                    # 1.47/1.46: the camera update's one call to LookAt goes through the camdolly cave first.
+                    sites = [line for line in meta.iter('Line') if line.get('Pattern')]
+                    self.assertEqual(len(sites), 1)
+                    pattern, at = sites[0].get('Pattern').split(), int(sites[0].get('At'))
+                    self.assertEqual(pattern[at - 1], 'e8')
+                    self.assertEqual(sites[0].get('Value'), '{rel:camdolly:0}')
+                    self.assertEqual([c.get('Name') for c in meta.iter('Cave')], ['camdolly'])
+                    continue
                 # Every write replaces a GlobalSNO observer slot immediate inside `mov edi, imm32` (0xbf).
                 for line in meta.iter('Line'):
                     pattern, at = line.get('Pattern').split(), int(line.get('At'))
@@ -575,14 +771,16 @@ class Diablo3PatchTests(unittest.TestCase):
         metas = [m for m in ET.parse(xml).getroot().iter('Metadata')
                  if m.get('Name') == graphics_options.PC_CAMERA_ZOOM]
         self.assertEqual(len(metas), 3)
-        for meta, expected_writes in zip(metas, (5, 5, 3)):
+        for meta, expected_writes in zip(metas, (3, 5, 3)):
             seen = {}
             image = bytearray(0x200)
-            for line in meta.iter('Line'):
+            for line in [*meta.iter('Line'), *meta.iter('Target')]:
                 pat = line.get('Pattern')
-                if pat not in seen:
+                if pat and pat not in seen:
                     seen[pat] = len(image)
                     image += bytes.fromhex(' '.join('5a' if b == '??' else b for b in pat.split())) + bytearray(0x40)
+            # Zero padding at the end: room for the 1.47 entry's camdolly cave.
+            image += bytearray(0x200)
             skipped = {}
             writes = patches.compile_patches(xml, [graphics_options.PC_CAMERA_ZOOM], '01.47',
                                              [(0, len(image))], image=bytes(image), skipped=skipped)

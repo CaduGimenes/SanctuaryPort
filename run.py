@@ -452,11 +452,28 @@ def main():
             # Diablo III: text at render heights it has no fonts for (#77 below 1080 lines, #75 above).
             if diablo3:
                 names = graphics_options.text_size_names(names, graphics['render_resolution'])
-            names = graphics_options.restrict_to_available(names, available)
+            # A frame rate or render size given freely in sanctuary.ini (frame_rate=144,
+            # render_resolution=1700x956) is the parameterised patch with values from its formula.
+            presets = patches.preset_choices(patch_xml, profile[2])
+            names = graphics_options.restrict_to_available(
+                names, available | graphics_options.free_value_names(names, presets))
+            # The game lists such a size with the mods' ones, so its menu and window keep it.
+            resolution = graphics['render_resolution']
+            if f'{graphics_options.RESOLUTION_PREFIX} - {resolution}' in names and \
+                    resolution not in graphics_options.resolutions(extra_resolutions):
+                env['SANCTUARY_EXTRA_RESOLUTIONS'] = ';'.join(extra_resolutions + [resolution])
             env['SANCTUARY_PATCHES'] = ';'.join(names)
             env['SANCTUARY_PATCHES_ONLY'] = '1'
+        # The choices that are one parameterised patch (Diablo III's resolution, frame limiter, reflection
+        # size) go to patches.py as that patch plus its values; SANCTUARY_PATCHES keeps the choices' names.
+        patch_values, chosen_as = {}, {}
+        run_names = env.get('SANCTUARY_PATCHES', '')
+        if profile:
+            run_names, patch_values, chosen_as = graphics_options.with_values(names, presets)
+            run_names = ';'.join(run_names)
         (out / 'patch_status.json').unlink(missing_ok=True)
-        run_script('patches.py', '--out', out, '--extra', env.get('SANCTUARY_PATCHES', ''), '--game-dir', game,
+        run_script('patches.py', '--out', out, '--extra', run_names, '--game-dir', game,
+                   *[arg for key, value in sorted(patch_values.items()) for arg in ('--param', f'{key}={value}')],
                    '--patches-dir', env.get('SANCTUARY_PATCHES_DIR', data / 'patches'),
                    '--patches-config', env.get('SANCTUARY_PATCHES_CONFIG', data / 'patches.json'),
                    *[arg for f in mod_patch_files for arg in ('--mod-patches', f)])
@@ -464,9 +481,10 @@ def main():
             # Only the patches found in this eboot.bin count: a frame rate patch that was skipped
             # leaves the engine at 60 FPS, and the notes' memory and VBlank needs follow the same list.
             status = patch_status(out) or {}
-            applied = status.get('applied', [])
+            dmem, vblank = patch_requirements(patch_xml, status.get('applied', []), profile[2], patch_values)
+            # By the choices' names ("Frame Limiter - 120 FPS"), as before the values were parameters.
+            applied = [chosen_as.get(n, n) for n in status.get('applied', [])]
             engine_fps = graphics_options.applied_engine_fps(applied)
-            dmem, vblank = patch_requirements(patch_xml, applied, profile[2])
             # Graphics > V-Sync (sanctuary.ini vertical_sync): the profile keeps it off otherwise.
             if diablo3 and 'SANCTUARY_VSYNC' not in caller_env:
                 vsync = graphics_options.read_ini(env['SANCTUARY_CONFIG']).get('vertical_sync') == '1'

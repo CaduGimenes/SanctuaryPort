@@ -34,6 +34,7 @@
   "close_on_play": false,
   "discord_rpc": false,
   "check_updates": false,
+  "save_log": false,
   "player_name": "",
   "lan_play": false,
   "pad_profiles": {},

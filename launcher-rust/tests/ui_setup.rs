@@ -661,3 +661,34 @@ fn the_fire_burns_at_splash_strength_under_the_setup() {
     );
     assert_eq!(state.fire.intensity(), 0.8);
 }
+
+#[test]
+fn a_free_frame_rate_or_render_size_shows_in_its_list() {
+    // sanctuary.ini or --set may hold a rate from 30 to 199 or a WIDTHxHEIGHT the lists lack
+    // (run.py works their patch values out): the drop-downs show them instead of an empty box.
+    let dir = tempfile::tempdir().unwrap();
+    let mut state = at_step(dir.path(), Step::Video);
+    let _ = app::update(&mut state, Message::Set("frame_rate".into(), "144".into()));
+    assert_eq!(
+        row_shown(&state, "frame_rate"),
+        ("144".into(), Some("144 FPS".into()))
+    );
+    let _ = app::update(&mut state, Message::Set("frame_rate".into(), "250".into()));
+    assert_eq!(row_shown(&state, "frame_rate").1, None);
+    state
+        .store
+        .set("render_resolution", serde_json::json!("1700x956"));
+    let options = performance::resolution_options(&state);
+    assert!(options
+        .iter()
+        .any(|(value, label)| value == "1700x956" && label == "1700 × 956 · 16:9"));
+    // An odd size is not one run.py takes: not listed.
+    state
+        .store
+        .set("render_resolution", serde_json::json!("1701x956"));
+    assert!(!performance::resolution_options(&state)
+        .iter()
+        .any(|(value, _)| value == "1701x956"));
+    assert_eq!(performance::free_resolution_label("640x358"), None);
+    assert_eq!(performance::free_resolution_label("native"), None);
+}

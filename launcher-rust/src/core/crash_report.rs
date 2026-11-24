@@ -19,6 +19,16 @@ pub fn keep_crash_log(run_log: &Path) -> std::io::Result<()> {
     std::fs::copy(run_log, target).map(|_| ())
 }
 
+/// Writes `text` (the output kept in memory, when the run log is not saved) as `last_crash.log`
+/// beside where `last_run.log` would be.
+pub fn write_crash_log(run_log: &Path, text: &str) -> std::io::Result<()> {
+    let target = run_log.with_file_name(CRASH_LOG);
+    if let Some(parent) = target.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    std::fs::write(target, text)
+}
+
 /// `text` with the user's home folder and any `/home/<name>`, `/Users/<name>` or
 /// `C:\Users\<name>` prefix shown as `~`.
 pub fn redact(text: &str, home: Option<&str>) -> String {

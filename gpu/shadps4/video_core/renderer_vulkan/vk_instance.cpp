@@ -513,14 +513,21 @@ bool Instance::CreateDevice() {
         sparse_queue_family_index = static_cast<u32>(sparse_family - family_properties.begin());
     }
 
-    static constexpr std::array queue_priorities = {1.0f};
+    // sanctuary: a second queue of the graphics family for presents when the GPU has one (NVIDIA
+    // has 16, AMD one): see HasSeparatePresentQueue. Opt-in until it is tested on NVIDIA (GitHub
+    // #103): SANCTUARY_PRESENT_QUEUE=1 turns it on; otherwise presents use the graphics queue.
+    const char* present_queue_env = std::getenv("SANCTUARY_PRESENT_QUEUE");
+    const bool separate_present_queue = family_properties[queue_family_index].queueCount >= 2 &&
+                                        present_queue_env && present_queue_env[0] == '1';
+    static constexpr std::array queue_priorities = {1.0f, 1.0f};
     const vk::DeviceQueueCreateInfo queue_info = {
         .queueFamilyIndex = queue_family_index,
-        .queueCount = static_cast<u32>(queue_priorities.size()),
+        .queueCount = separate_present_queue ? 2u : 1u,
         .pQueuePriorities = queue_priorities.data(),
     };
     std::array queue_infos = {queue_info, queue_info};
     queue_infos[1].queueFamilyIndex = sparse_queue_family_index;
+    queue_infos[1].queueCount = 1;
 
     const auto vk11_features = feature_chain.get<vk::PhysicalDeviceVulkan11Features>();
     vk12_features = feature_chain.get<vk::PhysicalDeviceVulkan12Features>();
@@ -803,7 +810,8 @@ bool Instance::CreateDevice() {
 
     graphics_queue = device->getQueue(queue_family_index, 0);
     sparse_queue = device->getQueue(sparse_queue_family_index, 0);
-    present_queue = device->getQueue(queue_family_index, 0);
+    present_queue = device->getQueue(queue_family_index, separate_present_queue ? 1 : 0);
+    std::printf("GPU: presents on %s queue\n", separate_present_queue ? "a queue of their own" : "the graphics");
 
     if (calibrated_timestamps) {
         const auto [time_domains_result, time_domains] =

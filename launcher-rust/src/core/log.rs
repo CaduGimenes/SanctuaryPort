@@ -103,6 +103,15 @@ impl RunLog {
         }
     }
 
+    /// A run log that writes nothing: the game's output stays in the launcher's memory only
+    /// (Advanced > Troubleshooting > Save a log of each start off, the default).
+    pub fn disabled() -> RunLog {
+        RunLog {
+            file: None,
+            journal: None,
+        }
+    }
+
     pub fn is_open(&self) -> bool {
         self.file.is_some()
     }

@@ -2793,7 +2793,10 @@
    "Full effects in local co-op": "Efeitos completos no co-op local",
    "The game lowers effects for 2+ local players; this may cost FPS.": "O jogo reduz os efeitos com 2+ jogadores locais; isso pode custar FPS.",
    "PC camera zoom": "Zoom de câmera do PC",
-   "Pulls the gameplay camera back to the PC version's distance and angle.": "Afasta a câmera para a distância e o ângulo da versão de PC."
+   "Pulls the gameplay camera back to the PC version's distance and angle.": "Afasta a câmera para a distância e o ângulo da versão de PC.",
+   "Save a log of each start": "Salvar um log de cada início",
+   "For bug reports: writes last_run.log. Off: nothing is written while you play.": "Para relatar bugs: grava o last_run.log. Desligado: nada é gravado enquanto você joga.",
+   "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "Para relatar um problema: ligue a opção acima, jogue até acontecer e anexe o last_run.log."
   },
   "es": {
    "The launcher cannot write to {}, so it cannot replace itself there. Open the releases page to download the new version by hand?": "El launcher no puede escribir en {}, así que no puede reemplazarse ahí. ¿Abrir la página de releases para descargar la versión nueva a mano?",
@@ -3385,7 +3388,10 @@
    "Full effects in local co-op": "Efectos completos en cooperativo local",
    "The game lowers effects for 2+ local players; this may cost FPS.": "El juego reduce los efectos con 2+ jugadores locales; puede costar FPS.",
    "PC camera zoom": "Zoom de cámara de PC",
-   "Pulls the gameplay camera back to the PC version's distance and angle.": "Aleja la cámara a la distancia y el ángulo de la versión de PC."
+   "Pulls the gameplay camera back to the PC version's distance and angle.": "Aleja la cámara a la distancia y el ángulo de la versión de PC.",
+   "Save a log of each start": "Guardar un registro de cada inicio",
+   "For bug reports: writes last_run.log. Off: nothing is written while you play.": "Para informar de errores: escribe last_run.log. Desactivado: no se escribe nada mientras juegas.",
+   "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "Para informar de un problema: activa la opción de arriba, juega hasta que ocurra y adjunta last_run.log."
   },
   "pl": {
    "Polish": "Polski",
@@ -3831,7 +3837,10 @@
    "Full effects in local co-op": "Pełne efekty w lokalnej kooperacji",
    "The game lowers effects for 2+ local players; this may cost FPS.": "Gra obniża efekty przy 2+ lokalnych graczach; może to kosztować FPS.",
    "PC camera zoom": "Zoom kamery z PC",
-   "Pulls the gameplay camera back to the PC version's distance and angle.": "Odsuwa kamerę na odległość i kąt z wersji PC."
+   "Pulls the gameplay camera back to the PC version's distance and angle.": "Odsuwa kamerę na odległość i kąt z wersji PC.",
+   "Save a log of each start": "Zapisuj log każdego uruchomienia",
+   "For bug reports: writes last_run.log. Off: nothing is written while you play.": "Do zgłoszeń błędów: zapisuje last_run.log. Wyłączone: nic nie jest zapisywane podczas gry.",
+   "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "Aby zgłosić problem: włącz opcję powyżej, graj, aż się pojawi, i dołącz last_run.log."
   },
   "fr": {
    "Polish": "Polonais",
@@ -4026,7 +4035,10 @@
    "Full effects in local co-op": "Effets complets en coop locale",
    "The game lowers effects for 2+ local players; this may cost FPS.": "Le jeu réduit les effets à 2+ joueurs locaux ; cela peut coûter des FPS.",
    "PC camera zoom": "Zoom de caméra PC",
-   "Pulls the gameplay camera back to the PC version's distance and angle.": "Recule la caméra à la distance et à l'angle de la version PC."
+   "Pulls the gameplay camera back to the PC version's distance and angle.": "Recule la caméra à la distance et à l'angle de la version PC.",
+   "Save a log of each start": "Enregistrer un journal de chaque lancement",
+   "For bug reports: writes last_run.log. Off: nothing is written while you play.": "Pour les rapports de bugs : écrit last_run.log. Désactivé : rien n'est écrit pendant que vous jouez.",
+   "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "Pour signaler un problème : activez l'option ci-dessus, jouez jusqu'à ce qu'il survienne et joignez last_run.log."
   },
   "de": {
    "Polish": "Polnisch",
@@ -4212,7 +4224,10 @@
    "Full effects in local co-op": "Volle Effekte im lokalen Koop",
    "The game lowers effects for 2+ local players; this may cost FPS.": "Das Spiel senkt die Effekte ab 2 lokalen Spielern; das kann FPS kosten.",
    "PC camera zoom": "PC-Kamerazoom",
-   "Pulls the gameplay camera back to the PC version's distance and angle.": "Zieht die Spielkamera auf Abstand und Winkel der PC-Version zurück."
+   "Pulls the gameplay camera back to the PC version's distance and angle.": "Zieht die Spielkamera auf Abstand und Winkel der PC-Version zurück.",
+   "Save a log of each start": "Protokoll jedes Starts speichern",
+   "For bug reports: writes last_run.log. Off: nothing is written while you play.": "Für Fehlerberichte: schreibt last_run.log. Aus: Beim Spielen wird nichts geschrieben.",
+   "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "Um ein Problem zu melden: Schalter oben einschalten, spielen, bis es auftritt, last_run.log anhängen."
   },
   "it": {
    "Polish": "Polacco",
@@ -4396,7 +4411,10 @@
    "Full effects in local co-op": "Effetti completi in cooperativa locale",
    "The game lowers effects for 2+ local players; this may cost FPS.": "Il gioco riduce gli effetti con 2+ giocatori locali; può costare FPS.",
    "PC camera zoom": "Zoom della telecamera PC",
-   "Pulls the gameplay camera back to the PC version's distance and angle.": "Allontana la telecamera alla distanza e all'angolo della versione PC."
+   "Pulls the gameplay camera back to the PC version's distance and angle.": "Allontana la telecamera alla distanza e all'angolo della versione PC.",
+   "Save a log of each start": "Salva un log di ogni avvio",
+   "For bug reports: writes last_run.log. Off: nothing is written while you play.": "Per segnalare bug: scrive last_run.log. Disattivato: non viene scritto nulla mentre giochi.",
+   "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "Per segnalare un problema: attiva l'opzione sopra, gioca finché accade e allega last_run.log."
   },
   "tr": {
    "Polish": "Lehçe",
@@ -4578,7 +4596,10 @@
    "Full effects in local co-op": "Yerel ortak oyunda tam efektler",
    "The game lowers effects for 2+ local players; this may cost FPS.": "Oyun 2+ yerel oyuncuda efektleri düşürür; bu FPS'e mal olabilir.",
    "PC camera zoom": "PC kamera yakınlaştırması",
-   "Pulls the gameplay camera back to the PC version's distance and angle.": "Oyun kamerasını PC sürümünün mesafesine ve açısına çeker."
+   "Pulls the gameplay camera back to the PC version's distance and angle.": "Oyun kamerasını PC sürümünün mesafesine ve açısına çeker.",
+   "Save a log of each start": "Her başlatmanın günlüğünü kaydet",
+   "For bug reports: writes last_run.log. Off: nothing is written while you play.": "Hata raporları için: last_run.log yazar. Kapalı: oynarken hiçbir şey yazılmaz.",
+   "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "Sorun bildirmek için: yukarıdaki seçeneği açın, sorun olana kadar oynayın ve last_run.log ekleyin."
   },
   "ar": {
    "Polish": "البولندية",
@@ -4759,7 +4780,10 @@
    "Full effects in local co-op": "تأثيرات كاملة في اللعب التعاوني المحلي",
    "The game lowers effects for 2+ local players; this may cost FPS.": "تخفض اللعبة التأثيرات مع لاعبَين محليين أو أكثر؛ قد يكلف ذلك إطارات.",
    "PC camera zoom": "تقريب كاميرا الحاسوب",
-   "Pulls the gameplay camera back to the PC version's distance and angle.": "يبعد كاميرا اللعب إلى مسافة وزاوية نسخة الحاسوب."
+   "Pulls the gameplay camera back to the PC version's distance and angle.": "يبعد كاميرا اللعب إلى مسافة وزاوية نسخة الحاسوب.",
+   "Save a log of each start": "حفظ سجل لكل تشغيل",
+   "For bug reports: writes last_run.log. Off: nothing is written while you play.": "لتقارير الأخطاء: يكتب last_run.log. عند الإيقاف: لا يُكتب شيء أثناء اللعب.",
+   "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "للإبلاغ عن مشكلة: فعّل الخيار أعلاه، والعب حتى تحدث، وأرفق last_run.log."
   },
   "zh": {
    "Polish": "波兰语",
@@ -5327,7 +5351,10 @@
    "Full effects in local co-op": "本地合作时保持完整特效",
    "The game lowers effects for 2+ local players; this may cost FPS.": "2 名以上本地玩家时游戏会降低特效；开启可能降低帧率。",
    "PC camera zoom": "PC 镜头缩放",
-   "Pulls the gameplay camera back to the PC version's distance and angle.": "将游戏镜头拉远到 PC 版的距离和角度。"
+   "Pulls the gameplay camera back to the PC version's distance and angle.": "将游戏镜头拉远到 PC 版的距离和角度。",
+   "Save a log of each start": "保存每次启动的日志",
+   "For bug reports: writes last_run.log. Off: nothing is written while you play.": "用于报告错误：写入 last_run.log。关闭：游戏时不写入任何内容。",
+   "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "报告问题：打开上面的开关，玩到问题出现，然后附上 last_run.log。"
   },
   "ja": {
    "Polish": "ポーランド語",
@@ -5509,7 +5536,10 @@
    "Full effects in local co-op": "ローカル協力プレイでもフルエフェクト",
    "The game lowers effects for 2+ local players; this may cost FPS.": "ローカル 2 人以上でゲームはエフェクトを下げます。オンにすると FPS が下がる場合があります。",
    "PC camera zoom": "PC 版のカメラズーム",
-   "Pulls the gameplay camera back to the PC version's distance and angle.": "ゲームカメラを PC 版の距離と角度まで引きます。"
+   "Pulls the gameplay camera back to the PC version's distance and angle.": "ゲームカメラを PC 版の距離と角度まで引きます。",
+   "Save a log of each start": "起動ごとのログを保存",
+   "For bug reports: writes last_run.log. Off: nothing is written while you play.": "不具合報告用：last_run.log を書き込みます。オフ：プレイ中は何も書き込みません。",
+   "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "問題を報告するには：上のスイッチをオンにし、問題が起きるまでプレイして last_run.log を添付してください。"
   },
   "ko": {
    "Polish": "폴란드어",
@@ -5691,7 +5721,10 @@
    "Full effects in local co-op": "로컬 협동에서 전체 효과",
    "The game lowers effects for 2+ local players; this may cost FPS.": "로컬 2인 이상이면 게임이 효과를 낮춥니다. FPS가 줄 수 있습니다.",
    "PC camera zoom": "PC 카메라 줌",
-   "Pulls the gameplay camera back to the PC version's distance and angle.": "게임 카메라를 PC 버전의 거리와 각도로 뒤로 뺍니다."
+   "Pulls the gameplay camera back to the PC version's distance and angle.": "게임 카메라를 PC 버전의 거리와 각도로 뒤로 뺍니다.",
+   "Save a log of each start": "실행할 때마다 로그 저장",
+   "For bug reports: writes last_run.log. Off: nothing is written while you play.": "버그 보고용: last_run.log를 기록합니다. 끄기: 플레이 중 아무것도 기록하지 않습니다.",
+   "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "문제를 보고하려면: 위 옵션을 켜고 문제가 생길 때까지 플레이한 뒤 last_run.log를 첨부하세요."
   },
   "id": {
    "Polish": "Polandia",
@@ -6172,7 +6205,10 @@
    "Full effects in local co-op": "Efek penuh di co-op lokal",
    "The game lowers effects for 2+ local players; this may cost FPS.": "Game menurunkan efek dengan 2+ pemain lokal; ini bisa mengurangi FPS.",
    "PC camera zoom": "Zoom kamera PC",
-   "Pulls the gameplay camera back to the PC version's distance and angle.": "Menarik kamera ke jarak dan sudut versi PC."
+   "Pulls the gameplay camera back to the PC version's distance and angle.": "Menarik kamera ke jarak dan sudut versi PC.",
+   "Save a log of each start": "Simpan log setiap mulai",
+   "For bug reports: writes last_run.log. Off: nothing is written while you play.": "Untuk laporan bug: menulis last_run.log. Mati: tidak ada yang ditulis saat bermain.",
+   "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "Untuk melaporkan masalah: nyalakan opsi di atas, mainkan sampai terjadi, lampirkan last_run.log."
   },
   "cs": {
    "Trophies": "Trofeje",
@@ -6712,7 +6748,10 @@
    "Full effects in local co-op": "Plné efekty v místní kooperaci",
    "The game lowers effects for 2+ local players; this may cost FPS.": "Hra snižuje efekty při 2+ místních hráčích; může to stát FPS.",
    "PC camera zoom": "Zoom kamery z PC",
-   "Pulls the gameplay camera back to the PC version's distance and angle.": "Oddálí kameru na vzdálenost a úhel PC verze."
+   "Pulls the gameplay camera back to the PC version's distance and angle.": "Oddálí kameru na vzdálenost a úhel PC verze.",
+   "Save a log of each start": "Ukládat log každého spuštění",
+   "For bug reports: writes last_run.log. Off: nothing is written while you play.": "Pro hlášení chyb: zapisuje last_run.log. Vypnuto: během hraní se nic nezapisuje.",
+   "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "Pro nahlášení problému: zapněte volbu výše, hrajte, dokud se neobjeví, a přiložte last_run.log."
   }
  },
  "ru": {
@@ -7262,7 +7301,10 @@
   "Full effects in local co-op": "Полные эффекты в локальном кооперативе",
   "The game lowers effects for 2+ local players; this may cost FPS.": "Игра снижает эффекты при 2+ локальных игроках; это может стоить FPS.",
   "PC camera zoom": "Камера как на ПК",
-  "Pulls the gameplay camera back to the PC version's distance and angle.": "Отодвигает игровую камеру на расстояние и угол версии для ПК."
+  "Pulls the gameplay camera back to the PC version's distance and angle.": "Отодвигает игровую камеру на расстояние и угол версии для ПК.",
+  "Save a log of each start": "Сохранять журнал каждого запуска",
+  "For bug reports: writes last_run.log. Off: nothing is written while you play.": "Для отчётов об ошибках: записывает last_run.log. Выключено: во время игры ничего не записывается.",
+  "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "Чтобы сообщить о проблеме: включите параметр выше, играйте, пока она не появится, и приложите last_run.log."
  },
  "windows_languages": {
   "25": "ru",

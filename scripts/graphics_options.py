@@ -9,6 +9,7 @@ never did, the next start goes back to the last confirmed values.
 """
 import json
 import math
+import struct
 from pathlib import Path
 
 RESOLUTIONS = ('native', '480p', '720p', '900p', '1440p', '1800p', '4K',
@@ -32,6 +33,13 @@ TEXTURE_FIX = 'Bug Fix - Texture Corruption Fix'
 # Diablo III: sanctuary.ini frame_rate picks the game's own frame limiter (patches/Diablo_III.xml).
 LIMITER_PREFIX = 'Frame Limiter'
 FRAME_RATES = ('30', '60', '90', '120', '0')  # 0 = 200 FPS
+# Any whole frame rate from 30 to 200 can be given in sanctuary.ini (frame_rate=144, or the launcher's
+# --set frame_rate=144): the Frame Limiter waits frame_wait(rate); the choices above are the presets.
+MIN_FRAME_RATE, MAX_FRAME_RATE = 30, 200
+# Any render size "<width>x<height>" within these limits (even numbers) can be given the same way
+# (render_resolution=1700x956): the Resolution Patch takes its values from resolution_values.
+MIN_RENDER_SIZE, MAX_RENDER_SIZE = (640, 360), (7680, 4320)
+MIN_ASPECT, MAX_ASPECT = 1.0, 4.0
 # Diablo III's frame rate 0 is the launcher's 200 FPS (the stored value of the former Unlimited, so
 # existing sanctuary.ini files keep it; 200 is read as 0): no wait in the Frame Limiter, and the
 # game's own second limiter (the PC game's Max Foreground FPS, 150 by default: about 143 FPS) asked
@@ -55,8 +63,21 @@ PRO_SIZE = (3840, 2160)
 CONSOLE_REFLECTION = (800, 450)
 # Diablo III: sanctuary.ini coop_full_effects keeps the full effects with two or more local players.
 COOP_EFFECTS = 'Local Co-op Full Effects'
-# Diablo III: sanctuary.ini pc_camera_zoom uses the PC version's default, Retro and wide camera observers.
+# Diablo III: sanctuary.ini pc_camera_zoom pulls the camera back to about the PC distance (1.47/1.46: a view
+# dolly; 1.25 and 1.00: the PC version's default, Retro and wide camera observers).
 PC_CAMERA_ZOOM = 'PC Camera Zoom'
+
+# Diablo III's parameterised patches (patches/Diablo_III.xml, Params=): one patch per setting whose values
+# come from the choice. Their Presets carry the names of the former one-entry-per-value patches, which
+# the lists here still use ("Resolution Patch - 1440p", "Frame Limiter - 120 FPS"); with_values turns
+# such a name into the patch plus its values for patches.py, and only names a Preset has are converted, so
+# the choices offered stay those the file had.
+LIMITER_PATCH = LIMITER_PREFIX
+RESOLUTION_PATCH = RESOLUTION_PREFIX
+REFLECTION_PATCH = f'{RENDER_TARGETS_PREFIX} - Reflection'
+# The game's own wait per frame at 59.94 Hz (microseconds), and the 30 FPS entry's, one above twice it.
+GAME_FRAME_WAIT = 16683
+FRAME_WAIT_30 = 33367
 
 
 def read_ini(path):
@@ -158,11 +179,29 @@ def resolution_label(name, aspect=True):
     return label + (' (beta)' if name in BETA_RESOLUTIONS else '')
 
 
+def custom_resolution(name):
+    """(width, height) of a render size given as "<width>x<height>" that no list has (sanctuary.ini,
+    --set render_resolution=1700x956): even numbers within MIN_RENDER_SIZE..MAX_RENDER_SIZE and an
+    aspect ratio from MIN_ASPECT to MAX_ASPECT; None for anything else."""
+    parts = name.split('x') if isinstance(name, str) else ()
+    if len(parts) != 2 or not all(p.isdigit() and len(p) <= 5 for p in parts):
+        return None
+    width, height = int(parts[0]), int(parts[1])
+    if width % 2 or height % 2:
+        return None
+    if not (MIN_RENDER_SIZE[0] <= width <= MAX_RENDER_SIZE[0] and MIN_RENDER_SIZE[1] <= height <= MAX_RENDER_SIZE[1]):
+        return None
+    if not MIN_ASPECT <= width / height <= MAX_ASPECT:
+        return None
+    return width, height
+
+
 def startup_options(ini, extra=()):
     """The startup options, normalized; unknown values fall back to the defaults. `extra`: the
-    resolutions of the enabled mods (a mod that is off leaves its resolution out: native)."""
+    resolutions of the enabled mods (a mod that is off leaves its resolution out: native). A render
+    size no list has is kept when custom_resolution accepts it."""
     options = {key: ini.get(key, value) for key, value in DEFAULTS.items()}
-    if options['render_resolution'] not in resolutions(extra):
+    if options['render_resolution'] not in resolutions(extra) and not custom_resolution(options['render_resolution']):
         options['render_resolution'] = 'native'
     if options['engine_fps'] not in {str(f) for f in ENGINE_FPS}:
         options['engine_fps'] = '120'
@@ -208,21 +247,37 @@ def patch_names(names, options, texture_fix_available=True):
 
 
 def frame_rate(ini):
-    """Diablo III's frame rate choice (sanctuary.ini frame_rate): 30, 60, 90, 120 or 0 (200 FPS)."""
+    """Diablo III's frame rate choice (sanctuary.ini frame_rate): a whole number from 30 to 199 (the
+    launcher offers 30, 60, 90 and 120) or 0 (200 FPS); anything else is the game's own 60."""
     value = ini.get('frame_rate')
     if value is None and ini.get('fps_limit') == '30':
         return '30'  # the old Frame rate limit row's 30
-    if value == '200':
+    if value in FRAME_RATES:
+        return value
+    if value is None or not value.strip().isdigit():
+        return '60'
+    rate = int(value)
+    if rate == MAX_FRAME_RATE:
         return '0'  # the name the launcher shows (--set frame_rate=200)
-    return value if value in FRAME_RATES else '60'
+    return str(rate) if MIN_FRAME_RATE <= rate < MAX_FRAME_RATE else '60'
 
 
 def limiter_patch(rate):
     """The Frame Limiter patch for a frame_rate choice; None for 60, the game's own. The 200 FPS choice
     (0) takes the one that does not wait, still named Unlimited."""
-    return {'30': f'{LIMITER_PREFIX} - 30 FPS', '90': f'{LIMITER_PREFIX} - 90 FPS',
-            '120': f'{LIMITER_PREFIX} - 120 FPS',
-            '0': f'{LIMITER_PREFIX} - Unlimited'}.get(rate)
+    if rate == '0':
+        return f'{LIMITER_PREFIX} - Unlimited'
+    if rate == '60' or not rate.isdigit():
+        return None
+    return f'{LIMITER_PREFIX} - {int(rate)} FPS'
+
+
+def limiter_rate(name):
+    """The frame rate of a "Frame Limiter - <n> FPS" name; None for anything else (Unlimited too)."""
+    if not name.startswith(f'{LIMITER_PREFIX} - ') or not name.endswith(' FPS'):
+        return None
+    number = name[len(LIMITER_PREFIX) + 3:-4]
+    return int(number) if number.isdigit() else None
 
 
 def limiter_environment(applied):
@@ -235,11 +290,10 @@ def limiter_environment(applied):
     of the display's (VRR, gamescope at 116 Hz). Only 30 FPS keeps the 60 Hz vblank. Either way the
     rate is this choice alone: the in-game menu's frame limit (fps_limit) is not used."""
     for name in applied:
-        if name == f'{LIMITER_PREFIX} - 90 FPS':
-            # GitHub #94: the Steam Deck OLED's and other 90 Hz screens.
-            return {'SANCTUARY_VBLANK_HZ': '0', 'SANCTUARY_FPS_LIMIT': '90'}
-        if name == f'{LIMITER_PREFIX} - 120 FPS':
-            return {'SANCTUARY_VBLANK_HZ': '0', 'SANCTUARY_FPS_LIMIT': '120'}
+        rate = limiter_rate(name)
+        if rate is not None and rate != 30:
+            # 90: GitHub #94, the Steam Deck OLED's and other 90 Hz screens; any other rate the same way.
+            return {'SANCTUARY_VBLANK_HZ': '0', 'SANCTUARY_FPS_LIMIT': str(rate)}
         if name == f'{LIMITER_PREFIX} - Unlimited':
             # 480 is what SANCTUARY_VBLANK_HZ=0 stands for (gpu/shim/core/emulator_settings.h
             # GetVblankFrequency): change the two together. A caller's own SANCTUARY_VBLANK_HZ moves
@@ -250,6 +304,91 @@ def limiter_environment(applied):
         if name == f'{LIMITER_PREFIX} - 30 FPS':
             return {'SANCTUARY_FPS_LIMIT': '0'}
     return {'SANCTUARY_VBLANK_HZ': '0', 'SANCTUARY_FPS_LIMIT': '60'}
+
+
+def frame_wait(fps):
+    """The Frame Limiter's wait per frame for a frame rate, in microseconds: the game's 16683 times 60 / fps,
+    rounded down (90: 11122, 120: 8341); 0 (200 FPS) does not wait. 30 keeps its entry's 33367."""
+    fps = int(fps)
+    if fps == 0:
+        return 0
+    return FRAME_WAIT_30 if fps == 30 else GAME_FRAME_WAIT * 60 // fps
+
+
+def limiter_values(name):
+    """The Frame Limiter values of a "Frame Limiter - <n> FPS" / "- Unlimited" name."""
+    return {'frame_wait': str(frame_wait(limiter_rate(name) or 0))}
+
+
+def resolution_values(name):
+    """The Resolution Patch values of a render resolution ("1440p", "2560x1080"): the size, the camera's
+    aspect ratio (float32 width / height, written for the sizes that are not 16:9), the 1080p fonts below
+    1080 lines and, on 1.00, the larger display heap above 1600x900."""
+    width, height = resolution_size(name)
+    aspect = struct.unpack('<f', struct.pack('<f', width / height))[0]
+    # The camera keeps the game's 16:9 for the 16:9 sizes (854x480 is 1.779); any other shape gets its
+    # own ratio, also a free size near 16:9 (1800x1000), which the 16:9 camera would stretch.
+    return {'render_width': str(width), 'render_height': str(height), 'render_aspect': repr(aspect),
+            'camera_aspect': '0' if abs(width / height - 16 / 9) < 0.005 else '1',
+            'small_fonts': '1' if height < 1080 else '0',
+            'big_heap': '1' if width * height > 1600 * 900 else '0'}
+
+
+def reflection_values(name):
+    """The reflection size values of a "PC Render Targets - Reflection <w>x<h>" name."""
+    width, height = name.rsplit(' ', 1)[1].split('x')
+    return {'reflection_width': str(int(width)), 'reflection_height': str(int(height))}
+
+
+VALUE_FORMULAS = ((f'{LIMITER_PREFIX} - ', LIMITER_PATCH, limiter_values),
+                  (f'{RESOLUTION_PREFIX} - ', RESOLUTION_PATCH, lambda name: resolution_values(name.split(' - ', 1)[1])),
+                  (f'{REFLECTION_PATCH} ', REFLECTION_PATCH, reflection_values))
+
+
+def with_values(names, presets):
+    """(names, values, chosen_as) for patches.py: each name in `presets` ({preset name: (patch, values)},
+    patches.preset_choices) that one of the formulas above covers becomes its patch, with the values worked
+    out from the choice; other names (a season's Preset, a mod's own entry) are passed on as they are.
+    chosen_as maps the patch back to the name, for the applied list."""
+    out, values, chosen_as = [], {}, {}
+    for name in names:
+        patch = presets.get(name, (None, None))[0] or free_value_patch(name, presets)
+        formula = next((f for prefix, own, f in VALUE_FORMULAS if patch == own and name.startswith(prefix)), None)
+        if formula is None:
+            out.append(name)
+            continue
+        out.append(patch)
+        values.update(formula(name))
+        chosen_as[patch] = name
+    return out, values, chosen_as
+
+
+def free_value_patch(name, presets):
+    """The parameterised patch a name no Preset has stands for, when its values can be worked out: a
+    "Frame Limiter - <n> FPS" with n from 30 to 199, a "Resolution Patch - <w>x<h>" custom_resolution
+    accepts or the "PC Render Targets - Reflection <w>x<h>" of such a size, and only when the file has
+    that patch (one of its Presets names it). None otherwise."""
+    if name in presets:
+        return None
+    patches = {patch for patch, _values in presets.values()}
+    rate = limiter_rate(name)
+    if rate is not None and MIN_FRAME_RATE <= rate < MAX_FRAME_RATE and LIMITER_PATCH in patches:
+        return LIMITER_PATCH
+    prefix = f'{RESOLUTION_PREFIX} - '
+    if name.startswith(prefix) and custom_resolution(name[len(prefix):]) and RESOLUTION_PATCH in patches:
+        return RESOLUTION_PATCH
+    # The reflection at half a free render size (render_target_names, reflection_size).
+    prefix = f'{REFLECTION_PATCH} '
+    size = name[len(prefix):].split('x') if name.startswith(prefix) else ()
+    if len(size) == 2 and all(p.isdigit() for p in size) and REFLECTION_PATCH in patches:
+        return REFLECTION_PATCH
+    return None
+
+
+def free_value_names(names, presets):
+    """The names of `names` that free_value_patch turns into a patch: available although no Preset
+    has them (restrict_to_available keeps them)."""
+    return {n for n in names if free_value_patch(n, presets)}
 
 
 def fixed_scale_fallback(status):
@@ -281,7 +420,8 @@ def foreground_cap_names(names):
     not wait (the 200 FPS choice), and without it otherwise, whatever the list named: at 30, 60 and
     120 FPS the first limiter waits longer than the second one, so the patch would change nothing."""
     names = [n for n in names if n != FOREGROUND_CAP_PATCH]
-    if f'{LIMITER_PREFIX} - Unlimited' in names:
+    # A free rate above 120 also passes the second limiter's 150 (about 143 FPS) only with it.
+    if f'{LIMITER_PREFIX} - Unlimited' in names or any((limiter_rate(n) or 0) > 120 for n in names):
         names.append(FOREGROUND_CAP_PATCH)
     return names
 

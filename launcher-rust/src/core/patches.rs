@@ -161,13 +161,34 @@ fn metadata<'a, 'input>(
     doc.descendants().filter(|n| n.has_tag_name("Metadata"))
 }
 
-/// The patches the XML has for this app version, in file order.
+/// A Preset of a parameterised patch, as the entry it stands for: its name and note, the patch's author.
+fn preset_of(patch: roxmltree::Node, preset: roxmltree::Node) -> PatchMeta {
+    PatchMeta {
+        name: preset.attribute("Name").unwrap_or_default().to_string(),
+        author: non_empty(patch.attribute("Author")),
+        note: non_empty(preset.attribute("Note")).or_else(|| non_empty(patch.attribute("Note"))),
+        enabled_by_default: false,
+    }
+}
+
+/// The patches the XML has for this app version, in file order. A parameterised patch (Params=, whose
+/// values run.py works out or a Preset names, scripts/patches.py) is listed as its Presets: the names
+/// that can be ticked ("Offline Seasons - Season 30"), which select the patch with those values.
 pub fn game_patch_metas(xml: &Path, app_version: &str) -> Result<Vec<PatchMeta>, PatchError> {
     let text = std::fs::read_to_string(xml)?;
     let doc = parse(&text).map_err(|e| PatchError::Xml(e.to_string()))?;
     Ok(metadata(&doc)
         .filter(|n| n.attribute("AppVer") == Some(app_version))
-        .map(meta_of)
+        .flat_map(|n| {
+            if n.attribute("Params").is_some_and(|p| !p.trim().is_empty()) {
+                n.descendants()
+                    .filter(|c| c.has_tag_name("Preset"))
+                    .map(|preset| preset_of(n, preset))
+                    .collect()
+            } else {
+                vec![meta_of(n)]
+            }
+        })
         .collect())
 }
 
@@ -267,6 +288,40 @@ mod tests {
         );
         assert_eq!(metas.len(), 2);
         assert_eq!(selectable(&metas), metas[..1]);
+    }
+
+    #[test]
+    fn a_parameterised_patch_is_listed_as_its_presets() {
+        let dir = tempfile::tempdir().unwrap();
+        let xml = dir.path().join("p.xml");
+        std::fs::write(
+            &xml,
+            r#"<Patch><Metadata Name="Offline Seasons - Season" Params="season" Author="A" Note="Any season" AppVer="01.47">
+<PatchList><Line Type="bytes" Address="0x1" Value="{param:season:a2}"/></PatchList>
+<Presets><Preset Name="Offline Seasons - Season 14" Note="Season 14" season="14"/>
+<Preset Name="Offline Seasons - Season 30" season="30"/></Presets></Metadata>
+<Metadata Name="Offline Seasons - Season" Params="season" AppVer="01.47"/>
+<Metadata Name="Event: Pandemonium" AppVer="01.47"/></Patch>"#,
+        )
+        .unwrap();
+        let metas = game_patch_metas(&xml, "01.47").unwrap();
+        let names: Vec<&str> = metas.iter().map(|m| m.name.as_str()).collect();
+        assert_eq!(
+            names,
+            ["Offline Seasons - Season 14", "Offline Seasons - Season 30", "Event: Pandemonium"]
+        );
+        assert_eq!(metas[0].note.as_deref(), Some("Season 14"));
+        assert_eq!(metas[1].note.as_deref(), Some("Any season"));
+        assert_eq!(metas[1].author.as_deref(), Some("A"));
+        // The built-in file: every season of the former one-entry-per-season patches, in order.
+        let profile = game_profile(Some("CUSA00243"), None).unwrap();
+        let seasons: Vec<String> = game_patch_metas(&diablo_xml(), profile.app_version)
+            .unwrap()
+            .into_iter()
+            .filter_map(|m| m.name.strip_prefix("Offline Seasons - Season ").map(str::to_string))
+            .collect();
+        let expected: Vec<String> = (14..=40).map(|n: u32| n.to_string()).collect();
+        assert_eq!(seasons, expected);
     }
 
     #[test]

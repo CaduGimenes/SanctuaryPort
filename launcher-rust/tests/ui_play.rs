@@ -617,6 +617,8 @@ fn run_log_is_written() {
     // test_play_passes_the_run_log_to_the_output_reader and
     // test_play_log_is_kept_when_the_launcher_hides_on_play
     set(&mut state, "user_dir", json!(text_of(&saves)));
+    // The run log is opt-in (Advanced > Troubleshooting > Save a log of each start).
+    set(&mut state, "save_log", json!(true));
     let log: PathBuf = saves.join("last_run.log");
     for close_on_play in [false, true] {
         set(&mut state, "close_on_play", json!(close_on_play));
@@ -970,6 +972,7 @@ fn a_tick_drains_at_most_500_events() {
     // Python's drain_output takes at most 500 items per pass; the rest waits for the next one.
     let dir = tempfile::tempdir().unwrap();
     let mut state = ready(dir.path(), &["--lines", "1200", "--exit", "0"]);
+    set(&mut state, "save_log", json!(true));
     send(&mut state, Message::Play);
     let log = state.paths.run_log_path("");
     let started = Instant::now();
@@ -1164,10 +1167,28 @@ fn play_runs_the_ports_run_sh() {
 }
 
 #[test]
+fn without_the_saved_log_nothing_is_written_but_a_crash_still_keeps_its_output() {
+    // The default: no last_run.log while the game runs; a failed start writes last_crash.log once,
+    // from the output the launcher kept in memory.
+    let dir = tempfile::tempdir().unwrap();
+    let mut state = ready(dir.path(), &["--lines", "3", "--exit", "5"]);
+    assert!(!state.store.flag("save_log"));
+    send(&mut state, Message::Play);
+    pump(&mut state, BOUND, idle);
+    let user = state.paths.user_dir(&state.store.text("user_dir"));
+    assert!(!user.join("last_run.log").exists());
+    assert!(!user.join("last_run.jsonl").exists());
+    let kept = fs::read_to_string(user.join("last_crash.log")).unwrap();
+    assert!(kept.contains("line 3"), "{kept}");
+    assert_eq!(state.crash_code, Some(5));
+}
+
+#[test]
 fn a_start_that_ends_in_an_error_keeps_its_log_and_offers_a_report() {
     let dir = tempfile::tempdir().unwrap();
     // An error exit: last_crash.log beside last_run.log, and the report question.
     let mut state = ready(dir.path(), &["--lines", "3", "--exit", "5"]);
+    set(&mut state, "save_log", json!(true));
     send(&mut state, Message::Play);
     pump(&mut state, BOUND, idle);
     let user = state.paths.user_dir(&state.store.text("user_dir"));

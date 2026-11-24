@@ -15,7 +15,7 @@ pub const GAME_MSAA_PATCH_PREFIX: &str = "Game MSAA";
 pub const RENDER_TARGETS_PATCH_PREFIX: &str = "PC Render Targets";
 /// SanctuaryPort: Diablo III's full effects in local co-op (Graphics > Effects, run.py).
 pub const COOP_EFFECTS_PATCH: &str = "Local Co-op Full Effects";
-/// SanctuaryPort: Diablo III's PC camera zoom observers (Graphics > Effects, run.py).
+/// SanctuaryPort: Diablo III's PC camera zoom (a view dolly in 1.47/1.46; Graphics > Effects, run.py).
 pub const PC_CAMERA_ZOOM_PATCH: &str = "PC Camera Zoom";
 /// The fix a resolution patch replaces: both resize the video arena.
 pub const TEXTURE_FIX_PATCH: &str = "Bug Fix - Texture Corruption Fix";

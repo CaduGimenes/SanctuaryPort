@@ -94,6 +94,12 @@ class SignatureTests(unittest.TestCase):
     <PatchList><Line Type="bytes32" Address="0x402000" Target="variable" Value="0x2"/></PatchList>
     <Target Name="variable" Address="0x402000" Pattern="44 89 35 ?? ?? ?? ?? c6" At="3" Ref="1"/>
   </Metadata>
+  <Metadata Name="Flex" AppVer="01.47">
+    <PatchList>
+      <Line Type="bytes" Address="0x401000" Value="90" Pattern="de ad be ef | ca fe ba be" At="1"/>
+      <Line Type="bytes" Address="0x401020" Value="00" Optional="true" Pattern="fe ed fa ce" At="0"/>
+    </PatchList>
+  </Metadata>
 </Patch>"""
 
     def setUp(self):
@@ -126,6 +132,34 @@ class SignatureTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             compile_patches(self.xml, ['Orphan'], None, [(0, 0x400)], bytes(image))
 
+    def test_optional_lines_and_alternative_patterns(self):
+        # GitHub #100: a '|' form matches another build's code; an Optional="true" Line whose site
+        # this build has not got is left out, and the rest of the patch is applied.
+        image = bytearray(self.image)
+        image[0x320:0x324] = bytes.fromhex('cafebabe')
+        self.assertEqual(compile_patches(self.xml, ['Flex'], None, [(0, 0x400)], bytes(image)),
+                         [(0x321, b'\x90')])
+        # When the optional site is there it is written; found twice, the whole patch is left out.
+        image[0x340:0x344] = bytes.fromhex('feedface')
+        self.assertEqual(compile_patches(self.xml, ['Flex'], None, [(0, 0x400)], bytes(image)),
+                         [(0x321, b'\x90'), (0x340, b'\x00')])
+        image[0x350:0x354] = bytes.fromhex('feedface')
+        skipped = {}
+        self.assertEqual(compile_patches(self.xml, ['Flex'], None, [(0, 0x400)], bytes(image), skipped), [])
+        self.assertEqual(skipped, {'Flex': 'signature found more than once'})
+        # Two forms that both match are ambiguous too; neither, and the patch is left out.
+        image[0x350:0x354] = bytes(4)
+        image[0x300:0x304] = bytes.fromhex('deadbeef')
+        skipped = {}
+        self.assertEqual(compile_patches(self.xml, ['Flex'], None, [(0, 0x400)], bytes(image), skipped), [])
+        self.assertEqual(skipped, {'Flex': 'signature found more than once'})
+        skipped = {}
+        self.assertEqual(compile_patches(self.xml, ['Flex'], None, [(0, 0x400)], self.image, skipped), [])
+        self.assertEqual(skipped, {'Flex': 'signature not found'})
+        # Without the image (the reference build), every Line is written at its Address.
+        self.assertEqual(compile_patches(self.xml, ['Flex'], '01.47', [(0, 0x10000)]),
+                         [(0x1000, b'\x90'), (0x1020, b'\x00')])
+
     def test_ambiguous_signature_is_skipped(self):
         image = bytearray(self.image)
         image[0x100:0x106] = image[0x40:0x46]
@@ -149,6 +183,177 @@ class SignatureTests(unittest.TestCase):
         skipped = {}
         self.assertEqual(compile_patches(self.xml, ['Data'], None, [(0, 0x400)], bytes(image), skipped), [])
         self.assertEqual(skipped, {'Data': 'signature not found'})
+
+
+class CaveTests(unittest.TestCase):
+    """Caves: blocks of the code's zero padding that compile_patches places, never fixed addresses."""
+    XML = """<?xml version="1.0"?>
+<Patch>
+  <Metadata Name="Hook" AppVer="01.47">
+    <PatchList>
+      <Line Type="bytes" Value="c3 {rel:flag:0}" Target="hook_cave"/>
+      <Line Type="bytes" Address="0x401010" Value="e8{rel:hook_cave:0}" Pattern="aa bb cc dd ee" At="0"/>
+    </PatchList>
+    <Cave Name="hook_cave" Size="6"/>
+    <Cave Name="flag" Size="4" Region="data"/>
+  </Metadata>
+  <Metadata Name="Text" AppVer="01.47">
+    <PatchList><Line Type="utf8" Value="hello" Target="text"/></PatchList>
+    <Cave Name="text" Size="6"/>
+  </Metadata>
+  <Metadata Name="Shared" AppVer="01.47">
+    <PatchList><Line Type="bytes" Value="cc" Target="second"/></PatchList>
+    <Cave Name="hook_cave" Size="6"/>
+    <Target Name="second" Cave="hook_cave" At="5"/>
+  </Metadata>
+  <Metadata Name="Other size" AppVer="01.47">
+    <PatchList><Line Type="bytes" Value="90" Target="hook_cave"/></PatchList>
+    <Cave Name="hook_cave" Size="7"/>
+  </Metadata>
+  <Metadata Name="Too long" AppVer="01.47">
+    <PatchList><Line Type="bytes" Value="90909090" Target="small"/></PatchList>
+    <Cave Name="small" Size="2"/>
+  </Metadata>
+  <Metadata Name="Big" AppVer="01.47">
+    <PatchList><Line Type="bytes" Value="90" Target="big"/></PatchList>
+    <Cave Name="big" Size="0x1000"/>
+  </Metadata>
+  <Metadata Name="Clash" AppVer="01.47">
+    <PatchList><Line Type="bytes" Address="0x401011" Value="9090" Pattern="aa bb cc dd ee" At="1"/></PatchList>
+  </Metadata>
+  <Metadata Name="Maybe" AppVer="01.47" Params="extra value">
+    <PatchList>
+      <Line Type="bytes" Address="0x401100" Value="11" Pattern="01 02 03 04" At="0" Optional="true"/>
+      <Line Type="bytes" Address="0x401110" Value="22" Pattern="05 06 07 08" At="0" If="extra"/>
+      <Line Type="bytes" Address="0x401080" Value="e8{rel:maybe_cave:0}" Pattern="aa bb cc dd ee" At="0"/>
+      <Line Type="bytes" Value="{param:value:u8} e9{rel:hook:0}" Target="maybe_cave"/>
+    </PatchList>
+    <Cave Name="maybe_cave" Size="6"/>
+    <Target Name="hook" Line="2"/>
+  </Metadata>
+  <Metadata Name="Maybe target" AppVer="01.47">
+    <PatchList>
+      <Line Type="bytes" Address="0x401100" Value="11" Pattern="01 02 03 04" At="0" Optional="true"/>
+      <Line Type="bytes" Value="e9{rel:there:0}" Target="text"/>
+    </PatchList>
+    <Cave Name="text" Size="6"/>
+    <Target Name="there" Line="0"/>
+  </Metadata>
+</Patch>"""
+
+    def setUp(self):
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        self.xml = Path(directory.name) / 'caves.xml'
+        self.xml.write_text(self.XML)
+        image = bytearray(0x400)
+        image[0x80:0x85] = bytes.fromhex('aabbccddee')
+        image[0x1a3] = 0xc3  # the last byte of code in use: the padding starts at 0x1b0
+        self.image = bytes(image)
+        self.segments = [(0, 0x400), (0x1000, 0x1234)]
+
+    def compile(self, names, **kwargs):
+        caves = {}
+        writes = compile_patches(self.xml, names, None, self.segments, self.image, caves=caves, **kwargs)
+        return writes, caves
+
+    def test_caves_go_one_after_another_into_the_zero_padding(self):
+        writes, caves = self.compile(['Text', 'Hook'])
+        # In file order (Hook, then Text), 16-byte aligned, whatever the order of the selection.
+        self.assertEqual(caves, {'hook_cave': 0x1b0, 'flag': 0x1240, 'text': 0x1c0})
+        flag = (0x1240 - (0x1b0 + 1 + 4)).to_bytes(4, 'little', signed=True)
+        call = (0x1b0 - (0x80 + 5)).to_bytes(4, 'little', signed=True)
+        self.assertEqual(sorted(writes), [(0x80, b'\xe8' + call), (0x1b0, b'\xc3' + flag), (0x1c0, b'hello\0')])
+        self.assertEqual(self.compile(['Hook', 'Text'])[1], caves)
+        # Alone, a patch's cave starts the padding: the place depends only on what is selected.
+        self.assertEqual(self.compile(['Text'])[1], {'text': 0x1b0})
+
+    def test_a_cave_of_the_same_name_is_shared(self):
+        writes, caves = self.compile(['Hook', 'Shared'])
+        self.assertEqual(caves['hook_cave'], 0x1b0)
+        self.assertIn((0x1b5, b'\xcc'), writes)
+        with self.assertRaisesRegex(ValueError, 'cave hook_cave is 7 bytes'):
+            self.compile(['Hook', 'Other size'])
+
+    def test_without_the_image_the_reference_padding_is_used(self):
+        caves = {}
+        compile_patches(self.xml, ['Text'], '01.47', [(0, 0x2000000)], caves=caves)
+        self.assertEqual(caves, {'text': 0x137a790})
+
+    def test_a_cave_that_does_not_fit_leaves_its_patch_out(self):
+        skipped = {}
+        writes, caves = self.compile(['Big', 'Text'], skipped=skipped)
+        self.assertEqual(skipped, {'Big': 'no room for its cave big (4096 bytes)'})
+        self.assertEqual(caves, {'text': 0x1b0})
+        with self.assertRaisesRegex(ValueError, 'Big: no room'):
+            compile_patches(self.xml, ['Big'], None, self.segments, self.image)
+
+    def test_overlapping_writes_are_refused(self):
+        with self.assertRaisesRegex(ValueError, 'Clash writes 0x400081, which Hook also writes'):
+            self.compile(['Hook', 'Clash'])
+        with self.assertRaisesRegex(ValueError, 'across the edge of the cave small'):
+            self.compile(['Too long'])
+
+    def test_optional_lines_with_params_caves_and_line_targets(self):
+        # An Optional Line counts in the Line= numbering of the Lines If= writes whether or not this
+        # build has its site; left out, it writes nothing (so it overlaps nothing). Parameters and
+        # caves are as without it.
+        image = bytearray(self.image)
+        image[0x110:0x114] = bytes.fromhex('05060708')
+        params = {'extra': '1', 'value': '0x42'}
+        call = (0x1b0 - (0x80 + 5)).to_bytes(4, 'little', signed=True)
+        back = b'\x42\xe9' + (0x80 - (0x1b0 + 6)).to_bytes(4, 'little', signed=True)
+        caves = {}
+        writes = compile_patches(self.xml, ['Maybe'], None, self.segments, bytes(image), caves=caves, params=params)
+        self.assertEqual(caves, {'maybe_cave': 0x1b0})
+        self.assertEqual(sorted(writes), [(0x80, b'\xe8' + call), (0x110, b'\x22'), (0x1b0, back)])
+        image[0x100:0x104] = bytes.fromhex('01020304')
+        writes = compile_patches(self.xml, ['Maybe'], None, self.segments, bytes(image), params=params)
+        self.assertEqual(sorted(writes), [(0x80, b'\xe8' + call), (0x100, b'\x11'), (0x110, b'\x22'), (0x1b0, back)])
+        # A Target at an Optional Line that is left out has no place: its patch is left out.
+        skipped = {}
+        self.assertEqual(compile_patches(self.xml, ['Maybe target'], None, self.segments, self.image, skipped), [])
+        self.assertEqual(skipped, {'Maybe target': 'signature not found (Target there is at an Optional Line left out)'})
+
+    def test_appended_code_and_a_full_last_page_leave_no_room(self):
+        # GitHub #100: fPKG builds append a stub (dlcldr.prx) to the code segment, after its zero
+        # padding: caves go after the stub's last byte, never into the gap before it. The data
+        # caves take the rest of the last segment's final 4 KiB page, after its memory.
+        image = bytearray(self.image)
+        image[0x290:0x295] = b'stub!'
+        caves = {}
+        compile_patches(self.xml, ['Hook'], None, [(0, 0x400), (0x1000, 0x1e68)], bytes(image), caves=caves)
+        self.assertEqual(caves, {'hook_cave': 0x2a0, 'flag': 0x1e70})
+        skipped = {}
+        self.assertEqual(compile_patches(self.xml, ['Hook'], None, [(0, 0x2a4), (0x1000, 0x1e68)], bytes(image),
+                                         skipped), [])
+        self.assertEqual(skipped, {'Hook': 'no room for its cave hook_cave (6 bytes)'})
+        skipped = {}
+        self.assertEqual(compile_patches(self.xml, ['Hook'], None, [(0, 0x400), (0x1000, 0x1ffd)], bytes(image),
+                                         skipped), [])
+        self.assertEqual(skipped, {'Hook': 'no room for its cave flag (4 bytes)'})
+        # The same from the program headers: a stub after a gap of zeros in the executable PT_LOAD.
+        elf = bytearray(0x3000)
+        struct.pack_into('<Q', elf, 0x20, 0x40)
+        struct.pack_into('<HH', elf, 0x36, 56, 2)
+        struct.pack_into('<IIQQQQQQ', elf, 0x40, 1, 5, 0x1000, 0, 0, 0x800, 0x800, 0x1000)
+        struct.pack_into('<IIQQQQQQ', elf, 0x78, 1, 6, 0x2000, 0x4000, 0x4000, 0x100, 0xff8, 0x1000)
+        elf[0x1000 + 0x100] = 0x90
+        elf[0x1000 + 0x600:0x1000 + 0x605] = b'stub!'
+        from patches import cave_regions
+        self.assertEqual(cave_regions(bytes(elf)), {'code': (0x610, 0x800), 'data': (0x5000, 0x5000)})
+
+    def test_regions_from_the_program_headers(self):
+        # The executable PT_LOAD's zero tail and the rest of the writable one's last page.
+        elf = bytearray(0x3000)
+        elf[:4] = b'\x7fELF'
+        struct.pack_into('<Q', elf, 0x20, 0x40)
+        struct.pack_into('<HH', elf, 0x36, 56, 2)
+        struct.pack_into('<IIQQQQQQ', elf, 0x40, 1, 5, 0x1000, 0, 0, 0x800, 0x800, 0x1000)
+        struct.pack_into('<IIQQQQQQ', elf, 0x78, 1, 6, 0x2000, 0x4000, 0x4000, 0x100, 0x234, 0x1000)
+        elf[0x1000 + 0x522] = 0x90
+        from patches import cave_regions
+        self.assertEqual(cave_regions(bytes(elf)), {'code': (0x530, 0x800), 'data': (0x4240, 0x5000)})
 
 
 class ModPatchTests(unittest.TestCase):

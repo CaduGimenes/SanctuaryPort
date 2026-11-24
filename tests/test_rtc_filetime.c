@@ -28,8 +28,8 @@ int main(void) {
     assert(rtc_set_win32_filetime(&back, filetime) == 0);
     assert(back.year == 2025 && back.month == 2 && back.day == 9 && back.hour == 12 &&
            back.minute == 34 && back.second == 56 && back.microsecond == 1);
-    /* The Seasons.txt dates of the offline seasons: 2025 comes before 2036. */
-    DateTime end = {2036, 2, 9, 1, 0, 0, 0};
+    /* The Seasons.txt dates of the offline seasons: 2025 comes before 2099. */
+    DateTime end = {2099, 12, 31, 1, 0, 0, 0};
     uint64_t later = 0;
     assert(rtc_get_win32_filetime(&end, &later) == 0 && later > filetime);
     /* Before 1601 there is no FILETIME; a bad date or a missing pointer is an error. */

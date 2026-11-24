@@ -22,239 +22,72 @@
      Frame Limiter: after each frame the game waits until [obj+0xce0] microseconds have passed
      (1.47 eboot 0xbef87, set at 0xbda8a from the video output's refresh rate: 16683 for 59.94 Hz,
      41701 for 23.98, 20000 for 50; 1.00: [r14+0xba8] at 0x37c3b2). Its game logic follows the
-     clock, not the frame count, so another wait changes only the frame rate. -->
+     clock, not the frame count, so another wait changes only the frame rate.
+     Caves (scripts/patches.py): code or data a patch adds goes in a cave it declares,
+     <Cave Name="mystic_cave" Size="79"/>, written by Lines with Target="mystic_cave" and reached by
+     {rel:mystic_cave:N}; <Target Name="theme" Cave="seasons_cave" At="1200"/> names a place inside one.
+     At start the caves of the chosen patches get their own 16-byte aligned blocks of the zero padding that
+     ends the code segment (found from the eboot's program headers, so in any build), in file order;
+     Region="data" caves are zero variables in the rest of the last data page. Patches that declare the
+     same Name (all with the same Size) share the cave. The Address of a Line that writes a cave is only
+     where the 1.47 build used to have it. Two chosen patches may not write the same bytes (only a patch
+     its Base's): patches.py refuses to start.
+     Value parameters (scripts/patches.py): a patch that writes one value chosen at start is one Metadata
+     with Params="name ..." instead of one per value. In a bytes Line, {param:NAME:TYPE} is the value given
+     for NAME: u8/u16/u32/u64 or i8..i64 (an integer, little-endian), f32/f64 (a float), N (N raw bytes, as
+     hex) or aN (exactly N ASCII characters); a Line with If="NAME" is written only when NAME is 1 (0 leaves
+     it out). run.py gives the values (the param option of patches.py): "Resolution Patch" render_width,
+     render_height, render_aspect (float width / height), camera_aspect (sizes not 16:9), small_fonts
+     (below 1080 lines), big_heap (above 1600x900, 1.00 only); "Frame Limiter" frame_wait (microseconds,
+     0 = no wait); "PC Render Targets - Reflection" reflection_width/height; "Offline Seasons - Season"
+     season, season_theme, altar, visions. Each <Preset> names one set of values: the names of the
+     entries these patches replace ("Resolution Patch - 1440p", "Frame Limiter - 120 FPS", "Offline
+     Seasons - Season 30"...) still select the patch with those values, and the presets are the values
+     offered (the launcher lists the seasons from them). RequirementsIf="NAME": the Note's DMEM need counts
+     only when NAME is 1. -->
 <Patch>
     <TitleID>
         <ID>CUSA00243</ID>
         <ID>CUSA00242</ID>
     </TitleID>
-    <Metadata Title="Diablo III" Name="Resolution Patch - 480p" Note="Renders at 854x480; text uses the 1080p fonts (the game has none for smaller screens)." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+    <Metadata Title="Diablo III" Name="Resolution Patch" Params="render_width render_height render_aspect camera_aspect small_fonts big_heap" Note="Renders at render_width x render_height (sanctuary.ini render_resolution, run.py); camera_aspect also writes the camera's aspect ratio (render_aspect, width / height) and small_fonts gives screens below 1080 lines the 1080p fonts (the game has none for smaller screens)." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
-            <Line Type="bytes" Address="0x004bb1ea" Value="56030000" Pattern="b8 00 0f 00 00 b9 80 07 00 00 0f 45 c8 41 89 4f 4c" At="6"/>
-            <Line Type="bytes" Address="0x004bb202" Value="e0010000" Pattern="b8 70 08 00 00 b9 38 04 00 00 49 8d bf 10 0d 00 00 0f 45 c8 41 89 4f 50" At="6"/>
-            <Line Type="bytes" Address="0x006015d4" Value="eb" Pattern="c7 45 a8 08 00 00 00 3d 37 04 00 00 77 2e" At="12"/>
-            <Line Type="bytes" Address="0x00601aef" Value="eb" Pattern="37 41 b8 08 00 00 00 3d 37 04 00 00 77 2a" At="12"/>
-            <Line Type="bytes" Address="0x00601f2b" Value="eb" Pattern="0e 03 00 8b 45 c8 bb 10 00 00 00 3d 6f 08 00 00 77 33 bb 08 00 00 00 3d 37 04 00 00 77 27" At="28"/>
-            <Line Type="bytes" Address="0x0060204b" Value="eb" Pattern="0d 03 00 8b 45 c8 bb 10 00 00 00 3d 6f 08 00 00 77 33 bb 08 00 00 00 3d 37 04 00 00 77 27" At="28"/>
+            <Line Type="bytes" Address="0x004bb1ea" Value="{param:render_width:u32}" Pattern="b8 00 0f 00 00 b9 80 07 00 00 0f 45 c8 41 89 4f 4c" At="6"/>
+            <Line Type="bytes" Address="0x004bb202" Value="{param:render_height:u32}" Pattern="b8 70 08 00 00 b9 38 04 00 00 49 8d bf 10 0d 00 00 0f 45 c8 41 89 4f 50" At="6"/>
+            <Line Type="bytes" Address="0x004bb218" Value="{param:render_aspect:f32}" Pattern="41 c7 47 54 39 8e e3 3f 49 c7 47 6c" At="4" If="camera_aspect"/>
+            <Line Type="bytes" Address="0x006015d4" Value="eb" Pattern="c7 45 a8 08 00 00 00 3d 37 04 00 00 77 2e" At="12" If="small_fonts"/>
+            <Line Type="bytes" Address="0x00601aef" Value="eb" Pattern="37 41 b8 08 00 00 00 3d 37 04 00 00 77 2a" At="12" If="small_fonts"/>
+            <Line Type="bytes" Address="0x00601f2b" Value="eb" Pattern="0e 03 00 8b 45 c8 bb 10 00 00 00 3d 6f 08 00 00 77 33 bb 08 00 00 00 3d 37 04 00 00 77 27" At="28" If="small_fonts"/>
+            <Line Type="bytes" Address="0x0060204b" Value="eb" Pattern="0d 03 00 8b 45 c8 bb 10 00 00 00 3d 6f 08 00 00 77 33 bb 08 00 00 00 3d 37 04 00 00 77 27" At="28" If="small_fonts"/>
         </PatchList>
+        <Presets>
+            <Preset Name="Resolution Patch - 480p" render_width="854" render_height="480" render_aspect="1.7791666984558105" camera_aspect="0" small_fonts="1" big_heap="0"/>
+            <Preset Name="Resolution Patch - 720p" render_width="1280" render_height="720" render_aspect="1.7777777910232544" camera_aspect="0" small_fonts="1" big_heap="0"/>
+            <Preset Name="Resolution Patch - 900p" render_width="1600" render_height="900" render_aspect="1.7777777910232544" camera_aspect="0" small_fonts="1" big_heap="0"/>
+            <Preset Name="Resolution Patch - 1440p" render_width="2560" render_height="1440" render_aspect="1.7777777910232544" camera_aspect="0" small_fonts="0" big_heap="1"/>
+            <Preset Name="Resolution Patch - 1800p" render_width="3200" render_height="1800" render_aspect="1.7777777910232544" camera_aspect="0" small_fonts="0" big_heap="1"/>
+            <Preset Name="Resolution Patch - 4K" render_width="3840" render_height="2160" render_aspect="1.7777777910232544" camera_aspect="0" small_fonts="0" big_heap="1"/>
+            <Preset Name="Resolution Patch - 2560x1080" render_width="2560" render_height="1080" render_aspect="2.370370388031006" camera_aspect="1" small_fonts="0" big_heap="1"/>
+            <Preset Name="Resolution Patch - 3440x1440" render_width="3440" render_height="1440" render_aspect="2.3888888359069824" camera_aspect="1" small_fonts="0" big_heap="1"/>
+            <Preset Name="Resolution Patch - 3840x1600" render_width="3840" render_height="1600" render_aspect="2.4000000953674316" camera_aspect="1" small_fonts="0" big_heap="1"/>
+            <Preset Name="Resolution Patch - 5120x1440" render_width="5120" render_height="1440" render_aspect="3.555555582046509" camera_aspect="1" small_fonts="0" big_heap="1"/>
+            <Preset Name="Resolution Patch - 1280x800" render_width="1280" render_height="800" render_aspect="1.600000023841858" camera_aspect="1" small_fonts="1" big_heap="0"/>
+            <Preset Name="Resolution Patch - 1920x1200" render_width="1920" render_height="1200" render_aspect="1.600000023841858" camera_aspect="1" small_fonts="0" big_heap="1"/>
+            <Preset Name="Resolution Patch - 2560x1600" render_width="2560" render_height="1600" render_aspect="1.600000023841858" camera_aspect="1" small_fonts="0" big_heap="1"/>
+        </Presets>
     </Metadata>
-    <Metadata Title="Diablo III" Name="Resolution Patch - 480p" Note="Renders at 854x480; text uses the 1080p fonts (the game has none for smaller screens)." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+    <Metadata Title="Diablo III" Name="Resolution Patch" Params="render_width render_height render_aspect camera_aspect small_fonts big_heap" Note="The same for the US 1.00 eboot; big_heap (above 1600x900) also grows the display buffers' heap to 224 MiB as in 1.47. Requires setting DMEM to 256 MB." RequirementsIf="big_heap" Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
-            <Line Type="bytes" Address="0x00779a23" Value="56030000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="4"/>
-            <Line Type="bytes" Address="0x00779a2b" Value="e0010000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="12"/>
-            <Line Type="bytes" Address="0x0057b481" Value="eb" Pattern="c4 3d 37 04 00 00 77 1b" At="6"/>
-            <Line Type="bytes" Address="0x0057b990" Value="eb" Pattern="3d 37 04 00 00 77 1d" At="5"/>
-            <Line Type="bytes" Address="0x0057bd8d" Value="eb" Pattern="85 02 00 bb 08 00 00 00 8b 45 d0 3d 37 04 00 00 77 1b" At="16"/>
-            <Line Type="bytes" Address="0x0057be9d" Value="eb" Pattern="84 02 00 bb 08 00 00 00 8b 45 d0 3d 37 04 00 00 77 1b" At="16"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Resolution Patch - 720p" Note="Renders at 1280x720; text uses the 1080p fonts (the game has none for smaller screens)." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
-        <PatchList>
-            <Line Type="bytes" Address="0x004bb1ea" Value="00050000" Pattern="b8 00 0f 00 00 b9 80 07 00 00 0f 45 c8 41 89 4f 4c" At="6"/>
-            <Line Type="bytes" Address="0x004bb202" Value="d0020000" Pattern="b8 70 08 00 00 b9 38 04 00 00 49 8d bf 10 0d 00 00 0f 45 c8 41 89 4f 50" At="6"/>
-            <Line Type="bytes" Address="0x006015d4" Value="eb" Pattern="c7 45 a8 08 00 00 00 3d 37 04 00 00 77 2e" At="12"/>
-            <Line Type="bytes" Address="0x00601aef" Value="eb" Pattern="37 41 b8 08 00 00 00 3d 37 04 00 00 77 2a" At="12"/>
-            <Line Type="bytes" Address="0x00601f2b" Value="eb" Pattern="0e 03 00 8b 45 c8 bb 10 00 00 00 3d 6f 08 00 00 77 33 bb 08 00 00 00 3d 37 04 00 00 77 27" At="28"/>
-            <Line Type="bytes" Address="0x0060204b" Value="eb" Pattern="0d 03 00 8b 45 c8 bb 10 00 00 00 3d 6f 08 00 00 77 33 bb 08 00 00 00 3d 37 04 00 00 77 27" At="28"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Resolution Patch - 720p" Note="Renders at 1280x720; text uses the 1080p fonts (the game has none for smaller screens)." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
-        <PatchList>
-            <Line Type="bytes" Address="0x00779a23" Value="00050000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="4"/>
-            <Line Type="bytes" Address="0x00779a2b" Value="d0020000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="12"/>
-            <Line Type="bytes" Address="0x0057b481" Value="eb" Pattern="c4 3d 37 04 00 00 77 1b" At="6"/>
-            <Line Type="bytes" Address="0x0057b990" Value="eb" Pattern="3d 37 04 00 00 77 1d" At="5"/>
-            <Line Type="bytes" Address="0x0057bd8d" Value="eb" Pattern="85 02 00 bb 08 00 00 00 8b 45 d0 3d 37 04 00 00 77 1b" At="16"/>
-            <Line Type="bytes" Address="0x0057be9d" Value="eb" Pattern="84 02 00 bb 08 00 00 00 8b 45 d0 3d 37 04 00 00 77 1b" At="16"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Resolution Patch - 900p" Note="Renders at 1600x900; text uses the 1080p fonts (the game has none for smaller screens)." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
-        <PatchList>
-            <Line Type="bytes" Address="0x004bb1ea" Value="40060000" Pattern="b8 00 0f 00 00 b9 80 07 00 00 0f 45 c8 41 89 4f 4c" At="6"/>
-            <Line Type="bytes" Address="0x004bb202" Value="84030000" Pattern="b8 70 08 00 00 b9 38 04 00 00 49 8d bf 10 0d 00 00 0f 45 c8 41 89 4f 50" At="6"/>
-            <Line Type="bytes" Address="0x006015d4" Value="eb" Pattern="c7 45 a8 08 00 00 00 3d 37 04 00 00 77 2e" At="12"/>
-            <Line Type="bytes" Address="0x00601aef" Value="eb" Pattern="37 41 b8 08 00 00 00 3d 37 04 00 00 77 2a" At="12"/>
-            <Line Type="bytes" Address="0x00601f2b" Value="eb" Pattern="0e 03 00 8b 45 c8 bb 10 00 00 00 3d 6f 08 00 00 77 33 bb 08 00 00 00 3d 37 04 00 00 77 27" At="28"/>
-            <Line Type="bytes" Address="0x0060204b" Value="eb" Pattern="0d 03 00 8b 45 c8 bb 10 00 00 00 3d 6f 08 00 00 77 33 bb 08 00 00 00 3d 37 04 00 00 77 27" At="28"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Resolution Patch - 900p" Note="Renders at 1600x900; text uses the 1080p fonts (the game has none for smaller screens)." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
-        <PatchList>
-            <Line Type="bytes" Address="0x00779a23" Value="40060000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="4"/>
-            <Line Type="bytes" Address="0x00779a2b" Value="84030000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="12"/>
-            <Line Type="bytes" Address="0x0057b481" Value="eb" Pattern="c4 3d 37 04 00 00 77 1b" At="6"/>
-            <Line Type="bytes" Address="0x0057b990" Value="eb" Pattern="3d 37 04 00 00 77 1d" At="5"/>
-            <Line Type="bytes" Address="0x0057bd8d" Value="eb" Pattern="85 02 00 bb 08 00 00 00 8b 45 d0 3d 37 04 00 00 77 1b" At="16"/>
-            <Line Type="bytes" Address="0x0057be9d" Value="eb" Pattern="84 02 00 bb 08 00 00 00 8b 45 d0 3d 37 04 00 00 77 1b" At="16"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Resolution Patch - 1440p" Note="Renders at 2560x1440." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
-        <PatchList>
-            <Line Type="bytes" Address="0x004bb1ea" Value="000a0000" Pattern="b8 00 0f 00 00 b9 80 07 00 00 0f 45 c8 41 89 4f 4c" At="6"/>
-            <Line Type="bytes" Address="0x004bb202" Value="a0050000" Pattern="b8 70 08 00 00 b9 38 04 00 00 49 8d bf 10 0d 00 00 0f 45 c8 41 89 4f 50" At="6"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Resolution Patch - 1440p" Note="Renders at 2560x1440. Requires setting DMEM to 256 MB." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
-        <PatchList>
-            <Line Type="bytes" Address="0x00779a23" Value="000a0000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="4"/>
-            <Line Type="bytes" Address="0x00779a2b" Value="a0050000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="12"/>
-            <Line Type="bytes" Address="0x00d2d43f" Value="0000000e" Pattern="ba 00 00 00 02 b9 00 00 01 00 41 b8 03 00 00 00 49 89 d9" At="1"/>
-            <Line Type="bytes" Address="0x00d2d461" Value="0000000e" Pattern="be 00 00 00 02 ba 33 00 00 00 31 c9" At="1"/>
-            <Line Type="bytes" Address="0x00d2d49d" Value="0000000e" Pattern="b9 00 00 00 02 41 b8 00 10 00 00 45 31 c9" At="1"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Resolution Patch - 1800p" Note="Renders at 3200x1800." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
-        <PatchList>
-            <Line Type="bytes" Address="0x004bb1ea" Value="800c0000" Pattern="b8 00 0f 00 00 b9 80 07 00 00 0f 45 c8 41 89 4f 4c" At="6"/>
-            <Line Type="bytes" Address="0x004bb202" Value="08070000" Pattern="b8 70 08 00 00 b9 38 04 00 00 49 8d bf 10 0d 00 00 0f 45 c8 41 89 4f 50" At="6"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Resolution Patch - 1800p" Note="Renders at 3200x1800. Requires setting DMEM to 256 MB." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
-        <PatchList>
-            <Line Type="bytes" Address="0x00779a23" Value="800c0000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="4"/>
-            <Line Type="bytes" Address="0x00779a2b" Value="08070000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="12"/>
-            <Line Type="bytes" Address="0x00d2d43f" Value="0000000e" Pattern="ba 00 00 00 02 b9 00 00 01 00 41 b8 03 00 00 00 49 89 d9" At="1"/>
-            <Line Type="bytes" Address="0x00d2d461" Value="0000000e" Pattern="be 00 00 00 02 ba 33 00 00 00 31 c9" At="1"/>
-            <Line Type="bytes" Address="0x00d2d49d" Value="0000000e" Pattern="b9 00 00 00 02 41 b8 00 10 00 00 45 31 c9" At="1"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Resolution Patch - 4K" Note="Renders at 3840x2160." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
-        <PatchList>
-            <Line Type="bytes" Address="0x004bb1ea" Value="000f0000" Pattern="b8 00 0f 00 00 b9 80 07 00 00 0f 45 c8 41 89 4f 4c" At="6"/>
-            <Line Type="bytes" Address="0x004bb202" Value="70080000" Pattern="b8 70 08 00 00 b9 38 04 00 00 49 8d bf 10 0d 00 00 0f 45 c8 41 89 4f 50" At="6"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Resolution Patch - 4K" Note="Renders at 3840x2160. Requires setting DMEM to 256 MB." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
-        <PatchList>
-            <Line Type="bytes" Address="0x00779a23" Value="000f0000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="4"/>
-            <Line Type="bytes" Address="0x00779a2b" Value="70080000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="12"/>
-            <Line Type="bytes" Address="0x00d2d43f" Value="0000000e" Pattern="ba 00 00 00 02 b9 00 00 01 00 41 b8 03 00 00 00 49 89 d9" At="1"/>
-            <Line Type="bytes" Address="0x00d2d461" Value="0000000e" Pattern="be 00 00 00 02 ba 33 00 00 00 31 c9" At="1"/>
-            <Line Type="bytes" Address="0x00d2d49d" Value="0000000e" Pattern="b9 00 00 00 02 41 b8 00 10 00 00 45 31 c9" At="1"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Resolution Patch - 2560x1080" Note="Renders at 2560x1080 (21:9), with the camera's aspect ratio." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
-        <PatchList>
-            <Line Type="bytes" Address="0x004bb1ea" Value="000a0000" Pattern="b8 00 0f 00 00 b9 80 07 00 00 0f 45 c8 41 89 4f 4c" At="6"/>
-            <Line Type="bytes" Address="0x004bb202" Value="38040000" Pattern="b8 70 08 00 00 b9 38 04 00 00 49 8d bf 10 0d 00 00 0f 45 c8 41 89 4f 50" At="6"/>
-            <Line Type="bytes" Address="0x004bb218" Value="26b41740" Pattern="41 c7 47 54 39 8e e3 3f 49 c7 47 6c" At="4"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Resolution Patch - 2560x1080" Note="Renders at 2560x1080 (21:9), with the camera's aspect ratio. Requires setting DMEM to 256 MB." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
-        <PatchList>
-            <Line Type="bytes" Address="0x00779a23" Value="000a0000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="4"/>
-            <Line Type="bytes" Address="0x00779a2b" Value="38040000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="12"/>
-            <Line Type="bytes" Address="0x00779a33" Value="26b41740" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="20"/>
-            <Line Type="bytes" Address="0x00d2d43f" Value="0000000e" Pattern="ba 00 00 00 02 b9 00 00 01 00 41 b8 03 00 00 00 49 89 d9" At="1"/>
-            <Line Type="bytes" Address="0x00d2d461" Value="0000000e" Pattern="be 00 00 00 02 ba 33 00 00 00 31 c9" At="1"/>
-            <Line Type="bytes" Address="0x00d2d49d" Value="0000000e" Pattern="b9 00 00 00 02 41 b8 00 10 00 00 45 31 c9" At="1"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Resolution Patch - 3440x1440" Note="Renders at 3440x1440 (21:9), with the camera's aspect ratio." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
-        <PatchList>
-            <Line Type="bytes" Address="0x004bb1ea" Value="700d0000" Pattern="b8 00 0f 00 00 b9 80 07 00 00 0f 45 c8 41 89 4f 4c" At="6"/>
-            <Line Type="bytes" Address="0x004bb202" Value="a0050000" Pattern="b8 70 08 00 00 b9 38 04 00 00 49 8d bf 10 0d 00 00 0f 45 c8 41 89 4f 50" At="6"/>
-            <Line Type="bytes" Address="0x004bb218" Value="8ee31840" Pattern="41 c7 47 54 39 8e e3 3f 49 c7 47 6c" At="4"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Resolution Patch - 3440x1440" Note="Renders at 3440x1440 (21:9), with the camera's aspect ratio. Requires setting DMEM to 256 MB." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
-        <PatchList>
-            <Line Type="bytes" Address="0x00779a23" Value="700d0000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="4"/>
-            <Line Type="bytes" Address="0x00779a2b" Value="a0050000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="12"/>
-            <Line Type="bytes" Address="0x00779a33" Value="8ee31840" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="20"/>
-            <Line Type="bytes" Address="0x00d2d43f" Value="0000000e" Pattern="ba 00 00 00 02 b9 00 00 01 00 41 b8 03 00 00 00 49 89 d9" At="1"/>
-            <Line Type="bytes" Address="0x00d2d461" Value="0000000e" Pattern="be 00 00 00 02 ba 33 00 00 00 31 c9" At="1"/>
-            <Line Type="bytes" Address="0x00d2d49d" Value="0000000e" Pattern="b9 00 00 00 02 41 b8 00 10 00 00 45 31 c9" At="1"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Resolution Patch - 3840x1600" Note="Renders at 3840x1600 (21:9), with the camera's aspect ratio." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
-        <PatchList>
-            <Line Type="bytes" Address="0x004bb1ea" Value="000f0000" Pattern="b8 00 0f 00 00 b9 80 07 00 00 0f 45 c8 41 89 4f 4c" At="6"/>
-            <Line Type="bytes" Address="0x004bb202" Value="40060000" Pattern="b8 70 08 00 00 b9 38 04 00 00 49 8d bf 10 0d 00 00 0f 45 c8 41 89 4f 50" At="6"/>
-            <Line Type="bytes" Address="0x004bb218" Value="9a991940" Pattern="41 c7 47 54 39 8e e3 3f 49 c7 47 6c" At="4"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Resolution Patch - 3840x1600" Note="Renders at 3840x1600 (21:9), with the camera's aspect ratio. Requires setting DMEM to 256 MB." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
-        <PatchList>
-            <Line Type="bytes" Address="0x00779a23" Value="000f0000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="4"/>
-            <Line Type="bytes" Address="0x00779a2b" Value="40060000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="12"/>
-            <Line Type="bytes" Address="0x00779a33" Value="9a991940" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="20"/>
-            <Line Type="bytes" Address="0x00d2d43f" Value="0000000e" Pattern="ba 00 00 00 02 b9 00 00 01 00 41 b8 03 00 00 00 49 89 d9" At="1"/>
-            <Line Type="bytes" Address="0x00d2d461" Value="0000000e" Pattern="be 00 00 00 02 ba 33 00 00 00 31 c9" At="1"/>
-            <Line Type="bytes" Address="0x00d2d49d" Value="0000000e" Pattern="b9 00 00 00 02 41 b8 00 10 00 00 45 31 c9" At="1"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Resolution Patch - 5120x1440" Note="Renders at 5120x1440 (32:9), with the camera's aspect ratio." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
-        <PatchList>
-            <Line Type="bytes" Address="0x004bb1ea" Value="00140000" Pattern="b8 00 0f 00 00 b9 80 07 00 00 0f 45 c8 41 89 4f 4c" At="6"/>
-            <Line Type="bytes" Address="0x004bb202" Value="a0050000" Pattern="b8 70 08 00 00 b9 38 04 00 00 49 8d bf 10 0d 00 00 0f 45 c8 41 89 4f 50" At="6"/>
-            <Line Type="bytes" Address="0x004bb218" Value="398e6340" Pattern="41 c7 47 54 39 8e e3 3f 49 c7 47 6c" At="4"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Resolution Patch - 5120x1440" Note="Renders at 5120x1440 (32:9), with the camera's aspect ratio. Requires setting DMEM to 256 MB." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
-        <PatchList>
-            <Line Type="bytes" Address="0x00779a23" Value="00140000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="4"/>
-            <Line Type="bytes" Address="0x00779a2b" Value="a0050000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="12"/>
-            <Line Type="bytes" Address="0x00779a33" Value="398e6340" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="20"/>
-            <Line Type="bytes" Address="0x00d2d43f" Value="0000000e" Pattern="ba 00 00 00 02 b9 00 00 01 00 41 b8 03 00 00 00 49 89 d9" At="1"/>
-            <Line Type="bytes" Address="0x00d2d461" Value="0000000e" Pattern="be 00 00 00 02 ba 33 00 00 00 31 c9" At="1"/>
-            <Line Type="bytes" Address="0x00d2d49d" Value="0000000e" Pattern="b9 00 00 00 02 41 b8 00 10 00 00 45 31 c9" At="1"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Resolution Patch - 1280x800" Note="Renders at 1280x800 (16:10), with the camera's aspect ratio; text uses the 1080p fonts (the game has none for smaller screens)." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
-        <PatchList>
-            <Line Type="bytes" Address="0x004bb1ea" Value="00050000" Pattern="b8 00 0f 00 00 b9 80 07 00 00 0f 45 c8 41 89 4f 4c" At="6"/>
-            <Line Type="bytes" Address="0x004bb202" Value="20030000" Pattern="b8 70 08 00 00 b9 38 04 00 00 49 8d bf 10 0d 00 00 0f 45 c8 41 89 4f 50" At="6"/>
-            <Line Type="bytes" Address="0x004bb218" Value="cdcccc3f" Pattern="41 c7 47 54 39 8e e3 3f 49 c7 47 6c" At="4"/>
-            <Line Type="bytes" Address="0x006015d4" Value="eb" Pattern="c7 45 a8 08 00 00 00 3d 37 04 00 00 77 2e" At="12"/>
-            <Line Type="bytes" Address="0x00601aef" Value="eb" Pattern="37 41 b8 08 00 00 00 3d 37 04 00 00 77 2a" At="12"/>
-            <Line Type="bytes" Address="0x00601f2b" Value="eb" Pattern="0e 03 00 8b 45 c8 bb 10 00 00 00 3d 6f 08 00 00 77 33 bb 08 00 00 00 3d 37 04 00 00 77 27" At="28"/>
-            <Line Type="bytes" Address="0x0060204b" Value="eb" Pattern="0d 03 00 8b 45 c8 bb 10 00 00 00 3d 6f 08 00 00 77 33 bb 08 00 00 00 3d 37 04 00 00 77 27" At="28"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Resolution Patch - 1280x800" Note="Renders at 1280x800 (16:10), with the camera's aspect ratio; text uses the 1080p fonts (the game has none for smaller screens)." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
-        <PatchList>
-            <Line Type="bytes" Address="0x00779a23" Value="00050000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="4"/>
-            <Line Type="bytes" Address="0x00779a2b" Value="20030000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="12"/>
-            <Line Type="bytes" Address="0x00779a33" Value="cdcccc3f" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="20"/>
-            <Line Type="bytes" Address="0x0057b481" Value="eb" Pattern="c4 3d 37 04 00 00 77 1b" At="6"/>
-            <Line Type="bytes" Address="0x0057b990" Value="eb" Pattern="3d 37 04 00 00 77 1d" At="5"/>
-            <Line Type="bytes" Address="0x0057bd8d" Value="eb" Pattern="85 02 00 bb 08 00 00 00 8b 45 d0 3d 37 04 00 00 77 1b" At="16"/>
-            <Line Type="bytes" Address="0x0057be9d" Value="eb" Pattern="84 02 00 bb 08 00 00 00 8b 45 d0 3d 37 04 00 00 77 1b" At="16"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Resolution Patch - 1920x1200" Note="Renders at 1920x1200 (16:10), with the camera's aspect ratio." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
-        <PatchList>
-            <Line Type="bytes" Address="0x004bb1ea" Value="80070000" Pattern="b8 00 0f 00 00 b9 80 07 00 00 0f 45 c8 41 89 4f 4c" At="6"/>
-            <Line Type="bytes" Address="0x004bb202" Value="b0040000" Pattern="b8 70 08 00 00 b9 38 04 00 00 49 8d bf 10 0d 00 00 0f 45 c8 41 89 4f 50" At="6"/>
-            <Line Type="bytes" Address="0x004bb218" Value="cdcccc3f" Pattern="41 c7 47 54 39 8e e3 3f 49 c7 47 6c" At="4"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Resolution Patch - 1920x1200" Note="Renders at 1920x1200 (16:10), with the camera's aspect ratio. Requires setting DMEM to 256 MB." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
-        <PatchList>
-            <Line Type="bytes" Address="0x00779a23" Value="80070000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="4"/>
-            <Line Type="bytes" Address="0x00779a2b" Value="b0040000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="12"/>
-            <Line Type="bytes" Address="0x00779a33" Value="cdcccc3f" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="20"/>
-            <Line Type="bytes" Address="0x00d2d43f" Value="0000000e" Pattern="ba 00 00 00 02 b9 00 00 01 00 41 b8 03 00 00 00 49 89 d9" At="1"/>
-            <Line Type="bytes" Address="0x00d2d461" Value="0000000e" Pattern="be 00 00 00 02 ba 33 00 00 00 31 c9" At="1"/>
-            <Line Type="bytes" Address="0x00d2d49d" Value="0000000e" Pattern="b9 00 00 00 02 41 b8 00 10 00 00 45 31 c9" At="1"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Resolution Patch - 2560x1600" Note="Renders at 2560x1600 (16:10), with the camera's aspect ratio." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
-        <PatchList>
-            <Line Type="bytes" Address="0x004bb1ea" Value="000a0000" Pattern="b8 00 0f 00 00 b9 80 07 00 00 0f 45 c8 41 89 4f 4c" At="6"/>
-            <Line Type="bytes" Address="0x004bb202" Value="40060000" Pattern="b8 70 08 00 00 b9 38 04 00 00 49 8d bf 10 0d 00 00 0f 45 c8 41 89 4f 50" At="6"/>
-            <Line Type="bytes" Address="0x004bb218" Value="cdcccc3f" Pattern="41 c7 47 54 39 8e e3 3f 49 c7 47 6c" At="4"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Resolution Patch - 2560x1600" Note="Renders at 2560x1600 (16:10), with the camera's aspect ratio. Requires setting DMEM to 256 MB." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
-        <PatchList>
-            <Line Type="bytes" Address="0x00779a23" Value="000a0000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="4"/>
-            <Line Type="bytes" Address="0x00779a2b" Value="40060000" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="12"/>
-            <Line Type="bytes" Address="0x00779a33" Value="cdcccc3f" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="20"/>
-            <Line Type="bytes" Address="0x00d2d43f" Value="0000000e" Pattern="ba 00 00 00 02 b9 00 00 01 00 41 b8 03 00 00 00 49 89 d9" At="1"/>
-            <Line Type="bytes" Address="0x00d2d461" Value="0000000e" Pattern="be 00 00 00 02 ba 33 00 00 00 31 c9" At="1"/>
-            <Line Type="bytes" Address="0x00d2d49d" Value="0000000e" Pattern="b9 00 00 00 02 41 b8 00 10 00 00 45 31 c9" At="1"/>
+            <Line Type="bytes" Address="0x00779a23" Value="{param:render_width:u32}" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="4"/>
+            <Line Type="bytes" Address="0x00779a2b" Value="{param:render_height:u32}" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="12"/>
+            <Line Type="bytes" Address="0x00779a33" Value="{param:render_aspect:f32}" Pattern="41 c7 46 48 80 07 00 00 41 c7 46 4c 38 04 00 00 41 c7 46 50 39 8e e3 3f" At="20" If="camera_aspect"/>
+            <Line Type="bytes" Address="0x0057b481" Value="eb" Pattern="c4 3d 37 04 00 00 77 1b" At="6" If="small_fonts"/>
+            <Line Type="bytes" Address="0x0057b990" Value="eb" Pattern="3d 37 04 00 00 77 1d" At="5" If="small_fonts"/>
+            <Line Type="bytes" Address="0x0057bd8d" Value="eb" Pattern="85 02 00 bb 08 00 00 00 8b 45 d0 3d 37 04 00 00 77 1b" At="16" If="small_fonts"/>
+            <Line Type="bytes" Address="0x0057be9d" Value="eb" Pattern="84 02 00 bb 08 00 00 00 8b 45 d0 3d 37 04 00 00 77 1b" At="16" If="small_fonts"/>
+            <Line Type="bytes" Address="0x00d2d43f" Value="0000000e" Pattern="ba 00 00 00 02 b9 00 00 01 00 41 b8 03 00 00 00 49 89 d9" At="1" If="big_heap"/>
+            <Line Type="bytes" Address="0x00d2d461" Value="0000000e" Pattern="be 00 00 00 02 ba 33 00 00 00 31 c9" At="1" If="big_heap"/>
+            <Line Type="bytes" Address="0x00d2d49d" Value="0000000e" Pattern="b9 00 00 00 02 41 b8 00 10 00 00 45 31 c9" At="1" If="big_heap"/>
         </PatchList>
     </Metadata>
     <!-- Max Foreground FPS: what the Frame Limiter patch that does not wait (Unlimited) stops at.
@@ -309,44 +142,20 @@
             <Line Type="bytes" Address="0x00602042" Value="18" Pattern="0d 03 00 8b 45 c8 bb 10 00 00 00 3d 6f 08 00 00 77 33 bb 08 00 00 00 3d 37 04 00 00 77 27" At="19"/>
         </PatchList>
     </Metadata>
-    <Metadata Title="Diablo III" Name="Frame Limiter - 30 FPS" Note="The game's frame limiter waits 33367 us (30 FPS) instead of 16683 us per frame." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+    <Metadata Title="Diablo III" Name="Frame Limiter" Params="frame_wait" Note="The game's frame limiter waits frame_wait microseconds per frame instead of 16683 (59.94 Hz); 0 does not wait (sanctuary.ini frame_rate, run.py)." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
-            <Line Type="bytes" Address="0x004bda91" Value="57820000" Pattern="49 c7 87 e0 0c 00 00 2b 41 00 00 eb 18 49 c7 87 e0 0c 00 00 e5 a2 00 00" At="7"/>
+            <Line Type="bytes" Address="0x004bda91" Value="{param:frame_wait:u32}" Pattern="49 c7 87 e0 0c 00 00 2b 41 00 00 eb 18 49 c7 87 e0 0c 00 00 e5 a2 00 00" At="7"/>
         </PatchList>
+        <Presets>
+            <Preset Name="Frame Limiter - 30 FPS" frame_wait="33367"/>
+            <Preset Name="Frame Limiter - 90 FPS" frame_wait="11122"/>
+            <Preset Name="Frame Limiter - 120 FPS" frame_wait="8341"/>
+            <Preset Name="Frame Limiter - Unlimited" frame_wait="0"/>
+        </Presets>
     </Metadata>
-    <Metadata Title="Diablo III" Name="Frame Limiter - 30 FPS" Note="The game's frame limiter waits 33367 us (30 FPS) instead of 16683 us per frame." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+    <Metadata Title="Diablo III" Name="Frame Limiter" Params="frame_wait" Note="The same for the US 1.00 eboot." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
-            <Line Type="bytes" Address="0x0077c3b9" Value="57820000" Pattern="49 c7 86 a8 0b 00 00 2b 41 00 00 41 c7 86 f8 0b" At="7"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Frame Limiter - 90 FPS" Note="The game's frame limiter waits 11122 us (90 FPS) instead of 16683 us per frame." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
-        <PatchList>
-            <Line Type="bytes" Address="0x004bda91" Value="722b0000" Pattern="49 c7 87 e0 0c 00 00 2b 41 00 00 eb 18 49 c7 87 e0 0c 00 00 e5 a2 00 00" At="7"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Frame Limiter - 90 FPS" Note="The game's frame limiter waits 11122 us (90 FPS) instead of 16683 us per frame." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
-        <PatchList>
-            <Line Type="bytes" Address="0x0077c3b9" Value="722b0000" Pattern="49 c7 86 a8 0b 00 00 2b 41 00 00 41 c7 86 f8 0b" At="7"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Frame Limiter - 120 FPS" Note="The game's frame limiter waits 8341 us (120 FPS) instead of 16683 us per frame." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
-        <PatchList>
-            <Line Type="bytes" Address="0x004bda91" Value="95200000" Pattern="49 c7 87 e0 0c 00 00 2b 41 00 00 eb 18 49 c7 87 e0 0c 00 00 e5 a2 00 00" At="7"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Frame Limiter - 120 FPS" Note="The game's frame limiter waits 8341 us (120 FPS) instead of 16683 us per frame." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
-        <PatchList>
-            <Line Type="bytes" Address="0x0077c3b9" Value="95200000" Pattern="49 c7 86 a8 0b 00 00 2b 41 00 00 41 c7 86 f8 0b" At="7"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Frame Limiter - Unlimited" Note="The game's frame limiter waits no wait instead of 16683 us per frame." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
-        <PatchList>
-            <Line Type="bytes" Address="0x004bda91" Value="00000000" Pattern="49 c7 87 e0 0c 00 00 2b 41 00 00 eb 18 49 c7 87 e0 0c 00 00 e5 a2 00 00" At="7"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Frame Limiter - Unlimited" Note="The game's frame limiter waits no wait instead of 16683 us per frame." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
-        <PatchList>
-            <Line Type="bytes" Address="0x0077c3b9" Value="00000000" Pattern="49 c7 86 a8 0b 00 00 2b 41 00 00 41 c7 86 f8 0b" At="7"/>
+            <Line Type="bytes" Address="0x0077c3b9" Value="{param:frame_wait:u32}" Pattern="49 c7 86 a8 0b 00 00 2b 41 00 00 41 c7 86 f8 0b" At="7"/>
         </PatchList>
     </Metadata>
     <!-- Smooth character motion above 60 FPS (GitHub #24). The simulation runs at 60 ticks per second; each
@@ -358,13 +167,13 @@
          frame accumulator holds (W+0x34: +4 time accumulated, +0xc time simulated, 3000 units per second):
          (W+0x54 * 50 + W+0x38 - W+0x40) / 3000, so f is the accumulator's fraction. Weapons, lights and the
          actor's world matrix follow, since they are built from that position. Off: the game is unchanged.
-         Code in the code segment's zero padding, after the offline seasons' code. -->
+         Code in a cave (smooth_cave). -->
     <Metadata Title="Diablo III" Name="Experimental: Smooth character motion above 60 FPS" Note="Above 60 FPS the hero and monsters move only on every other frame and look jittery; this places them where they are at the moment of each frame. No change at 60 FPS or below." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="true">
         <PatchList>
             <Line Type="bytes" Address="0x177b800" Value="51 8b4854 6bc932 034838 2b4840 c5fa2ac1 c5fa5e0502000000 59 c3 00803b45" Target="smooth_cave"/>
-            <Line Type="bytes" Address="0x657022" Value="e8{rel:smooth_cave:0}" Pattern="c5 f2 58 93 38 02 00 00 c5 f2 58 b3 3c 02 00 00 0f b7 93 d8 01 00 00 89 d6 c5 fa 10 40 60 48 8b 80 78 0a 00 00 c5 ea 5c d0 c5 ca 5c c0" At="25"/>
+            <Line Type="bytes" Address="0x657022" Value="e8{rel:smooth_cave:0}" Pattern="c5 f2 58 93 38 02 00 00 c5 f2 58 b3 3c 02 00 00 0f b7 93 d8 01 00 00 89 d6 c5 fa 10 40 60 48 8b 80 ?? 0a 00 00 c5 ea 5c d0 c5 ca 5c c0" At="25"/>
         </PatchList>
-        <Target Name="smooth_cave" Address="0x177b800" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="4236"/>
+        <Cave Name="smooth_cave" Size="31"/>
     </Metadata>
     <!-- Dynamic resolution off (Graphics > Dynamic resolution, run.py). The scaler's update (1.47 eboot
          0x26e80) averages its last eight GPU times and steps the scene's scale [obj+0x18] by 0.05 between
@@ -398,341 +207,238 @@
          online pubfile service for Seasons.txt and Config.txt; offline the answer never comes. The base patch
          "Offline Seasons" hooks the per-user lobby update (eboot 0x43528) and feeds both files once to the
          game's own handlers, skips the server-time check (0x42b9e), forces the season state to in progress
-         (0x42c0b), confirms the season at hero creation (0x2f97f0) and validates seasonal heroes (0x144020).
+         (0x42c0b), confirms the season at hero creation (0x2f97e8) and validates seasonal heroes (0x144020).
+         The signatures also match 1.46 (2.7.6) and 1.25 (2.6.1) (Dove2137, GitHub #100): the online-state
+         check (0x1404ec) has a '|' form per build, and the two clears of the Altar of Rites and Visions of
+         Enmity buffs (0x526fe6, 0x5272cf), which 1.47 turns on by default and older builds do not, are
+         Optional="true": left out where the build has not got them.
          A new seasonal hero takes its season from the season number itself (0x2f85f8, through a few
-         bytes at 0x177b500), not from the hero screen's copy, which only the answer to a per-player
+         bytes in a cave of their own), not from the hero screen's copy, which only the answer to a per-player
          server request fills: players 2 to 4, whose request may not be answered yet, got season 0, a
          regular hero (GitHub #83).
          Each "Offline Seasons - Season N" is that base (Base=) plus the season number and the community events
-         of its theme. Each "Event: ..." sets one flag of the event table. The code lives in the unused zero
-         padding that ends the code segment (last used byte 0x137a78b, padding to the segment's end 0x13847ec);
-         its variables in the unused rest of the last data page (0x1702f80). Every site, and the cave itself,
-         is found by a signature, so another eboot is skipped, never overwritten. Needs the FILETIME fix of
+         of its theme. Each "Event: ..." sets one flag of the event table; its Target "seasons" (the base's
+         hook site, written by no Line) leaves it out of a build without seasons, such as 1.00. The code is one cave, seasons_cave
+         (its event tables at fixed offsets: theme +0x4b0, tbl +0x4c0, tbl2 +0x4d0, then the stub of the two
+         extra events, entered from +0x85 and back to +0x8a); its flag a data cave. The dates in its
+         Seasons.txt and Config.txt matter: the game turns the community buffs on only while its clock is
+         between CommunityBuffStart and CommunityBuffEnd (0x43470; the server-time branch is skipped, so
+         the clock is the PS4's), parsed as 64-bit FILETIMEs (0x18d10, good to ~2290); the season's own
+         state is forced (0x42c0b). So both ends are fixed far ahead, 31 Dec 2099, not computed: there is
+         nothing to compute from the season number. Every site is found by a
+         signature, so another eboot is skipped, never overwritten. Needs the FILETIME fix of
          src/runtime_rtc.c. -->
     <Metadata Title="Diablo III" Name="Offline Seasons" Note="Shared part of the offline seasons (choose one &#x27;Offline Seasons - Season N&#x27;): answers the Seasons.txt and Config.txt requests locally, skips the server-time check and validates seasonal heroes. Code in the unused zero padding at the end of the code segment." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
-            <Line Type="bytes" Address="0x177a790" Value="803d{rel:flagvar:1}000f8595000000c605{rel:flagvar:1}01574881ec60040000488d057501000048c7c157000000e87b000000e8{rel:thunk_s:0}488d7c2460488d35af01000048c7c1bd000000f3a431d281fa100000007332488d0566040000803c1000750d488d0549040000803c10007414488d05a4000000486334d04801c68b4cd004f3a4ffc2ebc6488d4424604889f94829c1e815000000e8{rel:thunk_c:0}4881c4600400005f4889fb498b0424c3c744240800000000488944242048894c242848894c243048c744243800000000c74424400000004048c74424480000000048c744245000000000488d4424204889442410488d4424384889442418488b8424680400004889442458488d7c2458488d742408488d542410c30f1f00940100001f000000b301000022000000d50100001f000000f401000024000000180200001d000000350200001d000000520200001d0000006f02000022000000910200001e000000af02000026000000d50200001f000000f40200001c000000100300001c0000002c030000210000004d030000200000006d0300001c0000005b536561736f6e2034305d0a537461727420225361742c2030392046656220323032352030303a30303a303020474d54220a456e6420225475652c2030392046656220323033362030313a30303a303020474d54220a0a436f6d6d756e69747942756666537461727420223f3f3f2c2031362053657020323032332030303a30303a303020474d54220a436f6d6d756e69747942756666456e6420223f3f3f2c2030312046656220323033362030313a30303a303020474d54220a436f6d6d756e69747942756666536561736f6e4f6e6c79202231220a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a436f6d6d756e69747942756666446f75626c65476f626c696e73202231220a436f6d6d756e69747942756666446f75626c65426f756e747942616773202231220a436f6d6d756e69747942756666526f79616c4772616e64657572202231220a436f6d6d756e697479427566664c65676163794f664e696768746d61726573202231220a436f6d6d756e69747942756666547269756e657357696c6c202231220a436f6d6d756e6974794275666650616e64656d6f6e69756d202231220a436f6d6d756e697479427566664b616e6169506f77657273202231220a436f6d6d756e69747942756666547269616c734f6654656d7065737473202231220a436f6d6d756e69747942756666536861646f77436c6f6e6573202231220a436f6d6d756e69747942756666466f757274684b616e61697343756265536c6f74202231220a436f6d6d756e69747942756666457468657265616c4974656d73202231220a436f6d6d756e69747942756666536f756c536861726473202231220a436f6d6d756e69747942756666537761726d5269667473202231220a436f6d6d756e6974794275666653616e637469666965644974656d73202231220a436f6d6d756e69747942756666456173746572456767576f726c64202231220a436f6d6d756e69747942756666536561736f6e4f6e6c79202230220a66662e0f1f8400000000000f1f4000" Target="cave"/>
-            <Line Type="bytes" Address="0x443528" Value="e8{rel:cave:0}9090" Pattern="4c 8b 25 ?? ?? ?? ?? 48 89 fb 49 8b 04 24 48 89 45 d0 e8 08 a7 ff ff 41 89 c6 48 8b 03 48 89 df ff 50 18" At="7"/>
+            <Line Type="bytes" Address="0x177a790" Value="803d{rel:seasons_flag:1}000f8595000000c605{rel:seasons_flag:1}01574881ec60040000488d057501000048c7c157000000e87b000000e8{rel:thunk_s:0}488d7c2460488d35af01000048c7c1bd000000f3a431d281fa100000007332488d05{rel:tbl:0}803c1000750d488d05{rel:theme:0}803c10007414488d05a4000000486334d04801c68b4cd004f3a4ffc2ebc6e9{rel:ev2_stub:0}4889f94829c1e815000000e8{rel:thunk_c:0}4881c4600400005f4889fb498b0424c3c744240800000000488944242048894c242848894c243048c744243800000000c74424400000004048c74424480000000048c744245000000000488d4424204889442410488d4424384889442418488b8424680400004889442458488d7c2458488d742408488d542410c30f1f00940100001f000000b301000022000000d50100001f000000f401000024000000180200001d000000350200001d000000520200001d0000006f02000022000000910200001e000000af02000026000000d50200001f000000f40200001c000000100300001c0000002c030000210000004d030000200000006d0300001c0000005b536561736f6e2034305d0a537461727420225361742c2030392046656220323032352030303a30303a303020474d54220a456e6420225468752c2033312044656320323039392030313a30303a303020474d54220a0a436f6d6d756e69747942756666537461727420223f3f3f2c2031362053657020323032332030303a30303a303020474d54220a436f6d6d756e69747942756666456e6420223f3f3f2c2033312044656320323039392030313a30303a303020474d54220a436f6d6d756e69747942756666536561736f6e4f6e6c79202231220a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a436f6d6d756e69747942756666446f75626c65476f626c696e73202231220a436f6d6d756e69747942756666446f75626c65426f756e747942616773202231220a436f6d6d756e69747942756666526f79616c4772616e64657572202231220a436f6d6d756e697479427566664c65676163794f664e696768746d61726573202231220a436f6d6d756e69747942756666547269756e657357696c6c202231220a436f6d6d756e6974794275666650616e64656d6f6e69756d202231220a436f6d6d756e697479427566664b616e6169506f77657273202231220a436f6d6d756e69747942756666547269616c734f6654656d7065737473202231220a436f6d6d756e69747942756666536861646f77436c6f6e6573202231220a436f6d6d756e69747942756666466f757274684b616e61697343756265536c6f74202231220a436f6d6d756e69747942756666457468657265616c4974656d73202231220a436f6d6d756e69747942756666536f756c536861726473202231220a436f6d6d756e69747942756666537761726d5269667473202231220a436f6d6d756e6974794275666653616e637469666965644974656d73202231220a436f6d6d756e69747942756666456173746572456767576f726c64202231220a436f6d6d756e69747942756666536561736f6e4f6e6c79202230220a66662e0f1f8400000000000f1f4000" Target="seasons_cave"/>
+            <Line Type="bytes" Address="0x443528" Value="e8{rel:seasons_cave:0}9090" Pattern="4c 8b 25 ?? ?? ?? ?? 48 89 fb 49 8b 04 24 48 89 45 d0 e8 ?? ?? ?? ?? 41 89 c6 48 8b 03 48 89 df ff 50 18" At="7"/>
             <Line Type="bytes" Address="0x442b9e" Value="909090909090" Pattern="48 8d 1d ?? ?? ?? ?? 83 7b 08 00 0f 84 60 02 00 00 48 8d 05" At="11"/>
             <Line Type="bytes" Address="0x442c0b" Value="bf01000000" Pattern="48 85 f6 74 0a bf 02 00 00 00 49 39 f0 7d 1b 4c 3b 40 f8 bf 01 00 00 00" At="5"/>
-            <Line Type="bytes" Address="0x6f97f0" Value="e9db00000090" Pattern="8b 05 ?? ?? ?? ?? 85 c0 0f 85 da 00 00 00 48 8d bd 08 ff ff ff e8" At="8"/>
-            <Line Type="bytes" Address="0x544020" Value="31c0c390" Pattern="55 48 89 e5 41 57 41 56 41 55 41 54 53 48 81 ec d8 00 00 00 4c 8b 3d 8d" At="0"/>
-            <Line Type="bytes" Address="0x5404f1" Value="31db" Pattern="e8 cf 63 f2 ff 89 c3 85 db 0f 84 a9 04 00 00 89 d8 83 c8 08" At="5"/>
+            <Line Type="bytes" Address="0x6f97e8" Value="b80100000090" Pattern="8b 05 ?? ?? ?? ?? 85 c0 0f 85 ?? ?? 00 00 48 8d bd 08 ff ff ff e8" At="0"/>
+            <Line Type="bytes" Address="0x544020" Value="31c0c390" Pattern="55 48 89 e5 41 57 41 56 41 55 41 54 53 48 81 ec d8 00 00 00 4c 8b 3d ?? ?? ?? ?? 49 89 fe 49 8b 07 48 89 45 d0 41 80 be ?? 01 00 00 00 74 09 4d 8d a6 ?? 01 00 00 eb 03" At="0"/>
+            <Line Type="bytes" Address="0x5404ec" Value="31c0909090" Pattern="bf 01 00 00 00 e8 ?? ?? ?? ?? 89 c3 85 db 0f 84 ?? ?? 00 00 89 d8 83 c8 08 | bf 01 00 00 00 e8 ?? ?? ?? ?? 41 89 c5 45 85 ed 0f 84 ?? ?? 00 00 44 89 e8 83 c8 08" At="5"/>
             <Line Type="bytes" Address="0x44343f" Value="9090" Pattern="4c 8d 35 ?? ?? ?? ?? 31 db 41 83 7e 08 00 74 4f e8" At="14"/>
-            <Line Type="bytes" Address="0x926fe6" Value="c7436000000000c7436400000000c7436800000000" Pattern="48 8d 0d 4e 80 fb 00 42 c6 04 38 00 4c 89 7b 40 48 89 13 c7 43 60 01 00 00 00 c7 43 64 01 00 00 00 c7 43 68 01 00 00 00" At="19"/>
-            <Line Type="bytes" Address="0x9272cf" Value="c7436000000000c7436400000000c7436800000000" Pattern="48 8d 0d d5 7e fb 00 42 c6 04 38 00 4c 89 7b 40 48 89 13 c7 43 60 01 00 00 00 c7 43 64 01 00 00 00 c7 43 68 01 00 00 00" At="19"/>
-            <Line Type="bytes" Address="0x177a815" Value="e94e040000" Target="ev2_hook"/>
-            <Line Type="bytes" Address="0x177ac68" Value="31d283fa087325488d05eaffffff803c10007414488d051d000000486334d04801c68b4cd004f3a4ffc2ebd6488d442460e97cfbffff669040000000250000006500000023000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000436f6d6d756e69747942756666446f75626c65526966744b657973746f6e6573202231220a436f6d6d756e69747942756666446f75626c65426c6f6f64536861726473202231220a" Target="ev2_stub"/>
-            <Line Type="bytes" Address="0x177b500" Value="51 e8{rel:season_cvar:0} 59 c3" Target="season_cave"/>
-            <Line Type="bytes" Address="0x6f85f8" Value="e8{rel:season_cave:0}90" Pattern="8b 05 ?? ?? ?? ?? 81 c9 00 00 41 00 41 89 4f 10 41 89 87 90 00 00 00" At="0"/>
+            <Line Type="bytes" Address="0x926fe6" Value="c7436000000000c7436400000000c7436800000000" Optional="true" Pattern="48 8d 0d ?? ?? ?? ?? 42 c6 04 38 00 4c 89 7b 40 48 89 13 c7 43 60 01 00 00 00 c7 43 64 01 00 00 00 c7 43 68 01 00 00 00 48 89 4b 70 48 83 7d 90 00 78 09 48 8b 7d 80 e8 ?? ?? ?? ?? 48 83 7d b8 00 78 09 48 8b 7d a8 e8 ?? ?? ?? ?? 48 8b 85 c8 fe ff ff 48 8b b8 a0 00 00 00" At="19"/>
+            <Line Type="bytes" Address="0x9272cf" Value="c7436000000000c7436400000000c7436800000000" Optional="true" Pattern="48 8d 0d ?? ?? ?? ?? 42 c6 04 38 00 4c 89 7b 40 48 89 13 c7 43 60 01 00 00 00 c7 43 64 01 00 00 00 c7 43 68 01 00 00 00 48 89 4b 70 48 83 7d 90 00 78 09 48 8b 7d 80 e8 ?? ?? ?? ?? 48 83 7d b8 00 78 09 48 8b 7d a8 e8 ?? ?? ?? ?? 48 8b 85 c8 fe ff ff 48 8b b8 b0 00 00 00" At="19"/>
+            <Line Type="bytes" Address="0x177ac68" Value="31d283fa087325488d05{rel:tbl2:0}803c10007414488d051d000000486334d04801c68b4cd004f3a4ffc2ebd6488d442460e9{rel:ev2_back:0}669040000000250000006500000023000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000436f6d6d756e69747942756666446f75626c65526966744b657973746f6e6573202231220a436f6d6d756e69747942756666446f75626c65426c6f6f64536861726473202231220a" Target="ev2_stub"/>
+            <Line Type="bytes" Address="0x177b500" Value="51 e8{rel:season_cvar:0} 59 c3" Target="season_number_cave"/>
+            <Line Type="bytes" Address="0x6f85f8" Value="e8{rel:season_number_cave:0}90" Pattern="8b 05 ?? ?? ?? ?? 81 c9 00 00 41 00 41 89 4f 10 41 89 87 90 00 00 00" At="0"/>
 </PatchList>
-        <Target Name="cave" Address="0x177a790" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="28"/>
-        <Target Name="season_no" Address="0x177a930" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="444"/>
-        <Target Name="theme" Address="0x177ac40" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1228"/>
-        <Target Name="altar" Address="0x177a9ff" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="651"/>
-        <Target Name="visions" Address="0x177aa1c" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="680"/>
-        <Target Name="flagvar" Address="0x1b02f80" Pattern="00 26 fb 00 00 00 00 00 00 00 00 00 00 00 00 00 ff ff ff ff ff ff ff ff 00 00 00 00 00 00 00 00" At="2817152"/>
+        <Cave Name="seasons_cave" Size="1432"/>
+        <Target Name="season_no" Cave="seasons_cave" At="416"/>
+        <Target Name="theme" Cave="seasons_cave" At="1200"/>
+        <Target Name="altar" Cave="seasons_cave" At="623"/>
+        <Target Name="visions" Cave="seasons_cave" At="652"/>
+        <Cave Name="seasons_flag" Size="1" Region="data"/>
         <Target Name="thunk_c" Address="0x451ff0" Pattern="48 8b 03 bf 20 00 00 00 4c 8b 70 70 e8 ?? ?? ?? ?? 48 8d 0d ?? ?? ?? ??" At="20" Ref="1" Tail="0"/>
         <Target Name="thunk_s" Address="0x4520b0" Pattern="c6 01 01 48 8b 03 4c 8b 70 70 e8 ?? ?? ?? ?? 48 8d 0d ?? ?? ?? ??" At="18" Ref="1" Tail="0"/>
-            <Target Name="ev2_hook" Address="0x177a815" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="161"/>
-        <Target Name="ev2_stub" Address="0x177ac68" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1268"/>
-        <Target Name="season_cave" Address="0x177b500" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="3468"/>
+        <Target Name="ev2_back" Cave="seasons_cave" At="138"/>
+        <Target Name="tbl" Cave="seasons_cave" At="1216"/>
+        <Target Name="tbl2" Cave="seasons_cave" At="1232"/>
+        <Target Name="ev2_stub" Cave="seasons_cave" At="1240"/>
+        <Cave Name="season_number_cave" Size="8"/>
         <Target Name="season_cvar" Address="0xc250f0" Pattern="89 35 ?? ?? ?? ?? c6 05 ?? ?? ?? ?? 00 e8 ?? ?? ?? ?? 89 05" At="14" Ref="1" Tail="0"/>
     </Metadata>
-    <Metadata Title="Diablo III" Name="Offline Seasons - Season 14" Note="Offline seasonal heroes for Season 14, with the Season Journey and the season&#x27;s community event (DoubleGoblins). Tick one season only; it needs no other patch." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false" Base="Offline Seasons">
+    <Metadata Title="Diablo III" Name="Offline Seasons - Season" Params="season season_theme altar visions" Note="Offline seasonal heroes for one season (a Preset: 'Offline Seasons - Season N'): the base plus the season number (season, two ASCII digits), its community events (season_theme: one byte per event of the cave's table), the Altar of Rites (altar) and Visions of Enmity (visions)." Base="Offline Seasons" Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
-            <Line Type="bytes" Address="0x177a930" Value="3134" Target="season_no"/>
-            <Line Type="bytes" Address="0x177ac40" Value="01000000000000000000000000000000" Target="theme"/>
+            <Line Type="bytes" Address="0x177a930" Value="{param:season:a2}" Target="season_no"/>
+            <Line Type="bytes" Address="0x177ac40" Value="{param:season_theme:16}" Target="theme"/>
+            <Line Type="bytes" Address="0x177a9ff" Value="436f6d6d756e697479427566664461726b416c6368656d79202231220a" If="altar" Target="altar"/>
+            <Line Type="bytes" Address="0x177aa1c" Value="436f6d6d756e697479427566664e657374696e67506f7274616c73202231220a" If="visions" Target="visions"/>
         </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Offline Seasons - Season 15" Note="Offline seasonal heroes for Season 15, with the Season Journey and the season&#x27;s community event (DoubleBountyBags). Tick one season only; it needs no other patch." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false" Base="Offline Seasons">
-        <PatchList>
-            <Line Type="bytes" Address="0x177a930" Value="3135" Target="season_no"/>
-            <Line Type="bytes" Address="0x177ac40" Value="00010000000000000000000000000000" Target="theme"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Offline Seasons - Season 16" Note="Offline seasonal heroes for Season 16, with the Season Journey and the season&#x27;s community event (RoyalGrandeur). Tick one season only; it needs no other patch." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false" Base="Offline Seasons">
-        <PatchList>
-            <Line Type="bytes" Address="0x177a930" Value="3136" Target="season_no"/>
-            <Line Type="bytes" Address="0x177ac40" Value="00000100000000000000000000000000" Target="theme"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Offline Seasons - Season 17" Note="Offline seasonal heroes for Season 17, with the Season Journey and the season&#x27;s community event (LegacyOfNightmares). Tick one season only; it needs no other patch." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false" Base="Offline Seasons">
-        <PatchList>
-            <Line Type="bytes" Address="0x177a930" Value="3137" Target="season_no"/>
-            <Line Type="bytes" Address="0x177ac40" Value="00000001000000000000000000000000" Target="theme"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Offline Seasons - Season 18" Note="Offline seasonal heroes for Season 18, with the Season Journey and the season&#x27;s community event (TriunesWill). Tick one season only; it needs no other patch." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false" Base="Offline Seasons">
-        <PatchList>
-            <Line Type="bytes" Address="0x177a930" Value="3138" Target="season_no"/>
-            <Line Type="bytes" Address="0x177ac40" Value="00000000010000000000000000000000" Target="theme"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Offline Seasons - Season 19" Note="Offline seasonal heroes for Season 19, with the Season Journey and the season&#x27;s community event (Pandemonium). Tick one season only; it needs no other patch." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false" Base="Offline Seasons">
-        <PatchList>
-            <Line Type="bytes" Address="0x177a930" Value="3139" Target="season_no"/>
-            <Line Type="bytes" Address="0x177ac40" Value="00000000000100000000000000000000" Target="theme"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Offline Seasons - Season 20" Note="Offline seasonal heroes for Season 20, with the Season Journey and the season&#x27;s community event (KanaiPowers). Tick one season only; it needs no other patch." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false" Base="Offline Seasons">
-        <PatchList>
-            <Line Type="bytes" Address="0x177a930" Value="3230" Target="season_no"/>
-            <Line Type="bytes" Address="0x177ac40" Value="00000000000001000000000000000000" Target="theme"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Offline Seasons - Season 21" Note="Offline seasonal heroes for Season 21, with the Season Journey and the season&#x27;s community event (TrialsOfTempests). Tick one season only; it needs no other patch." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false" Base="Offline Seasons">
-        <PatchList>
-            <Line Type="bytes" Address="0x177a930" Value="3231" Target="season_no"/>
-            <Line Type="bytes" Address="0x177ac40" Value="00000000000000010000000000000000" Target="theme"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Offline Seasons - Season 22" Note="Offline seasonal heroes for Season 22, with the Season Journey and the season&#x27;s community event (ShadowClones, FourthKanaisCubeSlot). Tick one season only; it needs no other patch." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false" Base="Offline Seasons">
-        <PatchList>
-            <Line Type="bytes" Address="0x177a930" Value="3232" Target="season_no"/>
-            <Line Type="bytes" Address="0x177ac40" Value="00000000000000000101000000000000" Target="theme"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Offline Seasons - Season 23" Note="Offline seasonal heroes for Season 23, with the Season Journey, the Altar of Rites, Visions of Enmity. Tick one season only; it needs no other patch." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false" Base="Offline Seasons">
-        <PatchList>
-            <Line Type="bytes" Address="0x177a930" Value="3233" Target="season_no"/>
-            <Line Type="bytes" Address="0x177ac40" Value="00000000000000000000000000000000" Target="theme"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Offline Seasons - Season 24" Note="Offline seasonal heroes for Season 24, with the Season Journey and the season&#x27;s community event (EtherealItems). Tick one season only; it needs no other patch." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false" Base="Offline Seasons">
-        <PatchList>
-            <Line Type="bytes" Address="0x177a930" Value="3234" Target="season_no"/>
-            <Line Type="bytes" Address="0x177ac40" Value="00000000000000000000010000000000" Target="theme"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Offline Seasons - Season 25" Note="Offline seasonal heroes for Season 25, with the Season Journey and the season&#x27;s community event (SoulShards). Tick one season only; it needs no other patch." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false" Base="Offline Seasons">
-        <PatchList>
-            <Line Type="bytes" Address="0x177a930" Value="3235" Target="season_no"/>
-            <Line Type="bytes" Address="0x177ac40" Value="00000000000000000000000100000000" Target="theme"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Offline Seasons - Season 26" Note="Offline seasonal heroes for Season 26, with the Season Journey and the season&#x27;s community event (SwarmRifts). Tick one season only; it needs no other patch." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false" Base="Offline Seasons">
-        <PatchList>
-            <Line Type="bytes" Address="0x177a930" Value="3236" Target="season_no"/>
-            <Line Type="bytes" Address="0x177ac40" Value="00000000000000000000000001000000" Target="theme"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Offline Seasons - Season 27" Note="Offline seasonal heroes for Season 27, with the Season Journey and the season&#x27;s community event (SanctifiedItems). Tick one season only; it needs no other patch." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false" Base="Offline Seasons">
-        <PatchList>
-            <Line Type="bytes" Address="0x177a930" Value="3237" Target="season_no"/>
-            <Line Type="bytes" Address="0x177ac40" Value="00000000000000000000000000010000" Target="theme"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Offline Seasons - Season 28" Note="Offline seasonal heroes for Season 28, with the Season Journey and the Altar of Rites. Tick one season only; it needs no other patch." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false" Base="Offline Seasons">
-        <PatchList>
-            <Line Type="bytes" Address="0x177a930" Value="3238" Target="season_no"/>
-            <Line Type="bytes" Address="0x177ac40" Value="00000000000000000000000000000000" Target="theme"/>
-            <Line Type="bytes" Address="0x177a9ff" Value="436f6d6d756e697479427566664461726b416c6368656d79202231220a" Target="altar"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Offline Seasons - Season 29" Note="Offline seasonal heroes for Season 29, with the Season Journey, the Altar of Rites and Visions of Enmity. Tick one season only; it needs no other patch." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false" Base="Offline Seasons">
-        <PatchList>
-            <Line Type="bytes" Address="0x177a930" Value="3239" Target="season_no"/>
-            <Line Type="bytes" Address="0x177ac40" Value="00000000000000000000000000000000" Target="theme"/>
-            <Line Type="bytes" Address="0x177a9ff" Value="436f6d6d756e697479427566664461726b416c6368656d79202231220a" Target="altar"/>
-            <Line Type="bytes" Address="0x177aa1c" Value="436f6d6d756e697479427566664e657374696e67506f7274616c73202231220a" Target="visions"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Offline Seasons - Season 30" Note="Offline seasonal heroes for Season 30, with the Season Journey, the Altar of Rites, Visions of Enmity and the season&#x27;s community event (SoulShards). Tick one season only; it needs no other patch." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false" Base="Offline Seasons">
-        <PatchList>
-            <Line Type="bytes" Address="0x177a930" Value="3330" Target="season_no"/>
-            <Line Type="bytes" Address="0x177ac40" Value="00000000000000000000000100000000" Target="theme"/>
-            <Line Type="bytes" Address="0x177a9ff" Value="436f6d6d756e697479427566664461726b416c6368656d79202231220a" Target="altar"/>
-            <Line Type="bytes" Address="0x177aa1c" Value="436f6d6d756e697479427566664e657374696e67506f7274616c73202231220a" Target="visions"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Offline Seasons - Season 31" Note="Offline seasonal heroes for Season 31, with the Season Journey, the Altar of Rites, Visions of Enmity and the season&#x27;s community event (KanaiPowers). Tick one season only; it needs no other patch." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false" Base="Offline Seasons">
-        <PatchList>
-            <Line Type="bytes" Address="0x177a930" Value="3331" Target="season_no"/>
-            <Line Type="bytes" Address="0x177ac40" Value="00000000000001000000000000000000" Target="theme"/>
-            <Line Type="bytes" Address="0x177a9ff" Value="436f6d6d756e697479427566664461726b416c6368656d79202231220a" Target="altar"/>
-            <Line Type="bytes" Address="0x177aa1c" Value="436f6d6d756e697479427566664e657374696e67506f7274616c73202231220a" Target="visions"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Offline Seasons - Season 32" Note="Offline seasonal heroes for Season 32, with the Season Journey, the Altar of Rites, Visions of Enmity and the season&#x27;s community event (EtherealItems). Tick one season only; it needs no other patch." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false" Base="Offline Seasons">
-        <PatchList>
-            <Line Type="bytes" Address="0x177a930" Value="3332" Target="season_no"/>
-            <Line Type="bytes" Address="0x177ac40" Value="00000000000000000000010000000000" Target="theme"/>
-            <Line Type="bytes" Address="0x177a9ff" Value="436f6d6d756e697479427566664461726b416c6368656d79202231220a" Target="altar"/>
-            <Line Type="bytes" Address="0x177aa1c" Value="436f6d6d756e697479427566664e657374696e67506f7274616c73202231220a" Target="visions"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Offline Seasons - Season 33" Note="Offline seasonal heroes for Season 33, with the Season Journey, the Altar of Rites, Visions of Enmity and the season&#x27;s community event (ShadowClones, FourthKanaisCubeSlot). Tick one season only; it needs no other patch." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false" Base="Offline Seasons">
-        <PatchList>
-            <Line Type="bytes" Address="0x177a930" Value="3333" Target="season_no"/>
-            <Line Type="bytes" Address="0x177ac40" Value="00000000000000000101000000000000" Target="theme"/>
-            <Line Type="bytes" Address="0x177a9ff" Value="436f6d6d756e697479427566664461726b416c6368656d79202231220a" Target="altar"/>
-            <Line Type="bytes" Address="0x177aa1c" Value="436f6d6d756e697479427566664e657374696e67506f7274616c73202231220a" Target="visions"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Offline Seasons - Season 34" Note="Offline seasonal heroes for Season 34, with the Season Journey, the Altar of Rites, Visions of Enmity and the season&#x27;s community event (SanctifiedItems). Tick one season only; it needs no other patch." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false" Base="Offline Seasons">
-        <PatchList>
-            <Line Type="bytes" Address="0x177a930" Value="3334" Target="season_no"/>
-            <Line Type="bytes" Address="0x177ac40" Value="00000000000000000000000000010000" Target="theme"/>
-            <Line Type="bytes" Address="0x177a9ff" Value="436f6d6d756e697479427566664461726b416c6368656d79202231220a" Target="altar"/>
-            <Line Type="bytes" Address="0x177aa1c" Value="436f6d6d756e697479427566664e657374696e67506f7274616c73202231220a" Target="visions"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Offline Seasons - Season 35" Note="Offline seasonal heroes for Season 35, with the Season Journey, the Altar of Rites, Visions of Enmity and the season&#x27;s community event (Pandemonium). Tick one season only; it needs no other patch." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false" Base="Offline Seasons">
-        <PatchList>
-            <Line Type="bytes" Address="0x177a930" Value="3335" Target="season_no"/>
-            <Line Type="bytes" Address="0x177ac40" Value="00000000000100000000000000000000" Target="theme"/>
-            <Line Type="bytes" Address="0x177a9ff" Value="436f6d6d756e697479427566664461726b416c6368656d79202231220a" Target="altar"/>
-            <Line Type="bytes" Address="0x177aa1c" Value="436f6d6d756e697479427566664e657374696e67506f7274616c73202231220a" Target="visions"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Offline Seasons - Season 36" Note="Offline seasonal heroes for Season 36, with the Season Journey, the Altar of Rites, Visions of Enmity and the season&#x27;s community event (SoulShards). Tick one season only; it needs no other patch." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false" Base="Offline Seasons">
-        <PatchList>
-            <Line Type="bytes" Address="0x177a930" Value="3336" Target="season_no"/>
-            <Line Type="bytes" Address="0x177ac40" Value="00000000000000000000000100000000" Target="theme"/>
-            <Line Type="bytes" Address="0x177a9ff" Value="436f6d6d756e697479427566664461726b416c6368656d79202231220a" Target="altar"/>
-            <Line Type="bytes" Address="0x177aa1c" Value="436f6d6d756e697479427566664e657374696e67506f7274616c73202231220a" Target="visions"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Offline Seasons - Season 37" Note="Offline seasonal heroes for Season 37, with the Season Journey, the Altar of Rites, Visions of Enmity and the season&#x27;s community event (KanaiPowers). Tick one season only; it needs no other patch." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false" Base="Offline Seasons">
-        <PatchList>
-            <Line Type="bytes" Address="0x177a930" Value="3337" Target="season_no"/>
-            <Line Type="bytes" Address="0x177ac40" Value="00000000000001000000000000000000" Target="theme"/>
-            <Line Type="bytes" Address="0x177a9ff" Value="436f6d6d756e697479427566664461726b416c6368656d79202231220a" Target="altar"/>
-            <Line Type="bytes" Address="0x177aa1c" Value="436f6d6d756e697479427566664e657374696e67506f7274616c73202231220a" Target="visions"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Offline Seasons - Season 38" Note="Offline seasonal heroes for Season 38, with the Season Journey, the Altar of Rites, Visions of Enmity. Tick one season only; it needs no other patch." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false" Base="Offline Seasons">
-        <PatchList>
-            <Line Type="bytes" Address="0x177a930" Value="3338" Target="season_no"/>
-            <Line Type="bytes" Address="0x177ac40" Value="00000000000000000000000000000000" Target="theme"/>
-            <Line Type="bytes" Address="0x177a9ff" Value="436f6d6d756e697479427566664461726b416c6368656d79202231220a" Target="altar"/>
-            <Line Type="bytes" Address="0x177aa1c" Value="436f6d6d756e697479427566664e657374696e67506f7274616c73202231220a" Target="visions"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Offline Seasons - Season 39" Note="Offline seasonal heroes for Season 39, with the Season Journey, the Altar of Rites, Visions of Enmity. Tick one season only; it needs no other patch." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false" Base="Offline Seasons">
-        <PatchList>
-            <Line Type="bytes" Address="0x177a930" Value="3339" Target="season_no"/>
-            <Line Type="bytes" Address="0x177ac40" Value="00000000000000000000000000000000" Target="theme"/>
-            <Line Type="bytes" Address="0x177a9ff" Value="436f6d6d756e697479427566664461726b416c6368656d79202231220a" Target="altar"/>
-            <Line Type="bytes" Address="0x177aa1c" Value="436f6d6d756e697479427566664e657374696e67506f7274616c73202231220a" Target="visions"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="Offline Seasons - Season 40" Note="Offline seasonal heroes for Season 40, with the Season Journey, the Altar of Rites, Visions of Enmity. Tick one season only; it needs no other patch." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false" Base="Offline Seasons">
-        <PatchList>
-            <Line Type="bytes" Address="0x177a930" Value="3430" Target="season_no"/>
-            <Line Type="bytes" Address="0x177ac40" Value="00000000000000000000000000000000" Target="theme"/>
-            <Line Type="bytes" Address="0x177a9ff" Value="436f6d6d756e697479427566664461726b416c6368656d79202231220a" Target="altar"/>
-            <Line Type="bytes" Address="0x177aa1c" Value="436f6d6d756e697479427566664e657374696e67506f7274616c73202231220a" Target="visions"/>
-        </PatchList>
+        <Presets>
+            <Preset Name="Offline Seasons - Season 14" Note="Offline seasonal heroes for Season 14, with the Season Journey and the season's community event (DoubleGoblins). Tick one season only; it needs no other patch." season="14" season_theme="01000000000000000000000000000000" altar="0" visions="0"/>
+            <Preset Name="Offline Seasons - Season 15" Note="Offline seasonal heroes for Season 15, with the Season Journey and the season's community event (DoubleBountyBags). Tick one season only; it needs no other patch." season="15" season_theme="00010000000000000000000000000000" altar="0" visions="0"/>
+            <Preset Name="Offline Seasons - Season 16" Note="Offline seasonal heroes for Season 16, with the Season Journey and the season's community event (RoyalGrandeur). Tick one season only; it needs no other patch." season="16" season_theme="00000100000000000000000000000000" altar="0" visions="0"/>
+            <Preset Name="Offline Seasons - Season 17" Note="Offline seasonal heroes for Season 17, with the Season Journey and the season's community event (LegacyOfNightmares). Tick one season only; it needs no other patch." season="17" season_theme="00000001000000000000000000000000" altar="0" visions="0"/>
+            <Preset Name="Offline Seasons - Season 18" Note="Offline seasonal heroes for Season 18, with the Season Journey and the season's community event (TriunesWill). Tick one season only; it needs no other patch." season="18" season_theme="00000000010000000000000000000000" altar="0" visions="0"/>
+            <Preset Name="Offline Seasons - Season 19" Note="Offline seasonal heroes for Season 19, with the Season Journey and the season's community event (Pandemonium). Tick one season only; it needs no other patch." season="19" season_theme="00000000000100000000000000000000" altar="0" visions="0"/>
+            <Preset Name="Offline Seasons - Season 20" Note="Offline seasonal heroes for Season 20, with the Season Journey and the season's community event (KanaiPowers). Tick one season only; it needs no other patch." season="20" season_theme="00000000000001000000000000000000" altar="0" visions="0"/>
+            <Preset Name="Offline Seasons - Season 21" Note="Offline seasonal heroes for Season 21, with the Season Journey and the season's community event (TrialsOfTempests). Tick one season only; it needs no other patch." season="21" season_theme="00000000000000010000000000000000" altar="0" visions="0"/>
+            <Preset Name="Offline Seasons - Season 22" Note="Offline seasonal heroes for Season 22, with the Season Journey and the season's community event (ShadowClones, FourthKanaisCubeSlot). Tick one season only; it needs no other patch." season="22" season_theme="00000000000000000101000000000000" altar="0" visions="0"/>
+            <Preset Name="Offline Seasons - Season 23" Note="Offline seasonal heroes for Season 23, with the Season Journey, the Altar of Rites, Visions of Enmity. Tick one season only; it needs no other patch." season="23" season_theme="00000000000000000000000000000000" altar="0" visions="0"/>
+            <Preset Name="Offline Seasons - Season 24" Note="Offline seasonal heroes for Season 24, with the Season Journey and the season's community event (EtherealItems). Tick one season only; it needs no other patch." season="24" season_theme="00000000000000000000010000000000" altar="0" visions="0"/>
+            <Preset Name="Offline Seasons - Season 25" Note="Offline seasonal heroes for Season 25, with the Season Journey and the season's community event (SoulShards). Tick one season only; it needs no other patch." season="25" season_theme="00000000000000000000000100000000" altar="0" visions="0"/>
+            <Preset Name="Offline Seasons - Season 26" Note="Offline seasonal heroes for Season 26, with the Season Journey and the season's community event (SwarmRifts). Tick one season only; it needs no other patch." season="26" season_theme="00000000000000000000000001000000" altar="0" visions="0"/>
+            <Preset Name="Offline Seasons - Season 27" Note="Offline seasonal heroes for Season 27, with the Season Journey and the season's community event (SanctifiedItems). Tick one season only; it needs no other patch." season="27" season_theme="00000000000000000000000000010000" altar="0" visions="0"/>
+            <Preset Name="Offline Seasons - Season 28" Note="Offline seasonal heroes for Season 28, with the Season Journey and the Altar of Rites. Tick one season only; it needs no other patch." season="28" season_theme="00000000000000000000000000000000" altar="1" visions="0"/>
+            <Preset Name="Offline Seasons - Season 29" Note="Offline seasonal heroes for Season 29, with the Season Journey, the Altar of Rites and Visions of Enmity. Tick one season only; it needs no other patch." season="29" season_theme="00000000000000000000000000000000" altar="1" visions="1"/>
+            <Preset Name="Offline Seasons - Season 30" Note="Offline seasonal heroes for Season 30, with the Season Journey, the Altar of Rites, Visions of Enmity and the season's community event (SoulShards). Tick one season only; it needs no other patch." season="30" season_theme="00000000000000000000000100000000" altar="1" visions="1"/>
+            <Preset Name="Offline Seasons - Season 31" Note="Offline seasonal heroes for Season 31, with the Season Journey, the Altar of Rites, Visions of Enmity and the season's community event (KanaiPowers). Tick one season only; it needs no other patch." season="31" season_theme="00000000000001000000000000000000" altar="1" visions="1"/>
+            <Preset Name="Offline Seasons - Season 32" Note="Offline seasonal heroes for Season 32, with the Season Journey, the Altar of Rites, Visions of Enmity and the season's community event (EtherealItems). Tick one season only; it needs no other patch." season="32" season_theme="00000000000000000000010000000000" altar="1" visions="1"/>
+            <Preset Name="Offline Seasons - Season 33" Note="Offline seasonal heroes for Season 33, with the Season Journey, the Altar of Rites, Visions of Enmity and the season's community event (ShadowClones, FourthKanaisCubeSlot). Tick one season only; it needs no other patch." season="33" season_theme="00000000000000000101000000000000" altar="1" visions="1"/>
+            <Preset Name="Offline Seasons - Season 34" Note="Offline seasonal heroes for Season 34, with the Season Journey, the Altar of Rites, Visions of Enmity and the season's community event (SanctifiedItems). Tick one season only; it needs no other patch." season="34" season_theme="00000000000000000000000000010000" altar="1" visions="1"/>
+            <Preset Name="Offline Seasons - Season 35" Note="Offline seasonal heroes for Season 35, with the Season Journey, the Altar of Rites, Visions of Enmity and the season's community event (Pandemonium). Tick one season only; it needs no other patch." season="35" season_theme="00000000000100000000000000000000" altar="1" visions="1"/>
+            <Preset Name="Offline Seasons - Season 36" Note="Offline seasonal heroes for Season 36, with the Season Journey, the Altar of Rites, Visions of Enmity and the season's community event (SoulShards). Tick one season only; it needs no other patch." season="36" season_theme="00000000000000000000000100000000" altar="1" visions="1"/>
+            <Preset Name="Offline Seasons - Season 37" Note="Offline seasonal heroes for Season 37, with the Season Journey, the Altar of Rites, Visions of Enmity and the season's community event (KanaiPowers). Tick one season only; it needs no other patch." season="37" season_theme="00000000000001000000000000000000" altar="1" visions="1"/>
+            <Preset Name="Offline Seasons - Season 38" Note="Offline seasonal heroes for Season 38, with the Season Journey, the Altar of Rites, Visions of Enmity. Tick one season only; it needs no other patch." season="38" season_theme="00000000000000000000000000000000" altar="1" visions="1"/>
+            <Preset Name="Offline Seasons - Season 39" Note="Offline seasonal heroes for Season 39, with the Season Journey, the Altar of Rites, Visions of Enmity. Tick one season only; it needs no other patch." season="39" season_theme="00000000000000000000000000000000" altar="1" visions="1"/>
+            <Preset Name="Offline Seasons - Season 40" Note="Offline seasonal heroes for Season 40, with the Season Journey, the Altar of Rites, Visions of Enmity. Tick one season only; it needs no other patch." season="40" season_theme="00000000000000000000000000000000" altar="1" visions="1"/>
+        </Presets>
     </Metadata>
     <Metadata Title="Diablo III" Name="Event: Double Treasure Goblins" Note="Offline community event: adds CommunityBuffDoubleGoblins &quot;1&quot; to the local Config.txt. Needs an offline season." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x177ac50" Value="01" Target="tbl"/>
         </PatchList>
-        <Target Name="tbl" Address="0x177ac50" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1244"/>
+        <Cave Name="seasons_cave" Size="1432"/>
+        <Target Name="tbl" Cave="seasons_cave" At="1216"/>
+        <Target Name="seasons" Address="0x443528" Pattern="4c 8b 25 ?? ?? ?? ?? 48 89 fb 49 8b 04 24 48 89 45 d0 e8 ?? ?? ?? ?? 41 89 c6 48 8b 03 48 89 df ff 50 18" At="7"/>
     </Metadata>
     <Metadata Title="Diablo III" Name="Event: Double Bounty Bags" Note="Offline community event: adds CommunityBuffDoubleBountyBags &quot;1&quot; to the local Config.txt. Needs an offline season." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x177ac51" Value="01" Target="tbl"/>
         </PatchList>
-        <Target Name="tbl" Address="0x177ac51" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1245"/>
+        <Cave Name="seasons_cave" Size="1432"/>
+        <Target Name="tbl" Cave="seasons_cave" At="1217"/>
+        <Target Name="seasons" Address="0x443528" Pattern="4c 8b 25 ?? ?? ?? ?? 48 89 fb 49 8b 04 24 48 89 45 d0 e8 ?? ?? ?? ?? 41 89 c6 48 8b 03 48 89 df ff 50 18" At="7"/>
     </Metadata>
     <Metadata Title="Diablo III" Name="Event: Royal Grandeur" Note="Offline community event: adds CommunityBuffRoyalGrandeur &quot;1&quot; to the local Config.txt. Needs an offline season." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x177ac52" Value="01" Target="tbl"/>
         </PatchList>
-        <Target Name="tbl" Address="0x177ac52" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1246"/>
+        <Cave Name="seasons_cave" Size="1432"/>
+        <Target Name="tbl" Cave="seasons_cave" At="1218"/>
+        <Target Name="seasons" Address="0x443528" Pattern="4c 8b 25 ?? ?? ?? ?? 48 89 fb 49 8b 04 24 48 89 45 d0 e8 ?? ?? ?? ?? 41 89 c6 48 8b 03 48 89 df ff 50 18" At="7"/>
     </Metadata>
     <Metadata Title="Diablo III" Name="Event: Legacy of Nightmares" Note="Offline community event: adds CommunityBuffLegacyOfNightmares &quot;1&quot; to the local Config.txt. Needs an offline season." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x177ac53" Value="01" Target="tbl"/>
         </PatchList>
-        <Target Name="tbl" Address="0x177ac53" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1247"/>
+        <Cave Name="seasons_cave" Size="1432"/>
+        <Target Name="tbl" Cave="seasons_cave" At="1219"/>
+        <Target Name="seasons" Address="0x443528" Pattern="4c 8b 25 ?? ?? ?? ?? 48 89 fb 49 8b 04 24 48 89 45 d0 e8 ?? ?? ?? ?? 41 89 c6 48 8b 03 48 89 df ff 50 18" At="7"/>
     </Metadata>
     <Metadata Title="Diablo III" Name="Event: Triune&#x27;s Will" Note="Offline community event: adds CommunityBuffTriunesWill &quot;1&quot; to the local Config.txt. Needs an offline season." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x177ac54" Value="01" Target="tbl"/>
         </PatchList>
-        <Target Name="tbl" Address="0x177ac54" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1248"/>
+        <Cave Name="seasons_cave" Size="1432"/>
+        <Target Name="tbl" Cave="seasons_cave" At="1220"/>
+        <Target Name="seasons" Address="0x443528" Pattern="4c 8b 25 ?? ?? ?? ?? 48 89 fb 49 8b 04 24 48 89 45 d0 e8 ?? ?? ?? ?? 41 89 c6 48 8b 03 48 89 df ff 50 18" At="7"/>
     </Metadata>
     <Metadata Title="Diablo III" Name="Event: Pandemonium" Note="Offline community event: adds CommunityBuffPandemonium &quot;1&quot; to the local Config.txt. Needs an offline season." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x177ac55" Value="01" Target="tbl"/>
         </PatchList>
-        <Target Name="tbl" Address="0x177ac55" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1249"/>
+        <Cave Name="seasons_cave" Size="1432"/>
+        <Target Name="tbl" Cave="seasons_cave" At="1221"/>
+        <Target Name="seasons" Address="0x443528" Pattern="4c 8b 25 ?? ?? ?? ?? 48 89 fb 49 8b 04 24 48 89 45 d0 e8 ?? ?? ?? ?? 41 89 c6 48 8b 03 48 89 df ff 50 18" At="7"/>
     </Metadata>
     <Metadata Title="Diablo III" Name="Event: Kanai Powers" Note="Offline community event: adds CommunityBuffKanaiPowers &quot;1&quot; to the local Config.txt. Needs an offline season." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x177ac56" Value="01" Target="tbl"/>
         </PatchList>
-        <Target Name="tbl" Address="0x177ac56" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1250"/>
+        <Cave Name="seasons_cave" Size="1432"/>
+        <Target Name="tbl" Cave="seasons_cave" At="1222"/>
+        <Target Name="seasons" Address="0x443528" Pattern="4c 8b 25 ?? ?? ?? ?? 48 89 fb 49 8b 04 24 48 89 45 d0 e8 ?? ?? ?? ?? 41 89 c6 48 8b 03 48 89 df ff 50 18" At="7"/>
     </Metadata>
     <Metadata Title="Diablo III" Name="Event: Trials of Tempests" Note="Offline community event: adds CommunityBuffTrialsOfTempests &quot;1&quot; to the local Config.txt. Needs an offline season." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x177ac57" Value="01" Target="tbl"/>
         </PatchList>
-        <Target Name="tbl" Address="0x177ac57" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1251"/>
+        <Cave Name="seasons_cave" Size="1432"/>
+        <Target Name="tbl" Cave="seasons_cave" At="1223"/>
+        <Target Name="seasons" Address="0x443528" Pattern="4c 8b 25 ?? ?? ?? ?? 48 89 fb 49 8b 04 24 48 89 45 d0 e8 ?? ?? ?? ?? 41 89 c6 48 8b 03 48 89 df ff 50 18" At="7"/>
     </Metadata>
     <Metadata Title="Diablo III" Name="Event: Shadow Clones" Note="Offline community event: adds CommunityBuffShadowClones &quot;1&quot; to the local Config.txt. Needs an offline season." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x177ac58" Value="01" Target="tbl"/>
         </PatchList>
-        <Target Name="tbl" Address="0x177ac58" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1252"/>
+        <Cave Name="seasons_cave" Size="1432"/>
+        <Target Name="tbl" Cave="seasons_cave" At="1224"/>
+        <Target Name="seasons" Address="0x443528" Pattern="4c 8b 25 ?? ?? ?? ?? 48 89 fb 49 8b 04 24 48 89 45 d0 e8 ?? ?? ?? ?? 41 89 c6 48 8b 03 48 89 df ff 50 18" At="7"/>
     </Metadata>
     <Metadata Title="Diablo III" Name="Event: Fourth Kanai&#x27;s Cube Slot" Note="Offline community event: adds CommunityBuffFourthKanaisCubeSlot &quot;1&quot; to the local Config.txt. Needs an offline season." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x177ac59" Value="01" Target="tbl"/>
         </PatchList>
-        <Target Name="tbl" Address="0x177ac59" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1253"/>
+        <Cave Name="seasons_cave" Size="1432"/>
+        <Target Name="tbl" Cave="seasons_cave" At="1225"/>
+        <Target Name="seasons" Address="0x443528" Pattern="4c 8b 25 ?? ?? ?? ?? 48 89 fb 49 8b 04 24 48 89 45 d0 e8 ?? ?? ?? ?? 41 89 c6 48 8b 03 48 89 df ff 50 18" At="7"/>
     </Metadata>
     <Metadata Title="Diablo III" Name="Event: Ethereal Items" Note="Offline community event: adds CommunityBuffEtherealItems &quot;1&quot; to the local Config.txt. Needs an offline season." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x177ac5a" Value="01" Target="tbl"/>
         </PatchList>
-        <Target Name="tbl" Address="0x177ac5a" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1254"/>
+        <Cave Name="seasons_cave" Size="1432"/>
+        <Target Name="tbl" Cave="seasons_cave" At="1226"/>
+        <Target Name="seasons" Address="0x443528" Pattern="4c 8b 25 ?? ?? ?? ?? 48 89 fb 49 8b 04 24 48 89 45 d0 e8 ?? ?? ?? ?? 41 89 c6 48 8b 03 48 89 df ff 50 18" At="7"/>
     </Metadata>
     <Metadata Title="Diablo III" Name="Event: Soul Shards" Note="Offline community event: adds CommunityBuffSoulShards &quot;1&quot; to the local Config.txt. Needs an offline season." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x177ac5b" Value="01" Target="tbl"/>
         </PatchList>
-        <Target Name="tbl" Address="0x177ac5b" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1255"/>
+        <Cave Name="seasons_cave" Size="1432"/>
+        <Target Name="tbl" Cave="seasons_cave" At="1227"/>
+        <Target Name="seasons" Address="0x443528" Pattern="4c 8b 25 ?? ?? ?? ?? 48 89 fb 49 8b 04 24 48 89 45 d0 e8 ?? ?? ?? ?? 41 89 c6 48 8b 03 48 89 df ff 50 18" At="7"/>
     </Metadata>
     <Metadata Title="Diablo III" Name="Event: Swarm Rifts" Note="Offline community event: adds CommunityBuffSwarmRifts &quot;1&quot; to the local Config.txt. Needs an offline season." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x177ac5c" Value="01" Target="tbl"/>
         </PatchList>
-        <Target Name="tbl" Address="0x177ac5c" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1256"/>
+        <Cave Name="seasons_cave" Size="1432"/>
+        <Target Name="tbl" Cave="seasons_cave" At="1228"/>
+        <Target Name="seasons" Address="0x443528" Pattern="4c 8b 25 ?? ?? ?? ?? 48 89 fb 49 8b 04 24 48 89 45 d0 e8 ?? ?? ?? ?? 41 89 c6 48 8b 03 48 89 df ff 50 18" At="7"/>
     </Metadata>
     <Metadata Title="Diablo III" Name="Event: Sanctified Items" Note="Offline community event: adds CommunityBuffSanctifiedItems &quot;1&quot; to the local Config.txt. Needs an offline season." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x177ac5d" Value="01" Target="tbl"/>
         </PatchList>
-        <Target Name="tbl" Address="0x177ac5d" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1257"/>
+        <Cave Name="seasons_cave" Size="1432"/>
+        <Target Name="tbl" Cave="seasons_cave" At="1229"/>
+        <Target Name="seasons" Address="0x443528" Pattern="4c 8b 25 ?? ?? ?? ?? 48 89 fb 49 8b 04 24 48 89 45 d0 e8 ?? ?? ?? ?? 41 89 c6 48 8b 03 48 89 df ff 50 18" At="7"/>
     </Metadata>
     <Metadata Title="Diablo III" Name="Event: Whimsyshire (Easter Egg World)" Note="Offline community event: adds CommunityBuffEasterEggWorld &quot;1&quot; to the local Config.txt. Needs an offline season." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x177ac5e" Value="01" Target="tbl"/>
         </PatchList>
-        <Target Name="tbl" Address="0x177ac5e" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1258"/>
+        <Cave Name="seasons_cave" Size="1432"/>
+        <Target Name="tbl" Cave="seasons_cave" At="1230"/>
+        <Target Name="seasons" Address="0x443528" Pattern="4c 8b 25 ?? ?? ?? ?? 48 89 fb 49 8b 04 24 48 89 45 d0 e8 ?? ?? ?? ?? 41 89 c6 48 8b 03 48 89 df ff 50 18" At="7"/>
     </Metadata>
     <Metadata Title="Diablo III" Name="Event: Double Rift Keystones" Note="Offline community event: adds CommunityBuffDoubleRiftKeystones &quot;1&quot; to the local Config.txt. Needs an offline season." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x177ac60" Value="01" Target="tbl2"/>
         </PatchList>
-        <Target Name="tbl2" Address="0x177ac60" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1260"/>
+        <Cave Name="seasons_cave" Size="1432"/>
+        <Target Name="tbl2" Cave="seasons_cave" At="1232"/>
+        <Target Name="seasons" Address="0x443528" Pattern="4c 8b 25 ?? ?? ?? ?? 48 89 fb 49 8b 04 24 48 89 45 d0 e8 ?? ?? ?? ?? 41 89 c6 48 8b 03 48 89 df ff 50 18" At="7"/>
     </Metadata>
     <Metadata Title="Diablo III" Name="Event: Double Blood Shards" Note="Offline community event: adds CommunityBuffDoubleBloodShards &quot;1&quot; to the local Config.txt. Needs an offline season." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x177ac61" Value="01" Target="tbl2"/>
         </PatchList>
-        <Target Name="tbl2" Address="0x177ac61" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1261"/>
+        <Cave Name="seasons_cave" Size="1432"/>
+        <Target Name="tbl2" Cave="seasons_cave" At="1233"/>
+        <Target Name="seasons" Address="0x443528" Pattern="4c 8b 25 ?? ?? ?? ?? 48 89 fb 49 8b 04 24 48 89 45 d0 e8 ?? ?? ?? ?? 41 89 c6 48 8b 03 48 89 df ff 50 18" At="7"/>
     </Metadata>
     <Metadata Title="Diablo III" Name="Event: Also in non-seasonal games" Note="Offline community event: adds CommunityBuffSeasonOnly &quot;0&quot; to the local Config.txt. Needs an offline season." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="bytes" Address="0x177ac5f" Value="01" Target="tbl"/>
         </PatchList>
-        <Target Name="tbl" Address="0x177ac5f" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="1259"/>
+        <Cave Name="seasons_cave" Size="1432"/>
+        <Target Name="tbl" Cave="seasons_cave" At="1231"/>
+        <Target Name="seasons" Address="0x443528" Pattern="4c 8b 25 ?? ?? ?? ?? 48 89 fb 49 8b 04 24 48 89 45 d0 e8 ?? ?? ?? ?? 41 89 c6 48 8b 03 48 89 df ff 50 18" At="7"/>
     </Metadata>
     <!-- Challenge Rifts (GitHub #99): the cave answers the pubfile requests for challengerift_config.dat and
          challengerift_N.dat from user/data/pubfiles and writes the challenge number into the config (its first
@@ -747,11 +453,11 @@
          give once a high number had been rewarded. Week numbers (2900 and up) are above every old random one. -->
     <Metadata Title="Diablo III" Name="Event: Challenge Rifts" Note="Offline Challenge Rifts: the game reads challengerift_config.dat and challengerift_N.dat from user/data/pubfiles (you supply the files; see patches/challenge_rift_data/README.md), with the challenge number of the current week, so the Challenge Rift cache can be earned once a week and claimed in town." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
-            <Line Type="bytes" Address="0x177af90" Value="488d05d301000031c9448a04084584c0740e443a040e0f85b3010000ffc1ebe9554889e55341544155415641574881ec1802000048893c244989f44989d5488dbc2400010000488d359c010000ac84c07403aaebf84c89e6b9f0000000acaa84c07405e2f8c60700488dbc240001000031f631d2ff15{rel:got_open:0}85c00f883201000089c389df31f6ba02000000ff15{rel:got_lseek:0}4989c689df31f631d2ff15{rel:got_lseek:0}4d85f60f8e01010000498d7e10e8{rel:newobj:0}4989c789df4c89fe4c89f2ff15{rel:got_read:0}4989c689dfff15{rel:got_close:0}4d85f60f8edb00000041807c240e6375446641813f0881753c8b05{rel:chalnum:0}85c0751ce8{rel:filetime:0}4889c7e8{rel:unixtime:0}31d2b9803a0900f7f18905{rel:chalnum:0}89c183e17f81c98000000041884f01c1e80741884702bf40000000e8{rel:newobj:0}4889c34c893b4c8973084c89731048c743180000000048c7432000000000c7432800000040c7432c0000004048c743300000000048c7433800000000c74424080000000048895c2410488d43204889442418498b45004885c07410488d7818488d742408488d542410ff104881c418020000415f415e415d415c5b5dc389dfff15{rel:got_close:0}488b3c244c89e64c89ea4881c418020000415f415e415d415c5b5d554889e54157e9{rel:orig_next:0}6368616c6c656e6765726966745f002f646174612f70756266696c65732f00" Target="cr_cave"/>
+            <Line Type="bytes" Address="0x177af90" Value="488d05d301000031c9448a04084584c0740e443a040e0f85b3010000ffc1ebe9554889e55341544155415641574881ec1802000048893c244989f44989d5488dbc2400010000488d359c010000ac84c07403aaebf84c89e6b9f0000000acaa84c07405e2f8c60700488dbc240001000031f631d2ff15{rel:got_open:0}85c00f883201000089c389df31f6ba02000000ff15{rel:got_lseek:0}4989c689df31f631d2ff15{rel:got_lseek:0}4d85f60f8e01010000498d7e10e8{rel:newobj:0}4989c789df4c89fe4c89f2ff15{rel:got_read:0}4989c689dfff15{rel:got_close:0}4d85f60f8edb00000041807c240e6375446641813f0881753c8b05{rel:cr_number:0}85c0751ce8{rel:filetime:0}4889c7e8{rel:unixtime:0}31d2b9803a0900f7f18905{rel:cr_number:0}89c183e17f81c98000000041884f01c1e80741884702bf40000000e8{rel:newobj:0}4889c34c893b4c8973084c89731048c743180000000048c7432000000000c7432800000040c7432c0000004048c743300000000048c7433800000000c74424080000000048895c2410488d43204889442418498b45004885c07410488d7818488d742408488d542410ff104881c418020000415f415e415d415c5b5dc389dfff15{rel:got_close:0}488b3c244c89e64c89ea4881c418020000415f415e415d415c5b5d554889e54157e9{rel:orig_next:0}6368616c6c656e6765726966745f002f646174612f70756266696c65732f00" Target="cr_cave"/>
             <Line Type="bytes" Address="0x448590" Value="e9{rel:cr_cave:0}90" Pattern="ff 60 18 90 90 90 90 90 90 90 90 90 90 90 90 55 48 89 e5 41 57 41 56 41 55 41 54 53" At="15"/>
         </PatchList>
-        <Target Name="cr_cave" Address="0x177af90" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="2076"/>
-        <Target Name="chalnum" Address="0x1b02f84" Pattern="00 26 fb 00 00 00 00 00 00 00 00 00 00 00 00 00 ff ff ff ff ff ff ff ff 00 00 00 00 00 00 00 00" At="2817156"/>
+        <Cave Name="cr_cave" Size="505"/>
+        <Cave Name="cr_number" Size="4" Region="data"/>
         <Target Name="got_close" Address="0x1809a60" Pattern="68 1a 00 00 00 e9 ?? ?? ?? ?? ff 25 ?? ?? ?? ??" At="12" Ref="1" Tail="0"/>
         <Target Name="got_lseek" Address="0x1809a88" Pattern="68 1f 00 00 00 e9 ?? ?? ?? ?? ff 25 ?? ?? ?? ??" At="12" Ref="1" Tail="0"/>
         <Target Name="got_open" Address="0x1809a98" Pattern="68 21 00 00 00 e9 ?? ?? ?? ?? ff 25 ?? ?? ?? ??" At="12" Ref="1" Tail="0"/>
@@ -778,9 +484,7 @@
     </Metadata>
     <!-- Cheats (d3hack's "rare cheats", ported by what each one changes, not by its Switch offsets).
          Each is off by default and found by its signature, so another eboot skips it. Code and strings
-         they add live in the code segment's zero padding from 0x177b200 (after the offline seasons and the
-         Challenge Rifts cave, which ends at 0x177b189, and before the smooth motion code), each in its own
-         slot.
+         they add live in caves.
          Movement speed: the game builds its attribute table at start-up (eboot 0x749xxx), each attribute
          with its formula as text that it compiles; Movement_Scalar_Total (attribute 185, the factor every
          walking/running rate is multiplied by) is "Movement_Scalar_Capped_Total +
@@ -793,9 +497,9 @@
     <Metadata Title="Diablo III" Name="Cheat: Movement speed +25%" Note="The hero runs 25% faster, on top of the movement speed from items." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
             <Line Type="utf8" Address="0x177b200" Value="Movement_Scalar_Capped_Total + Movement_Scalar_Uncapped_Bonus + 0.25 * Pin(TeamID - 1, 0, 1) * Pin(3 - TeamID, 0, 1)" Target="ms_formula"/>
-            <Line Type="bytes" Address="0xb4dd35" Value="{rel:ms_formula:0}" Pattern="48 89 05 ae f0 da 00 48 8d 0d b8 0f 91 00 48 8d 05 ef 0f 91 00" At="10"/>
+            <Line Type="bytes" Address="0xb4dd35" Value="{rel:ms_formula:0}" Pattern="48 89 05 ?? ?? ?? ?? 48 8d 0d b8 0f 91 00 48 8d 05 ef 0f 91 00" At="10"/>
         </PatchList>
-        <Target Name="ms_formula" Address="0x177b200" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="2700"/>
+        <Cave Name="ms_formula" Size="117"/>
     </Metadata>
     <!-- Auto pickup: 0x583940 answers whether an actor on the ground is picked up by walking over it (the
          server's pickup sweep at 0x4f5100 asks it for each item near a hero, and the client hides the
@@ -845,20 +549,25 @@
          Lua script Mystic_Unlock_Automatic (QuestRangeValid "X1_WestmHub_MysticUnlock", from
          X1_Westm_KillUrzael step 1; the 1.47 data adds GameIsOpenWorld: Adventure Mode) and
          Mystic_Upgrade_1 (her Act V conversation). The 2.x data added Mystic_Upgrade_Automatic to the
-         New Tristram Mystic's marker: QuestRangeValid "A1_MysticUnlock" (QuestRange SNO 430609, from
+         New Tristram Mystic's marker: QuestRangeValid "A1_MysticUnlock" (QuestRange SNO 430609 in 1.47, from
          RescueCain, The Legacy of Cain) and, when she is not unlocked yet, UnlockCrafter: she joins the
          whole account in Act I. The patch makes that one quest range invalid for the scripts: the
          Lua binding's native (0xa83f10) looks the name up (SNO group 0x3a) and returns 0 for -1; the
-         call to the cave keeps its mov ebx,eax / cmp ebx,-1 and turns 430609 into -1 first. The
-         quest ranges of markers and the game's other code are not this function's; an account that
-         already has her keeps her (her level is saved), Act V and Adventure Mode still unlock her, and
-         saves are not touched. Code in the code segment's zero padding (0x177b400). -->
+         call to the cave keeps its mov ebx,eax / cmp ebx,-1 and turns A1_MysticUnlock's SNO into -1
+         first. The cave finds that SNO itself, by name, with the game's own lookup (the native's call
+         just before it, read from the return address) on its first run, and keeps it in a data cave
+         (mystic_sno; 0 = not looked up yet): no SNO number of one build of the data. The quest ranges
+         of markers and the game's other code are not this function's; an account that already has
+         her keeps her (her level is saved), Act V and Adventure Mode still unlock her, and saves are
+         not touched. Code in a cave (mystic_cave). -->
     <Metadata Title="Diablo III" Name="Mystic only from Act V (story order)" Note="Myriam the Mystic (enchanting, transmogrification) joins in Act V, as before Blizzard made her join in Act I after The Legacy of Cain. Adventure Mode still brings her, and an account that already has her keeps her." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
-            <Line Type="bytes" Address="0x177b400" Value="89c3 3d11920600 7505 bbffffffff 83fbff c3" Target="mystic_cave"/>
+            <Line Type="bytes" Address="0x177b400" Value="50 8b0d{rel:mystic_sno:0} 85c9 7524 488b4c2408 486351f7 488d5411fb bf3a000000 488d35{rel:mystic_name:0} ffd2 89c1 890d{rel:mystic_sno:0} 58 89c3 39c8 7505 bbffffffff 83fbff c3 41315f4d7973746963556e6c6f636b00" Target="mystic_cave"/>
             <Line Type="bytes" Address="0xe83f26" Value="e8{rel:mystic_cave:0}" Pattern="55 48 89 e5 53 50 48 89 f8 bf 3a 00 00 00 48 89 c6 e8 ?? ?? ?? ?? 89 c3 83 fb ff 74 38" At="22"/>
         </PatchList>
-        <Target Name="mystic_cave" Address="0x177b400" Pattern="00 a6 cb ff 5c ff ff ff 40 a6 cb ff 94 ff ff ff 00 a8 cb ff d4 ff ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" At="3212"/>
+        <Target Name="mystic_name" Cave="mystic_cave" At="63"/>
+        <Cave Name="mystic_cave" Size="79"/>
+        <Cave Name="mystic_sno" Size="4" Region="data"/>
     </Metadata>
     <!-- PC render target sizes (launcher Graphics > More options > Sharper shadows and reflections, sanctuary.ini
          pc_render_targets; run.py picks the entries). The console build gives some render targets fixed
@@ -931,85 +640,25 @@
             <Line Type="bytes" Address="0x004f74a7" Value="00080000" Pattern="b9 c0 06 00 00 41 b8 c0 06 00 00" At="7"/>
         </PatchList>
     </Metadata>
-    <Metadata Title="Diablo III" Name="PC Render Targets - Reflection 960x540" Note="Reflection colour and depth at 960x540 instead of 800x450: half of a 1920x1080 render, as the PC game." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+    <Metadata Title="Diablo III" Name="PC Render Targets - Reflection" Params="reflection_width reflection_height" Note="Reflection colour and depth at reflection_width x reflection_height instead of 800x450: half of the render size, as the PC game (sanctuary.ini pc_render_targets, run.py)." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
-            <Line Type="bytes" Address="0x004f6fc6" Value="c0030000" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="2"/>
-            <Line Type="bytes" Address="0x004f6fcc" Value="1c020000" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="8"/>
-            <Line Type="bytes" Address="0x004f750d" Value="c0030000" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="1"/>
-            <Line Type="bytes" Address="0x004f7513" Value="1c020000" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="7"/>
+            <Line Type="bytes" Address="0x004f6fc6" Value="{param:reflection_width:u32}" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="2"/>
+            <Line Type="bytes" Address="0x004f6fcc" Value="{param:reflection_height:u32}" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="8"/>
+            <Line Type="bytes" Address="0x004f750d" Value="{param:reflection_width:u32}" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="1"/>
+            <Line Type="bytes" Address="0x004f7513" Value="{param:reflection_height:u32}" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="7"/>
         </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="PC Render Targets - Reflection 1280x720" Note="Reflection colour and depth at 1280x720 instead of 800x450: half of a 2560x1440 render, as the PC game." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
-        <PatchList>
-            <Line Type="bytes" Address="0x004f6fc6" Value="00050000" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="2"/>
-            <Line Type="bytes" Address="0x004f6fcc" Value="d0020000" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="8"/>
-            <Line Type="bytes" Address="0x004f750d" Value="00050000" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="1"/>
-            <Line Type="bytes" Address="0x004f7513" Value="d0020000" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="7"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="PC Render Targets - Reflection 1600x900" Note="Reflection colour and depth at 1600x900 instead of 800x450: half of a 3200x1800 render, as the PC game." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
-        <PatchList>
-            <Line Type="bytes" Address="0x004f6fc6" Value="40060000" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="2"/>
-            <Line Type="bytes" Address="0x004f6fcc" Value="84030000" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="8"/>
-            <Line Type="bytes" Address="0x004f750d" Value="40060000" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="1"/>
-            <Line Type="bytes" Address="0x004f7513" Value="84030000" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="7"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="PC Render Targets - Reflection 1920x1080" Note="Reflection colour and depth at 1920x1080 instead of 800x450: half of a 3840x2160 render, as the PC game." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
-        <PatchList>
-            <Line Type="bytes" Address="0x004f6fc6" Value="80070000" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="2"/>
-            <Line Type="bytes" Address="0x004f6fcc" Value="38040000" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="8"/>
-            <Line Type="bytes" Address="0x004f750d" Value="80070000" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="1"/>
-            <Line Type="bytes" Address="0x004f7513" Value="38040000" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="7"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="PC Render Targets - Reflection 1280x540" Note="Reflection colour and depth at 1280x540 instead of 800x450: half of a 2560x1080 render, as the PC game." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
-        <PatchList>
-            <Line Type="bytes" Address="0x004f6fc6" Value="00050000" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="2"/>
-            <Line Type="bytes" Address="0x004f6fcc" Value="1c020000" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="8"/>
-            <Line Type="bytes" Address="0x004f750d" Value="00050000" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="1"/>
-            <Line Type="bytes" Address="0x004f7513" Value="1c020000" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="7"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="PC Render Targets - Reflection 1720x720" Note="Reflection colour and depth at 1720x720 instead of 800x450: half of a 3440x1440 render, as the PC game." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
-        <PatchList>
-            <Line Type="bytes" Address="0x004f6fc6" Value="b8060000" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="2"/>
-            <Line Type="bytes" Address="0x004f6fcc" Value="d0020000" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="8"/>
-            <Line Type="bytes" Address="0x004f750d" Value="b8060000" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="1"/>
-            <Line Type="bytes" Address="0x004f7513" Value="d0020000" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="7"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="PC Render Targets - Reflection 1920x800" Note="Reflection colour and depth at 1920x800 instead of 800x450: half of a 3840x1600 render, as the PC game." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
-        <PatchList>
-            <Line Type="bytes" Address="0x004f6fc6" Value="80070000" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="2"/>
-            <Line Type="bytes" Address="0x004f6fcc" Value="20030000" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="8"/>
-            <Line Type="bytes" Address="0x004f750d" Value="80070000" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="1"/>
-            <Line Type="bytes" Address="0x004f7513" Value="20030000" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="7"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="PC Render Targets - Reflection 2560x720" Note="Reflection colour and depth at 2560x720 instead of 800x450: half of a 5120x1440 render, as the PC game." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
-        <PatchList>
-            <Line Type="bytes" Address="0x004f6fc6" Value="000a0000" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="2"/>
-            <Line Type="bytes" Address="0x004f6fcc" Value="d0020000" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="8"/>
-            <Line Type="bytes" Address="0x004f750d" Value="000a0000" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="1"/>
-            <Line Type="bytes" Address="0x004f7513" Value="d0020000" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="7"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="PC Render Targets - Reflection 960x600" Note="Reflection colour and depth at 960x600 instead of 800x450: half of a 1920x1200 render, as the PC game." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
-        <PatchList>
-            <Line Type="bytes" Address="0x004f6fc6" Value="c0030000" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="2"/>
-            <Line Type="bytes" Address="0x004f6fcc" Value="58020000" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="8"/>
-            <Line Type="bytes" Address="0x004f750d" Value="c0030000" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="1"/>
-            <Line Type="bytes" Address="0x004f7513" Value="58020000" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="7"/>
-        </PatchList>
-    </Metadata>
-    <Metadata Title="Diablo III" Name="PC Render Targets - Reflection 1280x800" Note="Reflection colour and depth at 1280x800 instead of 800x450: half of a 2560x1600 render, as the PC game." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
-        <PatchList>
-            <Line Type="bytes" Address="0x004f6fc6" Value="00050000" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="2"/>
-            <Line Type="bytes" Address="0x004f6fcc" Value="20030000" Pattern="41 bf 20 03 00 00 41 bc c2 01 00 00" At="8"/>
-            <Line Type="bytes" Address="0x004f750d" Value="00050000" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="1"/>
-            <Line Type="bytes" Address="0x004f7513" Value="20030000" Pattern="b9 20 03 00 00 41 b8 c2 01 00 00" At="7"/>
-        </PatchList>
+        <Presets>
+            <Preset Name="PC Render Targets - Reflection 960x540" reflection_width="960" reflection_height="540"/>
+            <Preset Name="PC Render Targets - Reflection 1280x720" reflection_width="1280" reflection_height="720"/>
+            <Preset Name="PC Render Targets - Reflection 1600x900" reflection_width="1600" reflection_height="900"/>
+            <Preset Name="PC Render Targets - Reflection 1920x1080" reflection_width="1920" reflection_height="1080"/>
+            <Preset Name="PC Render Targets - Reflection 1280x540" reflection_width="1280" reflection_height="540"/>
+            <Preset Name="PC Render Targets - Reflection 1720x720" reflection_width="1720" reflection_height="720"/>
+            <Preset Name="PC Render Targets - Reflection 1920x800" reflection_width="1920" reflection_height="800"/>
+            <Preset Name="PC Render Targets - Reflection 2560x720" reflection_width="2560" reflection_height="720"/>
+            <Preset Name="PC Render Targets - Reflection 960x600" reflection_width="960" reflection_height="600"/>
+            <Preset Name="PC Render Targets - Reflection 1280x800" reflection_width="1280" reflection_height="800"/>
+        </Presets>
     </Metadata>
     <!-- Full effects in local co-op (launcher Graphics > More options > Full effects in local co-op, sanctuary.ini
          coop_full_effects; run.py adds the entry). When a local player joins, the handler (eboot 0x8ca80)
@@ -1046,15 +695,32 @@
          (sGetFrustum, 1.47 0x735530) already reads the PC default and PC wide slots, so enemies and
          scenes at the screen edges activate normally. Three Metadata variants of the same name cover
          1.47/1.46, 1.25 (2.6.1) and 1.00 (2.0.0, before Retro); the first whose signatures all match
-         is applied. -->
-    <Metadata Title="Diablo III" Name="PC Camera Zoom" Note="Uses the PC version&#x27;s default, Retro and wide camera observers (distance 98 instead of 80, pitch 42.2 deg instead of 38.2 deg)." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+         is applied. 1.25 and 1.00 still use the observers; 1.47/1.46 has the view dolly below. -->
+    <!-- PC Camera Zoom, 1.47/1.46 (thanosdk28, PR #102), after d3hack's ViewDolly. Pointing the game at the PC
+         observers (above) also brought their follow settings, which the console camera code does not expect:
+         the view trailed the hero and a teleport left it behind for a moment. Here the game's own camera is
+         left as it is (observers, follow, teleports) and only its eye is moved back along the view direction,
+         where the camera builds its view matrix. LookAt (0x234990: rdi matrix, rsi eye, rdx view direction,
+         rcx up, r8d 0 = negate the direction; this caller passes 1) has one caller, the camera update
+         (0x1eeb0b, eye = camera+0x18). The call goes to camdolly (a cave) first: when the direction is the
+         gameplay camera's (|x| = |y| within 0.03, |x| 0.45-0.70, |z| 0.45-0.75; menus, portraits and the
+         trigger zoom look elsewhere) it adds |direction| * 18 to the eye (the camera always sits at +x, +y, +z
+         from what it looks at), about the PC version's 98 for the console's 80, then jumps to LookAt. Its
+         constants (abs mask, 0.03, 0.45, 0.70, 0.75, 18) follow the code at +160 in the same cave. -->
+    <Metadata Title="Diablo III" Name="PC Camera Zoom" Note="Pulls the gameplay camera back along its view (d3hack&#x27;s ViewDolly, 18 units: about the PC version&#x27;s distance), leaving the game&#x27;s camera and its follow as they are." Author="SanctuaryPort" PatchVer="1.2" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
-            <Line Type="bytes" Address="0x005efe15" Value="2e040000" Pattern="55 48 89 e5 85 ff 75 23 e8 ?? ?? ?? ?? 48 89 c7 e8 ?? ?? ?? ?? 89 c7 e8 ?? ?? ?? ?? 85 c0 74 0b bf 2b 04 00 00 5d e9 ?? ?? ?? ?? e8 ?? ?? ?? ?? 85 c0 74 0b bf 2f 04 00 00 5d e9 ?? ?? ?? ?? bf 2d 04 00 00 5d e9 ?? ?? ?? ??" At="53"/>
-            <Line Type="bytes" Address="0x005efe20" Value="2c040000" Pattern="55 48 89 e5 85 ff 75 23 e8 ?? ?? ?? ?? 48 89 c7 e8 ?? ?? ?? ?? 89 c7 e8 ?? ?? ?? ?? 85 c0 74 0b bf 2b 04 00 00 5d e9 ?? ?? ?? ?? e8 ?? ?? ?? ?? 85 c0 74 0b bf 2f 04 00 00 5d e9 ?? ?? ?? ?? bf 2d 04 00 00 5d e9 ?? ?? ?? ??" At="64"/>
-            <Line Type="bytes" Address="0x005efbd9" Value="2e040000" Pattern="e8 ?? ?? ?? ?? 48 89 c7 e8 ?? ?? ?? ?? 89 c7 e8 ?? ?? ?? ?? 85 c0 74 07 bf 2b 04 00 00 eb 15 e8 ?? ?? ?? ?? 85 c0 74 07 bf 2f 04 00 00 eb 05 bf 2d 04 00 00 e8 ?? ?? ?? ?? 49 63 cf 4c 69" At="41"/>
-            <Line Type="bytes" Address="0x005efbe0" Value="2c040000" Pattern="e8 ?? ?? ?? ?? 48 89 c7 e8 ?? ?? ?? ?? 89 c7 e8 ?? ?? ?? ?? 85 c0 74 07 bf 2b 04 00 00 eb 15 e8 ?? ?? ?? ?? 85 c0 74 07 bf 2f 04 00 00 eb 05 bf 2d 04 00 00 e8 ?? ?? ?? ?? 49 63 cf 4c 69" At="48"/>
-            <Line Type="bytes" Address="0x008e0407" Value="31040000" Pattern="8b 83 d8 00 00 00 89 45 c8 8b 83 dc 00 00 00 89 45 cc 8b 83 e0 00 00 00 89 45 d0 e8 ?? ?? ?? ?? 85 c0 74 07 bf 34 04 00 00 eb 05 bf 33 04 00 00 e8 ?? ?? ?? ?? c4" At="44"/>
+            <Line Type="bytes" Value="c5fa1002 c5fa104a04 c5fa105208 c5fa103d{rel:dl_abs:0} c5f854c7 c5f054cf c5e854d7 c5fa5cd9 c5e054df c5f82f1d{rel:dl_k003:0} 7358 c5f82f05{rel:dl_k045:0} 764e c5f82f05{rel:dl_k070:0} 7344 c5f82f15{rel:dl_k045:0} 763a c5f82f15{rel:dl_k075:0} 7330 c5fa103d{rel:dl_d:0} c5fa59c7 c5f259cf c5ea59d7 c5fa5806 c5f2584e04 c5ea585608 c5fa1106 c5fa114e04 c5fa115608 e9{rel:lookat:0}" Target="camdolly"/>
+            <Line Type="bytes" Value="ffffff7f 8fc2f53c 6666e63e 3333333f 0000403f 00009041" Target="dl_abs"/>
+            <Line Type="bytes" Address="0x005eeb0c" Value="{rel:camdolly:0}" Pattern="c5 fa 11 65 cc c5 fa 11 45 d0 e8 ?? ?? ?? ?? 8b 45 d8 48 8d b3 fc 00 00 00 48 8d bb 5c 01 00 00" At="11"/>
         </PatchList>
+        <Cave Name="camdolly" Size="184"/>
+        <Target Name="dl_abs" Cave="camdolly" At="160"/>
+        <Target Name="dl_k003" Cave="camdolly" At="164"/>
+        <Target Name="dl_k045" Cave="camdolly" At="168"/>
+        <Target Name="dl_k070" Cave="camdolly" At="172"/>
+        <Target Name="dl_k075" Cave="camdolly" At="176"/>
+        <Target Name="dl_d" Cave="camdolly" At="180"/>
+        <Target Name="lookat" Address="0x634990" Pattern="c5 fa 11 65 cc c5 fa 11 45 d0 e8 ?? ?? ?? ?? 8b 45 d8 48 8d b3 fc 00 00 00 48 8d bb 5c 01 00 00" At="11" Ref="1" Tail="0"/>
     </Metadata>
     <Metadata Title="Diablo III" Name="PC Camera Zoom" Note="Uses the PC version&#x27;s default, Retro and wide camera observers (distance 98 instead of 80, pitch 42.2 deg instead of 38.2 deg)." Author="SanctuaryPort" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>

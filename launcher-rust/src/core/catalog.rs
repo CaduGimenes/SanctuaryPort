@@ -292,6 +292,9 @@ pub static SETTINGS: &[Setting] = &[
     // The runner reads SANCTUARY_DISCORD only to switch it off ("0"), so absent has no default.
     app("discord_rpc", Flag, Bool(true), env("SANCTUARY_DISCORD", "")),
     app("check_updates", Flag, Bool(false), None),
+    // SanctuaryPort: Advanced > Troubleshooting > Save a log of each start. Off by default: the
+    // game's output stays in memory (Log page) and only a failed start writes last_crash.log.
+    app("save_log", Flag, Bool(false), None),
     // SanctuaryPort: the name player 1 had before profiles (GitHub #23); it names profile 1 when
     // the profile list is first made (`core::profiles`).
     app("player_name", Kind::Text, Text(""), env("SANCTUARY_PLAYER_NAME", "")),

@@ -298,7 +298,9 @@ Usage: SanctuaryPort [options]
   --data-dir DIR         keep settings, saves and generated files in DIR
   --fullscreen | --borderless | --windowed
                          the display mode (saved, as the Graphics page does)
-  --set KEY=VALUE        any sanctuary.ini setting, e.g. --set frame_rate=120 (saved; repeatable)
+  --set KEY=VALUE        any sanctuary.ini setting, e.g. --set frame_rate=120 (saved; repeatable);
+                         frame_rate takes any rate from 30 to 200 and render_resolution any
+                         WIDTHxHEIGHT (even numbers, 640x360 to 7680x4320), e.g. 1700x956
   --install-pkg PKG DIR  install a game, update or add-on PKG into the games folder DIR
   --version              print the version
   --help                 this text";

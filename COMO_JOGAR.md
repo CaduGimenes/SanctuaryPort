@@ -159,10 +159,11 @@ A 1.0 sai quando a campanha inteira puder ser jogada no hardware comum sem ajuda
 você jogou, e em qual aparelho, na issue fixada
 [Road to 1.0](https://github.com/CaduGimenes/SanctuaryPort/issues/30).
 
-Para um problema, abra uma issue com o modelo de bug e anexe o `user/last_run.log` (o launcher
-abre em **Avançado → Solução de problemas → Log do último início**); depois de um travamento,
-também o `user/last_crash.log`. Se for engasgo ou queda de FPS, abra o launcher com a variável de
-ambiente `SANCTUARY_FRAME_STATS=1` e jogue no mesmo lugar: o log passa a registrar o ritmo dos
-quadros e cada quadro lento.
+Para um problema, abra uma issue com o modelo de bug. Depois de um travamento, anexe o
+`user/last_crash.log` (gravado sozinho). Para o resto, ligue **Avançado → Solução de problemas →
+Salvar um log de cada início** (vem desligado, então nada é gravado no disco enquanto você joga),
+jogue até acontecer e anexe o `user/last_run.log`. Se for engasgo ou queda de FPS, abra também o
+launcher com a variável de ambiente `SANCTUARY_FRAME_STATS=1` e jogue no mesmo lugar: o log passa
+a registrar o ritmo dos quadros e cada quadro lento.
 
 Detalhes técnicos: [docs/DIABLO3.md](docs/DIABLO3.md).

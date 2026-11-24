@@ -113,13 +113,18 @@ shortcuts.
 --data-dir DIR         keep settings, saves and generated files in DIR
 --fullscreen | --borderless | --windowed
                        the display mode (saved, as the Graphics page does)
---set KEY=VALUE        any sanctuary.ini setting, e.g. --set frame_rate=120 (saved; repeatable)
+--set KEY=VALUE        any sanctuary.ini setting, e.g. --set frame_rate=120 (saved; repeatable);
+                       frame_rate takes any rate from 30 to 200 and render_resolution any
+                       WIDTHxHEIGHT (even numbers, 640x360 to 7680x4320), e.g. 1700x956
 --install-pkg PKG DIR  install a game, update or add-on PKG into the games folder DIR
 --version, --help
 ```
 
 For example, straight into the game in full screen at 120 FPS:
 `SanctuaryPort.exe --play --fullscreen --set frame_rate=120 --game D:\PS4\CUSA00242`.
+The launcher's lists offer the usual rates and sizes; another one (a 144 Hz or 75 Hz screen, a
+window of an odd size) goes in `sanctuary.ini` (`frame_rate=144`, `render_resolution=1700x956`) or
+through `--set`, and the Graphics page then shows it in its list.
 
 ## Building from source (Linux)
 
@@ -217,11 +222,12 @@ SANCTUARY_GAME_DIR=~/Games/PS4/CUSA00243 SANCTUARY_PATCH_DIR=~/Games/PS4/CUSA002
 got, and on which device, in the pinned issue
 [Road to 1.0](https://github.com/CaduGimenes/SanctuaryPort/issues/30).
 
-For a problem, open an issue with the bug template and attach `user/last_run.log` (the launcher
-opens it from **Advanced → Troubleshooting → Last start log**); after a crash, also
-`user/last_crash.log`. For stutter or frame drops, start the launcher with the environment variable
-`SANCTUARY_FRAME_STATS=1` and play the same spot: the log then records the frame pacing and every
-long frame.
+For a problem, open an issue with the bug template. After a crash, attach `user/last_crash.log`
+(written automatically). For anything else, turn on **Advanced → Troubleshooting → Save a log of
+each start** (off by default, so nothing is written to disk while you play), play until it happens
+and attach `user/last_run.log`. For stutter or frame drops, also start the launcher with the
+environment variable `SANCTUARY_FRAME_STATS=1` and play the same spot: the log then records the
+frame pacing and every long frame.
 
 ## How it works
 

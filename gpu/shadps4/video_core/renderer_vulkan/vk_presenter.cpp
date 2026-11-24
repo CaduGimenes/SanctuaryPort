@@ -49,6 +49,48 @@
 
 namespace Vulkan {
 
+namespace {
+// sanctuary: SANCTUARY_FRAME_STATS=1: frames actually shown (presented) per second and where the
+// swap thread and the GPU thread waited for them, every 5 seconds (GitHub #103: V-Sync).
+struct PresentStats {
+    bool on = std::getenv("SANCTUARY_FRAME_STATS") != nullptr;
+    std::atomic<u64> frame_wait_ns{0}, ahead_wait_ns{0};
+    u64 shown = 0, acquire_ns = 0, acquire_max_ns = 0, present_ns = 0, present_max_ns = 0;
+    std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
+
+    static u64 Since(std::chrono::steady_clock::time_point t) {
+        return u64(std::chrono::duration_cast<std::chrono::nanoseconds>(
+                       std::chrono::steady_clock::now() - t).count());
+    }
+    void Shown(u64 acquire, u64 present) { // swap thread
+        ++shown;
+        acquire_ns += acquire;
+        acquire_max_ns = std::max(acquire_max_ns, acquire);
+        present_ns += present;
+        present_max_ns = std::max(present_max_ns, present);
+        const double s = std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+        if (s < 5.0) {
+            return;
+        }
+        std::printf("Present stats: %.1f FPS shown; acquire %.2f ms avg %.1f max, present %.2f ms avg "
+                    "%.1f max; GPU thread waited %.0f ms for a free frame, %.0f ms for frames queued\n",
+                    shown / s, acquire_ns / 1e6 / shown, acquire_max_ns / 1e6, present_ns / 1e6 / shown,
+                    present_max_ns / 1e6, frame_wait_ns.exchange(0) / 1e6, ahead_wait_ns.exchange(0) / 1e6);
+        shown = acquire_ns = acquire_max_ns = present_ns = present_max_ns = 0;
+        start = std::chrono::steady_clock::now();
+    }
+};
+PresentStats g_present_stats;
+
+/// sanctuary: vkQueuePresentKHR needs its queue to itself: the submission lock when presents share
+/// the graphics queue, a lock of their own otherwise (then a present that waits for the display
+/// does not hold up the game's submissions; GitHub #103).
+std::mutex& PresentQueueMutex(const Instance& instance) {
+    static std::mutex present_mutex;
+    return instance.HasSeparatePresentQueue() ? present_mutex : Scheduler::submit_mutex;
+}
+} // namespace
+
 bool CanBlitToSwapchain(const vk::PhysicalDevice physical_device, vk::Format format) {
     const vk::FormatProperties props{physical_device.getFormatProperties(format)};
     return static_cast<bool>(props.optimalTilingFeatures & vk::FormatFeatureFlagBits::eBlitDst);
@@ -753,7 +795,11 @@ Frame* Presenter::PrepareFrame(const Libraries::VideoOut::BufferAttributeGroup& 
             const u64 tick = recent_frame_ticks.front();
             recent_frame_ticks.pop_front();
             if (recent_frame_ticks.size() == frames_ahead) {
+                const auto waited = std::chrono::steady_clock::now();
                 draw_scheduler.Wait(tick);
+                if (g_present_stats.on) {
+                    g_present_stats.ahead_wait_ns += PresentStats::Since(waited);
+                }
             }
         }
     }
@@ -882,7 +928,7 @@ void Presenter::PresentLoadingFrame() {
     info.AddSignal(swapchain.GetPresentReadySemaphore());
     present_scheduler.Flush(info);
     {
-        std::scoped_lock submit_lock{Scheduler::submit_mutex};
+        std::scoped_lock present_lock{PresentQueueMutex(instance)};
         swapchain.Present();
     }
     // A few frames a second during start-up: waiting keeps semaphores and the swapchain simple.
@@ -937,6 +983,7 @@ void Presenter::Present(Frame* frame, bool is_reusing_frame, bool is_game_frame)
         swapchain.Recreate(window.GetWidth(), window.GetHeight());
     }
 
+    const auto acquire_start = std::chrono::steady_clock::now();
     if (!swapchain.AcquireNextImage()) {
         swapchain.Recreate(window.GetWidth(), window.GetHeight());
         if (!swapchain.AcquireNextImage()) {
@@ -946,6 +993,8 @@ void Presenter::Present(Frame* frame, bool is_reusing_frame, bool is_game_frame)
             return;
         }
     }
+
+    const auto acquire_end = std::chrono::steady_clock::now();
 
     // Reset fence for queue submission. Do it here instead of GetRenderFrame() because we may
     // skip frame because of slow swapchain recreation. If a frame skip occurs, we skip signal
@@ -1079,11 +1128,17 @@ void Presenter::Present(Frame* frame, bool is_reusing_frame, bool is_game_frame)
     scheduler.Flush(info);
 
     // Present to swapchain.
+    const auto present_start = std::chrono::steady_clock::now();
     {
-        std::scoped_lock submit_lock{Scheduler::submit_mutex};
+        std::scoped_lock present_lock{PresentQueueMutex(instance)};
         if (!swapchain.Present() && window.GetWidth() != 0 && window.GetHeight() != 0) {
             swapchain.Recreate(window.GetWidth(), window.GetHeight());
         }
+    }
+    if (g_present_stats.on && is_game_frame) {
+        g_present_stats.Shown(u64(std::chrono::duration_cast<std::chrono::nanoseconds>(
+                                      acquire_end - acquire_start).count()),
+                              PresentStats::Since(present_start));
     }
 
     free_frame();
@@ -1095,6 +1150,7 @@ void Presenter::Present(Frame* frame, bool is_reusing_frame, bool is_game_frame)
 Frame* Presenter::GetRenderFrame() {
     // Wait for free presentation frames
     Frame* frame;
+    const auto waited = std::chrono::steady_clock::now();
     {
         std::unique_lock lock{free_mutex};
         free_cv.wait(lock, [this] { return !free_queue.empty(); });
@@ -1121,6 +1177,9 @@ Frame* Presenter::GetRenderFrame() {
         if (result == vk::Result::eTimeout) {
             continue;
         }
+    }
+    if (g_present_stats.on) {
+        g_present_stats.frame_wait_ns += PresentStats::Since(waited);
     }
 
     if (frame->width != expected_frame_width || frame->height != expected_frame_height ||

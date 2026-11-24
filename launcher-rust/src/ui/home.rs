@@ -597,11 +597,15 @@ pub fn status_line(state: &State) -> String {
 pub fn quick_segments(state: &State) -> Vec<(String, bool)> {
     let lang = state.lang.as_str();
     // SanctuaryPort: Diablo III's frame rate is its own frame limiter (Graphics > Frame rate).
-    let fps = match state.store.text("frame_rate").as_str() {
+    let stored = state.store.text("frame_rate");
+    let fps = match stored.as_str() {
         // The game's maximum, stored as the former Unlimited's 0.
-        "0" => "200 FPS".to_string(),
-        rate @ ("30" | "120") => format!("{rate} FPS"),
-        _ => "60 FPS".to_string(),
+        "0" | "200" => "200 FPS".to_string(),
+        // The choices and any rate from 30 to 199 given in sanctuary.ini or with --set.
+        _ => match crate::ui::pages::performance::free_frame_rate(&stored) {
+            Some(rate) => format!("{rate} FPS"),
+            None => "60 FPS".to_string(),
+        },
     };
     let _ = FPS_LIMITS;
     // The size the game renders at (Graphics > Render resolution), which is what a player

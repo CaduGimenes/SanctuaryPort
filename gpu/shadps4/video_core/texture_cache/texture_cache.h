@@ -470,9 +470,10 @@ private:
     Common::SlotVector<ImageView> slot_image_views;
     tsl::robin_map<u64, Sampler> samplers;
     std::unordered_set<ImageId> download_images;
-    u64 total_used_memory = 0;
+    u64 total_used_memory = 0; ///< bytes of the registered images (guest sizes)
     u64 gc_evictions = 0, gc_downloads = 0; ///< sanctuary: pressure report
     std::chrono::steady_clock::time_point gc_report_time{};
+    std::chrono::steady_clock::time_point vram_report_time{}; ///< SANCTUARY_VRAM_REPORT
     u64 trigger_gc_memory = 0;
     u64 pressure_gc_memory = 0;
     u64 critical_gc_memory = 0;

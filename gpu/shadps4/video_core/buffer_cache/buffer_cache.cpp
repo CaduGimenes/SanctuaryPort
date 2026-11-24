@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <algorithm>
 #include <bit>
+#include <cstdio>
 #include <cstdlib>
 #include <magic_enum/magic_enum.hpp>
 #include "sanctuary_copy.h"
@@ -92,14 +93,58 @@ BufferCache::BufferCache(const Vulkan::Instance& instance_, Vulkan::Scheduler& s
         FindMemoryType(instance.GetMemoryProperties(), vk::MemoryPropertyFlagBits::eDeviceLocal,
                        reqs.memoryTypeBits)
             .value();
+    // sanctuary (GitHub #61): SANCTUARY_ARENA_SYSTEM_MEMORY=1 keeps the buffer arenas (guest
+    // memory the GPU reads, ~400 MiB in the world, never freed) in system memory, for cards with
+    // little VRAM. Not the default: on a discrete card every vertex, index and constant read then
+    // crosses the bus. Measured only on an integrated GPU, where both are the same RAM.
+    if (const char* env = std::getenv("SANCTUARY_ARENA_SYSTEM_MEMORY"); env && *env == '1') {
+        const auto& props = instance.GetMemoryProperties();
+        for (u32 i = 0; i < props.memoryTypeCount; ++i) {
+            const auto heap = props.memoryTypes[i].heapIndex;
+            if (((reqs.memoryTypeBits >> i) & 1) &&
+                !(props.memoryHeaps[heap].flags & vk::MemoryHeapFlagBits::eDeviceLocal)) {
+                arena_memory_type_index = i;
+                std::printf("GPU: buffer arenas in system memory (memory type %u)\n", i);
+                break;
+            }
+        }
+    }
 
-    const u64 bda_pagetable_size =
-        (blocks_per_arena_page * num_arena_pages) * sizeof(vk::DeviceAddress);
+    bda_pagetable_max_blocks = blocks_per_arena_page * num_arena_pages;
     fault_manager = std::make_unique<FaultManager>(instance, scheduler, *this, block_shift,
-                                                   blocks_per_arena_page * num_arena_pages);
-    bda_pagetable_buffer = std::make_unique<Buffer>(
-        instance, 0, bda_pagetable_size, MemoryType::DeviceLocal, "BDA Page Table Buffer");
-    runtime.FillBuffer(bda_pagetable_buffer.get(), 0u, bda_pagetable_size, 0u);
+                                                   bda_pagetable_max_blocks);
+    // sanctuary (GitHub #61): the table used to cover the whole 40-bit space from the start
+    // (128 MiB of VRAM with 64 KiB blocks, 512 MiB with 16 KiB ones). It now starts with one arena
+    // page and grows to the highest block the game makes resident (EnsureResident).
+    GrowBdaPageTable(blocks_per_arena_page);
+}
+
+void BufferCache::GrowBdaPageTable(u64 end_block) {
+    if (end_block <= bda_pagetable_blocks) {
+        return;
+    }
+    // Whole arena pages, and at least half again the current size: few regrowths.
+    u64 blocks = Common::AlignUp(end_block, u64{blocks_per_arena_page});
+    blocks = std::max(blocks, bda_pagetable_blocks + bda_pagetable_blocks / 2);
+    blocks = std::min(Common::AlignUp(blocks, u64{blocks_per_arena_page}), bda_pagetable_max_blocks);
+    ASSERT(blocks >= end_block);
+    const u64 old_size = bda_pagetable_blocks * sizeof(vk::DeviceAddress);
+    const u64 new_size = blocks * sizeof(vk::DeviceAddress);
+    auto table = std::make_unique<Buffer>(instance, 0, new_size, MemoryType::DeviceLocal,
+                                          "BDA Page Table Buffer");
+    if (old_size != 0) {
+        const vk::BufferCopy copy{0, 0, old_size};
+        runtime.CopyBuffer(bda_pagetable_buffer.get(), table.get(), {&copy, 1});
+    }
+    runtime.FillBuffer(table.get(), old_size, new_size - old_size, 0u);
+    if (bda_pagetable_buffer) {
+        // Command buffers not yet executed still bind the old table.
+        scheduler.DeferOperation([old = std::move(bda_pagetable_buffer)] {});
+    }
+    bda_pagetable_buffer = std::move(table);
+    bda_pagetable_blocks = blocks;
+    LOG_INFO(Render_Vulkan, "BDA page table: {} KiB, guest memory below {:#x}", new_size >> 10,
+             blocks << block_shift);
 }
 
 BufferCache::~BufferCache() = default;
@@ -489,6 +534,8 @@ void BufferCache::EnsureResident(const Buffer* arena, u64 first_block, u64 last_
         .memoryTypeIndex = arena_memory_type_index,
     };
     const auto device_memory = Vulkan::Check(instance.GetDevice().allocateMemory(alloc_info));
+    resident_bytes += alloc_info.allocationSize;
+    GrowBdaPageTable(last_block + 1);
 
     boost::container::small_vector<vk::BufferCopy, 8> copies;
     const auto staging =

@@ -102,6 +102,13 @@ public:
         return present_queue;
     }
 
+    /// sanctuary: presents go to a queue of their own (the graphics family's second queue), so a
+    /// driver that blocks in vkQueuePresentKHR or holds its queue until the display refreshes
+    /// (V-Sync) does not hold the game's GPU work (GitHub #103).
+    bool HasSeparatePresentQueue() const {
+        return present_queue != graphics_queue;
+    }
+
     TracyVkCtx GetProfilerContext() const {
         return profiler_context;
     }

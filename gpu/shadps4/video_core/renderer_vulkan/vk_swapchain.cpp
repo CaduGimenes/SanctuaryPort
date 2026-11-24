@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cstdio>
+#include <cstdlib>
 #include <limits>
 #include "common/assert.h"
 #include "common/logging/log.h"
@@ -106,9 +107,29 @@ void Swapchain::SetHDR(bool hdr) {
 
 bool Swapchain::AcquireNextImage() {
     vk::Device device = instance.GetDevice();
+    // sanctuary: the acquire also signals a fence, and this (present) thread waits for it before the
+    // blit is submitted (GitHub #103). The blit's wait on image_acquired then never holds the GPU
+    // queue: everything runs on one queue, and a driver that signals the semaphore only when the
+    // display lets go of the image (V-Sync, on the next refresh) stalled the game's own GPU work
+    // behind the blit. The game waits for that work every frame (readbacks, frames queued, GPU idle),
+    // so each frame took its frame time rounded up to whole refreshes: 60 FPS limit at 75 Hz,
+    // 2 x 13.3 ms = 37.5 FPS. SANCTUARY_ACQUIRE_FENCE=0 goes back to the semaphore alone.
+    static const bool use_fence = [] {
+        const char* env = std::getenv("SANCTUARY_ACQUIRE_FENCE");
+        return !(env && env[0] == '0');
+    }();
+    const vk::Fence fence = use_fence ? image_acquired_fences[frame_index] : vk::Fence{};
     vk::Result result =
         device.acquireNextImageKHR(swapchain, std::numeric_limits<u64>::max(),
-                                   image_acquired[frame_index], VK_NULL_HANDLE, &image_index);
+                                   image_acquired[frame_index], fence, &image_index);
+    if (fence && (result == vk::Result::eSuccess || result == vk::Result::eSuboptimalKHR)) {
+        const auto wait_result = device.waitForFences(fence, true, std::numeric_limits<u64>::max());
+        if (wait_result != vk::Result::eSuccess) {
+            LOG_WARNING(Render_Vulkan, "Failed to wait for an acquired swapchain image: {}",
+                        vk::to_string(wait_result));
+        }
+        (void)device.resetFences(fence);
+    }
 
     switch (result) {
     case vk::Result::eSuccess:
@@ -280,8 +301,13 @@ void Swapchain::Destroy() {
         device.destroySemaphore(sem);
     }
 
+    for (const auto& fence : image_acquired_fences) {
+        device.destroyFence(fence);
+    }
+
     image_acquired.clear();
     present_ready.clear();
+    image_acquired_fences.clear();
 }
 
 void Swapchain::RefreshSemaphores() {
@@ -301,6 +327,14 @@ void Swapchain::RefreshSemaphores() {
         ASSERT_MSG(semaphore_result == vk::Result::eSuccess,
                    "Failed to create present ready semaphore: {}", vk::to_string(semaphore_result));
         semaphore = sem;
+    }
+
+    image_acquired_fences.resize(image_count);
+    for (vk::Fence& fence : image_acquired_fences) {
+        auto [fence_result, created] = device.createFence({});
+        ASSERT_MSG(fence_result == vk::Result::eSuccess, "Failed to create image acquired fence: {}",
+                   vk::to_string(fence_result));
+        fence = created;
     }
 
     for (u32 i = 0; i < image_count; ++i) {

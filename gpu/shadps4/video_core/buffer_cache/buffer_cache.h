@@ -65,6 +65,15 @@ public:
         return bda_pagetable_buffer.get();
     }
 
+    /// sanctuary: bytes of guest memory made resident in the buffer arenas, and the size of the
+    /// BDA page table (VRAM report).
+    [[nodiscard]] u64 ResidentBytes() const noexcept {
+        return resident_bytes;
+    }
+    [[nodiscard]] u64 BdaPageTableBytes() const noexcept {
+        return bda_pagetable_blocks * sizeof(vk::DeviceAddress);
+    }
+
     /// Retrieves the fault buffer.
     [[nodiscard]] Buffer* GetFaultBuffer() noexcept {
         return fault_manager->GetFaultBuffer();
@@ -133,6 +142,9 @@ private:
 
     void EnsureResident(const Buffer* arena, u64 first_block, u64 last_block);
 
+    /// sanctuary: grows the BDA page table so that it covers blocks below `end_block`.
+    void GrowBdaPageTable(u64 end_block);
+
     void DownloadMemory(const Buffer* arena, VAddr device_addr, u64 size);
 
     bool SynchronizeMemory(const Buffer* arena, VAddr device_addr, u32 size, bool is_written,
@@ -169,6 +181,10 @@ private:
 
     std::unique_ptr<FaultManager> fault_manager;
     std::unique_ptr<Buffer> bda_pagetable_buffer;
+    // sanctuary: the table covers the guest blocks below this one (it grows on demand; shaders
+    // read past its end as zero, which is a fault, as for a block that is not resident).
+    u64 bda_pagetable_blocks{};
+    u64 bda_pagetable_max_blocks{};
 
     std::array<const Buffer*, MAX_ARENA_PAGES> address_space{};
     u64 arena_page_bits{MAX_ARENA_PAGE_BITS};
@@ -190,6 +206,7 @@ private:
     };
     IntervalList<Backing> resident_ranges;
 
+    u64 resident_bytes{};
     u32 arena_memory_type_index{};
     u32 block_size{};
     u32 block_shift{};

@@ -375,13 +375,23 @@ The PS4 archives ship both the console and PC `Observer` definitions (`ClientCom
   42.21°) vs PC `wide.obs` (distance 129.00, pitch 45.00°).
 
 `pc_camera_zoom=1` in sanctuary.ini (launcher Graphics > More options > PC camera zoom; off by default,
-applied at start) makes `run.py` add `PC Camera Zoom`, which switches the `GlobalSNOGet` slot
-immediates in `CameraManagerGetDefaultObserver` (`0x1efde0`), `CameraManagerResetCamera`
-(`0x1efbb0`) and `LeftTriggerZoomComponent::Update` (`0x4e03db`) to the PC slots (`0x42c`, `0x42e`,
-`0x431` in 1.47/1.46; `0x3fb`, `0x3fd`, `0x400` in 1.25; `0x37c`, `0x37f` in 1.00, which predates
-Retro). The server's visibility/prefetch frustum (`sGetFrustum`, 1.47 `0x735530`) already uses the
-PC default and wide slots, and local co-op clamping (`LocalPlayerClamping_Logic_UpdateCamera`,
-`0x5cb10`) projects against the active camera. Dedicated menu and boss observers are unchanged.
+applied at start) makes `run.py` add `PC Camera Zoom`.
+
+In 1.47/1.46 it is a view dolly, after d3hack's `ViewDolly`: the game's own camera is left as it is
+(the console observers, their follow, teleports) and only its eye is moved back along the view
+direction where the camera builds its view matrix. `LookAt` (`0x234990`: rdi the matrix, rsi the eye,
+rdx the view direction, rcx up, r8d 0 = negate the direction; this caller passes 1) has one caller, the camera update
+(`0x1eeb0b`, eye = camera+0x18). `camdolly`, a code cave (`<Cave Name="camdolly" Size="184"/>`, placed in the code segment's zero
+padding at start like the other caves; its constants at +160), runs first: when the
+direction is the gameplay camera's (|x| = |y| within 0.03, |x| 0.45-0.70, |z| 0.45-0.75; menus,
+portraits and the trigger zoom look elsewhere) it adds |direction| x 18 to the eye (the camera always
+sits at +x, +y, +z from what it looks at), about the PC version's 98 for the console's 80.
+
+Pointing the game at the PC observers instead (the first version, still the one for 1.25 and 1.00:
+the `GlobalSNOGet` slot immediates in `CameraManagerGetDefaultObserver`, `CameraManagerResetCamera`
+and `LeftTriggerZoomComponent::Update` switched to the PC slots, `0x3fb`, `0x3fd`, `0x400` in 1.25;
+`0x37c`, `0x37f` in 1.00) also brings the PC observers' follow settings, which the console camera
+code does not expect: the view trails the hero, and a teleport leaves it behind for a moment.
 
 ## Xbox button icons
 
@@ -457,6 +467,8 @@ America) whose pack is missing with the first one the dump has, Portuguese first
 | `SANCTUARY_PROFILE_CHOICE=1` / `new:Name` | answer a player's profile list without showing it: an item's number, or a new profile (with `SANCTUARY_PAD_FILE`, a scripted press also counts as player 1's first press) |
 | `SANCTUARY_PAD_FILE=<file>` | scripted input (button names, `lx=`..`ry=`, `shot`, `p2`/`p3`/`p4` for other players) |
 | `SANCTUARY_VIRTUAL_PAD=1` | attach an SDL virtual gamepad (scripted runs that need a connected controller) |
+| `SANCTUARY_PRESENT_QUEUE=1` | present frames on a second graphics queue when the GPU has one (NVIDIA): a V-Sync wait no longer holds up the game's own GPU work (GitHub #103; off by default until tested) |
+| `SANCTUARY_ACQUIRE_FENCE=0` | wait for the next screen image on the GPU queue as before 0.7.5, instead of on the present thread |
 | `SANCTUARY_DEBUGGABLE=1` | let other processes read the game's memory (`/proc/PID/mem`, gdb without root) |
 | `SANCTUARY_RECORD_THREADS=1` | report (with a backtrace) any use of the Vulkan command recording from a thread that does not own it at that moment |
 | `SANCTUARY_GTAO_TRACE=1` | log GTAO match/fallback state on Diablo III's full-size R8 SSAO upscale pass |

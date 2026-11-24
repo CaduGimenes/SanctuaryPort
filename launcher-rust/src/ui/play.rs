@@ -365,7 +365,13 @@ fn start(state: &mut State) -> Task<Message> {
 fn spawn(state: &mut State) -> Task<Message> {
     let lang = state.lang.clone();
     state.log.clear();
-    let run_log = RunLog::open(&state.paths.run_log_path(&state.store.text("user_dir")));
+    // Written only when the player asked for it (Advanced > Troubleshooting): otherwise nothing
+    // touches the disk while the game runs.
+    let run_log = if state.store.flag("save_log") {
+        RunLog::open(&state.paths.run_log_path(&state.store.text("user_dir")))
+    } else {
+        RunLog::disabled()
+    };
     let env = launch_environment(state);
     // The game starts from the port's runner (missing_port_files says so before).
     let command = state.launch_command.clone().ok_or_else(|| {
@@ -562,7 +568,13 @@ fn exited(state: &mut State, Exit { code, hint }: Exit) -> Task<Message> {
     // last_run.log) and offers a pre-filled bug report.
     if crashed {
         let run_log = state.paths.run_log_path(&state.store.text("user_dir"));
-        if crate::core::crash_report::keep_crash_log(&run_log).is_ok() {
+        let kept = if state.store.flag("save_log") {
+            crate::core::crash_report::keep_crash_log(&run_log)
+        } else {
+            // No run log on disk: the crash log is the output the launcher kept in memory.
+            crate::core::crash_report::write_crash_log(&run_log, &state.log.text())
+        };
+        if kept.is_ok() {
             state.crash_code = Some(code);
             if state.modal.is_none() {
                 state.modal = Some(Modal::confirm(

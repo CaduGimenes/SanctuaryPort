@@ -11,8 +11,8 @@ body:
     id: version
     attributes:
       label: Port version
-      description: Shown in the launcher title bar (e.g. v0.7.4)
-      placeholder: v0.7.4
+      description: Shown in the launcher title bar (e.g. v0.7.5)
+      placeholder: v0.7.5
     validations:
       required: true
 
@@ -54,8 +54,8 @@ body:
   - type: textarea
     id: log
     attributes:
-      label: user/last_run.log
-      description: Attach the file from the port's folder (drag and drop it here). Required for crashes, black screens, graphics glitches and performance issues.
+      label: user/last_run.log or user/last_crash.log
+      description: "After a crash, attach user/last_crash.log (written automatically). For other problems, turn on Advanced > Troubleshooting > Save a log of each start in the launcher, play until it happens, and attach user/last_run.log (drag and drop it here)."
     validations:
       required: false
 
