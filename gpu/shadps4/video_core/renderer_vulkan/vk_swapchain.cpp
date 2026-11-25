@@ -113,11 +113,18 @@ bool Swapchain::AcquireNextImage() {
     // display lets go of the image (V-Sync, on the next refresh) stalled the game's own GPU work
     // behind the blit. The game waits for that work every frame (readbacks, frames queued, GPU idle),
     // so each frame took its frame time rounded up to whole refreshes: 60 FPS limit at 75 Hz,
-    // 2 x 13.3 ms = 37.5 FPS. SANCTUARY_ACQUIRE_FENCE=0 goes back to the semaphore alone.
-    static const bool use_fence = [] {
+    // 2 x 13.3 ms = 37.5 FPS.
+    // Only with V-Sync (Fifo): with it off (Mailbox, Immediate) the image is given back without
+    // waiting for a refresh, and the CPU wait only added the present thread's own stalls on the
+    // GPU (or compositor) finishing an earlier frame: lower lows and more hitches (GitHub #106).
+    // SANCTUARY_ACQUIRE_FENCE=0: never (the semaphore alone, as in 0.7.4); =1: also without V-Sync.
+    static const int forced_fence = [] {
         const char* env = std::getenv("SANCTUARY_ACQUIRE_FENCE");
-        return !(env && env[0] == '0');
+        return env && (env[0] == '0' || env[0] == '1') ? env[0] - '0' : -1;
     }();
+    const bool use_fence = forced_fence >= 0 ? forced_fence == 1
+                                             : present_mode == vk::PresentModeKHR::eFifo ||
+                                                   present_mode == vk::PresentModeKHR::eFifoRelaxed;
     const vk::Fence fence = use_fence ? image_acquired_fences[frame_index] : vk::Fence{};
     vk::Result result =
         device.acquireNextImageKHR(swapchain, std::numeric_limits<u64>::max(),

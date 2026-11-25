@@ -225,9 +225,9 @@ got, and on which device, in the pinned issue
 For a problem, open an issue with the bug template. After a crash, attach `user/last_crash.log`
 (written automatically). For anything else, turn on **Advanced → Troubleshooting → Save a log of
 each start** (off by default, so nothing is written to disk while you play), play until it happens
-and attach `user/last_run.log`. For stutter or frame drops, also start the launcher with the
-environment variable `SANCTUARY_FRAME_STATS=1` and play the same spot: the log then records the
-frame pacing and every long frame.
+and attach `user/last_run.log`. For stutter or frame drops, turn on **Advanced → Troubleshooting →
+Detailed performance log** instead and play the same spot: the log then records the frame pacing,
+every long frame and the video memory every 5 seconds.
 
 ## How it works
 

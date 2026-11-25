@@ -468,7 +468,7 @@ America) whose pack is missing with the first one the dump has, Portuguese first
 | `SANCTUARY_PAD_FILE=<file>` | scripted input (button names, `lx=`..`ry=`, `shot`, `p2`/`p3`/`p4` for other players) |
 | `SANCTUARY_VIRTUAL_PAD=1` | attach an SDL virtual gamepad (scripted runs that need a connected controller) |
 | `SANCTUARY_PRESENT_QUEUE=1` | present frames on a second graphics queue when the GPU has one (NVIDIA): a V-Sync wait no longer holds up the game's own GPU work (GitHub #103; off by default until tested) |
-| `SANCTUARY_ACQUIRE_FENCE=0` | wait for the next screen image on the GPU queue as before 0.7.5, instead of on the present thread |
+| `SANCTUARY_ACQUIRE_FENCE=0` / `=1` | with V-Sync on, the present thread waits on the CPU for the next screen image (GitHub #103); `0`: never, on the GPU queue as before 0.7.5; `1`: also with V-Sync off (off by default there since GitHub #106: it lowered the lows) |
 | `SANCTUARY_DEBUGGABLE=1` | let other processes read the game's memory (`/proc/PID/mem`, gdb without root) |
 | `SANCTUARY_RECORD_THREADS=1` | report (with a backtrace) any use of the Vulkan command recording from a thread that does not own it at that moment |
 | `SANCTUARY_GTAO_TRACE=1` | log GTAO match/fallback state on Diablo III's full-size R8 SSAO upscale pass |

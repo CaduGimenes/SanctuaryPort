@@ -441,8 +441,15 @@
         <Target Name="seasons" Address="0x443528" Pattern="4c 8b 25 ?? ?? ?? ?? 48 89 fb 49 8b 04 24 48 89 45 d0 e8 ?? ?? ?? ?? 41 89 c6 48 8b 03 48 89 df ff 50 18" At="7"/>
     </Metadata>
     <!-- Challenge Rifts (GitHub #99): the cave answers the pubfile requests for challengerift_config.dat and
-         challengerift_N.dat from user/data/pubfiles and writes the challenge number into the config (its first
-         field, a 2-byte varint); the game loads challengerift_<number % 10>.dat. The number is the week since
+         challengerift_N.dat from user/data/pubfiles and appends three fields to the config (D3.ChallengeRifts
+         .ChallengeData): 1 challenge_number, 2 challenge_start_unix_time and 4 challenge_end_unix_time_console,
+         the week, its start and the next week's start; protobuf keeps the last value of a field, so these win
+         over the file's own, whatever their form. The game loads challengerift_<number % 10>.dat. Its own
+         end time matters (GitHub #105): when the player presses Continue in Challenge Rift mode (0x496bd4 ->
+         0x49b9a0), a time past field 4 shows "Challenge Rift N has ended" (ErrorChallengeEnded, 0x49bc3a)
+         and one before field 2 "not yet started" (0x49ba7b); the files players have are an old week's, so
+         without the append every challenge had ended (the cave used to rewrite only a number stored as
+         08 81 xx, and nothing else). The number is the week since
          1970 (Thursday 00:00 UTC), from the game's own clock (0x191f0 FILETIME, 0x189f0 to Unix seconds, the
          pair the reward code at 0x342bd uses), so it grows by one each week. The game gives the cache only for
          a challenge above the last one rewarded: the server (0x8a4620) gives status 2, "already earned", when
@@ -451,12 +458,12 @@
          reward whose number is not above it. A random number each launch (10..909, as before) thus left the
          town's "Challenge Rift Reward" box (gizmo group 86, claim 0x8a4e90, pure local code) with nothing to
          give once a high number had been rewarded. Week numbers (2900 and up) are above every old random one. -->
-    <Metadata Title="Diablo III" Name="Event: Challenge Rifts" Note="Offline Challenge Rifts: the game reads challengerift_config.dat and challengerift_N.dat from user/data/pubfiles (you supply the files; see patches/challenge_rift_data/README.md), with the challenge number of the current week, so the Challenge Rift cache can be earned once a week and claimed in town." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+    <Metadata Title="Diablo III" Name="Event: Challenge Rifts" Note="Offline Challenge Rifts: the game reads challengerift_config.dat and challengerift_N.dat from user/data/pubfiles (you supply the files; see patches/challenge_rift_data/README.md), with the challenge number and dates of the current week (it can be played any number of times), so the Challenge Rift cache can be earned once a week and claimed in town." Author="thanosdk28" PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
         <PatchList>
-            <Line Type="bytes" Address="0x177af90" Value="488d05d301000031c9448a04084584c0740e443a040e0f85b3010000ffc1ebe9554889e55341544155415641574881ec1802000048893c244989f44989d5488dbc2400010000488d359c010000ac84c07403aaebf84c89e6b9f0000000acaa84c07405e2f8c60700488dbc240001000031f631d2ff15{rel:got_open:0}85c00f883201000089c389df31f6ba02000000ff15{rel:got_lseek:0}4989c689df31f631d2ff15{rel:got_lseek:0}4d85f60f8e01010000498d7e10e8{rel:newobj:0}4989c789df4c89fe4c89f2ff15{rel:got_read:0}4989c689dfff15{rel:got_close:0}4d85f60f8edb00000041807c240e6375446641813f0881753c8b05{rel:cr_number:0}85c0751ce8{rel:filetime:0}4889c7e8{rel:unixtime:0}31d2b9803a0900f7f18905{rel:cr_number:0}89c183e17f81c98000000041884f01c1e80741884702bf40000000e8{rel:newobj:0}4889c34c893b4c8973084c89731048c743180000000048c7432000000000c7432800000040c7432c0000004048c743300000000048c7433800000000c74424080000000048895c2410488d43204889442418498b45004885c07410488d7818488d742408488d542410ff104881c418020000415f415e415d415c5b5dc389dfff15{rel:got_close:0}488b3c244c89e64c89ea4881c418020000415f415e415d415c5b5d554889e54157e9{rel:orig_next:0}6368616c6c656e6765726966745f002f646174612f70756266696c65732f00" Target="cr_cave"/>
+            <Line Type="bytes" Address="0x177af90" Value="488d050b02000031c9448a04084584c0740e443a040e0f85d3010000ffc1ebe9554889e55341544155415641574881ec1802000048893c244989f44989d5488dbc2400010000488d35d4010000ac84c07403aaebf84c89e6b9f0000000acaa84c07405e2f8c60700488dbc240001000031f631d2ff15{rel:got_open:0}85c00f885201000089c389df31f6ba02000000ff15{rel:got_lseek:0}4989c689df31f631d2ff15{rel:got_lseek:0}4d85f60f8e21010000498d7e20e8{rel:newobj:0}4989c789df4c89fe4c89f2ff15{rel:got_read:0}4989c689dfff15{rel:got_close:0}4d85f60f8efb00000041807c240e6375648b05{rel:cr_number:0}85c0751ce8{rel:filetime:0}4889c7e8{rel:unixtime:0}31d2b9803a0900f7f18905{rel:cr_number:0}89c64b8d3c37c6070848ffc7e8e2000000c6071048ffc74869c6803a0900e8d0000000c6072048ffc78d46014869c0803a0900e8bb0000004c29ff4989febf40000000e8{rel:newobj:0}4889c34c893b4c8973084c89731048c743180000000048c7432000000000c7432800000040c7432c0000004048c743300000000048c7433800000000c74424080000000048895c2410488d43204889442418498b45004885c07410488d7818488d742408488d542410ff104881c418020000415f415e415d415c5b5dc389dfff15{rel:got_close:0}488b3c244c89e64c89ea4881c418020000415f415e415d415c5b5d554889e54157e9{rel:orig_next:0}89c148c1e807740a80c980880f48ffc7ebee880f48ffc7c36368616c6c656e6765726966745f002f646174612f70756266696c65732f00" Target="cr_cave"/>
             <Line Type="bytes" Address="0x448590" Value="e9{rel:cr_cave:0}90" Pattern="ff 60 18 90 90 90 90 90 90 90 90 90 90 90 90 55 48 89 e5 41 57 41 56 41 55 41 54 53" At="15"/>
         </PatchList>
-        <Cave Name="cr_cave" Size="505"/>
+        <Cave Name="cr_cave" Size="561"/>
         <Cave Name="cr_number" Size="4" Region="data"/>
         <Target Name="got_close" Address="0x1809a60" Pattern="68 1a 00 00 00 e9 ?? ?? ?? ?? ff 25 ?? ?? ?? ??" At="12" Ref="1" Tail="0"/>
         <Target Name="got_lseek" Address="0x1809a88" Pattern="68 1f 00 00 00 e9 ?? ?? ?? ?? ff 25 ?? ?? ?? ??" At="12" Ref="1" Tail="0"/>

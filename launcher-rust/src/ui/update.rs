@@ -12,7 +12,7 @@ use iced::Task;
 
 use crate::core::i18n::{tr, tr_fmt};
 use crate::core::release::{newer, version_tuple, Release, ReleaseId};
-use crate::core::update::{InstallTarget, ReleaseHost};
+use crate::core::update::{rate_limited_minutes, InstallTarget, ReleaseHost};
 use crate::ui::app::{Message, State};
 use crate::ui::play::{self, WORKER_LOST};
 use crate::ui::splash::{Check, SplashMessage};
@@ -52,6 +52,10 @@ pub struct Updater {
     installed: ReleaseId,
     self_update: bool,
     phase: Phase,
+    /// A check is on its way: another press waits for its answer instead of asking again.
+    in_flight: bool,
+    /// A manual check was asked while `in_flight`: the answer is shown as a manual one.
+    manual_waiting: bool,
 }
 
 impl Updater {
@@ -62,6 +66,8 @@ impl Updater {
             self_update: host.self_update(),
             host,
             phase: Phase::Idle,
+            in_flight: false,
+            manual_waiting: false,
         }
     }
 
@@ -224,32 +230,63 @@ pub fn update(state: &mut State, message: UpdateMessage) -> Task<Message> {
     let lang = state.lang.clone();
     match message {
         UpdateMessage::Check { manual } => {
+            // One request at a time: repeated presses wait for the running one (#105).
+            if state.updater.in_flight {
+                state.updater.manual_waiting |= manual;
+                return Task::none();
+            }
+            state.updater.in_flight = true;
             if state.updater.stale() {
                 state.updater.phase = Phase::Checking;
             }
             let host = state.updater.host.clone();
-            blocking(move || host.list())
+            // A worker that dies still answers, so `in_flight` always ends.
+            blocking_or(move || host.list(), Err(WORKER_LOST.to_string()))
                 .map(move |result| Message::Update(UpdateMessage::Checked { manual, result }))
         }
         UpdateMessage::Checked { manual, result } => {
+            let manual = manual || std::mem::take(&mut state.updater.manual_waiting);
+            state.updater.in_flight = false;
             match result {
                 Ok(releases) => {
                     ready(state, releases);
-                    if offer_decision(state.updater.newer().is_some(), manual) == Decision::Latest {
-                        let text = tr_fmt(
-                            &lang,
-                            "You have the latest version ({}).",
-                            &[&state.updater.installed.version],
-                        );
-                        state.modal = Some(Modal::info(text));
+                    match offer_decision(state.updater.newer().is_some(), manual) {
+                        // A manual check that finds a newer release offers it (#105: it showed
+                        // nothing, only the version button's label changed).
+                        Decision::Offer if manual => {
+                            let newer = state.updater.newer().cloned();
+                            if let Some(newer) = newer {
+                                return install(state, newer, true);
+                            }
+                        }
+                        Decision::Latest => {
+                            let text = tr_fmt(
+                                &lang,
+                                "You have the latest version ({}).",
+                                &[&state.updater.installed.version],
+                            );
+                            state.modal = Some(Modal::info(text));
+                        }
+                        _ => {}
                     }
                 }
                 Err(error) => {
+                    let limited = rate_limited_minutes(&error);
+                    let error = match limited {
+                        Some(minutes) => tr_fmt(
+                            &lang,
+                            "GitHub limits update checks; try again in {} minutes.",
+                            &[&minutes.to_string()],
+                        ),
+                        None => error,
+                    };
                     // A list already shown and a running download stay.
                     if state.updater.listing() != Listing::Listed {
                         state.updater.phase = Phase::Failed(error.clone());
                     }
-                    if manual {
+                    if manual && limited.is_some() {
+                        state.modal = Some(Modal::info(error));
+                    } else if manual {
                         let text = tr_fmt(&lang, "Could not check for updates: {}", &[&error]);
                         state.modal = Some(Modal::error(text));
                     }
@@ -257,38 +294,7 @@ pub fn update(state: &mut State, message: UpdateMessage) -> Task<Message> {
             }
             Task::none()
         }
-        UpdateMessage::Install(release) => {
-            if state.updater.downloading().is_some()
-                || release.id.same_build(&state.updater.installed)
-            {
-                return Task::none();
-            }
-            let plan = install_decision(state.game.is_live(), &state.updater.host.target());
-            match plan {
-                InstallPlan::Blocked => {
-                    let text = tr(&lang, "Close the game before updating.");
-                    state.modal = Some(Modal::info(text));
-                    Task::none()
-                }
-                InstallPlan::OpenPage => open_page(state, release.page),
-                InstallPlan::ReadOnly(folder) => {
-                    let text = tr_fmt(
-                        &lang,
-                        "The launcher cannot write to {}, so it cannot replace itself there. Open the releases page to download the new version by hand?",
-                        &[&folder.display().to_string()],
-                    );
-                    let yes = Message::Update(UpdateMessage::OpenPage(release.page));
-                    state.modal = Some(Modal::confirm(text, yes));
-                    Task::none()
-                }
-                InstallPlan::Confirm => {
-                    let text = confirm_text(&lang, &release, &state.updater.installed);
-                    let yes = Message::Update(UpdateMessage::Confirmed(release));
-                    state.modal = Some(Modal::confirm(text, yes));
-                    Task::none()
-                }
-            }
-        }
+        UpdateMessage::Install(release) => install(state, release, false),
         UpdateMessage::OpenPage(page) => {
             state.modal = None;
             open_page(state, page)
@@ -335,6 +341,48 @@ pub fn update(state: &mut State, message: UpdateMessage) -> Task<Message> {
             }
             let text = tr_fmt(&lang, "Update failed: {}", &[&error]);
             state.modal = Some(Modal::error(text));
+            Task::none()
+        }
+    }
+}
+
+/// Installs `release` after the question its target asks; `offered` (a manual check found it)
+/// says first that it is available.
+fn install(state: &mut State, release: Release, offered: bool) -> Task<Message> {
+    let lang = state.lang.clone();
+    if state.updater.downloading().is_some() || release.id.same_build(&state.updater.installed) {
+        return Task::none();
+    }
+    let available = |text: String| {
+        if offered {
+            let head = tr_fmt(&lang, "Version {} is available.", &[&release.id.short()]);
+            format!("{head}\n{text}")
+        } else {
+            text
+        }
+    };
+    let plan = install_decision(state.game.is_live(), &state.updater.host.target());
+    match plan {
+        InstallPlan::Blocked => {
+            let text = available(tr(&lang, "Close the game before updating."));
+            state.modal = Some(Modal::info(text));
+            Task::none()
+        }
+        InstallPlan::OpenPage => open_page(state, release.page),
+        InstallPlan::ReadOnly(folder) => {
+            let text = available(tr_fmt(
+                &lang,
+                "The launcher cannot write to {}, so it cannot replace itself there. Open the releases page to download the new version by hand?",
+                &[&folder.display().to_string()],
+            ));
+            let yes = Message::Update(UpdateMessage::OpenPage(release.page));
+            state.modal = Some(Modal::confirm(text, yes));
+            Task::none()
+        }
+        InstallPlan::Confirm => {
+            let text = available(confirm_text(&lang, &release, &state.updater.installed));
+            let yes = Message::Update(UpdateMessage::Confirmed(release));
+            state.modal = Some(Modal::confirm(text, yes));
             Task::none()
         }
     }

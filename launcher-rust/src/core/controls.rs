@@ -944,6 +944,43 @@ mod tests {
         assert!(spec.contains("look_left=None"));
     }
 
+    /// #105: the right stick moved to 7 8 9 0 and the d-pad to the arrows. Each arrow is sent as a
+    /// d-pad key only and each right stick direction as its new key, so the runtime (which reads
+    /// `look_*` entries, see tests/test_pad_map.c) presses nothing twice.
+    #[test]
+    fn right_stick_and_dpad_keys_are_sent_apart() {
+        let mut keys = defaults_of(Kind::Key);
+        let mut none = [IndexMap::new(), IndexMap::new()];
+        let [alt, alt2] = &mut none;
+        for (button, key) in [
+            ("look_up", "7"),
+            ("look_down", "8"),
+            ("look_left", "9"),
+            ("look_right", "0"),
+            ("up", "Up"),
+            ("right", "Right"),
+            ("down", "Down"),
+            ("left", "Left"),
+        ] {
+            bind_key([&mut keys, alt, alt2], button, Slot::Main, key);
+        }
+        let spec = keyboard_map(&json!({ "key": keys }));
+        let entries: Vec<&str> = spec.split(',').collect();
+        for entry in [
+            "look_up=7",
+            "look_down=8",
+            "look_left=9",
+            "look_right=0",
+            "up=Up",
+            "right=Right",
+            "down=Down",
+            "left=Left",
+        ] {
+            assert!(entries.contains(&entry), "{entry} missing from {spec}");
+        }
+        assert!(conflicts(keys.values()).is_empty(), "{keys:?}");
+    }
+
     #[test]
     fn new_directions_do_not_take_keys_from_saved_actions() {
         let new = migrate_controls(object(

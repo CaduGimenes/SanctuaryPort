@@ -367,7 +367,8 @@ fn spawn(state: &mut State) -> Task<Message> {
     state.log.clear();
     // Written only when the player asked for it (Advanced > Troubleshooting): otherwise nothing
     // touches the disk while the game runs.
-    let run_log = if state.store.flag("save_log") {
+    // The detailed performance log is written too (it is no use in memory only).
+    let run_log = if state.store.flag("save_log") || state.store.flag("perf_log") {
         RunLog::open(&state.paths.run_log_path(&state.store.text("user_dir")))
     } else {
         RunLog::disabled()
@@ -568,7 +569,7 @@ fn exited(state: &mut State, Exit { code, hint }: Exit) -> Task<Message> {
     // last_run.log) and offers a pre-filled bug report.
     if crashed {
         let run_log = state.paths.run_log_path(&state.store.text("user_dir"));
-        let kept = if state.store.flag("save_log") {
+        let kept = if state.store.flag("save_log") || state.store.flag("perf_log") {
             crate::core::crash_report::keep_crash_log(&run_log)
         } else {
             // No run log on disk: the crash log is the output the launcher kept in memory.

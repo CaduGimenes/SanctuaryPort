@@ -87,6 +87,37 @@ int main(void) {
     assert(pressed_by(&mouse,MOUSE_BACK)==BTN_L2 && pressed_by(&mouse,MOUSE_FORWARD)==BTN_R2);
     assert(apply_button_map(&pad_map,"cross=Mouse Left",false)==0); /* the gamepad map has no mouse */
 
+    /* Alternatives: every name of `Space|K` presses the button; a bad one is skipped. */
+    ButtonMap alts=key_map;
+    assert(apply_button_map(&alts,"cross=Space|K|NotAKey,circle=Mouse Middle|0",true)==2);
+    assert(pressed_by(&alts,SDL_SCANCODE_SPACE)==BTN_CROSS && pressed_by(&alts,SDL_SCANCODE_K)==(BTN_CROSS|BTN_DOWN));
+    assert(pressed_by(&alts,MOUSE_MIDDLE)==BTN_CIRCLE && pressed_by(&alts,SDL_SCANCODE_0)==BTN_CIRCLE);
+    assert(pressed_by(&alts,SDL_SCANCODE_LSHIFT)==0);
+
+    /* #105: the stick directions are keyboard-map entries. By default WASD and the arrows. */
+    assert(pressed_by(&key_map,SDL_SCANCODE_W)==MOVE_UP && pressed_by(&key_map,SDL_SCANCODE_RIGHT)==LOOK_RIGHT);
+    PadData still={0};
+    still.left_x=still.left_y=still.right_x=still.right_y=128;
+    key_sticks(&still,LOOK_RIGHT|MOVE_UP);
+    assert(still.right_x==255 && still.right_y==128 && still.left_y==0 && still.left_x==128);
+    /* The reporter's layout: right stick on 7 8 9 0, the d-pad on the arrows. An arrow presses the
+     * d-pad only, and the right stick follows its own keys only. */
+    ButtonMap report=key_map;
+    assert(apply_button_map(&report,"up=Up,right=Right,down=Down,left=Left,"
+                                    "look_up=7,look_down=8,look_left=9,look_right=0",true)==8);
+    assert(pressed_by(&report,SDL_SCANCODE_UP)==BTN_UP && pressed_by(&report,SDL_SCANCODE_RIGHT)==BTN_RIGHT);
+    assert(pressed_by(&report,SDL_SCANCODE_DOWN)==BTN_DOWN && pressed_by(&report,SDL_SCANCODE_LEFT)==BTN_LEFT);
+    assert(pressed_by(&report,SDL_SCANCODE_7)==LOOK_UP && pressed_by(&report,SDL_SCANCODE_8)==LOOK_DOWN);
+    assert(pressed_by(&report,SDL_SCANCODE_9)==LOOK_LEFT && pressed_by(&report,SDL_SCANCODE_0)==LOOK_RIGHT);
+    assert(pressed_by(&report,SDL_SCANCODE_I)==0);
+    /* A direction on None follows no key; mouse names work; the gamepad map has no stick names. */
+    ButtonMap sticks=key_map;
+    assert(apply_button_map(&sticks,"move_up=None,move_left=Mouse Back|Keypad 4",true)==2);
+    assert(pressed_by(&sticks,SDL_SCANCODE_W)==0 && pressed_by(&sticks,SDL_SCANCODE_A)==0);
+    assert(pressed_by(&sticks,MOUSE_BACK)==MOVE_LEFT && pressed_by(&sticks,SDL_SCANCODE_KP_4)==MOVE_LEFT);
+    ButtonMap no_sticks=pad_map;
+    assert(apply_button_map(&no_sticks,"look_up=dpup,move_up=None",false)==0 && no_sticks.count==pad_map.count);
+
     /* Sources: mouse masks, wheel pulses, and keys only inside the scancode range. */
     bool held[SDL_SCANCODE_COUNT]={0};
     held[SDL_SCANCODE_E]=true;

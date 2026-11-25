@@ -1,7 +1,7 @@
 /* libScePad on SDL3 gamepads, with a keyboard fallback. SDL events are pumped
  * by the window thread (gpu/shim/window.cpp); here state is only sampled.
  *
- * Default keyboard layout (SANCTUARY_KEY_MAP changes the buttons, see apply_button_map):
+ * Default keyboard layout (SANCTUARY_KEY_MAP changes the buttons and the stick keys, see apply_button_map):
  *   WASD left stick, arrow keys right stick, Space Cross, LShift Circle,
  *   E Square, Q Triangle, 1 L1, 3 R1, R L2, F R2, Z L3, C R3,
  *   Enter Options, Tab left touchpad (photo mode), Backspace right touchpad (pause menu),
@@ -35,6 +35,11 @@ enum {
     /* Host-only sources, never shown to the game: a click on one side of the touchpad from a
      * button or key without a touch surface (play_click turns them into a touch and a click). */
     CLICK_LEFT=0x40000000, CLICK_RIGHT=0x80000000,
+    /* Keyboard-only sources, never shown to the game either: a key held on one direction of a
+     * stick (move_* left stick, look_* right stick). */
+    MOVE_UP=0x400000, MOVE_DOWN=0x800000, MOVE_LEFT=0x1000000, MOVE_RIGHT=0x2000000,
+    LOOK_UP=0x4000000, LOOK_DOWN=0x8000000, LOOK_LEFT=0x10000000, LOOK_RIGHT=0x20000000,
+    STICK_KEYS=MOVE_UP|MOVE_DOWN|MOVE_LEFT|MOVE_RIGHT|LOOK_UP|LOOK_DOWN|LOOK_LEFT|LOOK_RIGHT,
 };
 typedef struct { uint16_t x, y; uint8_t id, reserve[3]; } PadTouch;
 typedef struct {
@@ -284,19 +289,26 @@ static SDL_Gamepad *extra_gamepad(int user) { refresh_extra_pads(); return extra
  * changed per PS4 button with SANCTUARY_PAD_MAP (gamepad) and SANCTUARY_KEY_MAP (keyboard), e.g.
  * SANCTUARY_KEY_MAP="cross=Q,square=Left Shift" or SANCTUARY_PAD_MAP="cross=b,circle=a": comma-separated
  * <ps4 button>=<SDL key or gamepad button name>. A mapped PS4 button loses its default sources;
- * <ps4 button>=None leaves it without any.
+ * <ps4 button>=None leaves it without any; <ps4 button>=Space|K gives it several (the launcher's
+ * alternative keys).
+ * The keyboard map also takes the stick directions, move_up/down/left/right (left stick, WASD) and
+ * look_up/down/left/right (right stick, arrow keys): a remapped direction no longer follows its
+ * default key (#105: the arrows kept moving the right stick whatever keys were chosen).
  * touchpad_left (alias touchpad) and touchpad_right are the two sides of the touchpad click:
  * photo mode and the pause menu. Back/View (Share on a DualSense) is the right click, and with
- * L1 held the left one. Sticks, triggers, the real touchpad click and the overlay shortcuts are
+ * L1 held the left one. Gamepad sticks, triggers, the real touchpad click and the overlay shortcuts are
  * not remapped. */
 static const struct { const char *name; uint32_t ps; } ps_names[]={
     {"cross",BTN_CROSS}, {"circle",BTN_CIRCLE}, {"square",BTN_SQUARE}, {"triangle",BTN_TRIANGLE},
     {"l1",BTN_L1}, {"r1",BTN_R1}, {"l2",BTN_L2}, {"r2",BTN_R2}, {"l3",BTN_L3}, {"r3",BTN_R3},
     {"options",BTN_OPTIONS}, {"touchpad",CLICK_LEFT}, {"touchpad_left",CLICK_LEFT}, {"touchpad_right",CLICK_RIGHT},
     {"up",BTN_UP}, {"down",BTN_DOWN}, {"left",BTN_LEFT}, {"right",BTN_RIGHT},
+    {"move_up",MOVE_UP}, {"move_down",MOVE_DOWN}, {"move_left",MOVE_LEFT}, {"move_right",MOVE_RIGHT},
+    {"look_up",LOOK_UP}, {"look_down",LOOK_DOWN}, {"look_left",LOOK_LEFT}, {"look_right",LOOK_RIGHT},
 };
 typedef struct { int source; uint32_t ps; } ButtonSource;
-typedef struct { ButtonSource entries[48]; size_t count; } ButtonMap;
+/* Room for every button and stick direction of the keyboard with a main key and two alternatives. */
+typedef struct { ButtonSource entries[96]; size_t count; } ButtonMap;
 static ButtonMap pad_map={{
     {SDL_GAMEPAD_BUTTON_SOUTH,BTN_CROSS}, {SDL_GAMEPAD_BUTTON_EAST,BTN_CIRCLE},
     {SDL_GAMEPAD_BUTTON_WEST,BTN_SQUARE}, {SDL_GAMEPAD_BUTTON_NORTH,BTN_TRIANGLE},
@@ -313,7 +325,9 @@ static ButtonMap key_map={{
     {SDL_SCANCODE_R,BTN_L2}, {SDL_SCANCODE_F,BTN_R2}, {SDL_SCANCODE_Z,BTN_L3}, {SDL_SCANCODE_C,BTN_R3},
     {SDL_SCANCODE_RETURN,BTN_OPTIONS}, {SDL_SCANCODE_TAB,CLICK_LEFT}, {SDL_SCANCODE_BACKSPACE,CLICK_RIGHT},
     {SDL_SCANCODE_I,BTN_UP}, {SDL_SCANCODE_K,BTN_DOWN}, {SDL_SCANCODE_J,BTN_LEFT}, {SDL_SCANCODE_L,BTN_RIGHT},
-},17};
+    {SDL_SCANCODE_W,MOVE_UP}, {SDL_SCANCODE_S,MOVE_DOWN}, {SDL_SCANCODE_A,MOVE_LEFT}, {SDL_SCANCODE_D,MOVE_RIGHT},
+    {SDL_SCANCODE_UP,LOOK_UP}, {SDL_SCANCODE_DOWN,LOOK_DOWN}, {SDL_SCANCODE_LEFT,LOOK_LEFT}, {SDL_SCANCODE_RIGHT,LOOK_RIGHT},
+},25};
 
 static char *trim(char *text) {
     while (*text==' ' || *text=='\t') ++text;
@@ -404,7 +418,7 @@ static int key_source(const char *name) {
  * logged and skipped, so their PS4 button keeps its default. */
 static int apply_button_map(ButtonMap *map, const char *spec, bool keyboard) {
     if (!spec || !*spec) return 0;
-    char copy[1024];
+    char copy[4096]; /* every keyboard row with two alternatives fits */
     snprintf(copy,sizeof(copy),"%s",spec);
     int used=0;
     char *entry=copy;
@@ -422,6 +436,7 @@ static int apply_button_map(ButtonMap *map, const char *spec, bool keyboard) {
         entry=next;
         uint32_t ps=0;
         for (size_t i=0;i<sizeof(ps_names)/sizeof(*ps_names);++i) if (!SDL_strcasecmp(button,ps_names[i].name)) ps=ps_names[i].ps;
+        if (ps & STICK_KEYS && !keyboard) ps=0; /* gamepad sticks are not remapped */
         if (ps && !SDL_strcasecmp(name,"None")) { /* the button gets no source at all */
             size_t kept=0;
             for (size_t i=0;i<map->count;++i) if (map->entries[i].ps!=ps) map->entries[kept++]=map->entries[i];
@@ -429,17 +444,32 @@ static int apply_button_map(ButtonMap *map, const char *spec, bool keyboard) {
             ++used;
             continue;
         }
-        const int mouse=keyboard && *name ? mouse_source(name) : 0;
-        const int source=!*name ? -1 : mouse ? mouse : keyboard ? key_source(name)
-                                                         : (int)SDL_GetGamepadButtonFromString(name);
-        if (!ps || source<=(keyboard ? (int)SDL_SCANCODE_UNKNOWN : (int)SDL_GAMEPAD_BUTTON_INVALID)) {
+        /* Every name of `Space|K` is a source of the button; a bad one is skipped. */
+        int sources[8], found=0;
+        char names[256];
+        snprintf(names,sizeof(names),"%s",name);
+        for (char *one=names, *bar; one && ps; one=bar) {
+            bar=strchr(one,'|');
+            if (bar) *bar++=0;
+            const char *source_name=trim(one);
+            const int mouse=keyboard && *source_name ? mouse_source(source_name) : 0;
+            const int source=!*source_name ? -1 : mouse ? mouse : keyboard ? key_source(source_name)
+                                                                  : (int)SDL_GetGamepadButtonFromString(source_name);
+            if (source<=(keyboard ? (int)SDL_SCANCODE_UNKNOWN : (int)SDL_GAMEPAD_BUTTON_INVALID)) {
+                if (bar || one!=names) printf("Runtime: pad map: ignored '%s' of '%s=%s'\n",source_name,button,name);
+                continue;
+            }
+            if (found<(int)(sizeof(sources)/sizeof(*sources))) sources[found++]=source;
+        }
+        if (!found) {
             printf("Runtime: pad map: ignored '%s=%s'\n",button,name);
             continue;
         }
         size_t kept=0;
         for (size_t i=0;i<map->count;++i) if (map->entries[i].ps!=ps) map->entries[kept++]=map->entries[i];
         map->count=kept;
-        if (map->count<sizeof(map->entries)/sizeof(*map->entries)) map->entries[map->count++]=(ButtonSource){source,ps};
+        for (int i=0;i<found;++i)
+            if (map->count<sizeof(map->entries)/sizeof(*map->entries)) map->entries[map->count++]=(ButtonSource){sources[i],ps};
         ++used;
     }
     return used;
@@ -456,6 +486,13 @@ static void load_button_maps(void) {
 
 static void key_axis(uint8_t *axis, bool negative, bool positive) {
     if (negative || positive) *axis=(uint8_t)(128-(negative ? 128 : 0)+(positive ? 127 : 0));
+}
+/* The sticks of the held keyboard-map sources (`held`: their PS4 buttons and stick directions). */
+static void key_sticks(PadData *d, uint32_t held) {
+    key_axis(&d->left_x,held & MOVE_LEFT,held & MOVE_RIGHT);
+    key_axis(&d->left_y,held & MOVE_UP,held & MOVE_DOWN);
+    key_axis(&d->right_x,held & LOOK_LEFT,held & LOOK_RIGHT);
+    key_axis(&d->right_y,held & LOOK_UP,held & LOOK_DOWN);
 }
 static void neutral(PadData *d);
 static void read_gamepad(SDL_Gamepad *g, PadData *d);
@@ -476,17 +513,16 @@ static void sample_host(PadData *d) {
     const SDL_MouseButtonFlags mouse=SDL_GetMouseState(NULL,NULL);
     const bool wheel[2]={wheel_held(0,d->timestamp),wheel_held(1,d->timestamp)};
     const uint32_t pad_buttons=d->buttons;
+    uint32_t held=0;
     for (size_t i=0;i<key_map.count;++i)
-        if (source_down(key_map.entries[i].source,k,mouse,wheel)) d->buttons|=key_map.entries[i].ps;
+        if (source_down(key_map.entries[i].source,k,mouse,wheel)) held|=key_map.entries[i].ps;
+    d->buttons|=held & ~STICK_KEYS;
     /* A keyboard key mapped to L2/R2 is a binary press; the gamepad trigger stays analog. */
     const uint32_t from_keyboard=d->buttons & ~pad_buttons;
     host_keyboard_buttons=from_keyboard;
     if (from_keyboard & BTN_L2) d->l2=255;
     if (from_keyboard & BTN_R2) d->r2=255;
-    key_axis(&d->left_x,k[SDL_SCANCODE_A],k[SDL_SCANCODE_D]);
-    key_axis(&d->left_y,k[SDL_SCANCODE_W],k[SDL_SCANCODE_S]);
-    key_axis(&d->right_x,k[SDL_SCANCODE_LEFT],k[SDL_SCANCODE_RIGHT]);
-    key_axis(&d->right_y,k[SDL_SCANCODE_UP],k[SDL_SCANCODE_DOWN]);
+    key_sticks(d,held);
 }
 /* A neutral, connected pad state. */
 static void neutral(PadData *d) {

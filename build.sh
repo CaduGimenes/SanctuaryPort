@@ -106,6 +106,8 @@ if [[ ${1:-} == --test ]]; then
     out/pad-test
     "$CC" -std=c11 -O2 -g -Wall -Wextra -Werror -pthread "${includes[@]}" -I. -Isrc tests/test_pad_coop.c "${libraries[@]}" -o out/pad-coop-test
     out/pad-coop-test
+    "$CC" -std=c11 -O2 -g -UNDEBUG -Wall -Wextra -Werror -pthread "${includes[@]}" -I. -Isrc tests/test_pad_map.c "${libraries[@]}" -lm -o out/pad-map-test
+    out/pad-map-test
     "$CC" -std=c11 -O2 -g -Wall -Wextra -Werror -pthread -I. -Isrc tests/test_runtime.c "${runtime[@]}" "${ngs2[@]}" out/libatrac9.a -lstdc++ -lm "${gpu[@]}" "${libraries[@]}" -o out/runtime-test
     out/runtime-test
     "$CC" -std=c11 -O2 -g -Wall -Wextra -Werror -pthread -Isrc tests/test_file_mods.c -o out/file-mods-test

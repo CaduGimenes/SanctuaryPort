@@ -207,6 +207,37 @@ fn graphics_more_options_start_closed() {
 }
 
 #[test]
+fn the_detailed_performance_log_turns_on_frame_and_vram_reports() {
+    // GitHub #105 / #61: Advanced > Troubleshooting, for players without a terminal.
+    let dir = tempfile::tempdir().unwrap();
+    let mut state = state(dir.path());
+    open(&mut state, Page::Advanced);
+    assert!(!state.store.flag("perf_log"));
+    let clicked: Vec<Message> = {
+        let mut ui = iced_test::simulator::Simulator::with_size(
+            iced::Settings::default(),
+            iced::Size::new(1280.0, 4000.0),
+            app::view(&state),
+        );
+        ui.click("Detailed performance log").unwrap();
+        ui.into_messages().collect()
+    };
+    for message in clicked {
+        let _ = app::update(&mut state, message);
+    }
+    assert!(state.store.flag("perf_log"));
+    let env = game_environment(
+        state.store.app(),
+        &state.paths,
+        "en",
+        &indexmap::IndexMap::new(),
+        true,
+    );
+    assert_eq!(env["SANCTUARY_FRAME_STATS"], "1");
+    assert_eq!(env["SANCTUARY_VRAM_REPORT"], "1");
+}
+
+#[test]
 fn the_shader_warm_up_switch_reaches_the_game() {
     // GitHub #63: Advanced > Troubleshooting turns the background shader warm-up off.
     let dir = tempfile::tempdir().unwrap();
@@ -2802,6 +2833,87 @@ mod update_flow {
         assert_eq!(state.updater.releases(), list.as_slice());
         assert!(state.modal.is_none());
         assert!(calls.try_recv().is_err());
+    }
+
+    /// #105: a manual check that finds a newer stable offers it, every time, and a silent one
+    /// does not.
+    #[test]
+    fn a_manual_check_with_a_newer_stable_offers_it_every_time() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut state = state(dir.path());
+        let newer = release("999.0.0", None, false);
+        let list = vec![newer.clone(), release(&ReleaseId::this().version, None, false)];
+        for _ in 0..3 {
+            state.modal = None;
+            let _ = app::update(&mut state, checked(true, Ok(list.clone())));
+            let modal = state.modal.as_ref().expect("the offer");
+            assert!(
+                modal.text.starts_with("Version 999.0.0 is available.\nInstall version 999.0.0 now?"),
+                "{}",
+                modal.text
+            );
+            assert!(matches!(
+                &modal.kind,
+                ModalKind::YesNo { yes: Message::Update(UpdateMessage::Confirmed(r)), .. } if *r == newer
+            ));
+        }
+        state.modal = None;
+        let _ = app::update(&mut state, checked(false, Ok(list)));
+        assert!(state.modal.is_none());
+    }
+
+    #[test]
+    fn a_rate_limited_manual_check_says_when_to_try_again() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut state = state(dir.path());
+        let _ = app::update(&mut state, checked(true, Err("rate-limited:7".into())));
+        assert_eq!(
+            modal_text(&state),
+            "GitHub limits update checks; try again in 7 minutes."
+        );
+        assert!(matches!(
+            state.modal.as_ref().map(|m| &m.kind),
+            Some(ModalKind::Info)
+        ));
+        assert_eq!(
+            state.updater.error(),
+            Some("GitHub limits update checks; try again in 7 minutes.")
+        );
+    }
+
+    #[test]
+    fn presses_during_a_check_wait_for_its_answer() {
+        let dir = tempfile::tempdir().unwrap();
+        let (fake, calls) = FakeReleases::new();
+        let list = vec![release("999.0.0", None, false)];
+        let mut state = state_with(dir.path(), fake.list(Ok(list)).host());
+        let task = app::update(
+            &mut state,
+            Message::Update(UpdateMessage::Check { manual: false }),
+        );
+        assert_eq!(next_call(&calls), Call::List);
+        // A manual press while the silent check runs sends nothing more...
+        for _ in 0..3 {
+            let again = app::update(
+                &mut state,
+                Message::Update(UpdateMessage::Check { manual: true }),
+            );
+            assert!(run_task(again).is_empty());
+        }
+        assert!(calls.try_recv().is_err());
+        // ...and the answer is shown as the manual one.
+        for message in run_task(task) {
+            let _ = app::update(&mut state, message);
+        }
+        assert!(modal_text(&state).starts_with("Version 999.0.0 is available."));
+        // The next press asks again.
+        state.modal = None;
+        let task = app::update(
+            &mut state,
+            Message::Update(UpdateMessage::Check { manual: true }),
+        );
+        assert_eq!(next_call(&calls), Call::List);
+        drop(task);
     }
 
 }

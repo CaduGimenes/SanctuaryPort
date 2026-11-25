@@ -186,6 +186,93 @@ class Diablo3PatchTests(unittest.TestCase):
             to = lea + 7 + int.from_bytes(cave[lea + 3:lea + 7], 'little', signed=True)
             self.assertEqual(cave[to:to + len(text)], text)
 
+    def test_challenge_rifts_cave_runs_and_gives_the_config_this_weeks_number_and_dates(self):
+        # GitHub #105: the game refuses a challenge whose end (ChallengeData field 4,
+        # challenge_end_unix_time_console) has passed, "Challenge Rift N has ended" (0x49bc3a; before
+        # its start, field 2, "not yet started"), and a player's own config is an old week's. The
+        # cave, run on a config file: it keeps the file and appends field 1 (the week), field 2 (the
+        # week's start) and field 4 (the next week's start); protobuf keeps the last value of a field,
+        # so these win over the file's, whatever form its own number has. Other files pass unchanged.
+        import ctypes
+        import mmap
+        xml = ROOT / 'patches' / 'Diablo_III.xml'
+        caves = {}
+        writes = patches.compile_patches(xml, ['Event: Challenge Rifts'], '01.47', [(0, 0x1800000)], caves=caves)
+        (meta,) = [m for m in ET.parse(xml).getroot().iter('Metadata') if m.get('Name') == 'Event: Challenge Rifts']
+        target = {t.get('Name'): int(t.get('Address'), 0) - patches.EBOOT_BASE for t in meta.iter('Target')}
+        memory = mmap.mmap(-1, 0x1800000, prot=mmap.PROT_READ | mmap.PROT_WRITE | mmap.PROT_EXEC)
+        base = ctypes.addressof(ctypes.c_char.from_buffer(memory))
+        cave = caves['cr_cave']
+        for offset, value in writes:
+            if offset == cave:
+                memory[offset:offset + len(value)] = value
+        libc = ctypes.CDLL(None)
+        files, opened = {}, []
+        with tempfile.TemporaryDirectory() as folder:
+            def fake_open(path, flags, mode):
+                opened.append(path)
+                name = path.decode().rsplit('/', 1)[-1]
+                return os.open(files[name], os.O_RDONLY) if name in files else -1
+            open_fn = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_int)(fake_open)
+            got = {'got_open': ctypes.cast(open_fn, ctypes.c_void_p).value}
+            for name in ('lseek', 'read', 'close'):
+                got['got_' + name] = ctypes.cast(getattr(libc, name), ctypes.c_void_p).value
+            for name, pointer in got.items():
+                struct.pack_into('<Q', memory, target[name], pointer)
+            now = 2968 * 604800 + 3 * 86400  # a Sunday of week 2968
+            jump = lambda pointer: b'\x48\xb8' + struct.pack('<Q', pointer) + b'\xff\xe0'
+            memory[target['newobj']:target['newobj'] + 12] = jump(ctypes.cast(libc.malloc, ctypes.c_void_p).value)
+            memory[target['filetime']:target['filetime'] + 3] = bytes.fromhex('31c0c3')
+            memory[target['unixtime']:target['unixtime'] + 11] = b'\x48\xb8' + struct.pack('<Q', now) + b'\xc3'
+            answers = []
+            def answer(this, status, response):
+                data = ctypes.cast(response, ctypes.POINTER(ctypes.c_void_p))[0]
+                pointer, size = struct.unpack('<QQ', ctypes.string_at(data, 16))
+                answers.append((ctypes.cast(status, ctypes.POINTER(ctypes.c_int))[0], ctypes.string_at(pointer, size)))
+            answer_fn = ctypes.CFUNCTYPE(None, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p)(answer)
+            handler = (ctypes.c_void_p * 4)(ctypes.cast(answer_fn, ctypes.c_void_p).value)
+            holder = ctypes.c_void_p(ctypes.addressof(handler))
+            run = ctypes.CFUNCTYPE(None, ctypes.c_void_p, ctypes.c_char_p, ctypes.c_void_p)(base + cave)
+            # An old week's config: challenge 346 (varint da 02), start and end in 2021, hash, multiplier.
+            def encode(value):
+                out = bytearray()
+                while value >= 0x80:
+                    out.append(value & 0x7f | 0x80)
+                    value >>= 7
+                return bytes(out + bytes([value]))
+            old_week = 2690 * 604800
+            config = (b'\x08' + encode(346) + b'\x10' + encode(old_week) + b'\x18' + encode(old_week)
+                      + b'\x20' + encode(old_week + 604800) + b'\x28' + encode(0x1234) + b'\x35' + struct.pack('<f', 2))
+            other = b'\x0a\x03abc'
+            for name, data in (('challengerift_config.dat', config), ('challengerift_8.dat', other)):
+                files[name] = os.path.join(folder, name)
+                Path(files[name]).write_bytes(data)
+            run(None, b'challengerift_config.dat', ctypes.addressof(holder))
+            run(None, b'challengerift_8.dat', ctypes.addressof(holder))
+            self.assertEqual(opened, [b'/data/pubfiles/challengerift_config.dat', b'/data/pubfiles/challengerift_8.dat'])
+            (status, got_config), (status8, got_other) = answers
+            self.assertEqual((status, status8), (0, 0))
+            self.assertEqual(got_other, other)
+            self.assertTrue(got_config.startswith(config))
+            fields, at, extra = {}, 0, got_config[len(config):]
+            def varint():
+                nonlocal at
+                value = shift = 0
+                while True:
+                    byte = extra[at]
+                    at += 1
+                    value |= (byte & 0x7f) << shift
+                    shift += 7
+                    if byte < 0x80:
+                        return value
+            while at < len(extra):
+                tag = varint()
+                fields[tag >> 3] = varint()
+            self.assertEqual(fields, {1: 2968, 2: 2968 * 604800, 4: 2969 * 604800})
+            self.assertEqual(struct.unpack_from('<I', memory, caves['cr_number'])[0], 2968)
+        del run
+        memory.close()
+
     def test_cheat_auto_pickup(self):
         # 0x583940's item branch jumps (0x58396b) to its last test, the item's No_AutoPickup (0x583b29).
         writes = self.cheat('Cheat: Auto pickup')

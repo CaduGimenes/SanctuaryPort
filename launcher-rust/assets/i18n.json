@@ -2796,7 +2796,10 @@
    "Pulls the gameplay camera back to the PC version's distance and angle.": "Afasta a câmera para a distância e o ângulo da versão de PC.",
    "Save a log of each start": "Salvar um log de cada início",
    "For bug reports: writes last_run.log. Off: nothing is written while you play.": "Para relatar bugs: grava o last_run.log. Desligado: nada é gravado enquanto você joga.",
-   "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "Para relatar um problema: ligue a opção acima, jogue até acontecer e anexe o last_run.log."
+   "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "Para relatar um problema: ligue a opção acima, jogue até acontecer e anexe o last_run.log.",
+   "GitHub limits update checks; try again in {} minutes.": "O GitHub limita as verificações de atualização; tente de novo em {} minutos.",
+   "Detailed performance log": "Log detalhado de desempenho",
+   "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "Para relatar engasgos: tempo dos quadros e memória de vídeo a cada 5 s, gravados no last_run.log."
   },
   "es": {
    "The launcher cannot write to {}, so it cannot replace itself there. Open the releases page to download the new version by hand?": "El launcher no puede escribir en {}, así que no puede reemplazarse ahí. ¿Abrir la página de releases para descargar la versión nueva a mano?",
@@ -3391,7 +3394,10 @@
    "Pulls the gameplay camera back to the PC version's distance and angle.": "Aleja la cámara a la distancia y el ángulo de la versión de PC.",
    "Save a log of each start": "Guardar un registro de cada inicio",
    "For bug reports: writes last_run.log. Off: nothing is written while you play.": "Para informar de errores: escribe last_run.log. Desactivado: no se escribe nada mientras juegas.",
-   "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "Para informar de un problema: activa la opción de arriba, juega hasta que ocurra y adjunta last_run.log."
+   "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "Para informar de un problema: activa la opción de arriba, juega hasta que ocurra y adjunta last_run.log.",
+   "GitHub limits update checks; try again in {} minutes.": "GitHub limita las comprobaciones de actualizaciones; inténtalo de nuevo en {} minutos.",
+   "Detailed performance log": "Registro detallado de rendimiento",
+   "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "Para informar de tirones: tiempo de fotogramas y memoria de vídeo cada 5 s, en last_run.log."
   },
   "pl": {
    "Polish": "Polski",
@@ -3840,7 +3846,10 @@
    "Pulls the gameplay camera back to the PC version's distance and angle.": "Odsuwa kamerę na odległość i kąt z wersji PC.",
    "Save a log of each start": "Zapisuj log każdego uruchomienia",
    "For bug reports: writes last_run.log. Off: nothing is written while you play.": "Do zgłoszeń błędów: zapisuje last_run.log. Wyłączone: nic nie jest zapisywane podczas gry.",
-   "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "Aby zgłosić problem: włącz opcję powyżej, graj, aż się pojawi, i dołącz last_run.log."
+   "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "Aby zgłosić problem: włącz opcję powyżej, graj, aż się pojawi, i dołącz last_run.log.",
+   "GitHub limits update checks; try again in {} minutes.": "GitHub ogranicza sprawdzanie aktualizacji; spróbuj ponownie za {} min.",
+   "Detailed performance log": "Szczegółowy log wydajności",
+   "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "Do zgłoszeń przycięć: czas klatek i pamięć wideo co 5 s, zapisywane w last_run.log."
   },
   "fr": {
    "Polish": "Polonais",
@@ -4038,7 +4047,10 @@
    "Pulls the gameplay camera back to the PC version's distance and angle.": "Recule la caméra à la distance et à l'angle de la version PC.",
    "Save a log of each start": "Enregistrer un journal de chaque lancement",
    "For bug reports: writes last_run.log. Off: nothing is written while you play.": "Pour les rapports de bugs : écrit last_run.log. Désactivé : rien n'est écrit pendant que vous jouez.",
-   "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "Pour signaler un problème : activez l'option ci-dessus, jouez jusqu'à ce qu'il survienne et joignez last_run.log."
+   "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "Pour signaler un problème : activez l'option ci-dessus, jouez jusqu'à ce qu'il survienne et joignez last_run.log.",
+   "GitHub limits update checks; try again in {} minutes.": "GitHub limite les vérifications de mise à jour ; réessayez dans {} minutes.",
+   "Detailed performance log": "Journal de performances détaillé",
+   "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "Pour signaler des saccades : temps des images et mémoire vidéo toutes les 5 s, dans last_run.log."
   },
   "de": {
    "Polish": "Polnisch",
@@ -4227,7 +4239,10 @@
    "Pulls the gameplay camera back to the PC version's distance and angle.": "Zieht die Spielkamera auf Abstand und Winkel der PC-Version zurück.",
    "Save a log of each start": "Protokoll jedes Starts speichern",
    "For bug reports: writes last_run.log. Off: nothing is written while you play.": "Für Fehlerberichte: schreibt last_run.log. Aus: Beim Spielen wird nichts geschrieben.",
-   "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "Um ein Problem zu melden: Schalter oben einschalten, spielen, bis es auftritt, last_run.log anhängen."
+   "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "Um ein Problem zu melden: Schalter oben einschalten, spielen, bis es auftritt, last_run.log anhängen.",
+   "GitHub limits update checks; try again in {} minutes.": "GitHub begrenzt die Suche nach Updates; versuche es in {} Minuten erneut.",
+   "Detailed performance log": "Ausführliches Leistungsprotokoll",
+   "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "Für Ruckler-Berichte: Bildzeiten und Videospeicher alle 5 s, gespeichert in last_run.log."
   },
   "it": {
    "Polish": "Polacco",
@@ -4414,7 +4429,10 @@
    "Pulls the gameplay camera back to the PC version's distance and angle.": "Allontana la telecamera alla distanza e all'angolo della versione PC.",
    "Save a log of each start": "Salva un log di ogni avvio",
    "For bug reports: writes last_run.log. Off: nothing is written while you play.": "Per segnalare bug: scrive last_run.log. Disattivato: non viene scritto nulla mentre giochi.",
-   "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "Per segnalare un problema: attiva l'opzione sopra, gioca finché accade e allega last_run.log."
+   "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "Per segnalare un problema: attiva l'opzione sopra, gioca finché accade e allega last_run.log.",
+   "GitHub limits update checks; try again in {} minutes.": "GitHub limita i controlli degli aggiornamenti; riprova tra {} minuti.",
+   "Detailed performance log": "Log dettagliato delle prestazioni",
+   "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "Per segnalare scatti: tempi dei fotogrammi e memoria video ogni 5 s, salvati in last_run.log."
   },
   "tr": {
    "Polish": "Lehçe",
@@ -4599,7 +4617,10 @@
    "Pulls the gameplay camera back to the PC version's distance and angle.": "Oyun kamerasını PC sürümünün mesafesine ve açısına çeker.",
    "Save a log of each start": "Her başlatmanın günlüğünü kaydet",
    "For bug reports: writes last_run.log. Off: nothing is written while you play.": "Hata raporları için: last_run.log yazar. Kapalı: oynarken hiçbir şey yazılmaz.",
-   "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "Sorun bildirmek için: yukarıdaki seçeneği açın, sorun olana kadar oynayın ve last_run.log ekleyin."
+   "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "Sorun bildirmek için: yukarıdaki seçeneği açın, sorun olana kadar oynayın ve last_run.log ekleyin.",
+   "GitHub limits update checks; try again in {} minutes.": "GitHub güncelleme denetimlerini sınırlıyor; {} dakika sonra yeniden deneyin.",
+   "Detailed performance log": "Ayrıntılı performans günlüğü",
+   "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "Takılma raporları için: kare süreleri ve video belleği her 5 sn'de last_run.log'a yazılır."
   },
   "ar": {
    "Polish": "البولندية",
@@ -4783,7 +4804,10 @@
    "Pulls the gameplay camera back to the PC version's distance and angle.": "يبعد كاميرا اللعب إلى مسافة وزاوية نسخة الحاسوب.",
    "Save a log of each start": "حفظ سجل لكل تشغيل",
    "For bug reports: writes last_run.log. Off: nothing is written while you play.": "لتقارير الأخطاء: يكتب last_run.log. عند الإيقاف: لا يُكتب شيء أثناء اللعب.",
-   "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "للإبلاغ عن مشكلة: فعّل الخيار أعلاه، والعب حتى تحدث، وأرفق last_run.log."
+   "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "للإبلاغ عن مشكلة: فعّل الخيار أعلاه، والعب حتى تحدث، وأرفق last_run.log.",
+   "GitHub limits update checks; try again in {} minutes.": "يحدّ GitHub من عمليات التحقق من التحديثات؛ حاول مجددًا بعد {} دقيقة.",
+   "Detailed performance log": "سجل أداء مفصل",
+   "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "لتقارير التقطيع: توقيت الإطارات وذاكرة الفيديو كل 5 ثوانٍ، تُحفظ في last_run.log."
   },
   "zh": {
    "Polish": "波兰语",
@@ -5354,7 +5378,10 @@
    "Pulls the gameplay camera back to the PC version's distance and angle.": "将游戏镜头拉远到 PC 版的距离和角度。",
    "Save a log of each start": "保存每次启动的日志",
    "For bug reports: writes last_run.log. Off: nothing is written while you play.": "用于报告错误：写入 last_run.log。关闭：游戏时不写入任何内容。",
-   "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "报告问题：打开上面的开关，玩到问题出现，然后附上 last_run.log。"
+   "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "报告问题：打开上面的开关，玩到问题出现，然后附上 last_run.log。",
+   "GitHub limits update checks; try again in {} minutes.": "GitHub 限制了更新检查次数；请在 {} 分钟后重试。",
+   "Detailed performance log": "详细性能日志",
+   "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "用于报告卡顿：每 5 秒记录帧时间和显存，保存到 last_run.log。"
   },
   "ja": {
    "Polish": "ポーランド語",
@@ -5539,7 +5566,10 @@
    "Pulls the gameplay camera back to the PC version's distance and angle.": "ゲームカメラを PC 版の距離と角度まで引きます。",
    "Save a log of each start": "起動ごとのログを保存",
    "For bug reports: writes last_run.log. Off: nothing is written while you play.": "不具合報告用：last_run.log を書き込みます。オフ：プレイ中は何も書き込みません。",
-   "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "問題を報告するには：上のスイッチをオンにし、問題が起きるまでプレイして last_run.log を添付してください。"
+   "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "問題を報告するには：上のスイッチをオンにし、問題が起きるまでプレイして last_run.log を添付してください。",
+   "GitHub limits update checks; try again in {} minutes.": "GitHub は更新の確認回数を制限しています。{} 分後にもう一度お試しください。",
+   "Detailed performance log": "詳細なパフォーマンスログ",
+   "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "カクつきの報告用：5 秒ごとのフレーム時間とビデオメモリを last_run.log に保存します。"
   },
   "ko": {
    "Polish": "폴란드어",
@@ -5724,7 +5754,10 @@
    "Pulls the gameplay camera back to the PC version's distance and angle.": "게임 카메라를 PC 버전의 거리와 각도로 뒤로 뺍니다.",
    "Save a log of each start": "실행할 때마다 로그 저장",
    "For bug reports: writes last_run.log. Off: nothing is written while you play.": "버그 보고용: last_run.log를 기록합니다. 끄기: 플레이 중 아무것도 기록하지 않습니다.",
-   "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "문제를 보고하려면: 위 옵션을 켜고 문제가 생길 때까지 플레이한 뒤 last_run.log를 첨부하세요."
+   "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "문제를 보고하려면: 위 옵션을 켜고 문제가 생길 때까지 플레이한 뒤 last_run.log를 첨부하세요.",
+   "GitHub limits update checks; try again in {} minutes.": "GitHub에서 업데이트 확인 횟수를 제한합니다. {}분 후에 다시 시도하세요.",
+   "Detailed performance log": "상세 성능 로그",
+   "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "끊김 보고용: 5초마다 프레임 시간과 비디오 메모리를 last_run.log에 저장합니다."
   },
   "id": {
    "Polish": "Polandia",
@@ -6208,7 +6241,10 @@
    "Pulls the gameplay camera back to the PC version's distance and angle.": "Menarik kamera ke jarak dan sudut versi PC.",
    "Save a log of each start": "Simpan log setiap mulai",
    "For bug reports: writes last_run.log. Off: nothing is written while you play.": "Untuk laporan bug: menulis last_run.log. Mati: tidak ada yang ditulis saat bermain.",
-   "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "Untuk melaporkan masalah: nyalakan opsi di atas, mainkan sampai terjadi, lampirkan last_run.log."
+   "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "Untuk melaporkan masalah: nyalakan opsi di atas, mainkan sampai terjadi, lampirkan last_run.log.",
+   "GitHub limits update checks; try again in {} minutes.": "GitHub membatasi pemeriksaan pembaruan; coba lagi dalam {} menit.",
+   "Detailed performance log": "Log kinerja terperinci",
+   "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "Untuk laporan patah-patah: waktu frame dan memori video setiap 5 dtk, disimpan ke last_run.log."
   },
   "cs": {
    "Trophies": "Trofeje",
@@ -6751,7 +6787,10 @@
    "Pulls the gameplay camera back to the PC version's distance and angle.": "Oddálí kameru na vzdálenost a úhel PC verze.",
    "Save a log of each start": "Ukládat log každého spuštění",
    "For bug reports: writes last_run.log. Off: nothing is written while you play.": "Pro hlášení chyb: zapisuje last_run.log. Vypnuto: během hraní se nic nezapisuje.",
-   "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "Pro nahlášení problému: zapněte volbu výše, hrajte, dokud se neobjeví, a přiložte last_run.log."
+   "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "Pro nahlášení problému: zapněte volbu výše, hrajte, dokud se neobjeví, a přiložte last_run.log.",
+   "GitHub limits update checks; try again in {} minutes.": "GitHub omezuje kontroly aktualizací; zkuste to znovu za {} min.",
+   "Detailed performance log": "Podrobný log výkonu",
+   "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "Pro hlášení zasekávání: časy snímků a videopaměť každých 5 s, ukládané do last_run.log."
   }
  },
  "ru": {
@@ -7304,7 +7343,10 @@
   "Pulls the gameplay camera back to the PC version's distance and angle.": "Отодвигает игровую камеру на расстояние и угол версии для ПК.",
   "Save a log of each start": "Сохранять журнал каждого запуска",
   "For bug reports: writes last_run.log. Off: nothing is written while you play.": "Для отчётов об ошибках: записывает last_run.log. Выключено: во время игры ничего не записывается.",
-  "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "Чтобы сообщить о проблеме: включите параметр выше, играйте, пока она не появится, и приложите last_run.log."
+  "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "Чтобы сообщить о проблеме: включите параметр выше, играйте, пока она не появится, и приложите last_run.log.",
+  "GitHub limits update checks; try again in {} minutes.": "GitHub ограничивает проверки обновлений; попробуйте снова через {} мин.",
+  "Detailed performance log": "Подробный журнал производительности",
+  "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "Для отчётов о подтормаживаниях: время кадров и видеопамять каждые 5 с, сохраняются в last_run.log."
  },
  "windows_languages": {
   "25": "ru",

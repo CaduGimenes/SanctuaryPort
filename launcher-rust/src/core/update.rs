@@ -5,7 +5,8 @@ use std::fs;
 use std::io::{self, Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
-use std::time::Duration;
+use std::sync::Mutex;
+use std::time::{Duration, Instant};
 
 use indexmap::IndexMap;
 use sha2::{Digest, Sha256};
@@ -62,19 +63,176 @@ fn get(
     Ok((Box::new(body.into_reader()), total))
 }
 
-/// One GET of the list (Accept `application/vnd.github+json`, global timeout 15 s), then `parse_releases`.
-pub fn list_releases(windows: bool) -> Result<Vec<release::Release>, UpdateError> {
-    // SANCTUARY_RELEASES_API: another list (a test server), to try an update before publishing it.
-    let api = std::env::var("SANCTUARY_RELEASES_API").unwrap_or_else(|_| RELEASES_API.to_string());
-    let (mut reader, _) = get(
-        &api,
-        Some("application/vnd.github+json"),
-        Some(Duration::from_secs(15)),
-    )?;
-    let mut text = String::new();
-    reader.read_to_string(&mut text)?;
-    let json = serde_json::from_str(&text).map_err(|e| UpdateError::Json(e.to_string()))?;
+/// How long a fetched release list answers checks without asking GitHub again. GitHub lets a
+/// machine ask 60 times an hour without an account; repeated presses used up that budget and
+/// then read "http status 403" (#105).
+pub const LIST_FRESH: Duration = Duration::from_secs(5 * 60);
+
+/// The start of a check's error when GitHub refused it for its rate limit; the minutes to wait
+/// follow. The window turns it into a translated sentence ([`rate_limited_minutes`]).
+pub const RATE_LIMITED: &str = "rate-limited:";
+
+/// The minutes to wait in a [`RATE_LIMITED`] error.
+pub fn rate_limited_minutes(error: &str) -> Option<u64> {
+    error.strip_prefix(RATE_LIMITED)?.trim().parse().ok()
+}
+
+fn rate_limited(wait: Duration) -> UpdateError {
+    let minutes = wait.as_secs().div_ceil(60).max(1);
+    UpdateError::Http(format!("{RATE_LIMITED}{minutes}"))
+}
+
+/// What one ask for the release list brought back.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Fetched {
+    /// The list, and its `ETag` for the next ask.
+    List { text: String, etag: Option<String> },
+    /// 304: the list sent with `If-None-Match` has not changed (GitHub does not count it).
+    NotModified,
+    /// 403 or 429 with GitHub's rate-limit headers: ask again after `wait`.
+    Limited { wait: Duration },
+}
+
+/// How long GitHub asks to wait, from the headers of a 403 or 429: `Retry-After` (seconds),
+/// else `X-RateLimit-Reset` (Unix time) when `X-RateLimit-Remaining` is 0. None when the
+/// refusal is not a rate limit. `now` is the Unix time in seconds.
+pub fn limit_wait(header: impl Fn(&str) -> Option<String>, now: u64) -> Option<Duration> {
+    if let Some(seconds) = header("retry-after").and_then(|v| v.trim().parse::<u64>().ok()) {
+        return Some(Duration::from_secs(seconds.max(1)));
+    }
+    if header("x-ratelimit-remaining").as_deref().map(str::trim) != Some("0") {
+        return None;
+    }
+    let reset = header("x-ratelimit-reset").and_then(|v| v.trim().parse::<u64>().ok());
+    // No reset time: GitHub's window is an hour at most.
+    let seconds = reset.map_or(3600, |reset| reset.saturating_sub(now));
+    Some(Duration::from_secs(seconds.clamp(1, 3600)))
+}
+
+/// One GET of the list at `api` (Accept `application/vnd.github+json`, global timeout 15 s),
+/// sent with `If-None-Match: etag` when one is known.
+pub fn fetch_list(api: &str, etag: Option<&str>) -> Result<Fetched, UpdateError> {
+    let agent: ureq::Agent = ureq::Agent::config_builder()
+        .timeout_global(Some(Duration::from_secs(15)))
+        .http_status_as_error(false)
+        .build()
+        .into();
+    let mut request = agent
+        .get(api)
+        .header("User-Agent", USER_AGENT)
+        .header("Accept", "application/vnd.github+json");
+    if let Some(etag) = etag {
+        request = request.header("If-None-Match", etag);
+    }
+    let response = request.call().map_err(http_error)?;
+    let status = response.status().as_u16();
+    let header = |name: &str| {
+        response
+            .headers()
+            .get(name)
+            .and_then(|v| v.to_str().ok())
+            .map(str::to_string)
+    };
+    match status {
+        200..=299 => {
+            let etag = header("etag");
+            let mut text = String::new();
+            response.into_body().into_reader().read_to_string(&mut text)?;
+            Ok(Fetched::List { text, etag })
+        }
+        304 => Ok(Fetched::NotModified),
+        403 | 429 => {
+            let now = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map_or(0, |d| d.as_secs());
+            match limit_wait(header, now) {
+                Some(wait) => Ok(Fetched::Limited { wait }),
+                None => Err(UpdateError::Http(format!("http status {status}"))),
+            }
+        }
+        _ => Err(UpdateError::Http(format!("http status {status}"))),
+    }
+}
+
+/// The last release list GitHub sent, kept so repeated checks do not spend the rate limit:
+/// within [`LIST_FRESH`] it answers alone; later it is asked again with its `ETag`; while
+/// GitHub asks to wait, nothing is sent.
+#[derive(Debug, Default)]
+pub struct ReleaseCache {
+    list: Option<Vec<release::Release>>,
+    etag: Option<String>,
+    fetched: Option<Instant>,
+    blocked_until: Option<Instant>,
+}
+
+impl ReleaseCache {
+    /// The release list at `now`: the kept one while fresh, else `fetch`'s (given the kept
+    /// list's `ETag`), parsed by `parse`. A refusal for the rate limit answers with the kept
+    /// list when there is one, else with a [`RATE_LIMITED`] error.
+    pub fn list(
+        &mut self,
+        now: Instant,
+        fetch: impl FnOnce(Option<&str>) -> Result<Fetched, UpdateError>,
+        parse: impl FnOnce(&str) -> Result<Vec<release::Release>, UpdateError>,
+    ) -> Result<Vec<release::Release>, UpdateError> {
+        if let (Some(list), Some(at)) = (&self.list, self.fetched) {
+            if now.saturating_duration_since(at) < LIST_FRESH {
+                return Ok(list.clone());
+            }
+        }
+        if let Some(until) = self.blocked_until.filter(|until| now < *until) {
+            return match &self.list {
+                Some(list) => Ok(list.clone()),
+                None => Err(rate_limited(until - now)),
+            };
+        }
+        let etag = self.list.as_ref().and(self.etag.as_deref());
+        match fetch(etag)? {
+            Fetched::List { text, etag } => {
+                let list = parse(&text)?;
+                self.list = Some(list.clone());
+                self.etag = etag;
+                self.fetched = Some(now);
+                self.blocked_until = None;
+                Ok(list)
+            }
+            Fetched::NotModified => match &self.list {
+                Some(list) => {
+                    self.fetched = Some(now);
+                    self.blocked_until = None;
+                    Ok(list.clone())
+                }
+                None => Err(UpdateError::Http("http status 304".to_string())),
+            },
+            Fetched::Limited { wait } => {
+                self.blocked_until = Some(now + wait);
+                match &self.list {
+                    Some(list) => Ok(list.clone()),
+                    None => Err(rate_limited(wait)),
+                }
+            }
+        }
+    }
+}
+
+/// The release list at `SANCTUARY_RELEASES_API` (a test server, to try an update before
+/// publishing it), else GitHub's.
+fn releases_api() -> String {
+    std::env::var("SANCTUARY_RELEASES_API").unwrap_or_else(|_| RELEASES_API.to_string())
+}
+
+fn parse_list(text: &str, windows: bool) -> Result<Vec<release::Release>, UpdateError> {
+    let json = serde_json::from_str(text).map_err(|e| UpdateError::Json(e.to_string()))?;
     release::parse_releases(&json, windows)
+}
+
+/// One uncached ask for the list, then `parse_releases`.
+pub fn list_releases(windows: bool) -> Result<Vec<release::Release>, UpdateError> {
+    ReleaseCache::default().list(
+        Instant::now(),
+        |etag| fetch_list(&releases_api(), etag),
+        |text| parse_list(text, windows),
+    )
 }
 
 /// The SHA-256 in a `<package>.sha256` file (`sha256sum` format).
@@ -377,6 +535,7 @@ pub struct GitHubReleases {
     port_dir: PathBuf,
     appimage: Option<PathBuf>,
     packaged: bool,
+    cache: Mutex<ReleaseCache>,
 }
 
 impl GitHubReleases {
@@ -392,6 +551,7 @@ impl GitHubReleases {
             port_dir: port_dir.to_path_buf(),
             appimage: if windows { None } else { var("APPIMAGE") },
             packaged: is_packaged(),
+            cache: Mutex::new(ReleaseCache::default()),
         }
     }
 }
@@ -423,7 +583,15 @@ impl ReleaseHost for GitHubReleases {
     }
 
     fn list(&self) -> Result<Vec<release::Release>, String> {
-        list_releases(self.windows).map_err(|error| error.to_string())
+        let windows = self.windows;
+        let mut cache = self.cache.lock().unwrap_or_else(|e| e.into_inner());
+        cache
+            .list(
+                Instant::now(),
+                |etag| fetch_list(&releases_api(), etag),
+                |text| parse_list(text, windows),
+            )
+            .map_err(|error| error.to_string())
     }
 
     fn install(
@@ -513,6 +681,145 @@ mod tests {
     use std::io::Cursor;
 
     const NEW_APPIMAGE: &[u8] = b"\x7fELF new appimage";
+
+    fn cache_release(version: &str) -> release::Release {
+        release::Release {
+            id: release::ReleaseId::parse(&format!("v{version}"), false).unwrap(),
+            published: "2026-11-24T00:00:00Z".to_string(),
+            url: format!("https://example.test/{version}.zip"),
+            page: RELEASES_PAGE.to_string(),
+        }
+    }
+
+    /// `parse` for the cache tests: the text is the version.
+    fn parse_version(text: &str) -> Result<Vec<release::Release>, UpdateError> {
+        Ok(vec![cache_release(text)])
+    }
+
+    fn listed(text: &str, etag: &str) -> Result<Fetched, UpdateError> {
+        Ok(Fetched::List {
+            text: text.to_string(),
+            etag: Some(etag.to_string()),
+        })
+    }
+
+    #[test]
+    fn a_fresh_list_answers_repeated_checks_without_asking() {
+        let mut cache = ReleaseCache::default();
+        let start = Instant::now();
+        let first = cache.list(start, |_| listed("0.7.6", "\"a\""), parse_version);
+        assert_eq!(first.unwrap(), vec![cache_release("0.7.6")]);
+        for seconds in [1, 30, 299] {
+            let at = start + Duration::from_secs(seconds);
+            let again = cache.list(at, |_| panic!("asked GitHub again"), parse_version);
+            assert_eq!(again.unwrap(), vec![cache_release("0.7.6")]);
+        }
+    }
+
+    #[test]
+    fn a_stale_list_is_asked_with_its_etag() {
+        let mut cache = ReleaseCache::default();
+        let start = Instant::now();
+        let first = cache.list(start, |etag| {
+            assert_eq!(etag, None);
+            listed("0.7.6", "\"a\"")
+        }, parse_version);
+        assert!(first.is_ok());
+        let later = start + LIST_FRESH + Duration::from_secs(1);
+        let same = cache.list(later, |etag| {
+            assert_eq!(etag, Some("\"a\""));
+            Ok(Fetched::NotModified)
+        }, parse_version);
+        assert_eq!(same.unwrap(), vec![cache_release("0.7.6")]);
+        // The 304 refreshed it: the next check right after asks nothing.
+        let next = cache.list(later + Duration::from_secs(5), |_| panic!("asked"), parse_version);
+        assert!(next.is_ok());
+        let much_later = later + LIST_FRESH * 2;
+        let changed = cache.list(much_later, |_| listed("0.7.7", "\"b\""), parse_version);
+        assert_eq!(changed.unwrap(), vec![cache_release("0.7.7")]);
+    }
+
+    #[test]
+    fn a_rate_limit_says_how_long_and_asks_nothing_until_then() {
+        let mut cache = ReleaseCache::default();
+        let start = Instant::now();
+        let wait = Duration::from_secs(9 * 60 + 10);
+        let error = cache
+            .list(start, |_| Ok(Fetched::Limited { wait }), parse_version)
+            .unwrap_err()
+            .to_string();
+        assert_eq!(rate_limited_minutes(&error), Some(10));
+        let soon = start + Duration::from_secs(60);
+        let error = cache
+            .list(soon, |_| panic!("asked while limited"), parse_version)
+            .unwrap_err()
+            .to_string();
+        assert_eq!(rate_limited_minutes(&error), Some(9));
+        let after = start + wait + Duration::from_secs(1);
+        let list = cache.list(after, |_| listed("0.7.6", "\"a\""), parse_version);
+        assert!(list.is_ok());
+    }
+
+    #[test]
+    fn a_rate_limit_keeps_answering_with_the_last_list() {
+        let mut cache = ReleaseCache::default();
+        let start = Instant::now();
+        let _ = cache.list(start, |_| listed("0.7.6", "\"a\""), parse_version);
+        let later = start + LIST_FRESH * 2;
+        let wait = Duration::from_secs(600);
+        let kept = cache.list(later, |_| Ok(Fetched::Limited { wait }), parse_version);
+        assert_eq!(kept.unwrap(), vec![cache_release("0.7.6")]);
+        let soon = later + Duration::from_secs(1);
+        let kept = cache.list(soon, |_| panic!("asked while limited"), parse_version);
+        assert!(kept.is_ok());
+    }
+
+    #[test]
+    fn a_failed_ask_is_not_kept() {
+        let mut cache = ReleaseCache::default();
+        let start = Instant::now();
+        let failed = cache.list(start, |_| Err(UpdateError::Http("offline".into())), parse_version);
+        assert!(failed.is_err());
+        let list = cache.list(start, |_| listed("0.7.6", "\"a\""), parse_version);
+        assert!(list.is_ok());
+    }
+
+    #[test]
+    fn the_wait_comes_from_githubs_headers() {
+        let headers = |pairs: &'static [(&'static str, &'static str)]| {
+            move |name: &str| {
+                pairs
+                    .iter()
+                    .find(|(key, _)| *key == name)
+                    .map(|(_, value)| value.to_string())
+            }
+        };
+        let now = 1_000_000;
+        assert_eq!(
+            limit_wait(headers(&[("retry-after", "120")]), now),
+            Some(Duration::from_secs(120))
+        );
+        assert_eq!(
+            limit_wait(
+                headers(&[("x-ratelimit-remaining", "0"), ("x-ratelimit-reset", "1000600")]),
+                now
+            ),
+            Some(Duration::from_secs(600))
+        );
+        // A reset already past still waits a moment.
+        assert_eq!(
+            limit_wait(
+                headers(&[("x-ratelimit-remaining", "0"), ("x-ratelimit-reset", "999000")]),
+                now
+            ),
+            Some(Duration::from_secs(1))
+        );
+        // Requests left: the 403 is not the rate limit.
+        assert_eq!(limit_wait(headers(&[("x-ratelimit-remaining", "12")]), now), None);
+        assert_eq!(limit_wait(headers(&[]), now), None);
+        assert_eq!(rate_limited_minutes("rate-limited:3"), Some(3));
+        assert_eq!(rate_limited_minutes("http status 403"), None);
+    }
 
     #[test]
     fn versions_are_their_digit_runs() {

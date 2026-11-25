@@ -232,6 +232,12 @@ pub fn environment(
     ] {
         put_if_on(&mut env, settings, key);
     }
+    // Advanced > Troubleshooting > Detailed performance log: the frame statistics and the VRAM
+    // report, every 5 s (GitHub #105, #61).
+    if settings.flag("perf_log") {
+        env.insert("SANCTUARY_FRAME_STATS".into(), "1".into());
+        env.insert("SANCTUARY_VRAM_REPORT".into(), "1".into());
+    }
     // The key and pad maps are derived from the saved bindings (no 1:1 catalog row).
     let no_controls = Value::Object(serde_json::Map::new());
     let controls = settings.get("controls").unwrap_or(&no_controls);

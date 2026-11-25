@@ -61,6 +61,10 @@ pub const WARMUP_HINT: &str = "Off: a slower start that avoids some crashes at l
 pub const SAVE_LOG_LABEL: &str = "Save a log of each start";
 pub const SAVE_LOG_HINT: &str = "For bug reports: writes last_run.log. Off: nothing is written while you play.";
 
+/// The detailed performance log switch under Troubleshooting (off by default).
+pub const PERF_LOG_LABEL: &str = "Detailed performance log";
+pub const PERF_LOG_HINT: &str = "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.";
+
 /// Delete shader cache, held while the game runs.
 fn delete_cache_button<'a>(state: &State, lang: &str) -> Element<'a, Message> {
     let delete = button(text(tr(lang, "Delete shader cache"))).style(theme::button_flat);
@@ -384,6 +388,13 @@ pub fn view(state: &State) -> Element<'_, Message> {
             &tr(lang, SAVE_LOG_LABEL),
             state.store.flag("save_log"),
             Some(&hint(SAVE_LOG_HINT)),
+        ))
+        .push(checkbox(
+            state.rtl,
+            "perf_log",
+            &tr(lang, PERF_LOG_LABEL),
+            state.store.flag("perf_log"),
+            Some(&hint(PERF_LOG_HINT)),
         ))
         .push(row(
             state.rtl,
