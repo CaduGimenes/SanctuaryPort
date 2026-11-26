@@ -101,6 +101,12 @@ void UniqueImage::Destroy() {
 }
 
 void UniqueImage::Create(const vk::ImageCreateInfo& image_ci) {
+    const auto result = TryCreate(image_ci);
+    ASSERT_MSG(result == vk::Result::eSuccess, "Failed allocating image with error {}",
+               vk::to_string(result));
+}
+
+vk::Result UniqueImage::TryCreate(const vk::ImageCreateInfo& image_ci) {
     this->image_ci = image_ci;
     this->image_ci.pNext = nullptr; // a chain the caller kept on its stack (image compression)
     ASSERT(!image);
@@ -118,10 +124,11 @@ void UniqueImage::Create(const vk::ImageCreateInfo& image_ci) {
     VmaAllocationInfo alloc_info{};
     VkResult result = vmaCreateImage(allocator, &image_ci_unsafe, &alloc_ci, &unsafe_image,
                                      &allocation, &alloc_info);
-    ASSERT_MSG(result == VK_SUCCESS, "Failed allocating image with error {}",
-               vk::to_string(vk::Result{result}));
-    image = vk::Image{unsafe_image};
-    size_bytes = alloc_info.size;
+    if (result == VK_SUCCESS) {
+        image = vk::Image{unsafe_image};
+        size_bytes = alloc_info.size;
+    }
+    return vk::Result{result};
 }
 
 Image::Image(const Vulkan::Instance& instance, Vulkan::Runtime& runtime_,

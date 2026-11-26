@@ -1439,10 +1439,13 @@ void Rasterizer::DrawRecord(const GraphicsPipeline* pipeline, const PreparedDraw
     // half-res SSAO, and one small vignette) so it works across 1.00, 1.46, and 1.47 builds
     // regardless of shader hashes or resource-slot order. The stock draw has already completed
     // and is retained whenever any input or state does not match.
+    const bool gtao_enabled = SanctuarySettings::Get().gtao.load(std::memory_order_relaxed) !=
+                              SanctuarySettings::GtaoOff;
+    if (!gtao_enabled) {
+        gtao->InvalidateHistory();
+    }
     if (const auto* ps = pipeline->GetStages()[u32(Shader::SwStage::Fragment)];
-        SanctuarySettings::Get().gtao.load(std::memory_order_relaxed) !=
-            SanctuarySettings::GtaoOff &&
-        ps && num_indices == 4 && num_instances == 1 && ps->images.size() == 4 &&
+        gtao_enabled && ps && num_indices == 4 && num_instances == 1 && ps->images.size() == 4 &&
         state.num_color_attachments == 1 && !db_desc.first && cb_descs[0].first) {
         bool applied_gtao = false;
         std::array<float, 4> projection{};
@@ -1514,6 +1517,8 @@ void Rasterizer::DrawRecord(const GraphicsPipeline* pipeline, const PreparedDraw
                 applied_gtao = gtao->Run(depth_id, target_id, projection,
                                          gtao_input.bindings[vignette_idx].view,
                                          gtao_input.bindings[vignette_idx].layout, scene_extent);
+            } else if (layout_matches) {
+                gtao->InvalidateHistory();
             }
         }
         static const bool trace = std::getenv("SANCTUARY_GTAO_TRACE") != nullptr;
