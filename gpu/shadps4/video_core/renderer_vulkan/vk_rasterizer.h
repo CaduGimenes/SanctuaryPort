@@ -321,9 +321,10 @@ private:
     void BindIndexBuffer(u32 index_offset = 0);
     /// sanctuary: BindVertexBuffers/BindIndexBuffer in two halves: obtaining the buffers
     /// (vertex_binds, index_bind) and recording the binds.
-    void ResolveVertexBuffers(const GraphicsPipeline* pipeline, const PreparedDraw* prepared);
+    bool ResolveVertexBuffers(const GraphicsPipeline* pipeline, const PreparedDraw* prepared,
+                              std::optional<u32> direct_index_offset = std::nullopt);
     void EmitVertexBuffers();
-    void ResolveIndexBuffer(u32 index_offset);
+    void ResolveIndexBuffer(u32 index_offset, std::span<const u8>* stream_data = nullptr);
     void EmitIndexBuffer();
 
     void ResetBindings(bool is_compute);
