@@ -25,6 +25,13 @@ float Clamp(float v, float lo, float hi) {
     return std::clamp(v, lo, hi);
 }
 
+// Other front ends (RecompLauncher) write `key = value`; the launcher and run.py already read it.
+std::string Trim(const std::string& text) {
+    const auto first = text.find_first_not_of(" \t");
+    if (first == std::string::npos) return {};
+    return text.substr(first, text.find_last_not_of(" \t") - first + 1);
+}
+
 void Set(Values& v, const std::string& key, const std::string& value) {
     const float f = float(std::atof(value.c_str()));
     const int i = std::atoi(value.c_str());
@@ -171,7 +178,7 @@ void Load() {
             if (text.empty() || text[0] == '#' || eq == std::string::npos) {
                 continue;
             }
-            Set(v, text.substr(0, eq), text.substr(eq + 1));
+            Set(v, Trim(text.substr(0, eq)), Trim(text.substr(eq + 1)));
         }
         std::fclose(file);
         std::printf("Settings: %s\n", Path());
@@ -285,7 +292,7 @@ static std::vector<std::string> KeyLines(const std::string& path) {
 }
 
 static std::string KeyOf(const std::string& line) {
-    return line.substr(0, line.find('='));
+    return Trim(line.substr(0, line.find('=')));
 }
 
 // sanctuary: the file holds the launcher's keys too (frame_rate, vertical_sync, dynamic_resolution,
