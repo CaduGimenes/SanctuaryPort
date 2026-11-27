@@ -1,0 +1,5 @@
+/bin/
+/users.json
+/users.json.new
+/*.key
+/*.crt

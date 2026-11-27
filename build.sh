@@ -2,6 +2,8 @@
 set -euo pipefail
 cd -- "$(dirname -- "$0")"
 mkdir -p out
+# Entitlements declared without add-on folders. Edit addons.json, never out/addons.json.
+if [[ -f addons.json ]]; then cp addons.json out/addons.json; fi
 # Windows: MSYS2 CLANG64 (packages in packaging/windows/README.md). The GPU library is static
 # there and CMake links sanctuary-probe.exe as well; no PGO (GCC-only flags), LTO off by default.
 case $(uname -s) in
@@ -99,6 +101,8 @@ done
 "$CC" -std=c11 -O2 -g -Wall -Wextra -Werror -mgeneral-regs-only -c src/isa_emulate.c -o out/isa_emulate.o
 "$CC" -std=c11 -O2 -g -Wall -Wextra -Werror -pthread -no-pie "${includes[@]}" -I. -Isrc src/probe.c "${runtime[@]}" src/cpu_check.c src/vulkan_smoke.c out/isa_emulate.o src/isa_rewrite.c "${ngs2[@]}" out/libatrac9.a -lstdc++ -lm "${gpu[@]}" "${libraries[@]}" -o out/sanctuary-probe
 echo "Built $PWD/out/sanctuary-probe"
+# Online module (optional): built when its development dependencies are present.
+if [[ -f tools/build_online.sh ]]; then bash tools/build_online.sh || echo 'Online module not built; offline/LAN still work' >&2; fi
 # GPU check for run.sh (live_resolution=auto): links only the Vulkan loader.
 "$CC" -std=c11 -O2 -Wall -Wextra -Werror -Igpu/shadps4 tools/gpu_capabilities.c "${libraries[@]}" -o out/sanctuary-gpu-capabilities
 if [[ ${1:-} == --test ]]; then
@@ -118,6 +122,10 @@ if [[ ${1:-} == --test ]]; then
     out/sema-test
     "$CC" -std=c11 -D_GNU_SOURCE -O2 -g -Wall -Wextra -Werror -I. -Isrc tests/test_content.c src/runtime_content.c -o out/content-test
     out/content-test
+    "$CC" -std=c11 -D_GNU_SOURCE -O2 -g -Wall -Wextra -Werror -I. -Isrc tests/test_content_addons.c src/runtime_content.c -o out/content-addons-test
+    out/content-addons-test
+    "$CXX" -std=c++20 -O2 -g -Wall -Wextra -I. tests/test_osk.cpp -o out/osk-test
+    out/osk-test
     "$CC" -std=c11 -O2 -g -Wall -Wextra -Werror -pthread "${includes[@]}" -I. -Isrc tests/test_mp3.c src/runtime_mp3.c out/libatrac9.a -lm "${libraries[@]}" -o out/mp3-test
     out/mp3-test tests/data/sine.mp3
     "$CC" -std=c11 -O2 -g -Wall -Wextra -Werror -pthread "${includes[@]}" -I. -Isrc tests/test_videodec.c "${libraries[@]}" -o out/videodec-test

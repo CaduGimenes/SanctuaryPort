@@ -31,10 +31,11 @@ use sanctuaryport_launcher::ui::widgets;
 use sanctuaryport_launcher::ui::widgets::modal::{Modal, ModalKind, ModalMessage};
 
 /// The page order of the Global Constraints (SanctuaryPort: the log has no tab).
-const ORDER: [Page; 7] = [
+const ORDER: [Page; 8] = [
     Page::Home,
     Page::Graphics,
     Page::Game,
+    Page::Multiplayer,
     Page::Seasons,
     Page::Trophies,
     Page::Controls,
@@ -43,8 +44,9 @@ const ORDER: [Page; 7] = [
 
 /// The pages whose drawer takes 72 % of the window (the Graphics page took the Performance
 /// page's rows and its width).
-const WIDE: [Page; 4] = [
+const WIDE: [Page; 5] = [
     Page::Graphics,
+    Page::Multiplayer,
     Page::Trophies,
     Page::Controls,
     Page::Log,
@@ -402,12 +404,16 @@ fn a_red_hairline_tops_the_bar_and_edges_the_drawer() {
 }
 
 /// The drawer subtitles of the mockup (`launcher-mockup-v13.html`), without its sample counts.
-const SUBTITLES: [(Page, &str); 7] = [
+const SUBTITLES: [(Page, &str); 8] = [
     (
         Page::Graphics,
         "↻ applies on the next start. The others also change in game (Insert or R3+L2).",
     ),
     (Page::Game, "Your game dump, saves and language."),
+    (
+        Page::Multiplayer,
+        "The private PSN master and Demonware title server.",
+    ),
     (
         Page::Seasons,
         "The offline season, its events and the 15 day rotation.",

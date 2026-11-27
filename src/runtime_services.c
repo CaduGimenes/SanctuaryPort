@@ -113,6 +113,17 @@ static ABI int32_t user_name(int32_t id,char *name,uint64_t size) {
     if (id<USER_ID || id>MAX_USER_ID || !name) return USER_INVALID_ARGUMENT;
     char text[RUNTIME_PROFILE_NAME_SIZE];
     runtime_profile_name(id,text);
+    /* Online: the title puts UserService's name into Demonware's online_id field, so it must be
+     * the multiplayer username the launcher used for the PSN master session (d3pc does this in
+     * the same place). Offline the local profile name stays. */
+    const char *online=getenv("SANCTUARY_ONLINE");
+    if (!online) online=getenv("BB_ONLINE");
+    const char *master=getenv("BB_D3_MASTER"), *demonware=getenv("BB_D3_DEMONWARE");
+    const char *npid=getenv("BB_SHADNET_NPID");
+    if (online && online[0]=='1' && master && master[0]=='1' &&
+        demonware && demonware[0]=='1' && npid && npid[0]) {
+        snprintf(text,sizeof(text),"%s",npid);
+    }
     if (strlen(text)+1>size) return (int32_t)0x8096000a; /* BUFFER_TOO_SHORT */
     strcpy(name,text); return 0;
 }
@@ -154,27 +165,58 @@ static ABI int32_t system_param(int32_t id,int32_t *value) {
  * Diablo III 1.47 lists its add-ons (and so unlocks the Necromancer) only on that event, which a
  * PS4 sends when the licenses are loaded; 1.00 listed them at start on its own. */
 #define EVENT_ENTITLEMENT_UPDATE 0x10000003
+/* OrbisSystemServiceEvent is 8196 bytes: 32-bit type plus an 8192-byte union. The online module
+ * queues NP events (session invitations) for the game's ReceiveEvent. */
+#define SYSTEM_EVENT_SIZE 8196
+#define MAX_ONLINE_EVENTS 32
+static unsigned char online_events[MAX_ONLINE_EVENTS][SYSTEM_EVENT_SIZE];
+static unsigned online_event_head, online_event_count;
 static int entitlement_event_sent;
+int runtime_services_push_event(const void *event, uint32_t size) {
+    if (!event || size != SYSTEM_EVENT_SIZE) return -1;
+    pthread_mutex_lock(&lock);
+    if (online_event_count == MAX_ONLINE_EVENTS) { pthread_mutex_unlock(&lock); return -1; }
+    memcpy(online_events[(online_event_head + online_event_count) % MAX_ONLINE_EVENTS], event, size);
+    ++online_event_count;
+    pthread_mutex_unlock(&lock);
+    return 0;
+}
 static int pending_event(void) {
     pthread_mutex_lock(&lock);
     const int pending=!entitlement_event_sent;
     pthread_mutex_unlock(&lock);
     return pending && runtime_content_addons_ready() ? EVENT_ENTITLEMENT_UPDATE : 0;
 }
+static int online_events_pending(void) {
+    pthread_mutex_lock(&lock);
+    const int pending=online_event_count != 0;
+    pthread_mutex_unlock(&lock);
+    return pending;
+}
 static ABI int32_t system_status(unsigned char *status) {
     if (!status) return SYSTEM_PARAMETER;
     memset(status,0,12); /* no overlay, foreground, normal CPU mode */
-    const int32_t events=pending_event() ? 1 : 0;
+    const int32_t events=(online_events_pending() ? 1 : 0) + (pending_event() ? 1 : 0);
     memcpy(status,&events,4); /* event_num */
     return 0;
 }
 static ABI int32_t system_event(void *event) {
     if (!event) return SYSTEM_PARAMETER;
+    pthread_mutex_lock(&lock);
+    if (online_event_count) {
+        memcpy(event,online_events[online_event_head],SYSTEM_EVENT_SIZE);
+        online_event_head=(online_event_head+1) % MAX_ONLINE_EVENTS;
+        --online_event_count;
+        pthread_mutex_unlock(&lock);
+        return 0;
+    }
+    pthread_mutex_unlock(&lock);
     const int32_t type=pending_event();
     if (!type) return SYSTEM_NO_EVENT;
     pthread_mutex_lock(&lock); entitlement_event_sent=1; pthread_mutex_unlock(&lock);
-    memset(event,0,256);
-    memcpy(event,&type,4);
+    memset(event,0,SYSTEM_EVENT_SIZE);
+    const uint32_t fields[]={(uint32_t)type,(uint32_t)USER_ID,0}; /* EntitlementUpdate, service 0 */
+    memcpy(event,fields,sizeof(fields));
     note("SystemService: entitlement update event sent (installed add-ons)");
     return 0;
 }

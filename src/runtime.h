@@ -45,6 +45,12 @@ void runtime_sema_report(void);
 unsigned runtime_sema_waiters(uint32_t id);
 uintptr_t runtime_time_resolve(const char *name);
 void runtime_content_configure(const uint32_t values[5]);
+/* Entitlements the provider reports without an add-on folder, loaded once before the first
+ * sceAppContentInitialize: {"format":"bbport-addons/1","addons":{"<title>":["<label>"]}}.
+ * 1 loaded, 0 no such file (folders only), -1 malformed, already loaded or too late. */
+int runtime_content_addons(const char *path);
+/* AppContent service slots from the game's SFO, before initialization. */
+void runtime_content_set_service(uint32_t service, const char *title_id);
 uintptr_t runtime_content_resolve(const char *name);
 void runtime_content_report(void);
 typedef struct { const char *name; void *function; } RuntimeExport;
@@ -54,7 +60,19 @@ uintptr_t runtime_lookup(const RuntimeExport *table, size_t count, const char *n
 uintptr_t runtime_kernel_resolve(const char *name);
 uintptr_t runtime_file_resolve(const char *name);
 uintptr_t runtime_services_resolve(const char *name);
+/* Queues a SystemService event (8196 bytes) for the game's ReceiveEvent. 0, or -1 when full. */
+int runtime_services_push_event(const void *event, uint32_t size);
 uintptr_t runtime_net_resolve(const char *name);
+/* Online play (runtime_online.c, SANCTUARY_ONLINE/BB_ONLINE=1): the bbnet20 module answers the
+ * network and PSN imports. It is loaded on the first such import; offline nothing changes. */
+int runtime_online_enabled(void);
+int runtime_online_symbol(const char *name);
+uintptr_t runtime_online_resolve(const char *name);
+void runtime_online_configure(const char *app0, const char *serial, const char *title, const char *version);
+void runtime_online_image_mapped(uint8_t *image, uint64_t size);
+void runtime_online_image_patched(uint8_t *image, uint64_t size);
+void runtime_online_image_ready(uintptr_t base, uint64_t size);
+void runtime_online_start(void);
 void runtime_file_report(void);
 void runtime_file_configure(const char *app0, const char *user);
 int runtime_file_mount(const char *guest, const char *host);
@@ -70,9 +88,17 @@ int64_t runtime_file_stat(const char *path, void *guest_stat);
 int64_t runtime_file_fstat(int fd, void *guest_stat);
 int64_t runtime_file_getdents(int fd, char *buffer, uint64_t size, int64_t *base);
 void runtime_thread_keys_cleanup(void);
+/* Guest threads for host code (the online module's NP callbacks). 0 or a positive errno. */
+int32_t runtime_thread_spawn(void **thread, void *(ABI *entry)(void *), void *argument, uint64_t stack, const char *name);
+int32_t runtime_thread_join_spawned(void *thread, void **result);
+void runtime_thread_exit(void *value);
 /* Guest-visible errno values are FreeBSD's. */
 int32_t runtime_guest_errno(int host_errno);
 void *runtime_low_map(size_t size, int prot);
+/* Low-region bookkeeping for the online module (image, stacks, trampolines). */
+void runtime_low_protect(uintptr_t start, size_t size, int prot);
+int runtime_memory_low_info(uintptr_t address, int *prot, uintptr_t *end);
+int runtime_memory_vma_info(uintptr_t address, int *prot, int *type, uintptr_t *end);
 /* Windows: reserves the PS4 user address range as a placeholder (no-op elsewhere). */
 void runtime_memory_reserve(void);
 uintptr_t runtime_ajm_resolve(const char *name);

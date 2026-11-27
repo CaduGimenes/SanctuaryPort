@@ -38,6 +38,9 @@ static char (*names)[128];
 static uint64_t import_count;
 static unsigned char *image;
 static uint64_t image_size;
+/* The online module checks this before touching network state while a restart tears the process
+ * down (replaces itself with run.sh or the restart command). */
+volatile int runtime_restarting;
 unsigned char *runtime_image_base(void) { return image; }
 static size_t page_size;
 typedef struct { uint64_t base, size, init, tls_address, tls_memsz, tls_filesz, tls_module; } LinkedModule;
@@ -72,6 +75,7 @@ static void *allocate(size_t size) {
     return p;
 }
 static void protect(void *p, size_t size, unsigned flags) {
+    const int host_prot = ((flags & 4) ? PROT_READ : 0) | ((flags & 2) ? PROT_WRITE : 0) | ((flags & 1) ? PROT_EXEC : 0);
 #ifdef _WIN32
     DWORD old, mode = PAGE_NOACCESS;
     if (flags & 1) mode = (flags & 2) ? PAGE_EXECUTE_READWRITE : PAGE_EXECUTE_READ;
@@ -80,9 +84,9 @@ static void protect(void *p, size_t size, unsigned flags) {
     if (!VirtualProtect(p, size, mode, &old)) fail("VirtualProtect failed");
     FlushInstructionCache(GetCurrentProcess(), p, size);
 #else
-    int mode = ((flags & 4) ? PROT_READ : 0) | ((flags & 2) ? PROT_WRITE : 0) | ((flags & 1) ? PROT_EXEC : 0);
-    if (mprotect(p, size, mode)) fail("mprotect failed");
+    if (mprotect(p, size, host_prot)) fail("mprotect failed");
 #endif
+    runtime_low_protect((uintptr_t)p,size,host_prot);
 }
 static ABI __attribute__((noreturn)) void unresolved(uint32_t id, uintptr_t argument) {
     if (id >= import_count) fail("bad import trap index");
@@ -600,6 +604,27 @@ static void watchdog(int sig, siginfo_t *info, void *context) {
     _exit(128 + sig);
 }
 #endif
+/* <exe dir>/addons.json: entitlements the provider reports without add-on folders. */
+static int default_addons_path(char *out,size_t size) {
+#ifdef _WIN32
+    const DWORD n=GetModuleFileNameA(NULL,out,(DWORD)size);
+    if (!n || n>=size) return -1;
+#else
+    const ssize_t n=readlink("/proc/self/exe",out,size-1);
+    if (n<=0) return -1;
+    out[n]=0;
+#endif
+    char *slash=strrchr(out,'/');
+#ifdef _WIN32
+    char *back=strrchr(out,'\\');
+    if (!slash || (back && back>slash)) slash=back;
+#endif
+    if (!slash) return -1;
+    slash[1]=0;
+    if (strlen(out)+strlen("addons.json")>=size) return -1;
+    strcat(out,"addons.json");
+    return 0;
+}
 /* param.sfo lookup: string or integer value of key, 0 when absent. */
 static int sfo_value(const char *path, const char *key, char *text, size_t text_size, uint32_t *number) {
     FILE *f=fopen(path,"rb");
@@ -669,6 +694,7 @@ static void apply_patches(const char *path, Segment *segments, uint64_t ns, cons
  * applied at start). Descriptors are closed first so the old GPU device and its memory are
  * released before the new process opens its own. */
 void runtime_restart(void) {
+    runtime_restarting=1;
     fflush(NULL);
 #ifdef _WIN32
     /* run.py sets SANCTUARY_RESTART_COMMAND: the launch command line, started again (new patches). */
@@ -755,6 +781,8 @@ int main(int argc, char **argv) {
     int cpu_only = 0, strict_imports = 0, check_imports = 0;
     unsigned timeout_seconds = 10;
     const char *content_profile=NULL, *app0=NULL, *user_dir=NULL, *patch_file=NULL, *isa_file=NULL;
+    const char *addons_file=NULL;
+    int addons_manifest=1;
     const char *mounts[8]; int mount_count=0;
     for (int i = 2; i < argc; ++i) {
         if (!strcmp(argv[i], "--cpu-only")) cpu_only = 1;
@@ -765,6 +793,8 @@ int main(int argc, char **argv) {
         else if (!strcmp(argv[i], "--user") && i+1<argc) user_dir=argv[++i];
         else if (!strcmp(argv[i], "--patches") && i+1<argc) patch_file=argv[++i];
         else if (!strcmp(argv[i], "--isa-rewrite") && i+1<argc) isa_file=argv[++i];
+        else if (!strcmp(argv[i], "--addons") && i+1<argc) addons_file=argv[++i];
+        else if (!strcmp(argv[i], "--no-addons")) addons_manifest=0;
         else if (!strcmp(argv[i], "--mount") && i+1<argc) {
             /* guest=host; the guest part never has '=', so the first one splits */
             const char *spec=argv[++i], *eq=strchr(spec,'=');
@@ -775,7 +805,7 @@ int main(int argc, char **argv) {
         else { fprintf(stderr, "Unknown option: %s\n", argv[i]); return 1; }
     }
     if (argc < 2) {
-        fprintf(stderr, "Usage: %s boot.bin [--cpu-only] [--strict-imports] [--check-imports] [--content-profile file] [--app0 dir] [--user dir] [--patches file] [--isa-rewrite file] [--mount guest=host]... [--timeout seconds] | --vulkan-only | --cpu-features | --gamepad\n", argv[0]);
+        fprintf(stderr, "Usage: %s boot.bin [--cpu-only] [--strict-imports] [--check-imports] [--content-profile file] [--app0 dir] [--user dir] [--patches file] [--isa-rewrite file] [--mount guest=host]... [--addons file|--no-addons] [--timeout seconds] | --vulkan-only | --cpu-features | --gamepad\n", argv[0]);
         return 1;
     }
     if (!cpu_supported(missing, sizeof missing)) return 20;
@@ -815,10 +845,36 @@ int main(int argc, char **argv) {
             if (runtime_file_mount(guest, eq + 1)) { fprintf(stderr, "Cannot mount %s: too many mounts or host path longer than 511 characters\n", mounts[i]); return 1; }
             printf("Runtime: mount %s -> %s\n", guest, eq + 1);
         }
-        char sfo[4096], id[16]="";
+        char sfo[4096], id[16]="", serial[16]="", title[128]="", version[16]="";
         snprintf(sfo,sizeof(sfo),"%s/sce_sys/param.sfo",app0);
         if (sfo_value(sfo,"INSTALL_DIR_SAVEDATA",id,sizeof(id),NULL) || sfo_value(sfo,"TITLE_ID",id,sizeof(id),NULL))
             runtime_savedata_configure(id);
+        sfo_value(sfo,"TITLE_ID",serial,sizeof(serial),NULL);
+        sfo_value(sfo,"TITLE",title,sizeof(title),NULL);
+        sfo_value(sfo,"APP_VER",version,sizeof(version),NULL);
+        runtime_online_configure(app0,serial,title,version);
+        /* AppContent service slots: the game's own title, then linked SFO services. */
+        if (sfo_value(sfo,"TITLE_ID",serial,sizeof(serial),NULL) && serial[0])
+            runtime_content_set_service(0,serial);
+        for (uint32_t service=1;service<8;++service) {
+            char key[40], linked[64];
+            snprintf(key,sizeof(key),"SERVICE_ID_ADDCONT_ADD_%u",service);
+            if (sfo_value(sfo,key,linked,sizeof(linked),NULL) && strlen(linked)>=16) {
+                char linked_title[10];
+                memcpy(linked_title,linked+7,9); linked_title[9]=0;
+                runtime_content_set_service(service,linked_title);
+            }
+        }
+    }
+    /* Entitlements without add-on folders: SANCTUARY_ADDONS, --addons FILE, else
+     * <exe dir>/addons.json. A missing manifest is fine; a malformed one stops startup. */
+    if (addons_manifest) {
+        char path[4096];
+        const char *env=getenv("SANCTUARY_ADDONS");
+        if (env && !addons_file) addons_file=env[0] ? env : NULL;
+        if (!addons_file && !(env && !env[0]) && default_addons_path(path,sizeof(path))==0)
+            addons_file=path;
+        if (addons_file && runtime_content_addons(addons_file)<0) return 1;
     }
     sanctuarygpu_register_kernel();
 #ifdef _WIN32
@@ -1001,6 +1057,7 @@ int main(int argc, char **argv) {
         }
         memcpy(image + relocs[i].target, &value, 8);
     }
+    runtime_online_image_mapped(image,size);
     if (check_imports) {
         /* Lists every import the game would stop at, without running it (needs the GPU
          * library: without --cpu-only its symbols are registered above). */
@@ -1039,6 +1096,7 @@ int main(int argc, char **argv) {
         runtime_set_report_hook(isa_report_hook);
         protect(stubs, stub_area, 5);
     }
+    runtime_online_image_patched(image,size);
     protect(traps, round_page((import_count + 1) * 32), 5);
     protect(image, round_page(size), 0);
     int executable_entry = 0;
@@ -1049,6 +1107,7 @@ int main(int argc, char **argv) {
     }
     if (!executable_entry) fail("entry is not executable");
     image_size = size;
+    runtime_online_image_ready((uintptr_t)image,size);
     printf("Mapped %" PRIu64 " bytes, %" PRIu64 " segments; applied %" PRIu64 " relocations\n", size, ns, nr);
     if (native_libc) {
         for (uint64_t m=0;m<module_count;++m) {
@@ -1080,6 +1139,7 @@ int main(int argc, char **argv) {
     atexit(report_exit_caller); /* registered last, so it runs first */
     if ((profiling=getenv("SANCTUARY_PROFILE")!=NULL)) CloseHandle(CreateThread(NULL,0,profiler_thread,NULL,0,NULL));
 #endif
+    runtime_online_start();
     entered_game=1;
     struct { uint64_t argc; const char *argv[2]; } params = {1, {"/app0/eboot.bin", NULL}};
 #ifdef _WIN32

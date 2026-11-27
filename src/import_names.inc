@@ -1600,3 +1600,4 @@
 {"Cnp77podkCU#libSceHttp","sceHttpCreateRequestWithURL2"},
 {"hPTXo3bICzI#libSceHttp","sceHttpParseResponseHeader"},
 {"-PoIzr3PEk0#libSceSsl","sceSslGetMemoryPoolStats"},
+{"zPps3BXIxUE#libSceRtc","sceRtcGetCurrentWin32FileTime"},

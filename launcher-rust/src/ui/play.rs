@@ -21,6 +21,7 @@ use crate::core::launch::{
     spawn_game, Exit, GameEvent, GameHandle, Group, Launch, LaunchError,
 };
 use crate::core::log::{line_status, LineStatus, RunLog};
+use crate::core::multiplayer;
 use crate::core::paths::Paths;
 use crate::ui::app::{refresh_installation, show_page, Message, State};
 use crate::ui::follow::{follow, Cause};
@@ -278,6 +279,24 @@ fn checks(state: &mut State, declined: Option<&str>) -> Task<Message> {
             ],
         );
         return refuse(state, text);
+    }
+    // Online play needs a valid private-server configuration and the runtime module.
+    if state.store.flag("online_enabled") {
+        if let Err(error) = multiplayer::validate(state.store.app()) {
+            let text = format!("{} {error}", tr(&lang, "Multiplayer:"));
+            state.modal = Some(Modal::error(text));
+            return show_page(state, Page::Multiplayer);
+        }
+        if !multiplayer::module_installed(&state.paths.port_dir) {
+            let text = format!(
+                "{} {}\n\n{}",
+                tr(&lang, "The online module is not built:"),
+                multiplayer::module_path(&state.paths.port_dir).display(),
+                tr(&lang, "Build it with bash build.sh, then press PLAY again.")
+            );
+            state.modal = Some(Modal::error(text));
+            return show_page(state, Page::Multiplayer);
+        }
     }
     // An explicit command (the tests' fake game) replaces the runner and needs none of its files.
     if state.launch_command.is_none() {

@@ -20,6 +20,7 @@ use crate::core::i18n::{is_rtl, launcher_language, system_language, tr};
 use crate::core::installation::Installation;
 use crate::core::joysticks::{JoyError, Joysticks};
 use crate::core::log::{LogBuffer, MAX_LOG_LINES};
+use crate::core::multiplayer;
 use crate::core::paths::Paths;
 use crate::core::platform;
 use crate::core::platform::tool::SystemTools;
@@ -309,6 +310,8 @@ pub enum Message {
     NextPage,
     PreviousPage,
     Set(String, Value),
+    /// Multiplayer > Reset defaults: every multiplayer field back to its catalog default.
+    MultiplayerReset,
     /// The Upscaling choice of the Graphics page (`off`, `fsr1` or `fsr3`): sets `fsr1` and
     /// `temporal_aa` together.
     Upscaling(String),
@@ -558,6 +561,10 @@ pub fn update(state: &mut State, message: Message) -> Task<Message> {
         Message::Save => return persist::save(state),
         // Save persists what `Set` stored.
         Message::Set(key, value) => return apply_set(state, &key, value),
+        Message::MultiplayerReset => {
+            multiplayer::reset(&mut state.store);
+            return follow(state, Cause::Keys(&multiplayer::KEYS));
+        }
         Message::Upscaling(choice) => {
             let temporal = if choice == "fsr3" { "fsr3" } else { "off" };
             let fsr1 = choice == "fsr1" || (choice == "fsr3" && state.store.flag("fsr1"));

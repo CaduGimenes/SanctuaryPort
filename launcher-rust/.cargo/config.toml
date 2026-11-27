@@ -9,3 +9,6 @@ rustflags = ["-C", "target-feature=+crt-static"]
 # machine's language is.
 [env]
 LC_ALL = { value = "en_US.UTF-8", force = true }
+# The iced test simulators render with tiny-skia; the default GPU backend crashes when several
+# pages are rendered in parallel on a headless/CI machine.
+ICED_TEST_BACKEND = { value = "tiny-skia", force = true }

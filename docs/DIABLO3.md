@@ -21,6 +21,25 @@ add-on refresh job, which calls `sceAppContentGetAddcontInfoList` for service la
 sets one ownership bit per known label. The runtime sends one ENTITLEMENT_UPDATE once AppContent is
 initialized and add-ons are installed (`src/runtime_services.c`).
 
+Entitlements can also be declared without add-on folders in `addons.json`
+(`{"format":"bbport-addons/1","addons":{"CUSA00242":["NECROMANCER00003", ...]}}`).
+`build.sh` copies the repository's `addons.json` to `out/addons.json`, beside
+`sanctuary-probe`; `SANCTUARY_ADDONS=FILE` or `--addons FILE` selects another file, and
+`--no-addons` disables it. Labels are matched by the game's `TITLE_ID`, deduplicated against
+installed folders, and reported as installed; a missing file is ignored, a malformed one stops
+startup. The shipped manifest declares the five Diablo III labels for CUSA00242, CUSA00243,
+CUSA00433 and CUSA00434, so entitlements work without the add-on folders.
+
+Online play uses the private Go servers in `online/` and the runtime module in `gpu/online`; the
+launcher's **Multiplayer** page sets the host, ports and player name. `build.sh` builds
+`out/online/libsanctuarynet.so`, and the runtime loads it only when the launcher enables online
+play. The title-auth/bootstrap patch is byte-checked for **CUSA00242 01.46**; other versions stay
+offline. Invitations and shadNet notices are drawn as a banner over the game (the overlay event
+filter lets the invitation dialog take the keyboard/gamepad), and the game's text dialog gets the
+same on-screen keyboard as the d3pc port (D-pad/left stick choose, Cross presses, Options confirms, Circle deletes, Triangle cancels). Season dates
+use `sceRtcGetWin32FileTime`/`sceRtcGetCurrentWin32FileTime`; see
+[online/docs/ONLINE.md](../online/docs/ONLINE.md).
+
 Both share their saves (the game keeps them under `CUSA00242`); 1.47 upgrades a 1.00 save after
 asking. Update PKGs keep the game's content type (0x1A): the installer tells them apart by
 param.sfo's CATEGORY `gp` and installs them into `<TITLE_ID>-UPDATE`.

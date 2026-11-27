@@ -15,6 +15,7 @@
 
 #include <SDL3/SDL.h>
 #include "sanctuary_settings.h"
+#include "sanctuary_osk.h"
 #include "sanctuary_graphics.h"
 #include "sanctuary_perf_stats.h"
 
@@ -70,10 +71,27 @@ std::string notice_text;
 std::atomic<s64> notice_until{0}; // steady_clock milliseconds
 // Notices sent while one shows wait their turn (a trophy and the platinum it completes).
 std::deque<std::pair<std::string, int>> notice_queue;
+// A module's line over the game (the online module's invitations and notices), until cleared.
+std::mutex banner_mutex;
+std::string banner_text;
+std::atomic<bool> banner_active{false};
+std::atomic<bool> banner_captures_input{false};
+// Module event filters (the online module's invitation dialog and keyboard), window thread.
+EventFilter event_filters[4]{};
+unsigned event_filter_count = 0;
+// The on-screen keyboard of the text dialog and where its edits go (window thread; the present
+// thread reads the selection to draw it).
+std::mutex osk_mutex;
+Osk::State osk_state;
+int osk_axis_x = 0, osk_axis_y = 0;
+// Edits from the on-screen keyboard wait here for the window thread: an ImGui button is clicked
+// on the present thread, and the window must apply SDL text changes on its own thread.
+std::mutex text_edit_mutex;
+std::deque<std::pair<int, std::string>> text_edits;
 bool dirty = false; // settings changed while open: saved on close
 int requested_tab = -1; // switch on the next frame (L1/R1, Q/E, menu opened)
 // The game's text dialog (SetTextEntry), guarded by imgui_mutex.
-bool text_entry_active = false;
+std::atomic<bool> text_entry_active{false};
 std::string text_entry_prompt, text_entry_text;
 // The game's save list (sceSaveDataDialog): a choice made with the arrows/D-pad.
 std::atomic<bool> choice_active{false};
@@ -644,6 +662,8 @@ void Menu() {
 }
 
 
+bool ActivateOsk();
+
 // The game's text dialog: what is typed, and how to finish (keyboard or controller).
 void TextEntryBox() {
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
@@ -655,8 +675,7 @@ void TextEntryBox() {
     ImGui::SetNextWindowBgAlpha(0.92f);
     ImGui::Begin("##text_entry", nullptr,
                  ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize |
-                     ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoNav |
-                     ImGuiWindowFlags_NoFocusOnAppearing);
+                     ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoFocusOnAppearing);
     ImGui::TextColored(ImVec4(0.85f, 0.72f, 0.45f, 1.0f), "%s", text_entry_prompt.c_str());
     ImGui::Separator();
     ImGui::SetWindowFontScale(1.4f);
@@ -664,7 +683,42 @@ void TextEntryBox() {
     ImGui::SetWindowFontScale(1.0f);
     ImGui::Separator();
     ImGui::TextDisabled("Keyboard: type, Backspace to erase, Enter = OK, Esc = cancel");
-    ImGui::TextDisabled("%s", PadText("Controller: Cross (A) = OK, Circle (B) = cancel", "Controller: A = OK, B = cancel", "Controller: B = OK, A = cancel"));
+    ImGui::TextDisabled("%s", PadText("Controller: D-pad/left stick = move, Cross (A) = press, Options = OK, Circle (B) = delete, Triangle (Y) = cancel", "Controller: D-pad/left stick = move, A = press, Menu = OK, B = delete, Y = cancel", "Controller: D-pad/left stick = move, B = press, Menu = OK, A = delete, Y = cancel"));
+    ImGui::Separator();
+    ImGui::TextDisabled("On-screen keyboard: arrows / left stick / D-pad choose, Cross presses");
+    // The same fixed-size buttons as d3pc: the ImGui dark theme's blue buttons, a gold outline
+    // on the selected key. Mouse hover selects and a click presses it, as the pad's Cross does.
+    Osk::State shown;
+    {
+        std::scoped_lock osk_lock{osk_mutex};
+        shown = osk_state;
+    }
+    const float key_height = ImGui::GetFrameHeight() * 1.2f;
+    const float key_width = key_height * 1.9f;
+    const float spacing = ImGui::GetStyle().ItemSpacing.x;
+    ImDrawList* draw = ImGui::GetWindowDrawList();
+    for (int row = 0; row < Osk::kRowCount; ++row) {
+        for (int col = 0; col < Osk::kRows[row].count; ++col) {
+            if (col) {
+                ImGui::SameLine(0.0f, spacing);
+            }
+            ImGui::PushID(row * 16 + col);
+            if (ImGui::Button(Osk::Label(shown, Osk::kRows[row].keys[col]),
+                              ImVec2(key_width, key_height))) {
+                {
+                    std::scoped_lock osk_lock{osk_mutex};
+                    osk_state.row = row;
+                    osk_state.col = col;
+                }
+                ActivateOsk();
+            }
+            if (row == shown.row && col == shown.col) {
+                draw->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(),
+                              IM_COL32(240, 200, 90, 255), 4.0f, 0, 2.5f);
+            }
+            ImGui::PopID();
+        }
+    }
     ImGui::End();
 }
 
@@ -825,6 +879,102 @@ void Notice() {
     ImGui::End();
 }
 
+// The on-screen keyboard, while the game's text dialog is open. Characters typed on the real
+// keyboard still reach the dialog; the arrows/D-pad move, Enter/Cross presses, Esc/Circle cancels.
+/// The window's edit codes (0 append, 1 backspace, 2 clear, 3 confirm, 4 cancel); the Osk::Edit
+/// enum is not that order (Append is 1), so it must be mapped, never cast.
+int EditCode(Osk::Edit edit) {
+    switch (edit) {
+    case Osk::Edit::Append: return 0;
+    case Osk::Edit::Backspace: return 1;
+    case Osk::Edit::Clear: return 2;
+    case Osk::Edit::Confirm: return 3;
+    case Osk::Edit::Cancel: return 4;
+    case Osk::Edit::None: break;
+    }
+    return -1;
+}
+
+void QueueTextEdit(int edit, std::string text) {
+    std::scoped_lock lock{text_edit_mutex};
+    if (text_edits.size() < 32) {
+        text_edits.emplace_back(edit, std::move(text));
+    }
+}
+
+bool ActivateOsk() {
+    Osk::Result result;
+    {
+        std::scoped_lock lock{osk_mutex};
+        result = Osk::Activate(osk_state);
+    }
+    const int edit = EditCode(result.edit);
+    if (edit >= 0) {
+        QueueTextEdit(edit, result.text);
+    }
+    return true;
+}
+
+void MoveOsk(int drow, int dcol) {
+    std::scoped_lock lock{osk_mutex};
+    Osk::Move(osk_state, drow, dcol);
+}
+
+bool HandleTextEntryEvent(const SDL_Event& event) {
+    if (event.type == SDL_EVENT_KEY_DOWN) {
+        switch (event.key.key) {
+        case SDLK_UP: MoveOsk(-1, 0); return true;
+        case SDLK_DOWN: MoveOsk(1, 0); return true;
+        case SDLK_LEFT: MoveOsk(0, -1); return true;
+        case SDLK_RIGHT: MoveOsk(0, 1); return true;
+        case SDLK_RETURN:
+        case SDLK_KP_ENTER:
+            // A keyboard user expects Enter to finish typing; the pad's Cross presses the
+            // selected on-screen key instead.
+            QueueTextEdit(3, {});
+            return true;
+        case SDLK_ESCAPE:
+            QueueTextEdit(4, {});
+            return true;
+        default: return false;
+        }
+    }
+    if (event.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN) {
+        // d3pc's map: Cross presses the selected key, Circle deletes, Options accepts the text,
+        // Triangle cancels it.
+        switch (event.gbutton.button) {
+        case SDL_GAMEPAD_BUTTON_DPAD_UP: MoveOsk(-1, 0); return true;
+        case SDL_GAMEPAD_BUTTON_DPAD_DOWN: MoveOsk(1, 0); return true;
+        case SDL_GAMEPAD_BUTTON_DPAD_LEFT: MoveOsk(0, -1); return true;
+        case SDL_GAMEPAD_BUTTON_DPAD_RIGHT: MoveOsk(0, 1); return true;
+        case SDL_GAMEPAD_BUTTON_SOUTH: return ActivateOsk();
+        case SDL_GAMEPAD_BUTTON_EAST: QueueTextEdit(1, {}); return true; // delete
+        case SDL_GAMEPAD_BUTTON_START: QueueTextEdit(3, {}); return true; // OK
+        case SDL_GAMEPAD_BUTTON_NORTH: QueueTextEdit(4, {}); return true; // cancel
+        default: return false;
+        }
+    }
+    if (event.type == SDL_EVENT_GAMEPAD_AXIS_MOTION) {
+        // The left stick moves the selection once per direction; the D-pad repeats while held.
+        int direction = 0;
+        if (event.gaxis.axis == SDL_GAMEPAD_AXIS_LEFTX) {
+            direction = event.gaxis.value > 16000 ? 1 : event.gaxis.value < -16000 ? -1 : 0;
+            if (direction != osk_axis_x) {
+                if (direction) MoveOsk(0, direction);
+                osk_axis_x = direction;
+            }
+        } else if (event.gaxis.axis == SDL_GAMEPAD_AXIS_LEFTY) {
+            direction = event.gaxis.value > 16000 ? 1 : event.gaxis.value < -16000 ? -1 : 0;
+            if (direction != osk_axis_y) {
+                if (direction) MoveOsk(direction, 0);
+                osk_axis_y = direction;
+            }
+        }
+        return true;
+    }
+    return false;
+}
+
 } // namespace
 
 void ShowNotice(const std::string& text, int milliseconds) {
@@ -837,6 +987,50 @@ void ShowNotice(const std::string& text, int milliseconds) {
     }
     notice_text = text;
     notice_until.store(NowMs() + milliseconds, std::memory_order_relaxed);
+}
+
+void SetBanner(const char* text) {
+    {
+        std::scoped_lock lock{banner_mutex};
+        banner_text = text ? text : "";
+    }
+    banner_active = text != nullptr && text[0] != 0;
+}
+
+void ClearBanner() { SetBanner(nullptr); }
+
+void SetBannerCapture(bool capture) { banner_captures_input = capture; }
+
+void AddEventFilter(EventFilter filter) {
+    if (filter && event_filter_count < 4) {
+        event_filters[event_filter_count++] = filter;
+    }
+}
+
+bool RunEventFilters(const void* event, void* window) {
+    for (unsigned i = 0; i < event_filter_count; ++i) {
+        if (event_filters[i](event, window)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void ResetOsk() {
+    std::scoped_lock lock{osk_mutex};
+    osk_state.Reset();
+    osk_axis_x = osk_axis_y = 0;
+}
+
+bool PollTextEdit(int& edit, std::string& text) {
+    std::scoped_lock lock{text_edit_mutex};
+    if (text_edits.empty()) {
+        return false;
+    }
+    edit = text_edits.front().first;
+    text = std::move(text_edits.front().second);
+    text_edits.pop_front();
+    return true;
 }
 
 void Init(const Vulkan::Instance& instance, vk::Format format, u32 image_count) {
@@ -990,6 +1184,11 @@ bool HandleChoiceEvent(const SDL_Event& event) {
 }
 
 bool HandleEvent(const SDL_Event& event) {
+    // The text dialog's on-screen keyboard runs before the ImGui lock: its handler updates the
+    // window's text, which calls SetTextEntry (and takes the same lock).
+    if (text_entry_active.load(std::memory_order_relaxed)) {
+        return HandleTextEntryEvent(event);
+    }
     std::scoped_lock lock{imgui_mutex};
     if (!initialized) {
         return false;
@@ -1151,11 +1350,12 @@ bool Visible() {
     }
 
     return initialized && (loading || background_total || menu_open || text_entry_active || choice_active ||
-                           choice_retiring || s.show_fps || NoticeActive());
+                           choice_retiring || banner_active || s.show_fps || NoticeActive());
 }
 
 bool CapturesInput() {
-    return menu_open || text_entry_active || (choice_active && !choice_owner.load());
+    return menu_open || text_entry_active || banner_captures_input ||
+           (choice_active && !choice_owner.load());
 }
 
 void BeginChoice(const std::string& title, const std::vector<std::string>& items,
@@ -1192,6 +1392,10 @@ void EndChoice() {
 
 void SetTextEntry(bool active, const std::string& prompt, const std::string& text) {
     std::scoped_lock lock{imgui_mutex};
+    if (active && !text_entry_active.load(std::memory_order_relaxed)) {
+        std::scoped_lock osk_lock{osk_mutex};
+        osk_state.Reset();
+    }
     text_entry_active = active;
     text_entry_prompt = prompt;
     text_entry_text = text;
@@ -1245,6 +1449,20 @@ void Render(vk::CommandBuffer cmdbuf, vk::ImageView view, vk::Extent2D extent) {
     }
     if (choice_active && !menu_open) {
         ChoiceBox();
+    }
+    if (banner_active) {
+        std::string text;
+        {
+            std::scoped_lock banner_lock{banner_mutex};
+            text = banner_text;
+        }
+        const ImVec2 size = ImGui::CalcTextSize(text.c_str());
+        auto* draw = ImGui::GetForegroundDrawList();
+        const ImVec2 at{(io.DisplaySize.x - size.x) * 0.5f, io.DisplaySize.y * 0.82f};
+        draw->AddRectFilled({at.x - 24.0f, at.y - 12.0f},
+                            {at.x + size.x + 24.0f, at.y + size.y + 12.0f},
+                            IM_COL32(0, 0, 0, 170), 6.0f);
+        draw->AddText(at, IM_COL32(230, 220, 200, 255), text.c_str());
     }
     ImGui::Render();
 

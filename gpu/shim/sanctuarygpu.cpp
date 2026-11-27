@@ -380,6 +380,18 @@ extern "C" void sanctuarygpu_notice(const char* utf8) {
     SanctuaryOverlay::ShowNotice(utf8, 5000);
 }
 
+extern "C" void sanctuarygpu_overlay_banner(const char* utf8) {
+    SanctuaryOverlay::SetBanner(utf8);
+}
+
+extern "C" void sanctuarygpu_overlay_capture_input(int on) {
+    SanctuaryOverlay::SetBannerCapture(on != 0);
+}
+
+extern "C" void sanctuarygpu_add_event_filter(int (*filter)(const void*, void*)) {
+    SanctuaryOverlay::AddEventFilter(filter);
+}
+
 extern "C" int sanctuarygpu_mouse_prompt_distance(void) {
     return SanctuarySettings::Get().mouse_prompt_distance.load(std::memory_order_relaxed);
 }

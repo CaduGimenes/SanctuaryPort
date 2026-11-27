@@ -1,0 +1,66 @@
+name: sanctuaryport-online
+
+# One image contains both Go binaries; each service runs one of them.
+x-d3-server: &d3-server
+  image: "${D3_IMAGE:-sanctuaryport-online:local}"
+  build:
+    context: .
+    dockerfile: Dockerfile
+  restart: unless-stopped
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+
+services:
+  # PSN identity, Matching2 signaling/relay and the Toolkit WebAPI.
+  psn:
+    <<: *d3-server
+    command: ["/app/d3master", "-config", "/data/d3master.json"]
+    ports:
+      - "31313:31313/tcp"   # master identity
+      - "31314:31314/udp"   # Matching2 signaling
+      - "31315:31315/tcp"   # NP Toolkit WebAPI + internal identity endpoint
+      - "3478:3478/udp"     # Matching2 relay
+    volumes:
+      - psn-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 31313 && nc -z 127.0.0.1 31315"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  # Demonware title auth, encrypted lobby and NAT discovery.
+  demonware:
+    <<: *d3-server
+    command:
+      - /app/d3demonware
+      - -config
+      - /data/d3demonware.json
+      - -master-url
+      - http://psn:31315
+      # Players must be able to reach this IPv4 address. For local testing the
+      # default works; for LAN/Internet hosting set D3_PUBLIC_IP in .env.
+      - -public-ip
+      - "${D3_PUBLIC_IP:-127.0.0.1}"
+    depends_on:
+      psn:
+        condition: service_healthy
+    ports:
+      - "3074:3074/tcp"     # encrypted Demonware lobby
+      - "31316:31316/tcp"   # title authentication
+      - "31317:31317/udp"   # NAT discovery
+      - "31318:31318/udp"   # alternate NAT discovery
+    volumes:
+      - demonware-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:31316/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+volumes:
+  psn-data:
+  demonware-data:

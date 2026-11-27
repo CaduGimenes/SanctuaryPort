@@ -757,6 +757,9 @@ static const RuntimeExport exports[]={
     {"sceNetEpollAbort",net_epoll_abort},
 };
 uintptr_t runtime_net_resolve(const char *name) {
+    /* Online play first (its module also answers the 1.47 NP Toolkit imports); then LAN. */
+    const uintptr_t online=runtime_online_resolve(name);
+    if (online) return online;
     if (!lan_enabled()) return 0;
     return RUNTIME_LOOKUP(exports,name);
 }

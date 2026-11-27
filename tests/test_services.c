@@ -158,6 +158,13 @@ int main(void) {
     snprintf(profile_names[2],sizeof profile_names[2],"Leah");
     assert(user_name(USER_ID,name,sizeof name)==0 && !strcmp(name,"Ação Bárbaro"));
     assert(user_name(2,name,sizeof name)==0 && !strcmp(name,"Leah"));
+    /* Online: UserService's name is the launcher's multiplayer name (the Demonware online_id). */
+    setenv("SANCTUARY_ONLINE","1",1); setenv("BB_D3_MASTER","1",1);
+    setenv("BB_D3_DEMONWARE","1",1); setenv("BB_SHADNET_NPID","Liam",1);
+    assert(user_name(USER_ID,name,sizeof name)==0 && !strcmp(name,"Liam"));
+    unsetenv("SANCTUARY_ONLINE"); unsetenv("BB_D3_MASTER");
+    unsetenv("BB_D3_DEMONWARE"); unsetenv("BB_SHADNET_NPID");
+    assert(user_name(USER_ID,name,sizeof name)==0 && !strcmp(name,"Ação Bárbaro"));
     assert(user_name(2,name,4)==(int32_t)0x8096000a);
     pad_users|=(1u<<3)|(1u<<4); /* two more at once: one event each, lowest first */
     assert(user_event(event)==0 && event[0]==0 && event[1]==3);
@@ -187,7 +194,7 @@ int main(void) {
     assert(user_unregister_callback()==0);
 
     /* One entitlement update event once add-ons can be listed (Diablo III 1.47), then none. */
-    unsigned char status[12]; int32_t sys_event[64]; int32_t pending;
+    unsigned char status[12]; int32_t sys_event[2049]; int32_t pending;
     assert(system_status(status)==0 && (memcpy(&pending,status,4),pending)==0);
     assert(system_event(sys_event)==SYSTEM_NO_EVENT);
     addons_ready=2;

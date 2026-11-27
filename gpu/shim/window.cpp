@@ -143,6 +143,7 @@ void WindowSDL::BeginTextInput(const std::string& initial, const std::string& pr
     text_state = 0;
     text_owner = 0;
     text_requested = true;
+    SanctuaryOverlay::ResetOsk();
 }
 
 void WindowSDL::SetTextInputOwner(u32 joystick_id) {
@@ -154,6 +155,37 @@ int WindowSDL::PollTextInput(std::string& out) {
     std::scoped_lock lock{text_mutex};
     out = text;
     return text_state;
+}
+
+void WindowSDL::EditText(int edit, const std::string& utf8) {
+    std::scoped_lock lock{text_mutex};
+    if (!text_active) {
+        return;
+    }
+    switch (edit) {
+    case 0:
+        text += utf8;
+        break;
+    case 1:
+        if (!text.empty()) {
+            size_t cut = text.size() - 1;
+            while (cut > 0 && (static_cast<unsigned char>(text[cut]) & 0xC0) == 0x80) --cut;
+            text.erase(cut);
+        }
+        break;
+    case 2:
+        text.clear();
+        break;
+    case 3:
+    case 4:
+        text_state = edit == 3 ? 1 : 2;
+        text_active = false;
+        SDL_StopTextInput(window);
+        break;
+    default:
+        return;
+    }
+    UpdateTextTitle();
 }
 
 void WindowSDL::UpdateTextTitle() {
@@ -179,8 +211,19 @@ bool WindowSDL::PollEvents() {
     if (const int mode = SanctuarySettings::Get().display_mode; mode != display_mode) {
         ApplyDisplayMode(mode);
     }
+    int edit = 0;
+    std::string edit_text;
+    while (SanctuaryOverlay::PollTextEdit(edit, edit_text)) {
+        EditText(edit, edit_text);
+    }
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
+        if (SanctuaryOverlay::RunEventFilters(&event, window)) {
+            continue;
+        }
+        if (SanctuaryOverlay::HandleEvent(event)) {
+            continue;
+        }
         if (text_active && (event.type == SDL_EVENT_TEXT_INPUT || event.type == SDL_EVENT_KEY_DOWN)) {
             std::scoped_lock lock{text_mutex};
             if (event.type == SDL_EVENT_TEXT_INPUT) {
@@ -209,9 +252,6 @@ bool WindowSDL::PollEvents() {
             text_active = false;
             SDL_StopTextInput(window);
             UpdateTextTitle();
-            continue;
-        }
-        if (SanctuaryOverlay::HandleEvent(event)) {
             continue;
         }
         switch (event.type) {

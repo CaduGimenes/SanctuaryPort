@@ -292,6 +292,9 @@ pub fn environment(
     }
     env.insert("PYTHONUNBUFFERED".into(), "1".into());
     env.insert("PYTHONIOENCODING".into(), "utf-8".into());
+    if let Err(error) = crate::core::multiplayer::apply(settings, &mut env) {
+        eprintln!("Multiplayer: {error}");
+    }
     env
 }
 

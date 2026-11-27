@@ -54,6 +54,8 @@ private:
     u32 text_owner{};
     std::string text, text_prompt, base_title;
     void UpdateTextTitle();
+    /// An edit from the on-screen keyboard (0 append, 1 backspace, 2 clear, 3 confirm, 4 cancel).
+    void EditText(int edit, const std::string& utf8);
     SDL_Window* window{};
     WindowSystemInfo window_info{};
 };

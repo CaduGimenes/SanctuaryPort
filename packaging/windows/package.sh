@@ -44,6 +44,7 @@ llvm-strip -o "$dest/Play SanctuaryPort.exe" "$exes/sanctuary-play.exe"
 for exe in sanctuary-probe.exe sanctuary-gpu-capabilities.exe; do
     llvm-strip --strip-debug -o "$dest/bin/$exe" "$exes/$exe"
 done
+cp addons.json "$dest/bin/"
 # Every DLL the executables load from the CLANG64 tree (SDL3, FFmpeg, Vulkan loader...), found
 # through their import tables, recursively.
 declare -A seen

@@ -301,6 +301,21 @@ pub static SETTINGS: &[Setting] = &[
     // SanctuaryPort: the name player 1 had before profiles (GitHub #23); it names profile 1 when
     // the profile list is first made (`core::profiles`).
     app("player_name", Kind::Text, Text(""), env("SANCTUARY_PLAYER_NAME", "")),
+    // SanctuaryPort: Multiplayer (the private PSN master and Demonware title server). The
+    // environment is derived in core::multiplayer (BB_ONLINE, BB_SHADNET_*, BB_D3_*).
+    app("online_enabled", Flag, Bool(false), None),
+    app("multiplayer_username", Kind::Text, Text(""), None),
+    app("master_server", Kind::Text, Text("127.0.0.1"), None),
+    app("demonware_server", Kind::Text, Text(""), None),
+    app("master_port", Kind::Int, Int(31313), None),
+    app("webapi_port", Kind::Int, Int(31315), None),
+    app("titleauth_port", Kind::Int, Int(31316), None),
+    app("signaling_port", Kind::Int, Int(31314), None),
+    app("relay_port", Kind::Int, Int(3478), None),
+    app("lobby_port", Kind::Int, Int(3074), None),
+    app("stun_port", Kind::Int, Int(31317), None),
+    app("p2p_port", Kind::Int, Int(3658), None),
+    app("master_tls", Flag, Bool(false), None),
     // SanctuaryPort: Game > Player > LAN play (experimental): the game's own LAN Play network mode (src/runtime_net.c).
     // Off is sent as "0", so an inherited SANCTUARY_LAN never turns it on.
     app("lan_play", Flag, Bool(false), env("SANCTUARY_LAN", "")),

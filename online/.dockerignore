@@ -1,0 +1,9 @@
+# Only the two Go modules and their licenses are needed to build the image.
+.git
+.gitignore
+.env
+**/bin
+**/__pycache__
+*.log
+compose.yaml
+README.md
