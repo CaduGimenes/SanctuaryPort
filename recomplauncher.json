@@ -83,15 +83,15 @@
       "defaults": { "render_resolution": "native" }
     },
     {
-      "id": "upscaler",
+      "id": "upscaling",
       "label": "Upscaling",
-      "help": "FSR 3.1 works on any GPU. TAA smooths edges at the render resolution.",
+      "help": "FSR 1 enlarges with more detail than a plain stretch. FSR 3 also smooths edges; heavy on handhelds.",
       "choices": [
-        { "label": "Off", "set": { "upscaler": "off" } },
-        { "label": "FSR 3.1", "set": { "upscaler": "fsr3" } },
-        { "label": "TAA", "set": { "upscaler": "taa" } }
+        { "label": "Off", "set": { "temporal_aa": "off", "fsr1": "0" } },
+        { "label": "FSR 1", "set": { "temporal_aa": "off", "fsr1": "1" } },
+        { "label": "FSR 3", "set": { "temporal_aa": "fsr3", "fsr1": "0" } }
       ],
-      "defaults": { "upscaler": "off" }
+      "defaults": { "temporal_aa": "off", "fsr1": "0" }
     },
     {
       "id": "fxaa",
@@ -123,25 +123,27 @@
       "defaults": { "language": "1" }
     },
     {
-      "id": "vsync",
+      "id": "vertical_sync",
       "label": "V-Sync",
       "choices": [
-        { "label": "On", "set": { "vsync": "1" } },
-        { "label": "Off", "set": { "vsync": "0" } }
+        { "label": "On", "set": { "vertical_sync": "1" } },
+        { "label": "Off", "set": { "vertical_sync": "0" } }
       ],
-      "defaults": { "vsync": "1" }
+      "defaults": { "vertical_sync": "0" }
     },
     {
-      "id": "fps_limit",
-      "label": "Frame rate limit",
+      "id": "frame_rate",
+      "label": "Frame rate",
+      "help": "Above 60 the camera and characters move more smoothly.",
       "choices": [
-        { "label": "30", "set": { "fps_limit": "30" } },
-        { "label": "60", "set": { "fps_limit": "60" } },
-        { "label": "120", "set": { "fps_limit": "120" } },
-        { "label": "144", "set": { "fps_limit": "144" } },
-        { "label": "Unlimited", "set": { "fps_limit": "0" } }
+        { "label": "30 FPS", "set": { "frame_rate": "30" } },
+        { "label": "60 FPS (the game's own)", "set": { "frame_rate": "60" } },
+        { "label": "90 FPS", "set": { "frame_rate": "90" } },
+        { "label": "120 FPS", "set": { "frame_rate": "120" } },
+        { "label": "144 FPS", "set": { "frame_rate": "144" } },
+        { "label": "200 FPS (the game's maximum)", "set": { "frame_rate": "0" } }
       ],
-      "defaults": { "fps_limit": "0" }
+      "defaults": { "frame_rate": "60" }
     }
   ]
 }
