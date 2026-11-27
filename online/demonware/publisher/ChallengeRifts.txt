@@ -1,0 +1,9 @@
+# Private historical challenge leaderboard metadata, independent of retail.
+# This ended calendar enables empty current/previous score boards only.
+# Playable Challenge Rift hero/dungeon data is not supplied by this backend.
+ChallengeNumber "2"
+Start "Thu, 01 Jan 2026 00:00:00 GMT"
+LastBroadcast "Thu, 08 Jan 2026 00:00:00 GMT"
+End "Thu, 08 Jan 2026 00:00:00 GMT"
+Hash "0"
+OrbMultiplier "1"

@@ -5,6 +5,7 @@
 #include <assert.h>
 
 uintptr_t runtime_lookup(const RuntimeExport *table, size_t count, const char *nid) { (void)table; (void)count; (void)nid; return 0; }
+uintptr_t runtime_online_resolve(const char *name) { (void)name; return 0; }
 int32_t runtime_guest_errno(int e) { return e; }
 
 static struct sockaddr_in at(const char *ip, unsigned port) {

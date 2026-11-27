@@ -16,6 +16,9 @@ share=$appdir/usr/share/sanctuary
 mkdir -p "$share/bin/gpu" "$appdir/usr/lib" "$share/launcher" "$share/assets"
 
 install -m755 out/sanctuary-probe out/sanctuary-gpu-capabilities "$share/bin/"
+install -m644 addons.json "$share/bin/"
+mkdir -p "$share/bin/online"
+install -m755 out/online/libsanctuarynet.so "$share/bin/online/"
 install -m755 out/gpu/libsanctuarygpu.so "$share/bin/gpu/"
 install -m755 launcher-rust/target/release/sanctuaryport-launcher "$share/sanctuaryport-launcher"
 strip "$share/sanctuaryport-launcher"
@@ -55,6 +58,7 @@ bundle() {
 }
 bundle out/gpu/libsanctuarygpu.so
 bundle out/sanctuary-probe
+bundle out/online/libsanctuarynet.so
 bundle "$share/sanctuaryport-launcher"
 # The launcher loads the keyboard libraries at run time (dlopen), so ldd does not list them: bundle
 # them, as minimal desktops and containers can lack libxkbcommon-x11.

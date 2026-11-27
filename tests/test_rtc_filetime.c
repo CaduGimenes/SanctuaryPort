@@ -14,6 +14,8 @@ uintptr_t runtime_lookup(const RuntimeExport *table, size_t count, const char *n
     return 0;
 }
 
+typedef int32_t (ABI *CurrentFileTime)(uint64_t *);
+
 int main(void) {
     DateTime t;
     uint64_t filetime = 0;
@@ -36,6 +38,11 @@ int main(void) {
     DateTime early = {1600, 12, 31, 0, 0, 0, 0}, bad = {2025, 13, 1, 0, 0, 0, 0};
     assert(rtc_get_win32_filetime(&early, &filetime) == ERR_INVALID_YEAR);
     assert(rtc_get_win32_filetime(&bad, &filetime) == ERR_INVALID_MONTH);
+    CurrentFileTime current = rtc_get_current_win32_file_time;
+    uint64_t now_filetime = 0;
+    assert(current(&now_filetime) == 0);
+    assert(now_filetime > UINT64_C(116444736000000000)); /* after 1970 */
+    assert(current(NULL) == ERR_INVALID_POINTER);
     assert(rtc_get_win32_filetime(NULL, &filetime) == ERR_INVALID_POINTER);
     assert(rtc_set_win32_filetime(NULL, 0) == ERR_INVALID_POINTER);
     puts("rtc filetime ok");

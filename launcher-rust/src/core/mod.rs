@@ -19,6 +19,7 @@ pub mod installation;
 pub mod joysticks;
 pub mod launch;
 pub mod log;
+pub mod multiplayer;
 pub mod options;
 pub mod pad_model;
 pub mod patches;

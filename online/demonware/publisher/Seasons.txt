@@ -1,0 +1,6 @@
+# Private season 29 schedule, independent of the retail service.
+# All timestamps use GMT. Restart the master after editing this file.
+[Season 29]
+Pre "Thu, 01 Jan 2026 00:00:00 GMT"
+Start "Fri, 02 Jan 2026 00:00:00 GMT"
+End "Tue, 01 Jan 2030 00:00:00 GMT"

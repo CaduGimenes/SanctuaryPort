@@ -1,0 +1,5 @@
+# Private D3 master configuration for CUSA00242 01.46.
+# Show seasonal global boards hosted by this private master.
+SeasonalGlobalLeaderboardsEnabled "1"
+EnableDiablo4Advertisement "0"
+UpdateVersion "0"

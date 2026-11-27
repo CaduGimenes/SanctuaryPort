@@ -8,6 +8,7 @@ pub mod game;
 pub mod graphics;
 pub mod log;
 pub mod mapper;
+pub mod multiplayer;
 pub mod performance;
 pub mod trophies;
 
@@ -23,6 +24,7 @@ pub enum Page {
     Home,
     Graphics,
     Game,
+    Multiplayer,
     Seasons,
     Trophies,
     Controls,
@@ -35,10 +37,11 @@ pub enum Page {
 
 impl Page {
     /// Tab order, which is also the order of the arrow keys.
-    pub const ALL: [Page; 7] = [
+    pub const ALL: [Page; 8] = [
         Page::Home,
         Page::Graphics,
         Page::Game,
+        Page::Multiplayer,
         Page::Seasons,
         Page::Trophies,
         Page::Controls,
@@ -51,6 +54,7 @@ impl Page {
             Page::Home => "Home",
             Page::Graphics => "Graphics",
             Page::Game => "Game",
+            Page::Multiplayer => "Multiplayer",
             Page::Seasons => "Seasons",
             Page::Trophies => "Trophies",
             Page::Controls => "Controls",
@@ -69,6 +73,7 @@ impl Page {
                 "↻ applies on the next start. The others also change in game (Insert or R3+L2)."
             }
             Page::Game => "Your game dump, saves and language.",
+            Page::Multiplayer => "The private PSN master and Demonware title server.",
             Page::Seasons => "The offline season, its events and the 15 day rotation.",
             Page::Trophies => "The trophies this port recorded while you played.",
             Page::Controls => "Keyboard, mouse and gamepad mapping.",
@@ -83,6 +88,7 @@ impl Page {
         matches!(
             self,
             Page::Graphics
+                | Page::Multiplayer
                 | Page::Trophies
                 | Page::Controls
                 | Page::Log
@@ -124,6 +130,7 @@ pub fn view(state: &State, page: Page) -> Element<'_, Message> {
         Page::Home => text("…").into(),
         Page::Graphics => graphics::view(state),
         Page::Game => game::view(state),
+        Page::Multiplayer => multiplayer::view(state),
         Page::Seasons => game::seasons_view(state),
         Page::Trophies => trophies::view(state),
         Page::Controls => controls::view(state),

@@ -2803,7 +2803,9 @@
    "Turn wheel clockwise": "Girar a roda no sentido horário",
    "Turn wheel counter-clockwise": "Girar a roda no sentido anti-horário",
    "Wheel turn speed": "Velocidade de giro da roda",
-   "How fast the Turn wheel keys move the selection around the game's wheels (equipment, skills) while held. A short press, or one notch of the mouse wheel, moves it one small step, so every slot can be reached. Also in the in-game menu.": "Velocidade com que as teclas de girar a roda movem a seleção nas rodas do jogo (equipamento, habilidades) enquanto seguradas. Um toque curto, ou um clique da roda do mouse, move um pequeno passo, então todos os espaços podem ser alcançados. Também no menu do jogo."
+   "How fast the Turn wheel keys move the selection around the game's wheels (equipment, skills) while held. A short press, or one notch of the mouse wheel, moves it one small step, so every slot can be reached. Also in the in-game menu.": "Velocidade com que as teclas de girar a roda movem a seleção nas rodas do jogo (equipamento, habilidades) enquanto seguradas. Um toque curto, ou um clique da roda do mouse, move um pequeno passo, então todos os espaços podem ser alcançados. Também no menu do jogo.",
+   "Multiplayer": "Multijogador",
+   "The private PSN master and Demonware title server.": "O mestre PSN privado e o servidor de título Demonware."
   },
   "es": {
    "The launcher cannot write to {}, so it cannot replace itself there. Open the releases page to download the new version by hand?": "El launcher no puede escribir en {}, así que no puede reemplazarse ahí. ¿Abrir la página de releases para descargar la versión nueva a mano?",

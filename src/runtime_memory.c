@@ -716,6 +716,60 @@ uintptr_t runtime_memory_resolve(const char *name) {
     if (!strcmp(name, "cQke9UuBQOk#libkernel")) return (uintptr_t)direct_unmap;
     return RUNTIME_LOOKUP(exports,name);
 }
+/* Low-region mappings the guest can see (the image, stacks, trampolines): the online module
+ * reads the game's static pointers there through runtime_memory_low_info. */
+typedef struct { uintptr_t start, end; int prot; } LowRange;
+#define MAX_LOW_RANGES 2048
+static LowRange low_ranges[MAX_LOW_RANGES];
+static size_t low_range_count;
+static void low_record_locked(uintptr_t start, uintptr_t end, int prot) {
+    static LowRange kept[MAX_LOW_RANGES];
+    size_t n=0;
+    for (size_t i=0;i<low_range_count;++i) {
+        const LowRange r=low_ranges[i];
+        if (r.end<=start || r.start>=end) { if (n<MAX_LOW_RANGES) kept[n++]=r; continue; }
+        if (r.start<start && n<MAX_LOW_RANGES) kept[n++]=(LowRange){r.start,start,r.prot};
+        if (r.end>end && n<MAX_LOW_RANGES) kept[n++]=(LowRange){end,r.end,r.prot};
+    }
+    if (n<MAX_LOW_RANGES) kept[n++]=(LowRange){start,end,prot};
+    for (size_t i=1;i<n;++i) {
+        LowRange r=kept[i]; size_t j=i;
+        while (j>0 && kept[j-1].start>r.start) { kept[j]=kept[j-1]; --j; }
+        kept[j]=r;
+    }
+    size_t joined=0;
+    for (size_t i=0;i<n;++i) {
+        if (joined && kept[joined-1].end==kept[i].start && kept[joined-1].prot==kept[i].prot) kept[joined-1].end=kept[i].end;
+        else kept[joined++]=kept[i];
+    }
+    memcpy(low_ranges,kept,joined*sizeof(*kept));
+    low_range_count=joined;
+}
+void runtime_low_protect(uintptr_t start, size_t size, int prot) {
+    if (start<LOW_MIN || start>=USER_MIN || !size) return;
+    size=align_up(size,PAGE);
+    write_lock();
+    low_record_locked(start,start+size,prot);
+    write_unlock();
+}
+int runtime_memory_low_info(uintptr_t address, int *prot, uintptr_t *end) {
+    if (address<LOW_MIN || address>=USER_MIN) return 0;
+    int found=0;
+    read_lock();
+    for (size_t i=0;i<low_range_count;++i) {
+        const LowRange r=low_ranges[i];
+        if (address>=r.start && address<r.end) {
+            if (r.prot & (PROT_READ|PROT_WRITE|PROT_EXEC)) {
+                *prot=((r.prot & PROT_READ) ? 1 : 0) | ((r.prot & PROT_WRITE) ? 2 : 0) | ((r.prot & PROT_EXEC) ? 4 : 0);
+                *end=r.end;
+                found=1;
+            }
+            break;
+        }
+    }
+    read_unlock();
+    return found;
+}
 static uintptr_t low_next=LOW_MIN;
 void *runtime_low_map(size_t size, int prot) {
     size=align_up(size,PAGE);
@@ -726,6 +780,7 @@ void *runtime_low_map(size_t size, int prot) {
         p=VirtualAlloc((void *)low_next,size,MEM_RESERVE|MEM_COMMIT,win_prot(prot));
         low_next+=size+UINT64_C(65536); /* unmapped gap catches overruns; allocation granularity */
     }
+    if (p) low_record_locked((uintptr_t)p,(uintptr_t)p+size,prot);
     write_unlock();
     return p;
 #else
@@ -735,6 +790,7 @@ void *runtime_low_map(size_t size, int prot) {
         low_next+=size+PAGE; /* unmapped gap catches overruns */
         if (p!=MAP_FAILED) break;
     }
+    if (p!=MAP_FAILED) low_record_locked((uintptr_t)p,(uintptr_t)p+size,prot);
     write_unlock();
     return p==MAP_FAILED ? NULL : p;
 #endif
@@ -857,6 +913,20 @@ int runtime_memory_region(uintptr_t address, uintptr_t *start, uintptr_t *end, i
     }
     read_unlock();
     return found;
+}
+/* Protection and direct-memory type of the mapping at address (the online module reads the
+ * game's memory tables through it). 0 when nothing is mapped there. */
+int runtime_memory_vma_info(uintptr_t address, int *prot, int *type, uintptr_t *end) {
+    read_lock();
+    const size_t i=vma_index(address);
+    const int ok=i<vma_count && vmas[i].start<=address && vmas[i].kind!=KIND_RESERVED;
+    if (ok) {
+        *prot=vmas[i].prot;
+        *type=vmas[i].kind==KIND_DIRECT ? vmas[i].type : -1;
+        *end=vmas[i].end;
+    }
+    read_unlock();
+    return ok;
 }
 /* GPU page tracking: restrict host access, never beyond the guest's own protection. */
 void runtime_memory_gpu_protect(uintptr_t address, uint64_t size, int read, int write) {

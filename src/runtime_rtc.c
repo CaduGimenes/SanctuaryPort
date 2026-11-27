@@ -180,6 +180,13 @@ static ABI int32_t rtc_get_win32_filetime(const DateTime *t, uint64_t *filetime)
     if (tick<FILETIME_EPOCH_TICKS) return ERR_INVALID_YEAR;
     *filetime=(tick-FILETIME_EPOCH_TICKS)*10; return 0;
 }
+/* sceRtcGetCurrentWin32FileTime: the host clock as FILETIME (the game's season clock). */
+static ABI int32_t rtc_get_current_win32_file_time(uint64_t *filetime) {
+    if (!filetime) return ERR_INVALID_POINTER;
+    const time_t now=time(NULL);
+    if (now<0) return (int32_t)0x80B50003;
+    *filetime=((uint64_t)now+UINT64_C(11644473600))*UINT64_C(10000000); return 0;
+}
 /* sceRtcParseDateTime(tick*, text): "YYYY-MM-DD[T ]hh:mm:ss[.frac][Z|+hh:mm]" (UTC result). */
 static ABI int32_t rtc_parse_date_time(uint64_t *tick, const char *text) {
     if (!tick || !text) return ERR_INVALID_POINTER;
@@ -202,6 +209,7 @@ static ABI int32_t rtc_parse_date_time(uint64_t *tick, const char *text) {
 
 static const RuntimeExport exports[]={
     {"sceRtcSetWin32FileTime",rtc_set_win32_filetime}, {"sceRtcGetWin32FileTime",rtc_get_win32_filetime},
+    {"sceRtcGetCurrentWin32FileTime",rtc_get_current_win32_file_time},
     {"sceRtcParseDateTime",rtc_parse_date_time},
     {"sceRtcGetCurrentClockLocalTime",rtc_current_local}, {"sceRtcGetCurrentClock",rtc_current_clock},
     {"sceRtcGetCurrentTick",rtc_current_tick}, {"sceRtcGetCurrentNetworkTick",rtc_current_tick},

@@ -39,6 +39,26 @@ bool Visible();
 /// Any thread: a short message in the lower right corner (a saved screenshot).
 void ShowNotice(const std::string& text, int milliseconds = 3000);
 
+/// Any thread: a persistent line over the game (the online module's invitations and notices);
+/// null or empty clears it.
+void SetBanner(const char* text);
+void ClearBanner();
+/// While an interactive banner (the invitation dialog) is up, the game's pad input is held
+/// neutral; the module's event filter still receives the dialog's own keys/buttons.
+void SetBannerCapture(bool capture);
+
+/// A module's SDL event filter, called on the window thread before the overlay and the game.
+/// Up to 4; nonzero takes the event. The pointers are an SDL_Event and an SDL_Window.
+using EventFilter = int (*)(const void*, void*);
+void AddEventFilter(EventFilter filter);
+bool RunEventFilters(const void* event, void* window);
+
+/// Window thread: takes one queued on-screen keyboard edit (0 append, 1 backspace, 2 clear,
+/// 3 confirm, 4 cancel; UTF-8 text for append). The present thread queues button clicks here.
+bool PollTextEdit(int& edit, std::string& text);
+/// Window thread: a new text dialog starts at the first OSK key with Shift off.
+void ResetOsk();
+
 /// Present thread: draws into `view` (layout ColorAttachmentOptimal).
 void Render(vk::CommandBuffer cmdbuf, vk::ImageView view, vk::Extent2D extent);
 

@@ -56,6 +56,13 @@ void sanctuarygpu_movie_picture(void);
 void sanctuarygpu_request_screenshot(void);
 /* A short message in the lower right corner for a few seconds (a trophy unlock). */
 void sanctuarygpu_notice(const char *utf8);
+/* A persistent line over the game for the online module (invitations and notices); NULL clears. */
+void sanctuarygpu_overlay_banner(const char *utf8);
+/* The online module's interactive banner: while on, the game's pad is held neutral. */
+void sanctuarygpu_overlay_capture_input(int on);
+/* An SDL event filter for the online module (invitation dialog and on-screen keyboard); the
+ * pointers are an SDL_Event and an SDL_Window. Nonzero takes the event. */
+void sanctuarygpu_add_event_filter(int (*filter)(const void *sdl_event, void *sdl_window));
 /* Mouse movement in px that counts as one step of a stick prompt, set in the menu. */
 int sanctuarygpu_mouse_prompt_distance(void);
 /* The pause key (touchpad right) was pressed: it lets go of the mouse lock, or takes it back. */
