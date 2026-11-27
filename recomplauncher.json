@@ -24,18 +24,38 @@
       "format": "ini",
       "file": [
         { "path": "{install}/sanctuary.ini", "if": "{install}/SanctuaryPort.exe" },
+        { "path": "{install}/SanctuaryPort-data/sanctuary.ini", "if": "{install}/AppRun" },
+        { "path": "{install}/SanctuaryPort-data/sanctuary.ini", "if": "{install}/SanctuaryPort-data" },
         { "path": "{local}/sanctuaryport/sanctuary.ini" }
+      ]
+    },
+    {
+      "id": "app",
+      "format": "json",
+      "file": [
+        { "path": "{install}/settings.json", "if": "{install}/SanctuaryPort.exe" },
+        { "path": "{install}/SanctuaryPort-data/settings.json", "if": "{install}/AppRun" },
+        { "path": "{install}/SanctuaryPort-data/settings.json", "if": "{install}/SanctuaryPort-data" },
+        { "path": "{local}/sanctuaryport/settings.json" }
       ]
     }
   ],
-  "saves": ["{install}/user/savedata", "{local}/sanctuaryport/user/savedata"],
+  "saves": [
+    "{install}/user/savedata",
+    "{install}/SanctuaryPort-data/user/savedata",
+    "{local}/sanctuaryport/user/savedata"
+  ],
   "folders": {
     "saves": [
       { "path": "{install}/user/savedata", "if": "{install}/SanctuaryPort.exe" },
+      { "path": "{install}/SanctuaryPort-data/user/savedata", "if": "{install}/AppRun" },
+      { "path": "{install}/SanctuaryPort-data/user/savedata", "if": "{install}/SanctuaryPort-data" },
       { "path": "{local}/sanctuaryport/user/savedata" }
     ],
     "logs": [
       { "path": "{install}/user", "if": "{install}/SanctuaryPort.exe" },
+      { "path": "{install}/SanctuaryPort-data/user", "if": "{install}/AppRun" },
+      { "path": "{install}/SanctuaryPort-data/user", "if": "{install}/SanctuaryPort-data" },
       { "path": "{local}/sanctuaryport/user" }
     ]
   },
@@ -74,14 +94,33 @@
       "defaults": { "upscaler": "off" }
     },
     {
-      "id": "anti_aliasing",
-      "label": "Anti-aliasing",
+      "id": "fxaa",
+      "label": "FXAA",
+      "help": "Smooths edges after the frame is drawn.",
       "choices": [
-        { "label": "Off", "set": { "anti_aliasing": "off" } },
-        { "label": "FXAA", "set": { "anti_aliasing": "fxaa" } },
-        { "label": "SMAA", "set": { "anti_aliasing": "smaa" } }
+        { "label": "Off", "set": { "fxaa": "0" } },
+        { "label": "On", "set": { "fxaa": "1" } }
       ],
-      "defaults": { "anti_aliasing": "off" }
+      "defaults": { "fxaa": "0" }
+    },
+    {
+      "id": "language",
+      "label": "Game language",
+      "help": "The language of the game's text and voices. Your dump has only some of them; one it doesn't have falls back to one it has.",
+      "in": "app",
+      "choices": [
+        { "label": "English (US)", "set": { "language": "1" } },
+        { "label": "English (UK)", "set": { "language": "18" } },
+        { "label": "French", "set": { "language": "2" } },
+        { "label": "German", "set": { "language": "4" } },
+        { "label": "Italian", "set": { "language": "5" } },
+        { "label": "Spanish (Spain)", "set": { "language": "3" } },
+        { "label": "Spanish (Latin America)", "set": { "language": "20" } },
+        { "label": "Portuguese (Brazil)", "set": { "language": "17" } },
+        { "label": "Polish", "set": { "language": "16" } },
+        { "label": "Russian", "set": { "language": "8" } }
+      ],
+      "defaults": { "language": "1" }
     },
     {
       "id": "vsync",
