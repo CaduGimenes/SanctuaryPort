@@ -5,6 +5,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include "sanctuary_graphics.h"
 #include "sanctuary_settings.h"
 
 static std::string Read(const char* path) {
@@ -60,6 +61,23 @@ int main() {
     SanctuarySettings::Load();
     assert(v.gtao == SanctuarySettings::GtaoHigh);
     unsetenv("SANCTUARY_GTAO");
+
+    // RecompLauncher writes `key = value` (GitHub issue #119): the keys and values are read the
+    // same, and a save from the menu replaces such a line instead of keeping it beside its own.
+    {
+        std::ofstream out(path);
+        out << "display_mode = fullscreen\ntemporal_aa = fsr3\nfxaa = 1\nframe_rate = 120\n";
+    }
+    unsetenv("SANCTUARY_UPSCALER");
+    SanctuarySettings::Load();
+    assert(v.display_mode == SanctuaryGraphics::Fullscreen);
+    assert(v.upscaler == SanctuarySettings::UpscalerFsr3);
+    SanctuarySettings::Save();
+    const std::string spaced = Read(path);
+    assert(spaced.find("display_mode = ") == std::string::npos);
+    assert(spaced.find("display_mode=fullscreen\n") != std::string::npos);
+    assert(spaced.find("display_mode=") == spaced.rfind("display_mode="));
+    assert(spaced.find("frame_rate = 120\n") != std::string::npos);  // a launcher key stays as it was
 
     std::remove(path);
     std::puts("PASS: settings keep the launcher's keys");

@@ -24,18 +24,38 @@
       "format": "ini",
       "file": [
         { "path": "{install}/sanctuary.ini", "if": "{install}/SanctuaryPort.exe" },
+        { "path": "{install}/SanctuaryPort-data/sanctuary.ini", "if": "{install}/AppRun" },
+        { "path": "{install}/SanctuaryPort-data/sanctuary.ini", "if": "{install}/SanctuaryPort-data" },
         { "path": "{local}/sanctuaryport/sanctuary.ini" }
+      ]
+    },
+    {
+      "id": "app",
+      "format": "json",
+      "file": [
+        { "path": "{install}/settings.json", "if": "{install}/SanctuaryPort.exe" },
+        { "path": "{install}/SanctuaryPort-data/settings.json", "if": "{install}/AppRun" },
+        { "path": "{install}/SanctuaryPort-data/settings.json", "if": "{install}/SanctuaryPort-data" },
+        { "path": "{local}/sanctuaryport/settings.json" }
       ]
     }
   ],
-  "saves": ["{install}/user/savedata", "{local}/sanctuaryport/user/savedata"],
+  "saves": [
+    "{install}/user/savedata",
+    "{install}/SanctuaryPort-data/user/savedata",
+    "{local}/sanctuaryport/user/savedata"
+  ],
   "folders": {
     "saves": [
       { "path": "{install}/user/savedata", "if": "{install}/SanctuaryPort.exe" },
+      { "path": "{install}/SanctuaryPort-data/user/savedata", "if": "{install}/AppRun" },
+      { "path": "{install}/SanctuaryPort-data/user/savedata", "if": "{install}/SanctuaryPort-data" },
       { "path": "{local}/sanctuaryport/user/savedata" }
     ],
     "logs": [
       { "path": "{install}/user", "if": "{install}/SanctuaryPort.exe" },
+      { "path": "{install}/SanctuaryPort-data/user", "if": "{install}/AppRun" },
+      { "path": "{install}/SanctuaryPort-data/user", "if": "{install}/SanctuaryPort-data" },
       { "path": "{local}/sanctuaryport/user" }
     ]
   },
@@ -63,46 +83,67 @@
       "defaults": { "render_resolution": "native" }
     },
     {
-      "id": "upscaler",
+      "id": "upscaling",
       "label": "Upscaling",
-      "help": "FSR 3.1 works on any GPU. TAA smooths edges at the render resolution.",
+      "help": "FSR 1 enlarges with more detail than a plain stretch. FSR 3 also smooths edges; heavy on handhelds.",
       "choices": [
-        { "label": "Off", "set": { "upscaler": "off" } },
-        { "label": "FSR 3.1", "set": { "upscaler": "fsr3" } },
-        { "label": "TAA", "set": { "upscaler": "taa" } }
+        { "label": "Off", "set": { "temporal_aa": "off", "fsr1": "0" } },
+        { "label": "FSR 1", "set": { "temporal_aa": "off", "fsr1": "1" } },
+        { "label": "FSR 3", "set": { "temporal_aa": "fsr3", "fsr1": "0" } }
       ],
-      "defaults": { "upscaler": "off" }
+      "defaults": { "temporal_aa": "off", "fsr1": "0" }
     },
     {
-      "id": "anti_aliasing",
-      "label": "Anti-aliasing",
+      "id": "fxaa",
+      "label": "FXAA",
+      "help": "Smooths edges after the frame is drawn.",
       "choices": [
-        { "label": "Off", "set": { "anti_aliasing": "off" } },
-        { "label": "FXAA", "set": { "anti_aliasing": "fxaa" } },
-        { "label": "SMAA", "set": { "anti_aliasing": "smaa" } }
+        { "label": "Off", "set": { "fxaa": "0" } },
+        { "label": "On", "set": { "fxaa": "1" } }
       ],
-      "defaults": { "anti_aliasing": "off" }
+      "defaults": { "fxaa": "0" }
     },
     {
-      "id": "vsync",
+      "id": "language",
+      "label": "Game language",
+      "help": "The language of the game's text and voices. Your dump has only some of them; one it doesn't have falls back to one it has.",
+      "in": "app",
+      "choices": [
+        { "label": "English (US)", "set": { "language": "1" } },
+        { "label": "English (UK)", "set": { "language": "18" } },
+        { "label": "French", "set": { "language": "2" } },
+        { "label": "German", "set": { "language": "4" } },
+        { "label": "Italian", "set": { "language": "5" } },
+        { "label": "Spanish (Spain)", "set": { "language": "3" } },
+        { "label": "Spanish (Latin America)", "set": { "language": "20" } },
+        { "label": "Portuguese (Brazil)", "set": { "language": "17" } },
+        { "label": "Polish", "set": { "language": "16" } },
+        { "label": "Russian", "set": { "language": "8" } }
+      ],
+      "defaults": { "language": "1" }
+    },
+    {
+      "id": "vertical_sync",
       "label": "V-Sync",
       "choices": [
-        { "label": "On", "set": { "vsync": "1" } },
-        { "label": "Off", "set": { "vsync": "0" } }
+        { "label": "On", "set": { "vertical_sync": "1" } },
+        { "label": "Off", "set": { "vertical_sync": "0" } }
       ],
-      "defaults": { "vsync": "1" }
+      "defaults": { "vertical_sync": "0" }
     },
     {
-      "id": "fps_limit",
-      "label": "Frame rate limit",
+      "id": "frame_rate",
+      "label": "Frame rate",
+      "help": "Above 60 the camera and characters move more smoothly.",
       "choices": [
-        { "label": "30", "set": { "fps_limit": "30" } },
-        { "label": "60", "set": { "fps_limit": "60" } },
-        { "label": "120", "set": { "fps_limit": "120" } },
-        { "label": "144", "set": { "fps_limit": "144" } },
-        { "label": "Unlimited", "set": { "fps_limit": "0" } }
+        { "label": "30 FPS", "set": { "frame_rate": "30" } },
+        { "label": "60 FPS (the game's own)", "set": { "frame_rate": "60" } },
+        { "label": "90 FPS", "set": { "frame_rate": "90" } },
+        { "label": "120 FPS", "set": { "frame_rate": "120" } },
+        { "label": "144 FPS", "set": { "frame_rate": "144" } },
+        { "label": "200 FPS (the game's maximum)", "set": { "frame_rate": "0" } }
       ],
-      "defaults": { "fps_limit": "0" }
+      "defaults": { "frame_rate": "60" }
     }
   ]
 }
