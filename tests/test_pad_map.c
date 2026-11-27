@@ -19,6 +19,8 @@ static int aim_style;
 int sanctuarygpu_mouse_aim_style(void) { return aim_style; }
 static int aim_sensitivity=100;
 int sanctuarygpu_mouse_aim_sensitivity(void) { return aim_sensitivity; }
+static int wheel_speed=120;
+int sanctuarygpu_wheel_turn_speed(void) { return wheel_speed; }
 uintptr_t runtime_lookup(const RuntimeExport *table, size_t count, const char *name) {
     (void)table; (void)count; (void)name;
     return 0;
@@ -210,6 +212,89 @@ int main(void) {
     assert(item.right_x==128+31);
     aim_sensitivity=100;
     aim_style=0;
+
+    /* #112: the wheel-turn keys. By default the mouse wheel (down clockwise, up counter-clockwise);
+     * they can be remapped like the stick directions, and the gamepad map has none. */
+    assert(pressed_by(&key_map,WHEEL_DOWN)==WHEEL_CW && pressed_by(&key_map,WHEEL_UP)==WHEEL_CCW);
+    ButtonMap turns=key_map;
+    assert(apply_button_map(&turns,"wheel_cw=T|Keypad 6,wheel_ccw=None",true)==2);
+    assert(pressed_by(&turns,SDL_SCANCODE_T)==WHEEL_CW && pressed_by(&turns,SDL_SCANCODE_KP_6)==WHEEL_CW);
+    assert(pressed_by(&turns,WHEEL_DOWN)==0 && pressed_by(&turns,WHEEL_UP)==0);
+    /* A wheel given to a button stops turning the stick (the mouse test above: l1/r1 on the wheel),
+     * unless the map keeps it on a turn key too, before or after. */
+    assert(pressed_by(&mouse,WHEEL_UP)==BTN_L1 && pressed_by(&mouse,WHEEL_DOWN)==BTN_R1);
+    ButtonMap shared=key_map;
+    assert(apply_button_map(&shared,"wheel_cw=Wheel Down,l1=Wheel Down,r1=Wheel Up,wheel_ccw=Wheel Up",true)==4);
+    assert(pressed_by(&shared,WHEEL_DOWN)==(BTN_L1|WHEEL_CW) && pressed_by(&shared,WHEEL_UP)==(BTN_R1|WHEEL_CCW));
+    ButtonMap no_turns=pad_map;
+    assert(apply_button_map(&no_turns,"wheel_cw=dpright",false)==0);
+    assert((WHEEL_KEYS & STICK_KEYS)==WHEEL_KEYS); /* never shown to the game as buttons */
+
+    /* Turning: a press steps WHEEL_STEP_DEG from where the stick last pointed; held, it keeps
+     * turning at the menu's speed; released, the stick is the keys' or the gamepad's again. */
+    PadData wheel={0};
+    wheel.timestamp=100000000;
+    wheel.left_x=255; wheel.left_y=128;
+    turn_wheel(&wheel,0);                                     /* D held: the stick points right (90) */
+    assert(fabs(wheel_turn.angle-90)<1);
+    wheel.left_x=wheel.left_y=128; wheel.timestamp+=16000;
+    turn_wheel(&wheel,0);                                     /* back at rest: still 90 */
+    assert(fabs(wheel_turn.angle-90)<1 && wheel.left_x==128);
+    wheel.timestamp+=16000;
+    turn_wheel(&wheel,WHEEL_CW);                              /* one press: 105, full tilt */
+    assert(fabs(wheel_turn.angle-105)<1e-9);
+    const double tilt_x=wheel.left_x-128, tilt_y=wheel.left_y-128;
+    assert(fabs(sqrt(tilt_x*tilt_x+tilt_y*tilt_y)-127)<2);
+    assert(fabs(atan2(tilt_x,-tilt_y)*180/WHEEL_PI-105)<1);
+    wheel.left_x=wheel.left_y=128; wheel.timestamp+=WHEEL_REPEAT_US-1;
+    turn_wheel(&wheel,WHEEL_CW);                              /* held, before the repeat: no turn */
+    assert(fabs(wheel_turn.angle-105)<1e-9);
+    wheel.timestamp+=WHEEL_MAX_STEP_US/2;                     /* held: speed * time */
+    turn_wheel(&wheel,WHEEL_CW);
+    assert(fabs(wheel_turn.angle-(105+120.0*WHEEL_MAX_STEP_US/2/1e6))<1e-6);
+    const double held_at=wheel_turn.angle;
+    wheel.timestamp+=2000000;                                 /* a stall: at most WHEEL_MAX_STEP_US */
+    turn_wheel(&wheel,WHEEL_CW);
+    assert(fabs(wheel_turn.angle-(held_at+120.0*WHEEL_MAX_STEP_US/1e6))<1e-6);
+    wheel.timestamp+=16000;
+    turn_wheel(&wheel,WHEEL_CW|WHEEL_CCW);                    /* both: held still */
+    const double both_at=wheel_turn.angle;
+    wheel.timestamp+=WHEEL_REPEAT_US*2;
+    turn_wheel(&wheel,WHEEL_CW|WHEEL_CCW);
+    assert(fabs(wheel_turn.angle-both_at)<1e-9);
+    wheel.timestamp+=16000;
+    turn_wheel(&wheel,0);
+    wheel.left_x=wheel.left_y=128;
+    /* Counter-clockwise across the top wraps to 359..0; up (W) restarts at 0. */
+    wheel.left_x=128; wheel.left_y=0; wheel.timestamp+=16000;
+    turn_wheel(&wheel,0);
+    assert(fabs(wheel_turn.angle)<1);
+    wheel.timestamp+=16000;
+    turn_wheel(&wheel,WHEEL_CCW);
+    assert(fabs(wheel_turn.angle-345)<1 && wheel.left_x<128 && wheel.left_y<128);
+    wheel.timestamp+=16000;
+    turn_wheel(&wheel,0);
+    /* Every slot of both wheels is reached by presses (14 slots of the equipment wheel, 11 of the
+     * skill wheel, each a sector around the circle), and by holding at the fastest speed with
+     * slow reads. */
+    for (int pass=0;pass<2;++pass) {
+        const int slots[2]={14,11};
+        for (int w=0;w<2;++w) {
+            bool hit[14]={0};
+            wheel_turn.angle=0; wheel_turn.held=0;
+            wheel_speed=pass ? 360 : 120;
+            for (int n=0;n<400;++n) {
+                wheel.left_x=wheel.left_y=128;
+                wheel.timestamp+=pass ? 70000 : 16000;        /* pass 1: reads at 14 Hz, held */
+                turn_wheel(&wheel,WHEEL_CW);
+                if (!pass) { wheel.timestamp+=16000; turn_wheel(&wheel,0); } /* pass 0: taps */
+                const double angle=fmod(atan2(wheel.left_x-128.0,-(wheel.left_y-128.0))*180/WHEEL_PI+360,360);
+                hit[(int)(angle/(360.0/slots[w]))%slots[w]]=true;
+            }
+            for (int slot=0;slot<slots[w];++slot) assert(hit[slot]);
+        }
+    }
+    wheel_speed=120;
 
     puts("PASS: pad and key maps");
 }

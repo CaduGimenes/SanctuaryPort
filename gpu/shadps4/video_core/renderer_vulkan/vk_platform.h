@@ -27,6 +27,10 @@ vk::UniqueInstance CreateInstance(Frontend::WindowSystemType window_type, bool e
 
 vk::UniqueDebugUtilsMessengerEXT CreateDebugCallback(vk::Instance instance);
 
+/// sanctuary: true when the loader offers this instance extension (CreateInstance enables the
+/// optional ones it asks for exactly when this holds).
+bool IsInstanceExtensionAvailable(const char* name);
+
 template <typename T>
 concept VulkanHandleType = vk::isVulkanHandleType<T>::value;
 

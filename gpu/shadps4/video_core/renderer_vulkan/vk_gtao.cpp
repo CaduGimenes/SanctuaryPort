@@ -36,7 +36,7 @@ struct PushConstants {
     std::array<float, 4> projection;
     std::array<float, 4> dims;
     std::array<float, 4> params0; // radius, falloff, max screen radius, power
-    std::array<float, 4> params1; // padding, padding, denoise depth tolerance, padding
+    std::array<float, 4> params1; // extra cache reach (px), padding, denoise depth tolerance, padding
     std::array<float, 4> params2; // mip offset, thickness, far distance, final occlusion strength
 };
 static_assert(sizeof(PushConstants) == 80);
@@ -164,7 +164,8 @@ bool Gtao::EnsureDepthHistory() {
         const auto format = i == 0 ? vk::Format::eR32Uint : vk::Format::eR32Sfloat;
         const auto extent = i == 0
                                 ? vk::Extent3D{width, height, 1}
-                                : vk::Extent3D{width / HistoryTileSize, height / HistoryTileSize, 1};
+                                : vk::Extent3D{(width + HistoryTileSize - 1) / HistoryTileSize,
+                                               (height + HistoryTileSize - 1) / HistoryTileSize, 1};
         const auto result = history_images[i].TryCreate(vk::ImageCreateInfo{
             .imageType = vk::ImageType::e2D, .format = format,
             .extent = extent, .mipLevels = 1, .arrayLayers = 1,
@@ -375,7 +376,10 @@ bool Gtao::Run(VideoCore::ImageId depth_id, VideoCore::ImageId target_id,
         .dims = {float(scene_extent.width), float(scene_extent.height),
                  1.0f / scene_extent.width, 1.0f / scene_extent.height},
         .params0 = {3.0f, 0.5f, 0.10f, 2.2f},
-        .params1 = {0.0f, 0.0f, 0.03f, 0.0f},
+        // Sizes that are not multiples of 16 (1920x1080) give mip levels whose texels can come from
+        // the neighboring 16x16 tile: the cache then reaches one tile further.
+        .params1 = {w % HistoryTileSize || h % HistoryTileSize ? float(HistoryTileSize) : 0.0f,
+                    0.0f, 0.03f, 0.0f},
         .params2 = {4.5f, 1.0f, far, high ? 0.85f : 0.90f},
     };
     scheduler.EndRendering();
@@ -399,12 +403,12 @@ bool Gtao::Run(VideoCore::ImageId depth_id, VideoCore::ImageId target_id,
                                        : *prefilter_msaa_pipeline;
     const vk::Pipeline evaluate = high ? *high_evaluate_pipeline : *low_evaluate_pipeline;
     const auto& cached_evaluate = high ? cached_high_pipeline : cached_low_pipeline;
-    // The history classifier requires whole tiles and a full-size active viewport.
-    const bool eligible = cached_evaluate && !history_unavailable && w == scene_extent.width &&
-                          h == scene_extent.height && w % HistoryTileSize == 0 &&
-                          h % HistoryTileSize == 0;
+    // Diablo III's dynamic resolution draws the scene into the top-left part of the targets:
+    // the history is valid for one scene size (the evaluator's coordinates depend on it).
+    const bool eligible = cached_evaluate && !history_unavailable;
     const bool same_configuration = history_quality == quality && history_projection == proj &&
-                                    history_samples == depth_samples;
+                                    history_samples == depth_samples &&
+                                    history_extent == scene_extent;
     // Exact matching remains mandatory in the classifier. Warm-up avoids spending
     // time classifying depth while the captured projection is changing.
     const bool cache = cache_policy.Update(eligible && same_configuration) && EnsureDepthHistory();
@@ -413,6 +417,7 @@ bool Gtao::Run(VideoCore::ImageId depth_id, VideoCore::ImageId target_id,
     history_quality = quality;
     history_projection = proj;
     history_samples = depth_samples;
+    history_extent = scene_extent;
     std::array<vk::Image, 3> history{};
     std::array<vk::ImageView, 3> views{};
     if (cache) {

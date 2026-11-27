@@ -78,6 +78,9 @@ struct Values {
     std::atomic<int> mouse_aim_style{0};
     /// L2 aim sensitivity in percent, 10 to 200: lower needs more mouse for the same stick. Live.
     std::atomic<int> mouse_aim_sensitivity{100};
+    /// Keyboard keys that turn the left stick around a radial menu (runtime_pad.c, GitHub #112):
+    /// degrees per second while held, 30 to 360. Live.
+    std::atomic<int> wheel_turn_speed{120};
     // Startup: run.py turns them into patches and environment variables; "Apply and restart".
     std::atomic<int> render_resolution{0};
     std::atomic<int> engine_fps{120};

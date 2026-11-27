@@ -78,10 +78,13 @@ pub const ACTION_NAMES: &[(&str, &str)] = &[
     ("look_down", "Right stick down"),
     ("look_left", "Right stick left"),
     ("look_right", "Right stick right"),
+    ("wheel_cw", "Turn wheel clockwise"),
+    ("wheel_ccw", "Turn wheel counter-clockwise"),
 ];
 
 const KEY_NOTE: &str = "Click a box, then press a key, click a mouse button or turn the wheel (it gives up after {} seconds). An input already used by another button swaps with it; the arrow puts one button back on its default. Touchpad right opens the game's pause menu. Insert always opens the port's menu and cannot be bound. Applied when the game starts.";
 const MOUSE_LOCK_HINT: &str = "While you play, the mouse stays in the game window, so a click cannot land on another monitor or app. The in-game menu and switching windows get it back. Also in the in-game menu.";
+const WHEEL_SPEED_HINT: &str = "How fast the Turn wheel keys move the selection around the game's wheels (equipment, skills) while held. A short press, or one notch of the mouse wheel, moves it one small step, so every slot can be reached. Also in the in-game menu.";
 const VIBRATION_HINT: &str = "Strength of the gamepad's vibration; 0% turns it off.";
 const CONFIRM_HINT: &str = "Which button confirms choices in save/load dialogs and menu lists. Default: Cross confirms, Circle cancels. Swapped: Circle confirms, Cross cancels. Does not change gameplay or combat controls.";
 const PAD_NOTE: &str = "Touchpad right opens the game's pause menu. Touchpad left (photo mode) is L1 + Touchpad right, or a button of its own if you choose one. R3+L2 always opens the port's menu. Applied when the game starts.";
@@ -709,11 +712,13 @@ pub(crate) fn button_name_of(button: &str) -> &'static str {
 }
 
 /// The game button's icon as `(icon, style)`: its PlayStation button, the left stick for the
-/// movement rows and the right stick for the look rows.
+/// movement and wheel-turn rows and the right stick for the look rows.
 fn game_icon(button: &str) -> (&'static str, &'static str) {
     match (game_button(button), button) {
         (Some(sdl), _) => (sdl, "playstation"),
-        (None, move_stick) if move_stick.starts_with("move_") => ("leftstick", "xbox"),
+        (None, left_stick) if left_stick.starts_with("move_") || left_stick.starts_with("wheel_") => {
+            ("leftstick", "xbox")
+        }
         _ => ("rightstick", "xbox"),
     }
 }
@@ -1065,6 +1070,18 @@ fn keyboard_section<'a>(state: &State, lang: &str) -> Element<'a, Message> {
             &tr(lang, "Keep the mouse in the game window"),
             state.store.flag("mouse_lock"),
             Some(&hint(MOUSE_LOCK_HINT)),
+        ),
+        row(
+            state.rtl,
+            &tr(lang, "Wheel turn speed"),
+            slider(
+                "wheel_turn_speed",
+                30.0,
+                360.0,
+                "°/s",
+                ini_number(state, "wheel_turn_speed")
+            ),
+            Some(&hint(WHEEL_SPEED_HINT)),
         ),
         section(state.rtl, &tr(lang, "Keyboard & Mouse Mapping")),
         note(tr(

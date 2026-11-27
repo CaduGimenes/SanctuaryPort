@@ -318,6 +318,9 @@ void GameTab() {
                   "Strength of the controller's vibration. 0% turns it off.");
         CheckRow("Keep mouse in window", s.mouse_lock,
                  "While you play, the mouse stays in the game window; this menu and other windows get it back.");
+        SliderRow("Wheel turn speed", s.wheel_turn_speed, 30, 360, "%d\xC2\xB0/s",
+                  "How fast the keyboard's wheel-turn keys move the selection around a radial menu "
+                  "(equipment, skills) while held. A short press moves it one small step.");
         ImGui::EndTable();
     }
 }

@@ -392,6 +392,10 @@ extern "C" int sanctuarygpu_mouse_aim_sensitivity(void) {
     return SanctuarySettings::Get().mouse_aim_sensitivity.load(std::memory_order_relaxed);
 }
 
+extern "C" int sanctuarygpu_wheel_turn_speed(void) {
+    return SanctuarySettings::Get().wheel_turn_speed.load(std::memory_order_relaxed);
+}
+
 extern "C" void sanctuarygpu_mouse_pause_key(void) {
     Frontend::ToggleMousePause();
 }

@@ -6,7 +6,7 @@
 
 Port nativo da versão de PS4 de **Diablo III**: as versões brasileira (CUSA00243), americana
 (CUSA00242) e europeia (CUSA00433/CUSA00434) de *Reaper of Souls – Ultimate Evil Edition*, com a
-última atualização de cada uma (1.47 na brasileira e na americana, 1.46 na europeia), que é a
+atualização 1.46 ou 1.47 (a que a sua versão tiver), que é a
 **Eternal Collection** (com o Necromante). O código original do jogo roda direto no seu processador, um runtime substitui as
 bibliotecas do sistema do PS4, e os gráficos do PS4 são traduzidos para Vulkan. Não há emulação
 de CPU.

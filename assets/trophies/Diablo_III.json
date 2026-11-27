@@ -1,5 +1,6 @@
 {
  "_comment": "Diablo III (PS4) trophy names and descriptions, by trophy id, for the on-screen notices and the launcher's Trophies page. Source: the PS4 trophy list (Exophase, CUSA00242), each entry matched to the TROPnnn.PNG icon of the same id in the 1.47 update's trophy00.trp. The game's own texts (TROPCONF.ESFM) are encrypted with Sony's trophy key.",
+ "_comment_labels": "name_label, description_label: the same texts in the game's own language packs, <pack>_CoreCommon.cpk > StringList\\<file>.stl, by label hash (the same in every language): every trophy is also an in-game achievement. The launcher shows them in the game language.",
  "title": "Diablo III",
  "icons": 54,
  "groups": [
@@ -7,13 +8,15 @@
    "id": 0,
    "name": "Diablo III: Reaper of Souls",
    "first": 0,
-   "last": 43
+   "last": 43,
+   "name_label": "ConsoleAchievements/04762b83"
   },
   {
    "id": 1,
    "name": "Diablo III: Rise of the Necromancer",
    "first": 44,
-   "last": 53
+   "last": 53,
+   "name_label": "ConsoleAchievements/6d624585"
   }
  ],
  "trophies": [
@@ -22,378 +25,486 @@
    "tier": "platinum",
    "group": 0,
    "name": "Diablo III: Reaper of Souls Platinum Trophy",
-   "description": "Collected all other Diablo III: Reaper of Souls trophies."
+   "description": "Collected all other Diablo III: Reaper of Souls trophies.",
+   "name_label": "ConsoleAchievements/d3720531",
+   "description_label": "ConsoleAchievements/6100b4c3"
   },
   {
    "id": 1,
    "tier": "bronze",
    "group": 0,
    "name": "Deep Pockets",
-   "description": "Pick up 500,000 gold."
+   "description": "Pick up 500,000 gold.",
+   "name_label": "Achievements/db6cf3a3",
+   "description_label": "Achievements/f781fec5"
   },
   {
    "id": 2,
    "tier": "bronze",
    "group": 0,
    "name": "The Comfort of Strangers",
-   "description": "Recruit the Templar, Scoundrel, and Enchantress."
+   "description": "Recruit the Templar, Scoundrel, and Enchantress.",
+   "name_label": "Achievements/022a89d2",
+   "description_label": "Achievements/39893c34"
   },
   {
    "id": 3,
    "tier": "silver",
    "group": 0,
    "name": "Up All Night To Get Lucky",
-   "description": "Equip all Inventory slots with Legendary items that have a minimum required level of 70 or higher."
+   "description": "Equip all Inventory slots with Legendary items that have a minimum required level of 70 or higher.",
+   "name_label": "Achievements/ec63bd17",
+   "description_label": "Achievements/c40f0f39"
   },
   {
    "id": 4,
    "tier": "bronze",
    "group": 0,
    "name": "Breaking Not So Bad",
-   "description": "Use a merchant to repair an item."
+   "description": "Use a merchant to repair an item.",
+   "name_label": "Achievements/9f061d9e",
+   "description_label": "Achievements/d6ef7900"
   },
   {
    "id": 5,
    "tier": "bronze",
    "group": 0,
    "name": "Socket to Me",
-   "description": "Socket a gem in an item."
+   "description": "Socket a gem in an item.",
+   "name_label": "Achievements/ad452abd",
+   "description_label": "Achievements/5fd1a15f"
   },
   {
    "id": 6,
    "tier": "bronze",
    "group": 0,
    "name": "A New Start",
-   "description": "Complete 5 Bounties."
+   "description": "Complete 5 Bounties.",
+   "name_label": "Achievements/2adac472",
+   "description_label": "Achievements/f462eed4"
   },
   {
    "id": 7,
    "tier": "silver",
    "group": 0,
    "name": "Batting 500",
-   "description": "Complete 500 Bounties."
+   "description": "Complete 500 Bounties.",
+   "name_label": "Achievements/42bcc751",
+   "description_label": "Achievements/f0395cf3"
   },
   {
    "id": 8,
    "tier": "silver",
    "group": 0,
    "name": "Just Riffing",
-   "description": "Kill 500 monsters while in Nephalem Rifts."
+   "description": "Kill 500 monsters while in Nephalem Rifts.",
+   "name_label": "Achievements/8fe7f6fe",
+   "description_label": "Achievements/27e6da60"
   },
   {
    "id": 9,
    "tier": "silver",
    "group": 0,
    "name": "Dashing through the Rift",
-   "description": "Finish a Nephalem Rift within 15 Minutes."
+   "description": "Finish a Nephalem Rift within 15 Minutes.",
+   "name_label": "Achievements/72658cee",
+   "description_label": "Achievements/04192450"
   },
   {
    "id": 10,
    "tier": "bronze",
    "group": 0,
    "name": "The Mad King's End",
-   "description": "Kill the Skeleton King."
+   "description": "Kill the Skeleton King.",
+   "name_label": "Achievements/c20ce234",
+   "description_label": "Achievements/5798d616"
   },
   {
    "id": 11,
    "tier": "silver",
    "group": 0,
    "name": "Butchered!",
-   "description": "Kill the Butcher."
+   "description": "Kill the Butcher.",
+   "name_label": "Achievements/555716b5",
+   "description_label": "Achievements/58d2a757"
   },
   {
    "id": 12,
    "tier": "bronze",
    "group": 0,
    "name": "The Last of the Horadrim",
-   "description": "Complete all quests in Act I."
+   "description": "Complete all quests in Act I.",
+   "name_label": "Achievements/e28510c3",
+   "description_label": "Achievements/e8c373e5"
   },
   {
    "id": 13,
    "tier": "bronze",
    "group": 0,
    "name": "The Coven Overthrown",
-   "description": "Kill Maghda."
+   "description": "Kill Maghda.",
+   "name_label": "Achievements/39f61232",
+   "description_label": "Achievements/abb18c94"
   },
   {
    "id": 14,
    "tier": "bronze",
    "group": 0,
    "name": "Murderer. Torturer. Monster.",
-   "description": "Kill Zoltun Kulle."
+   "description": "Kill Zoltun Kulle.",
+   "name_label": "Achievements/3b702678",
+   "description_label": "Achievements/f9d73d5a"
   },
   {
    "id": 15,
    "tier": "silver",
    "group": 0,
    "name": "The Lord of Lies",
-   "description": "Kill Belial."
+   "description": "Kill Belial.",
+   "name_label": "Achievements/78e711d0",
+   "description_label": "Achievements/23974ab2"
   },
   {
    "id": 16,
    "tier": "bronze",
    "group": 0,
    "name": "The Black Soulstone",
-   "description": "Complete all quests in Act II."
+   "description": "Complete all quests in Act II.",
+   "name_label": "Achievements/935f7704",
+   "description_label": "Achievements/94dbc6e6"
   },
   {
    "id": 17,
    "tier": "bronze",
    "group": 0,
    "name": "The Ravening Beast",
-   "description": "Kill Ghom."
+   "description": "Kill Ghom.",
+   "name_label": "Achievements/f63e6d96",
+   "description_label": "Achievements/8351e2f8"
   },
   {
    "id": 18,
    "tier": "bronze",
    "group": 0,
    "name": "Making a Breakthrough",
-   "description": "Kill the Siegebreaker Assault Beast."
+   "description": "Kill the Siegebreaker Assault Beast.",
+   "name_label": "Achievements/fc26bb19",
+   "description_label": "Achievements/ff8d06bb"
   },
   {
    "id": 19,
    "tier": "silver",
    "group": 0,
    "name": "The Lord of Sin",
-   "description": "Kill Azmodan."
+   "description": "Kill Azmodan.",
+   "name_label": "Achievements/75cce89a",
+   "description_label": "Achievements/647990fc"
   },
   {
    "id": 20,
    "tier": "bronze",
    "group": 0,
    "name": "The Wages of Sin",
-   "description": "Complete all quests in Act III."
+   "description": "Complete all quests in Act III.",
+   "name_label": "Achievements/4439dd45",
+   "description_label": "Achievements/40f419e7"
   },
   {
    "id": 21,
    "tier": "silver",
    "group": 0,
    "name": "The Prime Evil",
-   "description": "Kill Diablo."
+   "description": "Kill Diablo.",
+   "name_label": "Achievements/8646cb5b",
+   "description_label": "Achievements/1dfcc07d"
   },
   {
    "id": 22,
    "tier": "bronze",
    "group": 0,
    "name": "Victory and Sacrifice",
-   "description": "Complete all quests in Act IV."
+   "description": "Complete all quests in Act IV.",
+   "name_label": "Achievements/f5144386",
+   "description_label": "Achievements/ed0c6ce8"
   },
   {
    "id": 23,
    "tier": "silver",
    "group": 0,
    "name": "Fire in Your New Boots",
-   "description": "Kill Urzael."
+   "description": "Kill Urzael.",
+   "name_label": "Achievements/31d1c49a",
+   "description_label": "Achievements/1fb36cfc"
   },
   {
    "id": 24,
    "tier": "silver",
    "group": 0,
    "name": "Her?",
-   "description": "Kill Adria."
+   "description": "Kill Adria.",
+   "name_label": "Achievements/58f20b08",
+   "description_label": "Achievements/9ef64dea"
   },
   {
    "id": 25,
    "tier": "silver",
    "group": 0,
    "name": "Death Do Us Part",
-   "description": "Kill Malthael."
+   "description": "Kill Malthael.",
+   "name_label": "Achievements/44135f0f",
+   "description_label": "Achievements/d59e4b31"
   },
   {
    "id": 26,
    "tier": "bronze",
    "group": 0,
    "name": "Don't Fear the Reaper",
-   "description": "Complete all quests in Act V."
+   "description": "Complete all quests in Act V.",
+   "name_label": "Achievements/e44d02cf",
+   "description_label": "Achievements/0cf3bef1"
   },
   {
    "id": 27,
    "tier": "gold",
    "group": 0,
    "name": "Above & Beyond (Hardcore)",
-   "description": "Reach level 70 in Hardcore mode."
+   "description": "Reach level 70 in Hardcore mode.",
+   "name_label": "Achievements/c1767761",
+   "description_label": "Achievements/af1ad903"
   },
   {
    "id": 28,
    "tier": "silver",
    "group": 0,
    "name": "Reign of Terror",
-   "description": "Kill Diablo in Hardcore mode."
+   "description": "Kill Diablo in Hardcore mode.",
+   "name_label": "Achievements/5e2a4942",
+   "description_label": "Achievements/b996cfa4"
   },
   {
    "id": 29,
    "tier": "silver",
    "group": 0,
    "name": "May His Death Satisfy You",
-   "description": "Kill Malthael in Hardcore mode."
+   "description": "Kill Malthael in Hardcore mode.",
+   "name_label": "Achievements/f50103d6",
+   "description_label": "Achievements/e9bc2938"
   },
   {
    "id": 30,
    "tier": "silver",
    "group": 0,
    "name": "Above & Beyond",
-   "description": "Reach level 70."
+   "description": "Reach level 70.",
+   "name_label": "Achievements/27a9123a",
+   "description_label": "Achievements/3b76729c"
   },
   {
    "id": 31,
    "tier": "gold",
    "group": 0,
    "name": "Dream Team",
-   "description": "Reach level 70 with 6 different classes."
+   "description": "Reach level 70 with 6 different classes.",
+   "name_label": "Achievements/d43b0a79",
+   "description_label": "Achievements/ad375e1b"
   },
   {
    "id": 32,
    "tier": "silver",
    "group": 0,
    "name": "The Elitist",
-   "description": "Kill 500 elite (champion, rare, or unique) enemies."
+   "description": "Kill 500 elite (champion, rare, or unique) enemies.",
+   "name_label": "Achievements/b8c379f3",
+   "description_label": "Achievements/07580115"
   },
   {
    "id": 33,
    "tier": "silver",
    "group": 0,
    "name": "Greed over Need",
-   "description": "Kill 100 Treasure Goblins."
+   "description": "Kill 100 Treasure Goblins.",
+   "name_label": "Achievements/3179dc99",
+   "description_label": "Achievements/6613483b"
   },
   {
    "id": 34,
    "tier": "bronze",
    "group": 0,
    "name": "Demolition Derby",
-   "description": "Get a destruction callout for breaking 50 objects."
+   "description": "Get a destruction callout for breaking 50 objects.",
+   "name_label": "Achievements/07772356",
+   "description_label": "Achievements/472be8b8"
   },
   {
    "id": 35,
    "tier": "bronze",
    "group": 0,
    "name": "Made to Order",
-   "description": "Craft 5 items."
+   "description": "Craft 5 items.",
+   "name_label": "Achievements/f5a5b2c8",
+   "description_label": "Achievements/af38c5aa"
   },
   {
    "id": 36,
    "tier": "silver",
    "group": 0,
    "name": "Custom-Fit",
-   "description": "Craft 100 items."
+   "description": "Craft 100 items.",
+   "name_label": "Achievements/a074d01a",
+   "description_label": "Achievements/fa51187c"
   },
   {
    "id": 37,
    "tier": "bronze",
    "group": 0,
    "name": "Forged Credentials",
-   "description": "Raise the Blacksmith to level 12."
+   "description": "Raise the Blacksmith to level 12.",
+   "name_label": "Achievements/33d62ff7",
+   "description_label": "Achievements/23042a19"
   },
   {
    "id": 38,
    "tier": "bronze",
    "group": 0,
    "name": "Gemkata",
-   "description": "Raise the Jeweler to level 12."
+   "description": "Raise the Jeweler to level 12.",
+   "name_label": "Achievements/ebd708a3",
+   "description_label": "Achievements/b667d3c5"
   },
   {
    "id": 39,
    "tier": "bronze",
    "group": 0,
    "name": "Maximum Myriam",
-   "description": "Raise the Mystic to level 12."
+   "description": "Raise the Mystic to level 12.",
+   "name_label": "Achievements/a5c4252e",
+   "description_label": "Achievements/9898ec90"
   },
   {
    "id": 40,
    "tier": "bronze",
    "group": 0,
    "name": "I Feel So Enchanting",
-   "description": "Enchant all your equipment slots."
+   "description": "Enchant all your equipment slots.",
+   "name_label": "Achievements/6aedcd78",
+   "description_label": "Achievements/50b6245a"
   },
   {
    "id": 41,
    "tier": "bronze",
    "group": 0,
    "name": "Trade-in",
-   "description": "Replace a property with Enchanting."
+   "description": "Replace a property with Enchanting.",
+   "name_label": "Achievements/141961dd",
+   "description_label": "Achievements/f7fab07f"
   },
   {
    "id": 42,
    "tier": "bronze",
    "group": 0,
    "name": "A Mystical Meeting",
-   "description": "Acquire the Mystic."
+   "description": "Acquire the Mystic.",
+   "name_label": "Achievements/22a8e1de",
+   "description_label": "Achievements/e1246d40"
   },
   {
    "id": 43,
    "tier": "bronze",
    "group": 0,
    "name": "Bejeweled",
-   "description": "Combine gems."
+   "description": "Combine gems.",
+   "name_label": "Achievements/f52cdd04",
+   "description_label": "Achievements/109dace6"
   },
   {
    "id": 44,
    "tier": "bronze",
    "group": 1,
    "name": "The Silence When You Speak to Me",
-   "description": "Listen to all of Master Ordan's conversations in the Pandemonium Fortress."
+   "description": "Listen to all of Master Ordan's conversations in the Pandemonium Fortress.",
+   "name_label": "Achievements/67de2061",
+   "description_label": "Achievements/78dd4203"
   },
   {
    "id": 45,
    "tier": "bronze",
    "group": 1,
    "name": "Serve the Balance",
-   "description": "Reach level 70 with a Necromancer."
+   "description": "Reach level 70 with a Necromancer.",
+   "name_label": "Achievements/04ff9206",
+   "description_label": "Achievements/bcd89b68"
   },
   {
    "id": 46,
    "tier": "bronze",
    "group": 1,
    "name": "Bringer of Order",
-   "description": "Complete Act V with a Necromancer."
+   "description": "Complete Act V with a Necromancer.",
+   "name_label": "Achievements/1c5703a9",
+   "description_label": "Achievements/273ca7cb"
   },
   {
    "id": 47,
    "tier": "bronze",
    "group": 1,
    "name": "Bone Skewer",
-   "description": "Damage 40 enemies with Bone Spear in 3 seconds."
+   "description": "Damage 40 enemies with Bone Spear in 3 seconds.",
+   "name_label": "Achievements/88c51d3f",
+   "description_label": "Achievements/4311ed61"
   },
   {
    "id": 48,
    "tier": "bronze",
    "group": 1,
    "name": "What Is Dead Can Sometimes Die",
-   "description": "Kill 1,000 Undead enemies with corpses."
+   "description": "Kill 1,000 Undead enemies with corpses.",
+   "name_label": "Achievements/ae8b1642",
+   "description_label": "Achievements/349d5ca4"
   },
   {
    "id": 49,
    "tier": "bronze",
    "group": 1,
    "name": "Curse Your Enthusiasm",
-   "description": "Kill 5,000 cursed enemies."
+   "description": "Kill 5,000 cursed enemies.",
+   "name_label": "Achievements/71c18515",
+   "description_label": "Achievements/00ae5db7"
   },
   {
    "id": 50,
    "tier": "bronze",
    "group": 1,
    "name": "Terror in the Blood",
-   "description": "Defeat Diablo after using an ability that costs health while below 10% of your life."
+   "description": "Defeat Diablo after using an ability that costs health while below 10% of your life.",
+   "name_label": "Achievements/3efae60e",
+   "description_label": "Achievements/cad4d570"
   },
   {
    "id": 51,
    "tier": "bronze",
    "group": 1,
    "name": "Game of Bones",
-   "description": "Use Bone Armor to rip the bones from the Skeleton King."
+   "description": "Use Bone Armor to rip the bones from the Skeleton King.",
+   "name_label": "Achievements/33ec0573",
+   "description_label": "Achievements/9c9b2c95"
   },
   {
    "id": 52,
    "tier": "silver",
    "group": 1,
    "name": "Skeleton Crew",
-   "description": "Kill 500 elite (champion, rare, or unique) enemies with Command Skeleton minions."
+   "description": "Kill 500 elite (champion, rare, or unique) enemies with Command Skeleton minions.",
+   "name_label": "Achievements/49625f52",
+   "description_label": "Achievements/7fab31b4"
   },
   {
    "id": 53,
    "tier": "silver",
    "group": 1,
    "name": "Self Controlled",
-   "description": "Kill your own Shadow Clone with Simulacrum during the Diablo encounter."
+   "description": "Kill your own Shadow Clone with Simulacrum during the Diablo encounter.",
+   "name_label": "Achievements/67ce04c3",
+   "description_label": "Achievements/c5f367e5"
   }
  ]
 }

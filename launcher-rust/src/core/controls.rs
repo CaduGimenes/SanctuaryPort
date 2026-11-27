@@ -153,7 +153,14 @@ pub static STICK_ROWS: [ControlRow; 8] = [
     row("look_left", "Left", None),
     row("look_right", "Right", None),
 ];
-pub static KEY_ACTIONS: [&ControlRow; 8] = [
+/// GitHub #112: the keys that turn the left stick around the game's radial menus (equipment and
+/// skill wheels), a small step per press and on while held; the runtime's own inputs are the mouse
+/// wheel.
+pub static WHEEL_ROWS: [ControlRow; 2] = [
+    row("wheel_cw", "Wheel Down", None),
+    row("wheel_ccw", "Wheel Up", None),
+];
+pub static KEY_ACTIONS: [&ControlRow; 10] = [
     &STICK_ROWS[0],
     &STICK_ROWS[1],
     &STICK_ROWS[2],
@@ -162,10 +169,12 @@ pub static KEY_ACTIONS: [&ControlRow; 8] = [
     &STICK_ROWS[5],
     &STICK_ROWS[6],
     &STICK_ROWS[7],
+    &WHEEL_ROWS[0],
+    &WHEEL_ROWS[1],
 ];
-/// Settings layout: 4 = remappable keyboard stick directions, 5 = the layout this launcher writes
-/// (`migrate_controls`).
-pub const CONTROLS_LAYOUT: u64 = 5;
+/// Settings layout: 4 = remappable keyboard stick directions, 5 = the stick rows saved, 6 = the
+/// wheel-turn keys, the layout this launcher writes (`migrate_controls`).
+pub const CONTROLS_LAYOUT: u64 = 6;
 
 pub static MOUSE_NAMES: &[&str] = &[
     "Mouse Left",
@@ -197,7 +206,7 @@ pub fn table_rows(kind: Kind) -> Vec<&'static ControlRow> {
     if kind != Kind::Key {
         return CONTROLS.iter().collect();
     }
-    let mut rows: Vec<&'static ControlRow> = STICK_ROWS.iter().collect();
+    let mut rows: Vec<&'static ControlRow> = STICK_ROWS.iter().chain(WHEEL_ROWS.iter()).collect();
     rows.extend(CONTROLS.iter());
     rows
 }
@@ -668,6 +677,9 @@ pub fn migrate_controls(saved: Map<String, Value>) -> Map<String, Value> {
     if previous.is_none_or(|n| n < 4.0) {
         claim_new_actions(&mut controls, &STICK_ROWS);
     }
+    if previous.is_none_or(|n| n < 6.0) {
+        claim_new_actions(&mut controls, &WHEEL_ROWS);
+    }
     saved.insert("controls".to_string(), Value::Object(controls));
     saved.insert("controls_layout".to_string(), Value::from(CONTROLS_LAYOUT));
     saved
@@ -1044,10 +1056,39 @@ mod tests {
         );
     }
 
+    /// #112: the wheel-turn keys default to the mouse wheel, which the runtime also uses, so only a
+    /// change is sent; a saved table that already uses the wheel keeps it, and the turn key is left
+    /// without an input.
+    #[test]
+    fn wheel_turn_keys_default_to_the_mouse_wheel() {
+        let mut keys = defaults_of(Kind::Key);
+        assert_eq!(keys["wheel_cw"], "Wheel Down");
+        assert_eq!(keys["wheel_ccw"], "Wheel Up");
+        assert!(!keyboard_map(&json!({ "key": keys.clone() })).contains("wheel_"));
+        let mut none = [IndexMap::new(), IndexMap::new()];
+        let [alt, alt2] = &mut none;
+        bind_key([&mut keys, alt, alt2], "wheel_cw", Slot::Main, "T");
+        bind_key([&mut keys, alt, alt2], "wheel_ccw", Slot::Alternative, "G");
+        let spec = keyboard_map(&json!({ "key": keys, "key_alt": alt.clone() }));
+        let entries: Vec<&str> = spec.split(',').collect();
+        assert!(entries.contains(&"wheel_cw=T"), "{spec}");
+        assert!(entries.contains(&"wheel_ccw=Wheel Up|G"), "{spec}");
+        let new = migrate_controls(object(
+            json!({"controls_layout": 5, "controls": {"key": {"l1": "Wheel Up"}}}),
+        ));
+        let key = &new["controls"]["key"];
+        assert_eq!(key["l1"], "Wheel Up");
+        assert_eq!(key["wheel_ccw"], "None");
+        assert!(key.get("wheel_cw").is_none()); // follows its default
+        assert_eq!(new["controls_layout"], json!(6));
+        assert!(keyboard_map(&new["controls"]).contains("wheel_ccw=None"));
+        assert_eq!(migrate_controls(new.clone()), new);
+    }
+
     // Rust only (not in the Python): the migration itself leaves a newer layout as it is.
     #[test]
     fn a_newer_layout_is_left_alone() {
-        let saved = json!({"controls_layout": 6, "controls": {"keyboard": {"rage": "Q"}}});
+        let saved = json!({"controls_layout": 7, "controls": {"keyboard": {"rage": "Q"}}});
         let map = saved.as_object().unwrap().clone();
         assert_eq!(migrate_controls(map.clone()), map);
     }
@@ -1062,7 +1103,11 @@ mod tests {
         let busy = migrate_controls(object(
             json!({"controls": {"native": {"circle": "Wheel Up"}}, "native_input": true}),
         ));
-        assert_eq!(busy["controls"]["key"], json!({"circle": "Wheel Up"}));
+        // the wheel-turn key whose default the table already uses is left without one (#112)
+        assert_eq!(
+            busy["controls"]["key"],
+            json!({"circle": "Wheel Up", "wheel_ccw": "None"})
+        );
         assert!(new["controls"].get("native").is_none());
         assert!(!new.contains_key("native_input"));
         assert!(!new.contains_key("native_rage"));

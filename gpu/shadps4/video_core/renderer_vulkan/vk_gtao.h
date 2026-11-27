@@ -65,6 +65,7 @@ class Gtao {
     std::array<vk::UniqueImageView, 3> history_views;
     std::array<float, 4> history_projection{};
     vk::SampleCountFlagBits history_samples{};
+    vk::Extent2D history_extent{};
     int history_quality = 0;
     bool history_initialized = false;
     bool history_valid = false;

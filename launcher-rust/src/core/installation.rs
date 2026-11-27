@@ -137,15 +137,19 @@ impl Installation {
 
     /// A file of `sce_sys`: the update's when it has it, else the game's.
     pub fn system_file(&self, rel: &str) -> Option<PathBuf> {
-        if !self.typed() {
-            return None;
-        }
-        let update = (!self.update.is_empty()).then(|| Path::new(self.update.as_str()));
-        update
+        self.game_folders()
             .into_iter()
-            .chain([Path::new(&self.game)])
             .map(|folder| folder.join("sce_sys").join(rel))
             .find(|path| path.is_file())
+    }
+
+    /// The update folder (when set), then the game folder; nothing while no game folder is typed.
+    pub fn game_folders(&self) -> Vec<PathBuf> {
+        if !self.typed() {
+            return Vec::new();
+        }
+        let update = (!self.update.is_empty()).then(|| PathBuf::from(&self.update));
+        update.into_iter().chain([PathBuf::from(&self.game)]).collect()
     }
 
     pub fn trophy_package(&self) -> Option<PathBuf> {

@@ -56,6 +56,7 @@ struct PresentStats {
     bool on = std::getenv("SANCTUARY_FRAME_STATS") != nullptr;
     std::atomic<u64> frame_wait_ns{0}, ahead_wait_ns{0};
     u64 shown = 0, acquire_ns = 0, acquire_max_ns = 0, present_ns = 0, present_max_ns = 0;
+    u64 ahead_ns = 0; // swap thread: the acquire made after the last present, counted with the next
     std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
 
     static u64 Since(std::chrono::steady_clock::time_point t) {
@@ -348,6 +349,7 @@ Presenter::Presenter(Frontend::WindowSDL& window_, AmdGpu::Liverpool* liverpool_
       texture_cache{rasterizer->GetTextureCache()} {
     const u32 num_images = swapchain.GetImageCount();
     const vk::Device device = instance.GetDevice();
+    swapchain.SetAcquireWaitScheduler(&present_scheduler);
 
     // Create presentation frames.
     present_frames.resize(num_images);
@@ -888,6 +890,9 @@ void Presenter::PresentLoadingFrame() {
         swapchain.Recreate(window.GetWidth(), window.GetHeight());
     }
     if (!swapchain.AcquireNextImage()) {
+        // sanctuary: a suboptimal image stays acquired and its semaphore signaled, which the next
+        // acquire must not reuse: a new swapchain gives new semaphores (GitHub #110).
+        swapchain.Recreate(window.GetWidth(), window.GetHeight());
         return;
     }
     const vk::Image image = swapchain.Image();
@@ -1136,7 +1141,8 @@ void Presenter::Present(Frame* frame, bool is_reusing_frame, bool is_game_frame)
         }
     }
     if (g_present_stats.on && is_game_frame) {
-        g_present_stats.Shown(u64(std::chrono::duration_cast<std::chrono::nanoseconds>(
+        g_present_stats.Shown(std::exchange(g_present_stats.ahead_ns, 0) +
+                                  u64(std::chrono::duration_cast<std::chrono::nanoseconds>(
                                       acquire_end - acquire_start).count()),
                               PresentStats::Since(present_start));
     }
@@ -1144,6 +1150,14 @@ void Presenter::Present(Frame* frame, bool is_reusing_frame, bool is_game_frame)
     free_frame();
     if (!is_reusing_frame && is_game_frame) {
         DebugState.IncFlipFrameNum();
+    }
+
+    // sanctuary: without V-Sync, the next frame's image is acquired now; AcquireNextImage then
+    // waits for it (GitHub #110).
+    const auto ahead_start = std::chrono::steady_clock::now();
+    swapchain.AcquireAhead();
+    if (g_present_stats.on) {
+        g_present_stats.ahead_ns += PresentStats::Since(ahead_start);
     }
 }
 

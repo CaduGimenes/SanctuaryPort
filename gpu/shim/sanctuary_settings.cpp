@@ -136,6 +136,8 @@ void Set(Values& v, const std::string& key, const std::string& value) {
         v.mouse_aim_style = std::clamp(i, 0, 1);
     } else if (key == "mouse_aim_sensitivity") {
         v.mouse_aim_sensitivity = value.empty() ? 100 : std::clamp(i, 10, 200);
+    } else if (key == "wheel_turn_speed") {
+        v.wheel_turn_speed = value.empty() ? 120 : std::clamp(i, 30, 360);
     } else if (key == "restart_unconfirmed") {
         v.restart_unconfirmed = i != 0;
     } else if (key == "fsr4_auto_exposure") {
@@ -195,6 +197,7 @@ void Load() {
         {"SANCTUARY_ANISOTROPY", "anisotropy"},            {"SANCTUARY_VIBRATION", "vibration"},
         {"SANCTUARY_MOUSE_PROMPT_DISTANCE", "mouse_prompt_distance"}, {"SANCTUARY_MOUSE_LOCK", "mouse_lock"},
         {"SANCTUARY_MOUSE_AIM_STYLE", "mouse_aim_style"}, {"SANCTUARY_VSYNC", "vsync"}, {"SANCTUARY_MOUSE_AIM_SENSITIVITY", "mouse_aim_sensitivity"},
+        {"SANCTUARY_WHEEL_TURN_SPEED", "wheel_turn_speed"},
         {"SANCTUARY_GTAO", "gtao"},
     };
     for (const auto& [env, key] : env_keys) {
@@ -362,9 +365,9 @@ static void SaveOwnKeys(FILE* file) {
     const int gtao = v.gtao.load();
     std::fprintf(file, "gtao=%s\n", gtao == GtaoHigh ? "high" : gtao == GtaoLow ? "low" : "off");
     std::fprintf(file, "anisotropy=%d\nvibration=%d\nmouse_prompt_distance=%d\nmouse_lock=%d\nmouse_aim_style=%d\n"
-                       "mouse_aim_sensitivity=%d\n",
+                       "mouse_aim_sensitivity=%d\nwheel_turn_speed=%d\n",
                  v.anisotropy.load(), v.vibration.load(), v.mouse_prompt_distance.load(), int(v.mouse_lock.load()),
-                 v.mouse_aim_style.load(), v.mouse_aim_sensitivity.load());
+                 v.mouse_aim_style.load(), v.mouse_aim_sensitivity.load(), v.wheel_turn_speed.load());
     // Read by run.sh at start.
     std::fprintf(file, "live_resolution=%s\n", v.live_resolution < 0 ? "auto"
                                                   : v.live_resolution ? "1" : "0");

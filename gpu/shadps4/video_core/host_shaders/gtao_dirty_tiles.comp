@@ -73,7 +73,8 @@ void main() {
             }
         }
         // The magnitude contains the padded radius and the sign encodes depth changes.
-        if (radius > 0.0) radius = ceil(radius) + 2.0;
+        // p1.x: one more tile when the mip levels are not aligned to the tiles.
+        if (radius > 0.0) radius = ceil(radius) + 2.0 + pc.p1.x;
         float packed = radius + 1.0;
         imageStore(dirtyTiles, tile, vec4(changed == 0u ? packed : -packed));
     }

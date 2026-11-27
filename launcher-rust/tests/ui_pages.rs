@@ -1029,6 +1029,37 @@ fn trophies_page_lists_35_cards_from_a_test_package() {
 }
 
 #[test]
+fn trophies_page_shows_the_game_language_texts_of_the_dump() {
+    use sanctuaryport_launcher::core::d3_cpk::fixtures::{cpk, stl};
+    use sanctuaryport_launcher::core::trophies::{trophy_group, trophy_info};
+    let dir = tempfile::tempdir().unwrap();
+    let mut state = state_with_trophies(dir.path());
+    // A synthesised Russian pack (GitHub #118) naming trophy 34 and the base game's group.
+    let hash = |label: &str| u32::from_str_radix(label.split_once('/').unwrap().1, 16).unwrap();
+    let info = trophy_info(34).unwrap();
+    let group = &trophy_group(0).unwrap().name_label;
+    let cpks = dir.path().join("game/CPKs");
+    std::fs::create_dir_all(&cpks).unwrap();
+    std::fs::write(cpks.join("ruRU_Common.cpk"), cpk(&[("x", b"x".to_vec())])).unwrap();
+    let achievements = stl(&[(hash(&info.name_label), "Тестовый трофей"), (hash(&info.description_label), "Тестовое описание")]);
+    let console = stl(&[(hash(group), "Тестовая группа")]);
+    std::fs::write(
+        cpks.join("ruRU_CoreCommon.cpk"),
+        cpk(&[("StringList\\Achievements.stl", achievements), ("StringList\\ConsoleAchievements.stl", console)]),
+    )
+    .unwrap();
+    let _ = app::update(&mut state, Message::Set("language".into(), "8".into()));
+    open(&mut state, Page::Trophies);
+    load_trophies(&mut state);
+    assert!(tall_has(&state, "Тестовый трофей"));
+    assert!(tall_has(&state, "Тестовое описание"));
+    assert!(tall_has(&state, "Тестовая группа"));
+    assert!(!tall_has(&state, "Demolition Derby"));
+    // A trophy the pack does not name keeps the built-in English text.
+    assert!(tall_has(&state, "Diablo III: Reaper of Souls Platinum Trophy"));
+}
+
+#[test]
 fn trophies_page_without_a_package_says_so() {
     let dir = tempfile::tempdir().unwrap();
     let mut state = state(dir.path());

@@ -23,6 +23,7 @@ int sanctuarygpu_mouse_prompt_distance(void) { return 0; }
 void sanctuarygpu_mouse_pause_key(void) {}
 int sanctuarygpu_mouse_aim_style(void) { return 0; }
 int sanctuarygpu_mouse_aim_sensitivity(void) { return 100; }
+int sanctuarygpu_wheel_turn_speed(void) { return 120; }
 uintptr_t runtime_lookup(const RuntimeExport *table, size_t count, const char *name) {
     (void)table; (void)count; (void)name;
     return 0;

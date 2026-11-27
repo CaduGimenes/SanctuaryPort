@@ -8,13 +8,33 @@
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "core/emulator_settings.h"
+#include "sanctuary_graphics.h"
 #include "sanctuary_settings.h"
 #include "imgui/renderer/imgui_core.h"
 #include "sdl_window.h"
 #include "video_core/renderer_vulkan/vk_instance.h"
+#include "video_core/renderer_vulkan/vk_scheduler.h"
 #include "video_core/renderer_vulkan/vk_swapchain.h"
 
 namespace Vulkan {
+
+// sanctuary: VkSurfaceFullScreenExclusiveInfoEXT and VK_FULL_SCREEN_EXCLUSIVE_DISALLOWED_EXT. The
+// Vulkan headers declare them only with VK_USE_PLATFORM_WIN32_KHR (which would pull in windows.h
+// here); the layout and values are fixed by the VK_EXT_full_screen_exclusive spec.
+struct FullScreenExclusiveInfo {
+    VkStructureType sType = VK_STRUCTURE_TYPE_SURFACE_FULL_SCREEN_EXCLUSIVE_INFO_EXT;
+    void* pNext = nullptr;
+    int32_t fullScreenExclusive = 2; // VK_FULL_SCREEN_EXCLUSIVE_DISALLOWED_EXT
+};
+
+// sanctuary: Borderless must stay a window on Windows. NVIDIA's driver promotes a Vulkan window
+// that covers the monitor to exclusive fullscreen on its own (slow Alt+Tab, the screen flashes:
+// GitHub #109); the swapchain now forbids that. Windowed asks the same (a maximized window can
+// cover the screen too); Fullscreen leaves the driver's default, which is the exclusive mode.
+static bool RefusesExclusiveFullscreen(const Instance& instance) {
+    return instance.IsFullScreenExclusiveSupported() &&
+           SanctuarySettings::Get().display_mode.load() != SanctuaryGraphics::Fullscreen;
+}
 
 static constexpr vk::SurfaceFormatKHR SURFACE_FORMAT_HDR = {
     .format = vk::Format::eA2B10G10R10UnormPack32,
@@ -27,6 +47,9 @@ Swapchain::Swapchain(const Instance& instance_, const Frontend::WindowSDL& windo
     FindPresentMode();
 
     Create(window.GetWidth(), window.GetHeight());
+    if (instance.IsFullScreenExclusiveSupported()) {
+        std::printf("Swapchain: exclusive fullscreen %s\n", borderless ? "refused" : "allowed");
+    }
     ImGui::Core::Initialize(instance, window, image_count, surface_format.format);
 }
 
@@ -54,7 +77,10 @@ void Swapchain::Create(u32 width_, u32 height_) {
     const vk::SharingMode sharing_mode =
         exclusive ? vk::SharingMode::eExclusive : vk::SharingMode::eConcurrent;
     const auto format = needs_hdr ? SURFACE_FORMAT_HDR : surface_format;
+    FullScreenExclusiveInfo no_exclusive{};
+    borderless = RefusesExclusiveFullscreen(instance);
     const vk::SwapchainCreateInfoKHR swapchain_info = {
+        .pNext = borderless ? &no_exclusive : nullptr,
         .surface = surface,
         .minImageCount = image_count,
         .imageFormat = format.format,
@@ -105,38 +131,88 @@ void Swapchain::SetHDR(bool hdr) {
                                                  : surface_format.format);
 }
 
-bool Swapchain::AcquireNextImage() {
-    vk::Device device = instance.GetDevice();
-    // sanctuary: the acquire also signals a fence, and this (present) thread waits for it before the
-    // blit is submitted (GitHub #103). The blit's wait on image_acquired then never holds the GPU
-    // queue: everything runs on one queue, and a driver that signals the semaphore only when the
-    // display lets go of the image (V-Sync, on the next refresh) stalled the game's own GPU work
-    // behind the blit. The game waits for that work every frame (readbacks, frames queued, GPU idle),
-    // so each frame took its frame time rounded up to whole refreshes: 60 FPS limit at 75 Hz,
-    // 2 x 13.3 ms = 37.5 FPS.
-    // Only with V-Sync (Fifo): with it off (Mailbox, Immediate) the image is given back without
-    // waiting for a refresh, and the CPU wait only added the present thread's own stalls on the
-    // GPU (or compositor) finishing an earlier frame: lower lows and more hitches (GitHub #106).
-    // SANCTUARY_ACQUIRE_FENCE=0: never (the semaphore alone, as in 0.7.4); =1: also without V-Sync.
-    static const int forced_fence = [] {
+namespace {
+// SANCTUARY_ACQUIRE_FENCE=0: the acquire semaphore alone, as in 0.7.4 (diagnosis only: not safe on
+// AMD's Windows driver, GitHub #110); =1: 0.7.5's order also without V-Sync (acquire when the frame
+// is ready, then wait); otherwise without V-Sync the next image is acquired right after a present.
+int ForcedAcquireFence() {
+    static const int forced = [] {
         const char* env = std::getenv("SANCTUARY_ACQUIRE_FENCE");
         return env && (env[0] == '0' || env[0] == '1') ? env[0] - '0' : -1;
     }();
-    const bool use_fence = forced_fence >= 0 ? forced_fence == 1
-                                             : present_mode == vk::PresentModeKHR::eFifo ||
-                                                   present_mode == vk::PresentModeKHR::eFifoRelaxed;
-    const vk::Fence fence = use_fence ? image_acquired_fences[frame_index] : vk::Fence{};
-    vk::Result result =
-        device.acquireNextImageKHR(swapchain, std::numeric_limits<u64>::max(),
-                                   image_acquired[frame_index], fence, &image_index);
-    if (fence && (result == vk::Result::eSuccess || result == vk::Result::eSuboptimalKHR)) {
-        const auto wait_result = device.waitForFences(fence, true, std::numeric_limits<u64>::max());
-        if (wait_result != vk::Result::eSuccess) {
-            LOG_WARNING(Render_Vulkan, "Failed to wait for an acquired swapchain image: {}",
-                        vk::to_string(wait_result));
-        }
-        (void)device.resetFences(fence);
+    return forced;
+}
+
+bool Acquired(vk::Result result) {
+    return result == vk::Result::eSuccess || result == vk::Result::eSuboptimalKHR;
+}
+} // namespace
+
+vk::Result Swapchain::StartAcquire() {
+    // sanctuary: the acquire also signals a fence, and this (present) thread waits for it on the
+    // CPU before the blit that waits on image_acquired is submitted (GitHub #103, #110).
+    // #103: everything runs on one queue, and a driver that signals the semaphore only when the
+    // display lets go of the image (V-Sync) stalled the game's own GPU work behind the blit's wait.
+    // #110: AMD's driver (PAL: SwapChain::AcquireNextImage, PresentScheduler::SignalOnAcquire,
+    // Queue::WaitQueueSemaphoreInternal) signals the semaphore from an internal queue only after the
+    // image's previous present is done. A queue that waits on a semaphore whose signal is not
+    // submitted yet is "stalled": the driver keeps every later submission of that queue (all of the
+    // game's GPU work here) in a software batch that another driver thread submits later. 0.7.6
+    // skipped the fence wait without V-Sync, so at 200 FPS (Immediate) the graphics queue went
+    // through that path while the pipeline warm-up ran, and amdvlk64.dll crashed. The fence is
+    // signaled after the semaphore on that same internal queue: once it is, the semaphore's signal
+    // has been submitted and the blit's wait never stalls the queue.
+    // The semaphore must have no wait pending (VUID-vkAcquireNextImageKHR-semaphore-01779). The
+    // frame fences used to guarantee that; an acquire made ahead comes one present earlier.
+    if (const u64 tick = acquire_wait_ticks[frame_index];
+        tick != 0 && acquire_wait_scheduler && !acquire_wait_scheduler->IsFree(tick)) {
+        acquire_wait_scheduler->Wait(tick);
     }
+    const vk::Device device = instance.GetDevice();
+    const bool use_fence = ForcedAcquireFence() != 0;
+    const vk::Fence fence = use_fence ? image_acquired_fences[frame_index] : vk::Fence{};
+    return device.acquireNextImageKHR(swapchain, std::numeric_limits<u64>::max(),
+                                      image_acquired[frame_index], fence, &image_index);
+}
+
+void Swapchain::FinishAcquire(vk::Result result) {
+    if (ForcedAcquireFence() == 0 || !Acquired(result)) {
+        return; // no fence, or nothing acquired: the fence is not signaled
+    }
+    const vk::Device device = instance.GetDevice();
+    const vk::Fence fence = image_acquired_fences[frame_index];
+    const auto wait_result = device.waitForFences(fence, true, std::numeric_limits<u64>::max());
+    if (wait_result != vk::Result::eSuccess) {
+        LOG_WARNING(Render_Vulkan, "Failed to wait for an acquired swapchain image: {}",
+                    vk::to_string(wait_result));
+    }
+    (void)device.resetFences(fence);
+}
+
+void Swapchain::AcquireAhead() {
+    // Without V-Sync only (Mailbox, Immediate): with V-Sync the acquire can block until the next
+    // refresh, and #103's frame pacing was measured with the acquire at the frame. Without it, the
+    // CPU wait for the image right before the blit gave the present thread 26-42 ms stalls
+    // (GitHub #106: earlier GPU or compositor work); acquired one frame earlier, that wait has the
+    // whole frame interval to finish.
+    if (acquired_ahead || needs_recreation || ForcedAcquireFence() >= 0 ||
+        present_mode == vk::PresentModeKHR::eFifo ||
+        present_mode == vk::PresentModeKHR::eFifoRelaxed) {
+        return;
+    }
+    ahead_result = StartAcquire();
+    acquired_ahead = true;
+}
+
+bool Swapchain::AcquireNextImage() {
+    vk::Result result;
+    if (acquired_ahead) {
+        acquired_ahead = false;
+        result = ahead_result;
+    } else {
+        result = StartAcquire();
+    }
+    FinishAcquire(result);
 
     switch (result) {
     case vk::Result::eSuccess:
@@ -174,6 +250,10 @@ bool Swapchain::Present() {
                    vk::to_string(result));
     }
 
+    // sanctuary: the blit that waited on this frame's acquire semaphore was the last submission.
+    if (acquire_wait_scheduler) {
+        acquire_wait_ticks[frame_index] = acquire_wait_scheduler->CurrentTick() - 1;
+    }
     frame_index = (frame_index + 1) % image_count;
 
     return !needs_recreation;
@@ -240,15 +320,23 @@ void Swapchain::FindPresentMode() {
 }
 
 void Swapchain::UpdateVsync() {
-    if (SanctuarySettings::Get().vsync == vsync) {
+    // sanctuary: a Display mode change to or from Fullscreen also rebuilds the swapchain, so the
+    // exclusive-fullscreen permission follows it even when the window size stays the same.
+    const bool vsync_changed = SanctuarySettings::Get().vsync != vsync;
+    if (!vsync_changed && RefusesExclusiveFullscreen(instance) == borderless) {
         return;
     }
     if (const auto result = instance.GetDevice().waitIdle(); result != vk::Result::eSuccess) {
         LOG_WARNING(Render_Vulkan, "Failed to wait for the device before a VSync change: {}",
                     vk::to_string(result));
     }
-    FindPresentMode();
+    if (vsync_changed) {
+        FindPresentMode();
+    }
     Recreate(width, height);
+    if (instance.IsFullScreenExclusiveSupported()) {
+        std::printf("Swapchain: exclusive fullscreen %s\n", borderless ? "refused" : "allowed");
+    }
 }
 
 void Swapchain::SetSurfaceProperties() {
@@ -286,6 +374,12 @@ void Swapchain::SetSurfaceProperties() {
 
 void Swapchain::Destroy() {
     vk::Device device = instance.GetDevice();
+    if (acquired_ahead) {
+        // sanctuary: the image stays acquired (destroying the swapchain releases it); its fence
+        // must be signaled before the fence and semaphore are destroyed.
+        acquired_ahead = false;
+        FinishAcquire(ahead_result);
+    }
     const auto wait_result = device.waitIdle();
     if (wait_result != vk::Result::eSuccess) {
         LOG_WARNING(Render_Vulkan, "Failed to wait for device to become idle: {}",
@@ -336,6 +430,9 @@ void Swapchain::RefreshSemaphores() {
         semaphore = sem;
     }
 
+    // sanctuary: the image count can change with the swapchain; frame_index indexes these.
+    frame_index = 0;
+    acquire_wait_ticks.assign(image_count, 0);
     image_acquired_fences.resize(image_count);
     for (vk::Fence& fence : image_acquired_fences) {
         auto [fence_result, created] = device.createFence({});

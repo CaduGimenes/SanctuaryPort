@@ -343,7 +343,8 @@ mod tests {
         // A parked key is not written; the upscaler and its preset are shown, so they are.
         assert!(!out.contains_key("object_motion"));
         assert!(out.contains_key("upscaler") && out.contains_key("preset"));
-        assert_eq!(out.len(), 59); // Includes GTAO, MSAA samples and the Effects switches.
+        // Includes GTAO, MSAA samples, the Effects switches and the wheel turn speed.
+        assert_eq!(out.len(), 60);
         assert_eq!(out.keys().next().unwrap(), "display_mode");
     }
 

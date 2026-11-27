@@ -109,7 +109,8 @@ Instance::Instance(s32 index, bool validation)
 Instance::Instance(const Frontend::WindowSystemInfo& window_info, s32 physical_device_index,
                    bool enable_validation, bool enable_crash_diagnostic)
     : instance{CreateInstance(window_info.type, enable_validation, enable_crash_diagnostic)},
-      physical_devices{EnumeratePhysicalDevices(instance)} {
+      physical_devices{EnumeratePhysicalDevices(instance)},
+      windows_surface{window_info.type == Frontend::WindowSystemType::Windows} {
     if (enable_validation) {
         debug_callback = CreateDebugCallback(*instance);
     }
@@ -358,6 +359,13 @@ bool Instance::CreateDevice() {
         feature_chain.get<vk::PhysicalDevicePipelineBinaryFeaturesKHR>().pipelineBinaries &&
         add_extension(VK_KHR_PIPELINE_BINARY_EXTENSION_NAME);
     maintenance_8 = add_extension(VK_KHR_MAINTENANCE_8_EXTENSION_NAME);
+    // sanctuary: with it a borderless window can refuse exclusive fullscreen, which NVIDIA's
+    // Windows driver otherwise picks for a window that covers the screen (GitHub #109). The name is
+    // spelled out: its header (vulkan_win32.h) is only included by vk_platform.cpp.
+    full_screen_exclusive =
+        windows_surface &&
+        IsInstanceExtensionAvailable(VK_KHR_GET_SURFACE_CAPABILITIES_2_EXTENSION_NAME) &&
+        add_extension("VK_EXT_full_screen_exclusive");
     attachment_feedback_loop = add_extension(VK_EXT_ATTACHMENT_FEEDBACK_LOOP_LAYOUT_EXTENSION_NAME);
     if (attachment_feedback_loop) {
         attachment_feedback_loop =

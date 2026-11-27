@@ -5,7 +5,8 @@
  *   WASD left stick, arrow keys right stick, Space Cross, LShift Circle,
  *   E Square, Q Triangle, 1 L1, 3 R1, R L2, F R2, Z L3, C R3,
  *   Enter Options, Tab left touchpad (photo mode), Backspace right touchpad (pause menu),
- *   IJKL d-pad (I up, K down, J left, L right).
+ *   IJKL d-pad (I up, K down, J left, L right),
+ *   mouse wheel down / up turns the left stick clockwise / counter-clockwise (radial menus, turn_wheel).
  * SANCTUARY_KEY_MAP also takes the mouse: Mouse Left, Mouse Right, Mouse Middle, Mouse Back,
  * Mouse Forward, Wheel Up and Wheel Down (see mouse_names). */
 #define _GNU_SOURCE
@@ -39,7 +40,9 @@ enum {
      * stick (move_* left stick, look_* right stick). */
     MOVE_UP=0x400000, MOVE_DOWN=0x800000, MOVE_LEFT=0x1000000, MOVE_RIGHT=0x2000000,
     LOOK_UP=0x4000000, LOOK_DOWN=0x8000000, LOOK_LEFT=0x10000000, LOOK_RIGHT=0x20000000,
-    STICK_KEYS=MOVE_UP|MOVE_DOWN|MOVE_LEFT|MOVE_RIGHT|LOOK_UP|LOOK_DOWN|LOOK_LEFT|LOOK_RIGHT,
+    /* Keys that turn the left stick around a circle, for the radial menus (turn_wheel). */
+    WHEEL_CW=0x40000, WHEEL_CCW=0x80000, WHEEL_KEYS=WHEEL_CW|WHEEL_CCW,
+    STICK_KEYS=MOVE_UP|MOVE_DOWN|MOVE_LEFT|MOVE_RIGHT|LOOK_UP|LOOK_DOWN|LOOK_LEFT|LOOK_RIGHT|WHEEL_KEYS,
 };
 typedef struct { uint16_t x, y; uint8_t id, reserve[3]; } PadTouch;
 typedef struct {
@@ -293,7 +296,8 @@ static SDL_Gamepad *extra_gamepad(int user) { refresh_extra_pads(); return extra
  * alternative keys).
  * The keyboard map also takes the stick directions, move_up/down/left/right (left stick, WASD) and
  * look_up/down/left/right (right stick, arrow keys): a remapped direction no longer follows its
- * default key (#105: the arrows kept moving the right stick whatever keys were chosen).
+ * default key (#105: the arrows kept moving the right stick whatever keys were chosen), and
+ * wheel_cw/wheel_ccw, the keys that turn the left stick around a radial menu (turn_wheel, #112).
  * touchpad_left (alias touchpad) and touchpad_right are the two sides of the touchpad click:
  * photo mode and the pause menu. Back/View (Share on a DualSense) is the right click, and with
  * L1 held the left one. Gamepad sticks, triggers, the real touchpad click and the overlay shortcuts are
@@ -305,7 +309,12 @@ static const struct { const char *name; uint32_t ps; } ps_names[]={
     {"up",BTN_UP}, {"down",BTN_DOWN}, {"left",BTN_LEFT}, {"right",BTN_RIGHT},
     {"move_up",MOVE_UP}, {"move_down",MOVE_DOWN}, {"move_left",MOVE_LEFT}, {"move_right",MOVE_RIGHT},
     {"look_up",LOOK_UP}, {"look_down",LOOK_DOWN}, {"look_left",LOOK_LEFT}, {"look_right",LOOK_RIGHT},
+    {"wheel_cw",WHEEL_CW}, {"wheel_ccw",WHEEL_CCW},
 };
+/* Mouse sources of the keyboard map, numbered above every SDL scancode. Buttons are sampled like
+ * keys; the wheel has no held state, so each notch becomes a short press (WHEEL_PRESS_US down,
+ * then WHEEL_GAP_US up) that the game sees across several reads. */
+enum { MOUSE_LEFT=0x10000, MOUSE_RIGHT, MOUSE_MIDDLE, MOUSE_BACK, MOUSE_FORWARD, WHEEL_UP, WHEEL_DOWN };
 typedef struct { int source; uint32_t ps; } ButtonSource;
 /* Room for every button and stick direction of the keyboard with a main key and two alternatives. */
 typedef struct { ButtonSource entries[96]; size_t count; } ButtonMap;
@@ -327,7 +336,8 @@ static ButtonMap key_map={{
     {SDL_SCANCODE_I,BTN_UP}, {SDL_SCANCODE_K,BTN_DOWN}, {SDL_SCANCODE_J,BTN_LEFT}, {SDL_SCANCODE_L,BTN_RIGHT},
     {SDL_SCANCODE_W,MOVE_UP}, {SDL_SCANCODE_S,MOVE_DOWN}, {SDL_SCANCODE_A,MOVE_LEFT}, {SDL_SCANCODE_D,MOVE_RIGHT},
     {SDL_SCANCODE_UP,LOOK_UP}, {SDL_SCANCODE_DOWN,LOOK_DOWN}, {SDL_SCANCODE_LEFT,LOOK_LEFT}, {SDL_SCANCODE_RIGHT,LOOK_RIGHT},
-},25};
+    {WHEEL_DOWN,WHEEL_CW}, {WHEEL_UP,WHEEL_CCW},
+},27};
 
 static char *trim(char *text) {
     while (*text==' ' || *text=='\t') ++text;
@@ -336,10 +346,6 @@ static char *trim(char *text) {
     return text;
 }
 
-/* Mouse sources of the keyboard map, numbered above every SDL scancode. Buttons are sampled like
- * keys; the wheel has no held state, so each notch becomes a short press (WHEEL_PRESS_US down,
- * then WHEEL_GAP_US up) that the game sees across several reads. */
-enum { MOUSE_LEFT=0x10000, MOUSE_RIGHT, MOUSE_MIDDLE, MOUSE_BACK, MOUSE_FORWARD, WHEEL_UP, WHEEL_DOWN };
 enum { WHEEL_PRESS_US=60000, WHEEL_GAP_US=40000, WHEEL_MAX_PENDING=4 };
 static const struct { const char *name; int source; } mouse_names[]={
     {"Mouse Left",MOUSE_LEFT}, {"Mouse Right",MOUSE_RIGHT}, {"Mouse Middle",MOUSE_MIDDLE},
@@ -421,6 +427,7 @@ static int apply_button_map(ButtonMap *map, const char *spec, bool keyboard) {
     char copy[4096]; /* every keyboard row with two alternatives fits */
     snprintf(copy,sizeof(copy),"%s",spec);
     int used=0;
+    uint32_t named=0; /* the buttons and directions this map names */
     char *entry=copy;
     while (entry) {
         char *next=strchr(entry,',');
@@ -441,6 +448,7 @@ static int apply_button_map(ButtonMap *map, const char *spec, bool keyboard) {
             size_t kept=0;
             for (size_t i=0;i<map->count;++i) if (map->entries[i].ps!=ps) map->entries[kept++]=map->entries[i];
             map->count=kept;
+            named|=ps;
             ++used;
             continue;
         }
@@ -465,9 +473,17 @@ static int apply_button_map(ButtonMap *map, const char *spec, bool keyboard) {
             printf("Runtime: pad map: ignored '%s=%s'\n",button,name);
             continue;
         }
+        /* The wheel-turn keys came after the mouse wheel could be bound: a wheel the map gives to a
+         * button no longer turns the stick too, unless the map names the turn keys as well. */
         size_t kept=0;
-        for (size_t i=0;i<map->count;++i) if (map->entries[i].ps!=ps) map->entries[kept++]=map->entries[i];
+        for (size_t i=0;i<map->count;++i) {
+            const ButtonSource *e=&map->entries[i];
+            bool taken=false;
+            for (int k=0;k<found && (e->ps & WHEEL_KEYS) && !(e->ps & named);++k) taken|=e->source==sources[k];
+            if (e->ps!=ps && !taken) map->entries[kept++]=*e;
+        }
         map->count=kept;
+        named|=ps;
         for (int i=0;i<found;++i)
             if (map->count<sizeof(map->entries)/sizeof(*map->entries)) map->entries[map->count++]=(ButtonSource){sources[i],ps};
         ++used;
@@ -496,10 +512,11 @@ static void key_sticks(PadData *d, uint32_t held) {
 }
 static void neutral(PadData *d);
 static void read_gamepad(SDL_Gamepad *g, PadData *d);
-/* The buttons of the last sample_host that only the keyboard or the mouse pressed. */
-static uint32_t host_keyboard_buttons;
+/* The buttons of the last sample_host that only the keyboard or the mouse pressed, and the
+ * wheel-turn keys it found held. */
+static uint32_t host_keyboard_buttons, host_wheel_keys;
 static void sample_host(PadData *d) {
-    host_keyboard_buttons=0;
+    host_keyboard_buttons=0; host_wheel_keys=0;
     neutral(d);
     SDL_Gamepad *g=current_gamepad();
     watch_wheel();
@@ -517,6 +534,7 @@ static void sample_host(PadData *d) {
     for (size_t i=0;i<key_map.count;++i)
         if (source_down(key_map.entries[i].source,k,mouse,wheel)) held|=key_map.entries[i].ps;
     d->buttons|=held & ~STICK_KEYS;
+    host_wheel_keys=held & WHEEL_KEYS;
     /* A keyboard key mapped to L2/R2 is a binary press; the gamepad trigger stays analog. */
     const uint32_t from_keyboard=d->buttons & ~pad_buttons;
     host_keyboard_buttons=from_keyboard;
@@ -561,7 +579,8 @@ static void read_gamepad(SDL_Gamepad *g, PadData *d) {
 
 /* SANCTUARY_PAD_FILE=<file>: scripted input for automated runs. The file holds whitespace-separated
  * tokens, re-read when it changes: button names (cross circle square triangle l1 r1 l2 r2 l3 r3
- * options touchpad touchpad_left touchpad_right up down left right) are held while listed;
+ * options touchpad touchpad_left touchpad_right up down left right, and wheel_cw wheel_ccw) are held
+ * while listed;
  * touchpad is the left side; lx= ly= rx= ry= (0..255) override the sticks; shot saves a
  * screenshot (as F12, without taking the focus); tokens after p2, p3 or p4 are that player's (the
  * user then stays logged in, as with a further gamepad). An empty file releases everything. */
@@ -681,6 +700,43 @@ static void replay_sample(PadData *d) {
     d->left_x=s->axes[0]; d->left_y=s->axes[1]; d->right_x=s->axes[2]; d->right_y=s->axes[3];
     d->l2=s->l2; d->r2=s->r2;
 }
+/* The radial menus (the equipment and skill wheels) pick a slot by the left stick's angle: 14
+ * slots of about 26 degrees on the equipment wheel, 11 of about 33 on the skill wheel, so the 8
+ * directions of WASD miss some of them (GitHub #112). The game keeps the slot the stick last
+ * pointed at once the stick is back at rest, so two keys turn the stick around the circle:
+ * wheel_cw clockwise, wheel_ccw counter-clockwise. Each press turns it WHEEL_STEP_DEG from where
+ * the stick last pointed (smaller than any slot, so a press never skips one); held past
+ * WHEEL_REPEAT_US it keeps turning at the menu's speed (degrees per second), at most
+ * WHEEL_MAX_STEP_US worth per read. While a key is held the stick points at full tilt at that
+ * angle; both held hold it still. `keys`: the wheel-turn keys held. */
+enum { WHEEL_STEP_DEG=15, WHEEL_REPEAT_US=300000, WHEEL_MAX_STEP_US=50000, WHEEL_FOLLOW_TILT=64 };
+static const double WHEEL_PI=3.14159265358979323846;
+static struct { double angle; uint64_t last, pressed; uint32_t held; } wheel_turn;
+static void turn_wheel(PadData *d, uint32_t keys) {
+    const uint64_t now=d->timestamp;
+    keys&=WHEEL_KEYS;
+    if (!keys) {
+        /* Not turning: follow the stick (keys, gamepad or pad file), so a turn starts from the slot
+         * the game shows. */
+        const int x=d->left_x-128, y=d->left_y-128;
+        if (x*x+y*y>=WHEEL_FOLLOW_TILT*WHEEL_FOLLOW_TILT) wheel_turn.angle=atan2(x,-y)*180.0/WHEEL_PI;
+        wheel_turn.held=0;
+        return;
+    }
+    const int dir=((keys & WHEEL_CW) ? 1 : 0)-((keys & WHEEL_CCW) ? 1 : 0);
+    if (keys & ~wheel_turn.held) { wheel_turn.angle+=dir*WHEEL_STEP_DEG; wheel_turn.pressed=now; }
+    else if (now-wheel_turn.pressed>=WHEEL_REPEAT_US) {
+        const uint64_t step=now-wheel_turn.last<WHEEL_MAX_STEP_US ? now-wheel_turn.last : WHEEL_MAX_STEP_US;
+        wheel_turn.angle+=dir*sanctuarygpu_wheel_turn_speed()*(double)step/1e6;
+    }
+    wheel_turn.held=keys; wheel_turn.last=now;
+    wheel_turn.angle=fmod(wheel_turn.angle,360.0);
+    if (wheel_turn.angle<0) wheel_turn.angle+=360.0;
+    const double a=wheel_turn.angle*WHEEL_PI/180.0, x=sin(a), y=-cos(a);
+    d->left_x=(uint8_t)lround(128+x*(x<0 ? 128 : 127));
+    d->left_y=(uint8_t)lround(128+y*(y<0 ? 128 : 127));
+}
+
 /* Mouse aim while L2 is held, in the menu's right stick style.
  * Relative: while L2 is held, moving the mouse pushes the right stick the way it moves, as far as
  * it moves fast (full tilt at AIM_FULL_PX_PER_MS); when the mouse stops the stick is left alone
@@ -762,6 +818,8 @@ static void sample(PadData *d) {
     if (injected.buttons & BTN_R2) d->r2=255;
     uint8_t *axes[4]={&d->left_x,&d->left_y,&d->right_x,&d->right_y};
     for (int i=0;i<4;++i) if (injected.stick[i]>=0) *axes[i]=(uint8_t)injected.stick[i];
+    turn_wheel(d,host_wheel_keys|injected.buttons); /* the pad file's wheel_cw/wheel_ccw too */
+    d->buttons&=~STICK_KEYS;
     apply_mouse_aim(d);
     note_pause_key(d,host_keyboard_buttons);
     play_click(d);
@@ -780,7 +838,7 @@ static void sample_extra(int user, PadData *d) {
     if (sanctuarygpu_overlay_captures_input()) return;
     load_button_maps();
     read_gamepad(g,d);
-    d->buttons|=in->buttons;
+    d->buttons|=in->buttons & ~STICK_KEYS;
     if (d->buttons & (CLICK_LEFT|CLICK_RIGHT)) d->buttons|=BTN_TOUCHPAD; /* no touch surface to aim */
     d->buttons&=~(CLICK_LEFT|CLICK_RIGHT);
     if (in->buttons & BTN_L2) d->l2=255;

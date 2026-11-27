@@ -1191,20 +1191,8 @@ pub fn backup_is_for_another_game(current: &str, titles: &BTreeSet<String>) -> b
     !titles.is_empty() && !titles.iter().any(|t| same(t))
 }
 
-/// The system language codes and the language pack (CPK prefix) each one needs, in the order
-/// run.py falls back when the chosen pack is missing (scripts: `D3_LANGUAGE_PACKS`).
-const LANGUAGE_PACKS: [(&str, &str); 10] = [
-    ("17", "ptBR"),
-    ("1", "enUS"),
-    ("20", "esMX"),
-    ("2", "frFR"),
-    ("16", "plPL"),
-    ("8", "ruRU"),
-    ("3", "esES"),
-    ("4", "deDE"),
-    ("5", "itIT"),
-    ("18", "enGB"),
-];
+// The system language codes and the pack each one needs, in run.py's fallback order.
+use crate::core::trophies::LANGUAGE_PACKS;
 
 /// The Game language list: only the languages whose pack the game (or its update) folder has,
 /// all of them while no folder is set; and the one run.py will use when the saved choice has

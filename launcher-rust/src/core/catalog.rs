@@ -325,7 +325,7 @@ pub static SETTINGS: &[Setting] = &[
     app("tristram_end", Kind::Text, Text(""), None),
     app("controls", Json, Object, None),
     app("pad_style", Kind::Text, Text("playstation"), None),
-    app("controls_layout", Kind::Int, Int(5), None),
+    app("controls_layout", Kind::Int, Int(6), None),
     // SanctuaryPort: a legacy value only; the choice is sanctuary.ini's (run.py reads it).
     app("glyph_style", Pick(GLYPH_STYLES), Text("off"), None),
     app_unwritten("launcher_effects", Flag, Bool(true)),
@@ -420,6 +420,10 @@ pub static SETTINGS: &[Setting] = &[
     ini("pc_render_targets", Flag, Bool(false), true, 59),
     ini("coop_full_effects", Flag, Bool(false), true, 60),
     ini("pc_camera_zoom", Flag, Bool(false), true, 61),
+    // SanctuaryPort: Controls > Keyboard & mouse > Wheel turn speed (GitHub #112): degrees per
+    // second the wheel-turn keys turn the left stick while held (runtime_pad.c), also in the
+    // in-game menu.
+    ini("wheel_turn_speed", Kind::Int, Int(120), true, 62),
     ini("free_camera", Flag, Bool(false), true, 35),
     // The in-game menu's cheats and multipliers (#1135), read by the game from sanctuary.ini.
     ini("cheat_health", Flag, Bool(false), true, 36),
@@ -583,14 +587,15 @@ mod tests {
                 "cheat_very_hard"
             ]
         );
-        assert_eq!(keys.last(), Some(&"pc_camera_zoom"));
+        assert_eq!(keys.last(), Some(&"wheel_turn_speed"));
         let shown: Vec<_> = rows.iter().filter(|s| s.written).map(|s| s.key).collect();
         assert_eq!(shown, SHOWN_INI_KEYS.iter().copied().collect::<Vec<_>>());
     }
 
     #[test]
-    fn shown_ini_keys_are_the_58_controls_of_the_window() {
-        assert_eq!(SHOWN_INI_KEYS.len(), 58); // Includes GTAO, Game MSAA and the Effects switches.
+    fn shown_ini_keys_are_the_59_controls_of_the_window() {
+        // Includes GTAO, Game MSAA, the Effects switches and the wheel turn speed.
+        assert_eq!(SHOWN_INI_KEYS.len(), 59);
         for seeded in ["monitor", "hdr", "glyph_style"] {
             assert!(SHOWN_INI_KEYS.contains(&seeded), "{seeded}");
         }
@@ -657,7 +662,7 @@ mod tests {
     fn text_reads_the_default_of_an_absent_key() {
         let mut s = Settings(serde_json::Map::new());
         assert_eq!(s.text("stream_memory"), "cached");
-        assert_eq!(s.text("controls_layout"), "5");
+        assert_eq!(s.text("controls_layout"), "6");
         s.set("stream_memory", json!("host"));
         assert_eq!(s.text("stream_memory"), "host");
     }

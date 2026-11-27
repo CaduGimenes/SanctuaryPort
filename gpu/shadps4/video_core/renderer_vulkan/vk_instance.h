@@ -153,6 +153,12 @@ public:
         return vk12_features.shaderInt8;
     }
 
+    /// sanctuary: VK_EXT_full_screen_exclusive is enabled (Windows): the swapchain can tell the
+    /// driver not to turn a borderless window into exclusive fullscreen (GitHub #109).
+    bool IsFullScreenExclusiveSupported() const {
+        return full_screen_exclusive;
+    }
+
     /// Returns true if VK_KHR_maintenance8 is supported
     bool IsMaintenance8Supported() const {
         return maintenance_8;
@@ -598,6 +604,8 @@ private:
     bool pipeline_binaries{};
     vk::PipelineBinaryKeyKHR pipeline_binary_global_key{};
     bool maintenance_8{};
+    bool windows_surface{};       ///< sanctuary: the instance presents to a Win32 window
+    bool full_screen_exclusive{}; ///< sanctuary: VK_EXT_full_screen_exclusive (Windows only)
     bool attachment_feedback_loop{};
     bool image_2d_view_of_3d{};
     bool image_view_min_lod{};

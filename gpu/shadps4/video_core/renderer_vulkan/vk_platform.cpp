@@ -156,6 +156,13 @@ static auto GetLayerExtensions(std::vector<const char*>&& extensions,
     return extensions;
 }
 
+bool IsInstanceExtensionAvailable(const char* name) {
+    const auto [result, properties] = vk::enumerateInstanceExtensionProperties();
+    return result == vk::Result::eSuccess &&
+           std::any_of(properties.begin(), properties.end(),
+                       [name](const auto& prop) { return std::strcmp(name, prop.extensionName) == 0; });
+}
+
 std::vector<const char*> GetInstanceExtensions(Frontend::WindowSystemType window_type,
                                                bool enable_debug_utils) {
     const auto [properties_result, properties] = vk::enumerateInstanceExtensionProperties();
@@ -175,6 +182,8 @@ std::vector<const char*> GetInstanceExtensions(Frontend::WindowSystemType window
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
     case Frontend::WindowSystemType::Windows:
         extensions.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
+        // sanctuary: needed by VK_EXT_full_screen_exclusive (borderless stays a window, GitHub #109).
+        extensions.push_back(VK_KHR_GET_SURFACE_CAPABILITIES_2_EXTENSION_NAME);
         break;
 #elif defined(VK_USE_PLATFORM_XLIB_KHR) || defined(VK_USE_PLATFORM_WAYLAND_KHR)
     case Frontend::WindowSystemType::X11:

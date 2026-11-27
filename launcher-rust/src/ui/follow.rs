@@ -74,7 +74,7 @@ const TABLE: [Row; 7] = [
     row(View::Aspect, &["render_resolution"], true, false),
     row(
         View::Trophies,
-        &["game_dir", "update_dir", "user_dir"],
+        &["game_dir", "update_dir", "user_dir", "language"],
         false,
         false,
     ),

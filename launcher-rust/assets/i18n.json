@@ -2799,7 +2799,11 @@
    "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "Para relatar um problema: ligue a opção acima, jogue até acontecer e anexe o last_run.log.",
    "GitHub limits update checks; try again in {} minutes.": "O GitHub limita as verificações de atualização; tente de novo em {} minutos.",
    "Detailed performance log": "Log detalhado de desempenho",
-   "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "Para relatar engasgos: tempo dos quadros e memória de vídeo a cada 5 s, gravados no last_run.log."
+   "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "Para relatar engasgos: tempo dos quadros e memória de vídeo a cada 5 s, gravados no last_run.log.",
+   "Turn wheel clockwise": "Girar a roda no sentido horário",
+   "Turn wheel counter-clockwise": "Girar a roda no sentido anti-horário",
+   "Wheel turn speed": "Velocidade de giro da roda",
+   "How fast the Turn wheel keys move the selection around the game's wheels (equipment, skills) while held. A short press, or one notch of the mouse wheel, moves it one small step, so every slot can be reached. Also in the in-game menu.": "Velocidade com que as teclas de girar a roda movem a seleção nas rodas do jogo (equipamento, habilidades) enquanto seguradas. Um toque curto, ou um clique da roda do mouse, move um pequeno passo, então todos os espaços podem ser alcançados. Também no menu do jogo."
   },
   "es": {
    "The launcher cannot write to {}, so it cannot replace itself there. Open the releases page to download the new version by hand?": "El launcher no puede escribir en {}, así que no puede reemplazarse ahí. ¿Abrir la página de releases para descargar la versión nueva a mano?",
@@ -3397,7 +3401,11 @@
    "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "Para informar de un problema: activa la opción de arriba, juega hasta que ocurra y adjunta last_run.log.",
    "GitHub limits update checks; try again in {} minutes.": "GitHub limita las comprobaciones de actualizaciones; inténtalo de nuevo en {} minutos.",
    "Detailed performance log": "Registro detallado de rendimiento",
-   "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "Para informar de tirones: tiempo de fotogramas y memoria de vídeo cada 5 s, en last_run.log."
+   "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "Para informar de tirones: tiempo de fotogramas y memoria de vídeo cada 5 s, en last_run.log.",
+   "Turn wheel clockwise": "Girar la rueda en sentido horario",
+   "Turn wheel counter-clockwise": "Girar la rueda en sentido antihorario",
+   "Wheel turn speed": "Velocidad de giro de la rueda",
+   "How fast the Turn wheel keys move the selection around the game's wheels (equipment, skills) while held. A short press, or one notch of the mouse wheel, moves it one small step, so every slot can be reached. Also in the in-game menu.": "Velocidad a la que las teclas de girar la rueda mueven la selección por las ruedas del juego (equipo, habilidades) mientras se mantienen pulsadas. Una pulsación corta, o un paso de la rueda del ratón, la mueve un pequeño paso, así se llega a todas las ranuras. También en el menú del juego."
   },
   "pl": {
    "Polish": "Polski",
@@ -3849,7 +3857,11 @@
    "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "Aby zgłosić problem: włącz opcję powyżej, graj, aż się pojawi, i dołącz last_run.log.",
    "GitHub limits update checks; try again in {} minutes.": "GitHub ogranicza sprawdzanie aktualizacji; spróbuj ponownie za {} min.",
    "Detailed performance log": "Szczegółowy log wydajności",
-   "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "Do zgłoszeń przycięć: czas klatek i pamięć wideo co 5 s, zapisywane w last_run.log."
+   "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "Do zgłoszeń przycięć: czas klatek i pamięć wideo co 5 s, zapisywane w last_run.log.",
+   "Turn wheel clockwise": "Obróć koło zgodnie z ruchem wskazówek zegara",
+   "Turn wheel counter-clockwise": "Obróć koło przeciwnie do ruchu wskazówek zegara",
+   "Wheel turn speed": "Szybkość obracania koła",
+   "How fast the Turn wheel keys move the selection around the game's wheels (equipment, skills) while held. A short press, or one notch of the mouse wheel, moves it one small step, so every slot can be reached. Also in the in-game menu.": "Jak szybko klawisze obracania koła przesuwają zaznaczenie po kołach gry (ekwipunek, umiejętności), gdy są przytrzymane. Krótkie naciśnięcie lub jeden skok kółka myszy przesuwa je o mały krok, więc można wybrać każde miejsce. Również w menu w grze."
   },
   "fr": {
    "Polish": "Polonais",
@@ -4050,7 +4062,11 @@
    "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "Pour signaler un problème : activez l'option ci-dessus, jouez jusqu'à ce qu'il survienne et joignez last_run.log.",
    "GitHub limits update checks; try again in {} minutes.": "GitHub limite les vérifications de mise à jour ; réessayez dans {} minutes.",
    "Detailed performance log": "Journal de performances détaillé",
-   "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "Pour signaler des saccades : temps des images et mémoire vidéo toutes les 5 s, dans last_run.log."
+   "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "Pour signaler des saccades : temps des images et mémoire vidéo toutes les 5 s, dans last_run.log.",
+   "Turn wheel clockwise": "Tourner la roue dans le sens horaire",
+   "Turn wheel counter-clockwise": "Tourner la roue dans le sens antihoraire",
+   "Wheel turn speed": "Vitesse de rotation de la roue",
+   "How fast the Turn wheel keys move the selection around the game's wheels (equipment, skills) while held. A short press, or one notch of the mouse wheel, moves it one small step, so every slot can be reached. Also in the in-game menu.": "Vitesse à laquelle les touches de rotation font tourner la sélection sur les roues du jeu (équipement, compétences) tant qu'elles sont maintenues. Un appui bref, ou un cran de la molette de la souris, la déplace d'un petit pas : chaque emplacement est accessible. Aussi dans le menu en jeu."
   },
   "de": {
    "Polish": "Polnisch",
@@ -4242,7 +4258,11 @@
    "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "Um ein Problem zu melden: Schalter oben einschalten, spielen, bis es auftritt, last_run.log anhängen.",
    "GitHub limits update checks; try again in {} minutes.": "GitHub begrenzt die Suche nach Updates; versuche es in {} Minuten erneut.",
    "Detailed performance log": "Ausführliches Leistungsprotokoll",
-   "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "Für Ruckler-Berichte: Bildzeiten und Videospeicher alle 5 s, gespeichert in last_run.log."
+   "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "Für Ruckler-Berichte: Bildzeiten und Videospeicher alle 5 s, gespeichert in last_run.log.",
+   "Turn wheel clockwise": "Rad im Uhrzeigersinn drehen",
+   "Turn wheel counter-clockwise": "Rad gegen den Uhrzeigersinn drehen",
+   "Wheel turn speed": "Drehgeschwindigkeit des Rads",
+   "How fast the Turn wheel keys move the selection around the game's wheels (equipment, skills) while held. A short press, or one notch of the mouse wheel, moves it one small step, so every slot can be reached. Also in the in-game menu.": "Wie schnell die Rad-Drehtasten die Auswahl auf den Rädern des Spiels (Ausrüstung, Fertigkeiten) bewegen, solange sie gehalten werden. Ein kurzer Druck oder eine Raste des Mausrads bewegt sie einen kleinen Schritt, so ist jeder Platz erreichbar. Auch im Spielmenü."
   },
   "it": {
    "Polish": "Polacco",
@@ -4432,7 +4452,11 @@
    "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "Per segnalare un problema: attiva l'opzione sopra, gioca finché accade e allega last_run.log.",
    "GitHub limits update checks; try again in {} minutes.": "GitHub limita i controlli degli aggiornamenti; riprova tra {} minuti.",
    "Detailed performance log": "Log dettagliato delle prestazioni",
-   "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "Per segnalare scatti: tempi dei fotogrammi e memoria video ogni 5 s, salvati in last_run.log."
+   "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "Per segnalare scatti: tempi dei fotogrammi e memoria video ogni 5 s, salvati in last_run.log.",
+   "Turn wheel clockwise": "Ruota la ruota in senso orario",
+   "Turn wheel counter-clockwise": "Ruota la ruota in senso antiorario",
+   "Wheel turn speed": "Velocità di rotazione della ruota",
+   "How fast the Turn wheel keys move the selection around the game's wheels (equipment, skills) while held. A short press, or one notch of the mouse wheel, moves it one small step, so every slot can be reached. Also in the in-game menu.": "Quanto velocemente i tasti di rotazione spostano la selezione sulle ruote del gioco (equipaggiamento, abilità) mentre sono premuti. Una pressione breve, o uno scatto della rotellina del mouse, la sposta di un piccolo passo, così ogni slot è raggiungibile. Anche nel menu di gioco."
   },
   "tr": {
    "Polish": "Lehçe",
@@ -4620,7 +4644,11 @@
    "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "Sorun bildirmek için: yukarıdaki seçeneği açın, sorun olana kadar oynayın ve last_run.log ekleyin.",
    "GitHub limits update checks; try again in {} minutes.": "GitHub güncelleme denetimlerini sınırlıyor; {} dakika sonra yeniden deneyin.",
    "Detailed performance log": "Ayrıntılı performans günlüğü",
-   "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "Takılma raporları için: kare süreleri ve video belleği her 5 sn'de last_run.log'a yazılır."
+   "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "Takılma raporları için: kare süreleri ve video belleği her 5 sn'de last_run.log'a yazılır.",
+   "Turn wheel clockwise": "Çarkı saat yönünde döndür",
+   "Turn wheel counter-clockwise": "Çarkı saat yönünün tersine döndür",
+   "Wheel turn speed": "Çark dönüş hızı",
+   "How fast the Turn wheel keys move the selection around the game's wheels (equipment, skills) while held. A short press, or one notch of the mouse wheel, moves it one small step, so every slot can be reached. Also in the in-game menu.": "Çark döndürme tuşları basılı tutulduğunda seçimin oyunun çarklarında (ekipman, yetenekler) ne kadar hızlı ilerleyeceği. Kısa bir basış veya fare tekerleğinin bir adımı onu küçük bir adım ilerletir, böylece her yuvaya ulaşılabilir. Oyun içi menüde de var."
   },
   "ar": {
    "Polish": "البولندية",
@@ -4807,7 +4835,11 @@
    "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "للإبلاغ عن مشكلة: فعّل الخيار أعلاه، والعب حتى تحدث، وأرفق last_run.log.",
    "GitHub limits update checks; try again in {} minutes.": "يحدّ GitHub من عمليات التحقق من التحديثات؛ حاول مجددًا بعد {} دقيقة.",
    "Detailed performance log": "سجل أداء مفصل",
-   "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "لتقارير التقطيع: توقيت الإطارات وذاكرة الفيديو كل 5 ثوانٍ، تُحفظ في last_run.log."
+   "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "لتقارير التقطيع: توقيت الإطارات وذاكرة الفيديو كل 5 ثوانٍ، تُحفظ في last_run.log.",
+   "Turn wheel clockwise": "تدوير العجلة باتجاه عقارب الساعة",
+   "Turn wheel counter-clockwise": "تدوير العجلة عكس اتجاه عقارب الساعة",
+   "Wheel turn speed": "سرعة تدوير العجلة",
+   "How fast the Turn wheel keys move the selection around the game's wheels (equipment, skills) while held. A short press, or one notch of the mouse wheel, moves it one small step, so every slot can be reached. Also in the in-game menu.": "مدى سرعة تحريك مفاتيح تدوير العجلة للتحديد حول عجلات اللعبة (المعدات، المهارات) أثناء الضغط عليها. الضغطة القصيرة، أو نقرة واحدة من عجلة الفأرة، تحركه خطوة صغيرة، لذا يمكن الوصول إلى كل خانة. موجود أيضًا في قائمة اللعبة."
   },
   "zh": {
    "Polish": "波兰语",
@@ -5381,7 +5413,11 @@
    "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "报告问题：打开上面的开关，玩到问题出现，然后附上 last_run.log。",
    "GitHub limits update checks; try again in {} minutes.": "GitHub 限制了更新检查次数；请在 {} 分钟后重试。",
    "Detailed performance log": "详细性能日志",
-   "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "用于报告卡顿：每 5 秒记录帧时间和显存，保存到 last_run.log。"
+   "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "用于报告卡顿：每 5 秒记录帧时间和显存，保存到 last_run.log。",
+   "Turn wheel clockwise": "顺时针转动轮盘",
+   "Turn wheel counter-clockwise": "逆时针转动轮盘",
+   "Wheel turn speed": "轮盘转动速度",
+   "How fast the Turn wheel keys move the selection around the game's wheels (equipment, skills) while held. A short press, or one notch of the mouse wheel, moves it one small step, so every slot can be reached. Also in the in-game menu.": "按住转动轮盘键时，选择在游戏轮盘（装备、技能）上移动的速度。短按一次或鼠标滚轮滚动一格会移动一小步，因此每个栏位都能选到。游戏内菜单中也有此设置。"
   },
   "ja": {
    "Polish": "ポーランド語",
@@ -5569,7 +5605,11 @@
    "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "問題を報告するには：上のスイッチをオンにし、問題が起きるまでプレイして last_run.log を添付してください。",
    "GitHub limits update checks; try again in {} minutes.": "GitHub は更新の確認回数を制限しています。{} 分後にもう一度お試しください。",
    "Detailed performance log": "詳細なパフォーマンスログ",
-   "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "カクつきの報告用：5 秒ごとのフレーム時間とビデオメモリを last_run.log に保存します。"
+   "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "カクつきの報告用：5 秒ごとのフレーム時間とビデオメモリを last_run.log に保存します。",
+   "Turn wheel clockwise": "ホイールを時計回りに回す",
+   "Turn wheel counter-clockwise": "ホイールを反時計回りに回す",
+   "Wheel turn speed": "ホイールの回転速度",
+   "How fast the Turn wheel keys move the selection around the game's wheels (equipment, skills) while held. A short press, or one notch of the mouse wheel, moves it one small step, so every slot can be reached. Also in the in-game menu.": "ホイール回転キーを押し続けたときに、ゲームのホイール（装備、スキル）上で選択が動く速さ。短く押すか、マウスホイールを1目盛り回すと小さく1歩動くので、すべてのスロットを選べます。ゲーム内メニューにもあります。"
   },
   "ko": {
    "Polish": "폴란드어",
@@ -5757,7 +5797,11 @@
    "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "문제를 보고하려면: 위 옵션을 켜고 문제가 생길 때까지 플레이한 뒤 last_run.log를 첨부하세요.",
    "GitHub limits update checks; try again in {} minutes.": "GitHub에서 업데이트 확인 횟수를 제한합니다. {}분 후에 다시 시도하세요.",
    "Detailed performance log": "상세 성능 로그",
-   "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "끊김 보고용: 5초마다 프레임 시간과 비디오 메모리를 last_run.log에 저장합니다."
+   "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "끊김 보고용: 5초마다 프레임 시간과 비디오 메모리를 last_run.log에 저장합니다.",
+   "Turn wheel clockwise": "휠 시계 방향으로 돌리기",
+   "Turn wheel counter-clockwise": "휠 시계 반대 방향으로 돌리기",
+   "Wheel turn speed": "휠 회전 속도",
+   "How fast the Turn wheel keys move the selection around the game's wheels (equipment, skills) while held. A short press, or one notch of the mouse wheel, moves it one small step, so every slot can be reached. Also in the in-game menu.": "휠 회전 키를 누르고 있을 때 게임의 휠(장비, 기술)에서 선택이 움직이는 속도입니다. 짧게 누르거나 마우스 휠을 한 칸 돌리면 작게 한 걸음 움직이므로 모든 칸을 선택할 수 있습니다. 게임 내 메뉴에도 있습니다."
   },
   "id": {
    "Polish": "Polandia",
@@ -6244,7 +6288,11 @@
    "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "Untuk melaporkan masalah: nyalakan opsi di atas, mainkan sampai terjadi, lampirkan last_run.log.",
    "GitHub limits update checks; try again in {} minutes.": "GitHub membatasi pemeriksaan pembaruan; coba lagi dalam {} menit.",
    "Detailed performance log": "Log kinerja terperinci",
-   "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "Untuk laporan patah-patah: waktu frame dan memori video setiap 5 dtk, disimpan ke last_run.log."
+   "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "Untuk laporan patah-patah: waktu frame dan memori video setiap 5 dtk, disimpan ke last_run.log.",
+   "Turn wheel clockwise": "Putar roda searah jarum jam",
+   "Turn wheel counter-clockwise": "Putar roda berlawanan arah jarum jam",
+   "Wheel turn speed": "Kecepatan putar roda",
+   "How fast the Turn wheel keys move the selection around the game's wheels (equipment, skills) while held. A short press, or one notch of the mouse wheel, moves it one small step, so every slot can be reached. Also in the in-game menu.": "Seberapa cepat tombol putar roda menggerakkan pilihan di roda game (perlengkapan, skill) saat ditahan. Tekan singkat, atau satu langkah roda mouse, menggerakkannya satu langkah kecil, jadi setiap slot bisa dicapai. Juga ada di menu dalam game."
   },
   "cs": {
    "Trophies": "Trofeje",
@@ -6790,7 +6838,11 @@
    "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "Pro nahlášení problému: zapněte volbu výše, hrajte, dokud se neobjeví, a přiložte last_run.log.",
    "GitHub limits update checks; try again in {} minutes.": "GitHub omezuje kontroly aktualizací; zkuste to znovu za {} min.",
    "Detailed performance log": "Podrobný log výkonu",
-   "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "Pro hlášení zasekávání: časy snímků a videopaměť každých 5 s, ukládané do last_run.log."
+   "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "Pro hlášení zasekávání: časy snímků a videopaměť každých 5 s, ukládané do last_run.log.",
+   "Turn wheel clockwise": "Otočit kolo po směru hodinových ručiček",
+   "Turn wheel counter-clockwise": "Otočit kolo proti směru hodinových ručiček",
+   "Wheel turn speed": "Rychlost otáčení kola",
+   "How fast the Turn wheel keys move the selection around the game's wheels (equipment, skills) while held. A short press, or one notch of the mouse wheel, moves it one small step, so every slot can be reached. Also in the in-game menu.": "Jak rychle klávesy otáčení kola posouvají výběr po kolech hry (vybavení, dovednosti), když jsou drženy. Krátký stisk nebo jeden krok kolečka myši ho posune o malý krok, takže lze vybrat každé místo. Také v herní nabídce."
   }
  },
  "ru": {
@@ -7346,7 +7398,11 @@
   "To report a problem: turn on the switch above, play until it happens, attach last_run.log.": "Чтобы сообщить о проблеме: включите параметр выше, играйте, пока она не появится, и приложите last_run.log.",
   "GitHub limits update checks; try again in {} minutes.": "GitHub ограничивает проверки обновлений; попробуйте снова через {} мин.",
   "Detailed performance log": "Подробный журнал производительности",
-  "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "Для отчётов о подтормаживаниях: время кадров и видеопамять каждые 5 с, сохраняются в last_run.log."
+  "For stutter reports: frame timing and video memory every 5 s, saved to last_run.log.": "Для отчётов о подтормаживаниях: время кадров и видеопамять каждые 5 с, сохраняются в last_run.log.",
+  "Turn wheel clockwise": "Повернуть колесо по часовой стрелке",
+  "Turn wheel counter-clockwise": "Повернуть колесо против часовой стрелки",
+  "Wheel turn speed": "Скорость поворота колеса",
+  "How fast the Turn wheel keys move the selection around the game's wheels (equipment, skills) while held. A short press, or one notch of the mouse wheel, moves it one small step, so every slot can be reached. Also in the in-game menu.": "Как быстро клавиши поворота колеса двигают выбор по колёсам игры (снаряжение, умения), пока они зажаты. Короткое нажатие или один щелчок колёсика мыши сдвигает его на небольшой шаг, так что можно выбрать любую ячейку. Также в меню игры."
  },
  "windows_languages": {
   "25": "ru",

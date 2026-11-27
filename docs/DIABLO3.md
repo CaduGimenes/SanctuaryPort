@@ -319,9 +319,10 @@ any input, viewport, projection, or device limit does not match.
 Both presets start checking depth history after twelve consecutive evaluations with a compatible
 preset, projection, and sample count. The first cache evaluation builds fresh history. Later
 evaluations can reuse visibility and denoising where every contributing depth sample matches.
-The cache requires the active scene to cover the entire AO target with both dimensions divisible
-by 16. GTAO evaluates all pixels at other sizes, including a 1920×1080 scene, and when the device
-or a history allocation cannot support caching.
+The cache requires the active scene to cover the entire AO target. At sizes that are not multiples
+of 16 (1920×1080) the depth pyramid's texels can come from the neighboring 16×16 tile, so a
+changed tile invalidates one more ring of tiles. GTAO evaluates all pixels for partial viewports
+and when the device or a history allocation cannot support caching.
 
 The store pass writes GTAO visibility straight to the stock SSAO output without applying Diablo
 III's 64x64 screen-edge vignette mask: `gtao_evaluate.comp` stops rays at the viewport edges rather
@@ -477,7 +478,7 @@ America) whose pack is missing with the first one the dump has, Portuguese first
 | `SANCTUARY_PAD_FILE=<file>` | scripted input (button names, `lx=`..`ry=`, `shot`, `p2`/`p3`/`p4` for other players) |
 | `SANCTUARY_VIRTUAL_PAD=1` | attach an SDL virtual gamepad (scripted runs that need a connected controller) |
 | `SANCTUARY_PRESENT_QUEUE=1` | present frames on a second graphics queue when the GPU has one (NVIDIA): a V-Sync wait no longer holds up the game's own GPU work (GitHub #103; off by default until tested) |
-| `SANCTUARY_ACQUIRE_FENCE=0` / `=1` | with V-Sync on, the present thread waits on the CPU for the next screen image (GitHub #103); `0`: never, on the GPU queue as before 0.7.5; `1`: also with V-Sync off (off by default there since GitHub #106: it lowered the lows) |
+| `SANCTUARY_ACQUIRE_FENCE=0` / `=1` | the present thread waits on the CPU for the next screen image before the GPU waits on it (GitHub #103; AMD's Windows driver crashed without it, GitHub #110); with V-Sync off the image is acquired right after the previous present, so that wait has a whole frame to finish (GitHub #106). `1`: acquire when the frame is ready, also with V-Sync off (0.7.5); `0`: no CPU wait, as in 0.7.4 (diagnosis only: not safe on AMD Windows) |
 | `SANCTUARY_DEBUGGABLE=1` | let other processes read the game's memory (`/proc/PID/mem`, gdb without root) |
 | `SANCTUARY_RECORD_THREADS=1` | report (with a backtrace) any use of the Vulkan command recording from a thread that does not own it at that moment |
 | `SANCTUARY_GTAO_TRACE=1` | log GTAO match/fallback state on Diablo III's full-size R8 SSAO upscale pass |

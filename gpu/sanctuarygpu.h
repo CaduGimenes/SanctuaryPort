@@ -64,6 +64,8 @@ void sanctuarygpu_mouse_pause_key(void);
 int sanctuarygpu_mouse_aim_style(void);
 /* L2 aim sensitivity in percent (10 to 200), set in the menu. */
 int sanctuarygpu_mouse_aim_sensitivity(void);
+/* Degrees per second the wheel-turn keys turn the left stick while held (30 to 360), set in the menu. */
+int sanctuarygpu_wheel_turn_speed(void);
 /* Number of symbols registered by the vendored libraries (diagnostics). */
 unsigned sanctuarygpu_symbol_count(void);
 #ifdef __cplusplus

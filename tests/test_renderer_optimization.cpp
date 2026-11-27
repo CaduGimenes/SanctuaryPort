@@ -10,7 +10,7 @@
 namespace {
 
 void CheckCacheWarmup(Vulkan::GtaoCachePolicy& policy) {
-    for (int frame = 0; frame < 11; ++frame) {
+    for (int frame = 0; frame < 2; ++frame) {
         assert(!policy.Update(true));
     }
     assert(policy.Update(true));
@@ -20,7 +20,7 @@ void CheckCacheWarmup(Vulkan::GtaoCachePolicy& policy) {
 void TestAdaptiveGtao() {
     Vulkan::GtaoCachePolicy policy;
     assert(!policy.Update(false));
-    for (int frame = 0; frame < 11; ++frame) {
+    for (int frame = 0; frame < 2; ++frame) {
         assert(!policy.Update(true));
     }
     assert(!policy.Update(false)); // Projection, preset, or depth sample mode changed.

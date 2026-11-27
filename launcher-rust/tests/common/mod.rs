@@ -322,7 +322,8 @@ pub fn state_with_trophies(dir: &Path) -> State {
 
 /// What the background read of the Trophies page delivers.
 pub fn load_trophies(state: &mut State) {
-    let view = trophies::load(&state.paths, &state.store, &state.installation);
+    let lang = state.lang.clone();
+    let view = trophies::load(&state.paths, &state.store, &state.installation, &lang);
     let _ = app::update(
         state,
         Message::Trophies(TrophiesMessage::Loaded(Box::new(view))),

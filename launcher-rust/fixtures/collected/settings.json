@@ -62,7 +62,7 @@
     }
   },
   "pad_style": "playstation",
-  "controls_layout": 5,
+  "controls_layout": 6,
   "glyph_style": "off",
   "patches_offered": [
     "High FPS Wall Seam Fix",

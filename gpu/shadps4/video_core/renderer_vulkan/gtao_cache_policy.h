@@ -20,7 +20,7 @@ public:
     void Reset() noexcept { compatible_frames = 0; }
 
 private:
-    static constexpr unsigned RequiredFrames = 12;
+    static constexpr unsigned RequiredFrames = 3;
     unsigned compatible_frames = 0;
 };
 

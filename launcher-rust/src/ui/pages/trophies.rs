@@ -16,8 +16,9 @@ use crate::core::paths::Paths;
 use crate::core::settings::Settings;
 use crate::core::store::Store;
 use crate::core::trophies::{
-    listed_tier, read_trp_icons, read_unlocked_trophies, reset_trophies, tier_color, tier_label,
-    trophy_group, trophy_info, trophy_tier, Tier, UNLOCKS_FILE,
+    game_text_pack, game_texts, listed_tier, read_trp_icons, read_unlocked_trophies,
+    reset_trophies, tier_color, tier_label, trophy_group, trophy_info, trophy_tier, GameTexts,
+    Tier, UNLOCKS_FILE,
 };
 use crate::ui::app::{Message, State};
 use crate::ui::follow::{self, View};
@@ -59,6 +60,9 @@ pub struct TrophiesView {
     pub locked_icons: BTreeMap<u32, Handle>,
     pub tiers: BTreeMap<u32, Option<Tier>>,
     pub unlocked: BTreeSet<u32>,
+    /// The names and descriptions in the game language, from the game's own language pack
+    /// (GitHub #118); empty for English or without the pack: the built-in list is shown.
+    pub texts: GameTexts,
     pub filter: Filter,
     /// Whether a load is under way.
     pub loading: bool,
@@ -101,17 +105,21 @@ fn locked_icon(png: &[u8]) -> Option<Handle> {
 }
 
 /// Reads the package of the game in `installation`, the tiers and the unlocked flags, for the
-/// settings in `store`.
-pub fn load(paths: &Paths, store: &Store, installation: &Installation) -> TrophiesView {
+/// settings in `store`; `lang` (the launcher's) picks the texts when no game language is set.
+pub fn load(paths: &Paths, store: &Store, installation: &Installation, lang: &str) -> TrophiesView {
     TrophiesView {
         inputs: follow::inputs(View::Trophies, store),
-        ..read(paths, store.app(), installation)
+        ..read(paths, store.app(), installation, lang)
     }
 }
 
 /// `load` without the inputs; runs on a thread.
-fn read(paths: &Paths, settings: &Settings, installation: &Installation) -> TrophiesView {
+fn read(paths: &Paths, settings: &Settings, installation: &Installation, lang: &str) -> TrophiesView {
     let mut view = TrophiesView::default();
+    let folders = installation.game_folders();
+    if let Some(pack) = game_text_pack(&folders, &settings.get_str("language"), lang) {
+        view.texts = game_texts(&folders, pack);
+    }
     let pngs = installation
         .trophy_package()
         .map(|path| read_trp_icons(&path))
@@ -136,10 +144,11 @@ pub(crate) fn refresh(state: &mut State) -> Task<Message> {
     let paths = state.paths.clone();
     let settings = state.store.app().clone();
     let installation = state.installation.clone();
+    let lang = state.lang.clone();
     let inputs = follow::inputs(View::Trophies, &state.store);
     blocking(move || TrophiesView {
         inputs,
-        ..read(&paths, &settings, &installation)
+        ..read(&paths, &settings, &installation, &lang)
     })
     .map(|view| Message::Trophies(TrophiesMessage::Loaded(Box::new(view))))
 }
@@ -272,13 +281,16 @@ fn card<'a>(state: &State, id: u32) -> Option<Element<'a, Message>> {
     } else {
         view.locked_icons.get(&id).or_else(|| view.icons.get(&id))
     }?;
-    // The package's own texts (TROP*.ESFM) are encrypted: the built-in list names the trophy, and
-    // the number stands in for one it does not know.
+    // The package's own texts (TROP*.ESFM) are encrypted: the game's language pack names the
+    // trophy in the game language, else the built-in list in English; the number stands in for one
+    // neither knows.
     let info = trophy_info(id);
-    let name = info.map_or_else(
-        || tr_fmt(lang, "Trophy {}", &[&id.to_string()]),
-        |info| info.name.clone(),
-    );
+    let texts = view.texts.trophy(id);
+    let (name, description) = match (&texts, info) {
+        (Some((name, description)), _) => (name.clone(), Some(description.clone())),
+        (None, Some(info)) => (info.name.clone(), Some(info.description.clone())),
+        (None, None) => (tr_fmt(lang, "Trophy {}", &[&id.to_string()]), None),
+    };
     let ink = if got { palette::TEXT } else { palette::MUTED };
     let tier = view.tiers.get(&id).copied().flatten();
     let id_line = match tier {
@@ -290,8 +302,8 @@ fn card<'a>(state: &State, id: u32) -> Option<Element<'a, Message>> {
         _ => palette::MUTED,
     };
     let mut details = column![text(name).size(16).color(ink)].spacing(2);
-    if let Some(info) = info {
-        details = details.push(text(info.description.clone()).size(13).color(palette::MUTED));
+    if let Some(description) = description {
+        details = details.push(text(description).size(13).color(palette::MUTED));
     }
     let details = details.push(text(id_line).size(12).color(id_ink));
     let (badge, badge_ink) = if got {
@@ -352,7 +364,8 @@ pub fn view(state: &State) -> Element<'_, Message> {
             let group = trophy_info(id).and_then(|info| trophy_group(info.group));
             if let Some(group) = group.filter(|group| heading != Some(group.id)) {
                 heading = Some(group.id);
-                page = page.push(text(group.name.clone()).size(15).font(theme::CINZEL_BOLD));
+                let name = view.texts.group(group.id).unwrap_or_else(|| group.name.clone());
+                page = page.push(text(name).size(15).font(theme::CINZEL_BOLD));
             }
             page = page.push(card);
         }

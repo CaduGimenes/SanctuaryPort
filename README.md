@@ -19,8 +19,8 @@
 
 SanctuaryPort runs the PlayStation 4 version of **Diablo III** natively on a PC: the Brazilian
 (CUSA00243), US (CUSA00242) and European (CUSA00433/CUSA00434) releases of *Reaper of Souls –
-Ultimate Evil Edition*, with each one's last update (1.47 for the Brazilian and US ones, 1.46 for
-the European one), which is the **Eternal Collection** (2.7.7, or 2.7.6 for the European 1.46, with the Necromancer). The game's original x86-64 code runs directly on your
+Ultimate Evil Edition*, with the update 1.46 or 1.47 (whichever your release has), which is the
+**Eternal Collection** (2.7.6 or 2.7.7, with the Necromancer). The game's original x86-64 code runs directly on your
 processor, a runtime replaces the PS4 system libraries, and the PS4 GPU commands are translated to
 Vulkan by a video core derived from [shadPS4](https://github.com/shadps4-emu/shadPS4). There is no
 CPU emulator.
@@ -149,8 +149,8 @@ with MSYS2.
 
 ## Getting your game ready
 
-1. Dump **Diablo III** (the Brazilian CUSA00243 or US CUSA00242 release with its 01.47 update, or
-   the European CUSA00433/CUSA00434 with its 01.46 update) from your own PS4 as fake PKG files: base game, update and,
+1. Dump **Diablo III** (the Brazilian CUSA00243, US CUSA00242 or European CUSA00433/CUSA00434
+   release, with its 1.46 or 1.47 update) from your own PS4 as fake PKG files: base game, update and,
    if you have them, the add-ons. This project does not provide the game or help obtaining it.
 2. Start the launcher (the AppImage, `SanctuaryPort.exe`, or
    `launcher-rust/target/release/sanctuaryport-launcher` from source), open **Game** and
@@ -192,6 +192,7 @@ SANCTUARY_GAME_DIR=~/Games/PS4/CUSA00243 SANCTUARY_PATCH_DIR=~/Games/PS4/CUSA002
   | Z / X | L3 / R3 |
   | 1 2 3 4 | d-pad up, right, down, left |
   | Tab | Options |
+  | Mouse wheel down / up | turn the selection clockwise / counter-clockwise around the equipment and skill wheels (a small step per notch; keys bound to it keep turning while held, speed in *Controls*) |
   | P / Esc | touchpad left / right |
   | Insert | the port's menu (cannot be changed) |
   | F12 | screenshot (`user/screenshots/`) |

@@ -1,10 +1,11 @@
 //! Trophies: the icons in the game's trophy package, the unlocked flags and the tier of an icon.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::fs;
 use std::io;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
+use super::d3_cpk::{string_list, Archive};
 use super::i18n::tr;
 
 const MAGIC: [u8; 4] = [0xdc, 0xa2, 0x4d, 0x00];
@@ -96,6 +97,11 @@ pub struct TrophyInfo {
     pub group: u32,
     pub name: String,
     pub description: String,
+    /// Where the game's own packs keep the name: `<string list>/<label hash>` (`game_texts`).
+    #[serde(default)]
+    pub name_label: String,
+    #[serde(default)]
+    pub description_label: String,
 }
 
 /// A trophy group (the base game, an add-on): its name and the ids it holds.
@@ -103,6 +109,8 @@ pub struct TrophyInfo {
 pub struct TrophyGroup {
     pub id: u32,
     pub name: String,
+    #[serde(default)]
+    pub name_label: String,
 }
 
 #[derive(Debug, Default, serde::Deserialize)]
@@ -142,6 +150,120 @@ pub fn listed_tier(id: u32) -> Option<Tier> {
         "bronze" => Some(Tier::Bronze),
         _ => None,
     }
+}
+
+/// Diablo III's language packs by PS4 system language code, in the order run.py falls back in
+/// when the chosen pack is missing (`D3_LANGUAGE_PACKS`): the game shows the text of the packs
+/// it finds in `CPKs/`.
+pub const LANGUAGE_PACKS: [(&str, &str); 10] = [
+    ("17", "ptBR"),
+    ("1", "enUS"),
+    ("20", "esMX"),
+    ("2", "frFR"),
+    ("16", "plPL"),
+    ("8", "ruRU"),
+    ("3", "esES"),
+    ("4", "deDE"),
+    ("5", "itIT"),
+    ("18", "enGB"),
+];
+
+/// The PS4 language code for a launcher language, when the game language is not set.
+fn language_for_launcher(lang: &str) -> &'static str {
+    match lang {
+        "pt" => "17",
+        "es" => "20",
+        "fr" => "2",
+        "pl" => "16",
+        "ru" => "8",
+        "de" => "4",
+        "it" => "5",
+        _ => "1",
+    }
+}
+
+/// The pack whose text the game shows, as run.py picks it: the game language (`language`; the
+/// launcher's, `lang`, when it is empty) when the folders have its pack, else the first pack they
+/// have; `None` when they have none (no folder, or not Diablo III's layout).
+pub fn game_text_pack(folders: &[PathBuf], language: &str, lang: &str) -> Option<&'static str> {
+    let wanted = if language.is_empty() { language_for_launcher(lang) } else { language };
+    let has = |pack: &str| {
+        folders
+            .iter()
+            .any(|folder| folder.join("CPKs").join(format!("{pack}_Common.cpk")).is_file())
+    };
+    let pack = |code: &str| LANGUAGE_PACKS.iter().find(|(c, _)| *c == code).map(|(_, p)| *p);
+    match pack(wanted) {
+        Some(chosen) if has(chosen) => Some(chosen),
+        _ => LANGUAGE_PACKS.iter().map(|(_, p)| *p).find(|p| has(p)),
+    }
+}
+
+/// The trophy texts of one language pack, by label (`Achievements/f781fec5`).
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct GameTexts(HashMap<String, String>);
+
+impl GameTexts {
+    fn get(&self, label: &str) -> Option<&str> {
+        self.0.get(&label.to_ascii_lowercase()).map(String::as_str).filter(|text| !text.trim().is_empty())
+    }
+
+    /// Trophy `id`'s name and description in the pack's language; `None` unless both are there.
+    pub fn trophy(&self, id: u32) -> Option<(String, String)> {
+        let info = trophy_info(id)?;
+        Some((
+            self.get(&info.name_label)?.to_string(),
+            self.get(&info.description_label)?.to_string(),
+        ))
+    }
+
+    /// The name of group `id` in the pack's language.
+    pub fn group(&self, id: u32) -> Option<String> {
+        self.get(&trophy_group(id)?.name_label).map(str::to_string)
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+}
+
+/// The texts the built-in list points at (`name_label`, `description_label`), from
+/// `<pack>_CoreCommon.cpk` in `folders` (the update first: its packs add the later trophies).
+/// The English packs are not read: the built-in list is in English. Empty when nothing is found.
+pub fn game_texts(folders: &[PathBuf], pack: &str) -> GameTexts {
+    let mut texts = HashMap::new();
+    if pack.starts_with("en") {
+        return GameTexts(texts);
+    }
+    let list = trophy_list();
+    let labels = list
+        .trophies
+        .iter()
+        .flat_map(|t| [&t.name_label, &t.description_label])
+        .chain(list.groups.iter().map(|g| &g.name_label));
+    // {string list: [label hashes]}
+    let mut wanted: BTreeMap<String, Vec<(String, u32)>> = BTreeMap::new();
+    for label in labels {
+        let Some((file, hash)) = label.split_once('/') else { continue };
+        let Ok(hash) = u32::from_str_radix(hash, 16) else { continue };
+        wanted.entry(file.to_string()).or_default().push((label.to_ascii_lowercase(), hash));
+    }
+    // The game folder first and the update over it.
+    for folder in folders.iter().rev() {
+        let Ok(mut archive) = Archive::open(&folder.join("CPKs").join(format!("{pack}_CoreCommon.cpk"))) else {
+            continue;
+        };
+        for (file, labels) in &wanted {
+            let Ok(data) = archive.read(&format!("StringList\\{file}.stl")) else { continue };
+            let strings = string_list(&data);
+            for (label, hash) in labels {
+                if let Some(text) = strings.get(hash) {
+                    texts.insert(label.clone(), text.clone());
+                }
+            }
+        }
+    }
+    GameTexts(texts)
 }
 
 /// The grade of a trophy, told by the colour of its icon.
@@ -389,6 +511,113 @@ mod tests {
         let empty = write(&dir, "empty.txt", b"");
         assert_eq!(reset_trophies(&empty).unwrap(), 0);
         assert!(empty.exists());
+    }
+
+    /// A synthesised `<pack>_Common.cpk` (any content: it says the pack is there) and
+    /// `<pack>_CoreCommon.cpk` with the string lists holding `texts` ({label: text}).
+    fn language_pack(folder: &Path, pack: &str, texts: &[(&str, &str)]) {
+        use crate::core::d3_cpk::fixtures::{cpk, stl};
+        let cpks = folder.join("CPKs");
+        fs::create_dir_all(&cpks).unwrap();
+        fs::write(cpks.join(format!("{pack}_Common.cpk")), cpk(&[("x", b"x".to_vec())])).unwrap();
+        let mut lists: BTreeMap<&str, Vec<(u32, &str)>> = BTreeMap::new();
+        for (label, text) in texts {
+            let (file, hash) = label.split_once('/').unwrap();
+            lists.entry(file).or_default().push((u32::from_str_radix(hash, 16).unwrap(), text));
+        }
+        let files: Vec<(String, Vec<u8>)> = lists
+            .iter()
+            .map(|(file, entries)| (format!("StringList\\{file}.stl"), stl(entries)))
+            .collect();
+        let files: Vec<(&str, Vec<u8>)> = files.iter().map(|(n, d)| (n.as_str(), d.clone())).collect();
+        fs::write(cpks.join(format!("{pack}_CoreCommon.cpk")), cpk(&files)).unwrap();
+    }
+
+    fn labels(id: u32) -> (&'static str, &'static str) {
+        let info = trophy_info(id).unwrap();
+        (&info.name_label, &info.description_label)
+    }
+
+    #[test]
+    fn every_trophy_and_group_points_at_the_game_texts() {
+        for id in 0..54 {
+            let (name, description) = labels(id);
+            for label in [name, description] {
+                let (file, hash) = label.split_once('/').unwrap();
+                assert!(file == "Achievements" || file == "ConsoleAchievements", "{label}");
+                assert!(hash.len() == 8 && u32::from_str_radix(hash, 16).is_ok(), "{label}");
+            }
+        }
+        assert!(trophy_group(0).unwrap().name_label.starts_with("ConsoleAchievements/"));
+        assert!(trophy_group(1).unwrap().name_label.starts_with("ConsoleAchievements/"));
+    }
+
+    #[test]
+    fn the_pack_follows_the_game_language_as_run_py_does() {
+        let game = tempfile::tempdir().unwrap();
+        let folders = vec![game.path().to_path_buf()];
+        assert_eq!(game_text_pack(&folders, "8", "ru"), None);
+        language_pack(game.path(), "esMX", &[]);
+        language_pack(game.path(), "ruRU", &[]);
+        assert_eq!(game_text_pack(&folders, "8", "en"), Some("ruRU"));
+        assert_eq!(game_text_pack(&folders, "20", "ru"), Some("esMX"));
+        // A language without its pack: the first one the dump has (ptBR, enUS, esMX... order).
+        assert_eq!(game_text_pack(&folders, "4", "de"), Some("esMX"));
+        assert_eq!(game_text_pack(&folders, "99", "de"), Some("esMX"));
+        // No game language: the launcher's.
+        assert_eq!(game_text_pack(&folders, "", "ru"), Some("ruRU"));
+        assert_eq!(game_text_pack(&folders, "", "ja"), Some("esMX"));
+        assert_eq!(game_text_pack(&[], "8", "ru"), None);
+    }
+
+    #[test]
+    fn texts_come_from_the_language_pack_and_the_update_adds_to_them() {
+        let game = tempfile::tempdir().unwrap();
+        let update = tempfile::tempdir().unwrap();
+        let (name1, text1) = labels(1);
+        let (name2, text2) = labels(2);
+        let (name45, text45) = labels(45);
+        let group1 = trophy_group(1).unwrap().name_label.as_str();
+        // Synthesised texts (fixtures), not the game's.
+        language_pack(
+            game.path(),
+            "ruRU",
+            &[(name1, "Тест один"), (text1, "Описание один"), (name2, "Старое имя"), (text2, "Старое описание")],
+        );
+        language_pack(
+            update.path(),
+            "ruRU",
+            &[(name2, "Тест два"), (text2, "Описание два"), (name45, "Тест 45"), (text45, "Описание 45"), (group1, "Группа")],
+        );
+        let folders = vec![update.path().to_path_buf(), game.path().to_path_buf()];
+        let texts = game_texts(&folders, "ruRU");
+        assert_eq!(texts.trophy(1), Some(("Тест один".into(), "Описание один".into())));
+        assert_eq!(texts.trophy(2), Some(("Тест два".into(), "Описание два".into())));
+        assert_eq!(texts.trophy(45), Some(("Тест 45".into(), "Описание 45".into())));
+        assert_eq!(texts.group(1).as_deref(), Some("Группа"));
+        // Missing texts fall back to the built-in list (None here).
+        assert_eq!(texts.trophy(3), None);
+        assert_eq!(texts.group(0), None);
+        assert_eq!(texts.trophy(999), None);
+        // The game folder alone lacks what only the update has.
+        let base = game_texts(&folders[1..], "ruRU");
+        assert_eq!(base.trophy(2), Some(("Старое имя".into(), "Старое описание".into())));
+        assert_eq!(base.trophy(45), None);
+    }
+
+    #[test]
+    fn english_packs_and_missing_or_broken_ones_give_no_texts() {
+        let game = tempfile::tempdir().unwrap();
+        let (name1, text1) = labels(1);
+        language_pack(game.path(), "enUS", &[(name1, "Other"), (text1, "Other")]);
+        let folders = vec![game.path().to_path_buf()];
+        assert!(game_texts(&folders, "enUS").is_empty());
+        assert!(game_texts(&folders, "ruRU").is_empty());
+        fs::write(game.path().join("CPKs/ruRU_CoreCommon.cpk"), b"not an archive").unwrap();
+        assert!(game_texts(&folders, "ruRU").is_empty());
+        // A blank text is as good as none.
+        language_pack(game.path(), "plPL", &[(name1, " "), (text1, "Opis")]);
+        assert_eq!(game_texts(&folders, "plPL").trophy(1), None);
     }
 
     #[test]
