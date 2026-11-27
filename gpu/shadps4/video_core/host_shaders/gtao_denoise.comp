@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-// Plane-aware a-trous denoiser for GTAO visibility (3x3 for Low, 5x5 for High).
+// Plane-aware 5x5 denoiser for GTAO visibility.
 #version 450
 layout(local_size_x = 8, local_size_y = 8) in;
 
@@ -13,16 +13,31 @@ layout(push_constant) uniform Params {
 layout(binding = 0) uniform sampler2D aoIn;
 layout(binding = 1) uniform sampler2D viewDist;
 layout(binding = 2, r16f) uniform writeonly image2D aoOut;
+#ifdef GTAO_FINE_CACHE
+layout(binding = 3, r32f) uniform readonly image2D recomputeTiles;
+
+bool recompute(ivec2 group) {
+    // A 5x5 footprint from this 8x8 group touches at most four 16x16 tiles.
+    ivec2 tile = group / 2;
+    ivec2 offset = (group & 1) * 2 - 1;
+    ivec2 other = clamp(tile + offset, ivec2(0), imageSize(recomputeTiles) - 1);
+    return imageLoad(recomputeTiles, tile).r != 0.0 ||
+           imageLoad(recomputeTiles, ivec2(other.x, tile.y)).r != 0.0 ||
+           imageLoad(recomputeTiles, ivec2(tile.x, other.y)).r != 0.0 ||
+           imageLoad(recomputeTiles, other).r != 0.0;
+}
+#endif
 
 float load_dist(ivec2 p) {
     return texelFetch(viewDist, clamp(p, ivec2(0), ivec2(pc.dims.xy) - 1), 0).r;
 }
 void main() {
+#ifdef GTAO_FINE_CACHE
+    if (!recompute(ivec2(gl_WorkGroupID.xy))) return;
+#endif
     ivec2 pix = ivec2(gl_GlobalInvocationID.xy);
-    if (any(greaterThanEqual(pix, ivec2(pc.dims.xy)))) return;
-    int stride = int(pc.p2.w);
-    int radius = clamp(int(pc.p1.w), 1, 2);
     ivec2 dims_i = ivec2(pc.dims.xy);
+    if (any(greaterThanEqual(pix, dims_i))) return;
     float zc = load_dist(pix);
     float zl = load_dist(pix - ivec2(1, 0));
     float zr = load_dist(pix + ivec2(1, 0));
@@ -35,15 +50,14 @@ void main() {
                : pix.y == dims_i.y - 1 ? (zc - zu)
                : (abs(zd - zc) < abs(zc - zu) ? zd - zc : zc - zu);
     float tol = 1.0 / max(zc * pc.p1.z, 1e-4);
-    const float k5[5] = float[5](1.0/16.0, 4.0/16.0, 6.0/16.0, 4.0/16.0, 1.0/16.0);
-    const float k3[3] = float[3](1.0/4.0, 2.0/4.0, 1.0/4.0);
+    const float kernel[5] = float[5](1.0/16.0, 4.0/16.0, 6.0/16.0, 4.0/16.0, 1.0/16.0);
     float sum = 0.0, wsum = 0.0;
-    for (int y = -radius; y <= radius; ++y) {
-        float wy = radius == 1 ? k3[y + 1] : k5[y + 2];
-        for (int x = -radius; x <= radius; ++x) {
-            float wx = radius == 1 ? k3[x + 1] : k5[x + 2];
-            ivec2 o = ivec2(x, y) * stride;
-            ivec2 p = clamp(pix + o, ivec2(0), ivec2(pc.dims.xy) - 1);
+    for (int y = -2; y <= 2; ++y) {
+        float wy = kernel[y + 2];
+        for (int x = -2; x <= 2; ++x) {
+            float wx = kernel[x + 2];
+            ivec2 o = ivec2(x, y);
+            ivec2 p = clamp(pix + o, ivec2(0), dims_i - 1);
             float z = texelFetch(viewDist, p, 0).r;
             float rel = (z - (zc + dzdx * float(o.x) + dzdy * float(o.y))) * tol;
             float weight = wx * wy * exp(-rel * rel);

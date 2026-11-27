@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Visibility-bitmask GTAO evaluator with finite-thickness occluders across 32 angular sectors.
-// Slice and step counts are driven by push constants (Low: 3x4, High: 8x8).
 #version 450
 layout(local_size_x = 8, local_size_y = 8) in;
 
@@ -50,15 +49,23 @@ uint sector_mask(float lo, float hi) {
     return (count >= 32u ? 0xffffffffu : ((1u << count) - 1u)) << a;
 }
 
+#ifdef GTAO_EXACT_CACHE
+layout(binding = 1) uniform sampler2D dirtyTiles;
+#endif
+
 void main() {
+#ifdef GTAO_EXACT_CACHE
+    // All four evaluator groups over the same 16x16 tile share the dilation result.
+    if (texelFetch(dirtyTiles, ivec2(gl_WorkGroupID.xy) / 2, 0).r == 0.0) return;
+#endif
     ivec2 pix = ivec2(gl_GlobalInvocationID.xy);
-    if (any(greaterThanEqual(pix, ivec2(pc.dims.xy)))) return;
+    ivec2 dims_i = ivec2(pc.dims.xy);
+    if (any(greaterThanEqual(pix, dims_i))) return;
     float dist = load_dist(pix);
     if (dist >= pc.p2.z * 0.995) {
         imageStore(outAO, pix, vec4(1.0));
         return;
     }
-    ivec2 dims_i = ivec2(pc.dims.xy);
     vec3 P = view_pos(vec2(pix), dist);
     vec3 pl = view_pos(vec2(pix + ivec2(-1, 0)), load_dist(pix + ivec2(-1, 0)));
     vec3 pr = view_pos(vec2(pix + ivec2( 1, 0)), load_dist(pix + ivec2( 1, 0)));
@@ -88,8 +95,10 @@ void main() {
     vec2 inv_dist_size = 1.0 / vec2(textureSize(viewDist, 0));
     float visibility = 0.0, weight_sum = 0.0;
 
-    for (int slice = 0; slice < int(pc.p1.x); ++slice) {
-        float phi = (float(slice) + noise_dir) * (PI / pc.p1.x);
+    const float slices = GTAO_FIXED_SLICES;
+    const float steps = GTAO_FIXED_STEPS;
+    for (int slice = 0; slice < int(slices); ++slice) {
+        float phi = (float(slice) + noise_dir) * (PI / slices);
         vec2 dir = vec2(cos(phi), sin(phi));
         vec3 dir_v = vec3(dir.x, -dir.y, 0.0);
         vec3 ortho = dir_v - dot(dir_v, V) * V;
@@ -109,8 +118,15 @@ void main() {
 
         for (int side = 0; side < 2; ++side) {
             float sgn = side == 0 ? 1.0 : -1.0;
-            for (int step = 0; step < int(pc.p1.y); ++step) {
-                float f = (float(step) + noise_step) / pc.p1.y;
+#ifdef GTAO_LOW_OFFSETS
+            float step_phase = fract(noise_step + float(slice) * 0.61803399 + float(side) * 0.38196601);
+#endif
+            for (int step = 0; step < int(steps); ++step) {
+#ifdef GTAO_LOW_OFFSETS
+                float f = (float(step) + step_phase) / steps;
+#else
+                float f = (float(step) + noise_step) / steps;
+#endif
                 float len_px = max(f * f * radius_px, float(step + 1));
                 vec2 sp = vec2(pix) + sgn * dir * len_px;
                 if (any(lessThan(sp, vec2(0.0))) || any(greaterThan(sp, pc.dims.xy - 1.0))) break;
@@ -125,6 +141,9 @@ void main() {
                     max(dd - 2.0 * thickness * dv + thickness * thickness, 1e-12));
                 float theta_front = sgn * fast_acos(clamp(cos_front, -1.0, 1.0));
                 float theta_back = sgn * fast_acos(clamp(cos_back, -1.0, 1.0));
+                // The sector interval is empty when both angles clamp to the same endpoint.
+                if ((theta_front >= right && theta_back >= right) ||
+                    (theta_front <= left && theta_back <= left)) continue;
                 float u_front = (slice_measure(clamp(theta_front, left, right), n, cos_n, sin_n)
                                  - measure_left) * inv_total;
                 float u_back = (slice_measure(clamp(theta_back, left, right), n, cos_n, sin_n)

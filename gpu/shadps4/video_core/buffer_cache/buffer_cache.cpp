@@ -355,6 +355,18 @@ void PrintBufferStats() {
 
 std::pair<const Buffer*, u64> BufferCache::ObtainBuffer(VAddr device_addr, u32 size,
                                                         bool is_written, bool is_texel_buffer) {
+    return ObtainBuffer(device_addr, size, is_written, is_texel_buffer, nullptr);
+}
+
+std::pair<const Buffer*, u64> BufferCache::ObtainIndexBuffer(VAddr device_addr, u32 size,
+                                                           std::span<const u8>& data) {
+    data = {};
+    return ObtainBuffer(device_addr, size, false, false, &data);
+}
+
+std::pair<const Buffer*, u64> BufferCache::ObtainBuffer(VAddr device_addr, u32 size, bool is_written,
+                                                        bool is_texel_buffer,
+                                                        std::span<const u8>* stream_data) {
     texture_cache.ResolveReadbacks(device_addr, size, true, ReadbackSource::BufferObtain);
     const bool stats = BufferStatsEnabled();
     if (stats) {
@@ -370,7 +382,7 @@ std::pair<const Buffer*, u64> BufferCache::ObtainBuffer(VAddr device_addr, u32 s
         }
         // sanctuary: the guest data is copied on a copy thread, started now; submission and
         // guest-visible fences wait for it (Scheduler::WaitHostCopies).
-        if (!stream_buffer.mapped_data.empty() &&
+        if (!stream_data && !stream_buffer.mapped_data.empty() &&
             !SanctuaryToggle::Disabled(SanctuaryToggle::DeferredStreamCopies)) {
             if (const auto offset = stream_buffer.Reserve(size, instance.UniformMinAlignment())) {
                 SmallGuestCopy({
@@ -387,25 +399,46 @@ std::pair<const Buffer*, u64> BufferCache::ObtainBuffer(VAddr device_addr, u32 s
         const auto [data, offset] = stream_buffer.Map(size, instance.UniformMinAlignment());
         memory->CopySparseMemory(device_addr, data, size);
         stream_buffer.Commit();
+        if (stream_data) {
+            *stream_data = {data, size};
+        }
         return {&stream_buffer, offset};
     }
-    const u64 first_block = device_addr >> block_shift;
-    const u64 last_block = (device_addr + size - 1) >> block_shift;
-    const auto* arena = GetArena(first_block, last_block);
-    EnsureResident(arena, first_block, last_block);
-    const u64 uploaded_before = SanctuaryStats::buffer_upload_bytes.load(std::memory_order_relaxed);
-    SynchronizeMemory(arena, device_addr, size, is_written, is_texel_buffer);
+    return ObtainArenaBuffer(device_addr, size, device_addr, size, is_written, is_texel_buffer,
+                             stats);
+}
+
+std::pair<const Buffer*, u64> BufferCache::ObtainVertexBuffer(VAddr base, u32 size, VAddr fetch_start,
+                                                            u32 fetch_size) {
+    texture_cache.ResolveReadbacks(fetch_start, fetch_size, true, ReadbackSource::BufferObtain);
+    const bool stats = BufferStatsEnabled();
     if (stats) {
-        auto& region = Stats().regions[RegionKey(device_addr)];
+        PrintBufferStats();
+        NoteHotUse(fetch_start, fetch_size);
+    }
+    return ObtainArenaBuffer(base, size, fetch_start, fetch_size, false, false, stats);
+}
+
+std::pair<const Buffer*, u64> BufferCache::ObtainArenaBuffer(VAddr base, u32 size, VAddr fetch_start,
+                                                           u32 fetch_size, bool is_written,
+                                                           bool is_texel_buffer, bool stats) {
+    const u64 first_block = base >> block_shift;
+    const u64 last_block = (base + size - 1) >> block_shift;
+    const auto* arena = GetArena(first_block, last_block);
+    EnsureResident(arena, fetch_start >> block_shift, (fetch_start + fetch_size - 1) >> block_shift);
+    const u64 uploaded_before = SanctuaryStats::buffer_upload_bytes.load(std::memory_order_relaxed);
+    SynchronizeMemory(arena, fetch_start, fetch_size, is_written, is_texel_buffer);
+    if (stats) {
+        auto& region = Stats().regions[RegionKey(fetch_start)];
         ++region.arena_count;
-        region.arena_bytes += size;
+        region.arena_bytes += fetch_size;
         region.upload_bytes +=
             SanctuaryStats::buffer_upload_bytes.load(std::memory_order_relaxed) - uploaded_before;
     }
     if (is_written) {
-        gpu_modified_ranges.Add(device_addr, size);
+        gpu_modified_ranges.Add(fetch_start, fetch_size);
     }
-    return {arena, arena->Offset(device_addr)};
+    return {arena, arena->Offset(base)};
 }
 
 std::pair<const Buffer*, u64> BufferCache::ObtainBufferForImage(VAddr device_addr, u32 size) {

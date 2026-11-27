@@ -140,4 +140,6 @@ if [[ ${1:-} == --test ]]; then
     ninja -C out/gpu settings-keep-test >> out/gpu-build.log 2>&1 && (cd out && gpu/settings-keep-test)
     ninja -C out/gpu no-msaa-test >> out/gpu-build.log 2>&1 && out/gpu/no-msaa-test
     ninja -C out/gpu gc-marks-test >> out/gpu-build.log 2>&1 && out/gpu/gc-marks-test
+    ninja -C out/gpu renderer-optimization-test >> out/gpu-build.log 2>&1
+    out/gpu/renderer-optimization-test
 fi

@@ -102,6 +102,12 @@ public:
     [[nodiscard]] std::pair<const Buffer*, u64> ObtainBuffer(VAddr device_addr, u32 size,
                                                              bool is_written,
                                                              bool is_texel_buffer = false);
+    /// Returns the exact index payload when this index buffer uses the upload stream.
+    [[nodiscard]] std::pair<const Buffer*, u64> ObtainIndexBuffer(VAddr device_addr, u32 size,
+                                                                 std::span<const u8>& data);
+    /// Retains a vertex binding's sparse virtual extent and synchronizes only the fetched bytes.
+    [[nodiscard]] std::pair<const Buffer*, u64> ObtainVertexBuffer(VAddr base, u32 size,
+                                                                  VAddr fetch_start, u32 fetch_size);
 
     /// Attempts to obtain a buffer without modifying the cache contents.
     [[nodiscard]] std::pair<const Buffer*, u64> ObtainBufferForImage(VAddr device_addr, u32 size);
@@ -125,6 +131,11 @@ public:
     void SubmitPendingArenaBinds(Vulkan::SubmitInfo& info);
 
 private:
+    [[nodiscard]] std::pair<const Buffer*, u64> ObtainBuffer(VAddr device_addr, u32 size,
+        bool is_written, bool is_texel_buffer, std::span<const u8>* stream_data);
+    [[nodiscard]] std::pair<const Buffer*, u64> ObtainArenaBuffer(VAddr base, u32 size,
+        VAddr fetch_start, u32 fetch_size, bool is_written, bool is_texel_buffer, bool stats);
+
     struct ArenaBinds {
         const Buffer* arena;
         boost::container::small_vector<vk::SparseMemoryBind, 32> binds;

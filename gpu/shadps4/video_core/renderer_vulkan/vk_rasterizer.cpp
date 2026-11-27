@@ -17,6 +17,7 @@
 #include "video_core/buffer_cache/buffer.h"
 #include "video_core/buffer_cache/buffer_cache.h"
 #include "video_core/renderer_vulkan/liverpool_to_vk.h"
+#include "video_core/renderer_vulkan/vertex_fetch_window.h"
 #include "video_core/renderer_vulkan/vk_depth_stencil_state.h"
 #include "video_core/renderer_vulkan/vk_instance.h"
 #include "video_core/renderer_vulkan/vk_pipeline_cache.h"
@@ -32,6 +33,7 @@
 #include "video_core/renderer_vulkan/vk_shader_hle.h"
 #include "video_core/texture_cache/image_view.h"
 #include "video_core/texture_cache/texture_cache.h"
+#include <vulkan/vulkan_format_traits.hpp>
 
 namespace Vulkan {
 
@@ -1245,8 +1247,9 @@ void Rasterizer::DrawRecord(const GraphicsPipeline* pipeline, const PreparedDraw
     const auto state = BeginRendering(pipeline);
 
     if (!inputs_resolved) {
-        ResolveVertexBuffers(pipeline, draw_prepared);
-        if (is_indexed) {
+        const bool index_resolved = ResolveVertexBuffers(
+            pipeline, draw_prepared, is_indexed ? std::optional{index_offset} : std::nullopt);
+        if (is_indexed && !index_resolved) {
             ResolveIndexBuffer(index_offset);
         }
     }
@@ -1439,10 +1442,13 @@ void Rasterizer::DrawRecord(const GraphicsPipeline* pipeline, const PreparedDraw
     // half-res SSAO, and one small vignette) so it works across 1.00, 1.46, and 1.47 builds
     // regardless of shader hashes or resource-slot order. The stock draw has already completed
     // and is retained whenever any input or state does not match.
+    const bool gtao_enabled = SanctuarySettings::Get().gtao.load(std::memory_order_relaxed) !=
+                              SanctuarySettings::GtaoOff;
+    if (!gtao_enabled) {
+        gtao->InvalidateHistory();
+    }
     if (const auto* ps = pipeline->GetStages()[u32(Shader::SwStage::Fragment)];
-        SanctuarySettings::Get().gtao.load(std::memory_order_relaxed) !=
-            SanctuarySettings::GtaoOff &&
-        ps && num_indices == 4 && num_instances == 1 && ps->images.size() == 4 &&
+        gtao_enabled && ps && num_indices == 4 && num_instances == 1 && ps->images.size() == 4 &&
         state.num_color_attachments == 1 && !db_desc.first && cb_descs[0].first) {
         bool applied_gtao = false;
         std::array<float, 4> projection{};
@@ -1514,6 +1520,8 @@ void Rasterizer::DrawRecord(const GraphicsPipeline* pipeline, const PreparedDraw
                 applied_gtao = gtao->Run(depth_id, target_id, projection,
                                          gtao_input.bindings[vignette_idx].view,
                                          gtao_input.bindings[vignette_idx].layout, scene_extent);
+            } else if (layout_matches) {
+                gtao->InvalidateHistory();
             }
         }
         static const bool trace = std::getenv("SANCTUARY_GTAO_TRACE") != nullptr;
@@ -2109,8 +2117,10 @@ bool Rasterizer::BindResources(const Pipeline* pipeline) {
             BindBuffers(*stage.info, stage.prepared, stage.binding, push_data, stage.write_index);
         }
         if (draw_inputs.pending && !SanctuaryToggle::Disabled(SanctuaryToggle::EarlyDrawInputs)) {
-            ResolveVertexBuffers(draw_inputs.pipeline, draw_inputs.prepared);
-            if (draw_inputs.is_indexed) {
+            const bool index_resolved = ResolveVertexBuffers(
+                draw_inputs.pipeline, draw_inputs.prepared,
+                draw_inputs.is_indexed ? std::optional{draw_inputs.index_offset} : std::nullopt);
+            if (draw_inputs.is_indexed && !index_resolved) {
                 ResolveIndexBuffer(draw_inputs.index_offset);
             }
             draw_inputs.resolved = true;
@@ -2176,8 +2186,9 @@ void Rasterizer::EmitVertexBuffers() {
     });
 }
 
-void Rasterizer::ResolveVertexBuffers(const GraphicsPipeline* pipeline,
-                                      const PreparedDraw* prepared) {
+bool Rasterizer::ResolveVertexBuffers(const GraphicsPipeline* pipeline,
+                                      const PreparedDraw* prepared,
+                                      std::optional<u32> direct_index_offset) {
     const auto& regs = Regs();
     auto& v = vertex_binds;
     v.num_buffers = 0;
@@ -2210,7 +2221,7 @@ void Rasterizer::ResolveVertexBuffers(const GraphicsPipeline* pipeline,
 
     if (bindings.empty()) {
         // If there are no bindings, there is nothing further to do.
-        return;
+        return false;
     }
     if (motion_draw && !guest_buffers.empty()) {
         // Include every stream: identical position buffers can be paired with different
@@ -2299,9 +2310,79 @@ void Rasterizer::ResolveVertexBuffers(const GraphicsPipeline* pipeline,
         }
     }
 
-    // Map buffers for merged ranges
+    // For a direct draw, derive the range from the actual payload bound as a Vulkan index
+    // stream. Arena indices may have been GPU-written, so never infer their contents here.
+    constexpr u64 MinBindingSize = 1_MB;
+    bool index_resolved = false;
+    Motion::VertexRange vertices{};
+    if (direct_index_offset && instance.IsVertexInputDynamicState() &&
+        !FrameCapture::Active() && !regs.enable_primitive_restart && regs.num_indices != 0 &&
+        regs.num_instances.NumInstances() != 0 &&
+        std::ranges::any_of(ranges_merged, [](const auto& range) {
+            return range.GetSize() >= MinBindingSize && range.GetSize() <= UINT32_MAX;
+        }) &&
+        std::ranges::none_of(pipeline->GetStages(), [](const auto* stage) {
+            return stage && stage->uses_dma;
+        })) {
+        const bool index16 = regs.index_buffer_type.index_type == AmdGpu::IndexType::Index16;
+        const u32 index_size = index16 ? sizeof(u16) : sizeof(u32);
+        if (regs.num_indices <= VideoCore::BufferCache::STREAM_THRESHOLD / index_size) {
+            std::span<const u8> data;
+            ResolveIndexBuffer(*direct_index_offset, &data);
+            index_resolved = true;
+            if (!data.empty() && reinterpret_cast<uintptr_t>(data.data()) % index_size == 0) {
+                const auto& vs = pipeline->GetStage(Shader::SwStage::Vertex);
+                const u32 vertex_offset = GetDrawOffsets(regs, vs, fetch).first;
+                vertices = index16
+                    ? Motion::IndexedRange(std::span{reinterpret_cast<const u16*>(data.data()),
+                                                     data.size() / sizeof(u16)},
+                                           s32(vertex_offset), false)
+                    : Motion::IndexedRange(std::span{reinterpret_cast<const u32*>(data.data()),
+                                                     data.size() / sizeof(u32)},
+                                           s32(vertex_offset), false);
+            }
+        }
+    }
+
+    // Map buffers for merged ranges. Keep the Vulkan binding base and only narrow residency,
+    // uploads and hazard checks. A stream with an unknown access pattern keeps its full range.
     for (auto& range : ranges_merged) {
         const u64 size = memory->ClampRangeSize(range.base_address, range.GetSize());
+        VAddr fetch_start = range.end_address;
+        VAddr fetch_end = range.base_address;
+        if (vertices.count && size >= MinBindingSize && size <= UINT32_MAX &&
+            size == range.GetSize()) {
+            for (u32 i = 0; i < guest_buffers.size(); ++i) {
+                const auto& buffer = guest_buffers[i];
+                const VAddr base = buffer.base_address;
+                const u32 extent = buffer.GetSize();
+                if (!extent || base < range.base_address || base >= range.end_address) {
+                    continue;
+                }
+                const auto& attribute = attributes[i];
+                const auto& binding = bindings[i];
+                std::optional<VertexFetchWindow> window;
+                if (attribute.binding == i && binding.binding == i && attribute.offset == 0 &&
+                    attribute.format != vk::Format::eUndefined &&
+                    binding.inputRate == vk::VertexInputRate::eVertex &&
+                    binding.stride == buffer.GetStride()) {
+                    window = VertexFetchBytes(vertices.first, vertices.count, binding.stride,
+                                              vk::blockSize(attribute.format), extent);
+                }
+                fetch_start = std::min(fetch_start, base + (window ? window->start : 0));
+                fetch_end = std::max(fetch_end, base + (window ? window->end : extent));
+            }
+        }
+        const bool narrowed = fetch_start < fetch_end && fetch_end <= range.end_address &&
+                              fetch_end - fetch_start <= size / 2;
+        if (narrowed) {
+            const u64 fetch_size = fetch_end - fetch_start;
+            std::tie(range.buffer, range.offset) = buffer_cache.ObtainVertexBuffer(
+                range.base_address, size, fetch_start, fetch_size);
+            needs_barrier |= runtime.IsBufferAccessed(
+                range.buffer, range.offset + fetch_start - range.base_address, fetch_size);
+            continue;
+        }
         std::tie(range.buffer, range.offset) =
             buffer_cache.ObtainBuffer(range.base_address, size, false);
         needs_barrier |= runtime.IsBufferAccessed(range.buffer, range.offset, size);
@@ -2334,6 +2415,7 @@ void Rasterizer::ResolveVertexBuffers(const GraphicsPipeline* pipeline,
     }
 
     v.num_buffers = static_cast<u32>(guest_buffers.size());
+    return index_resolved;
 }
 
 void Rasterizer::BindIndexBuffer(u32 index_offset) {
@@ -2348,7 +2430,7 @@ void Rasterizer::EmitIndexBuffer() {
     });
 }
 
-void Rasterizer::ResolveIndexBuffer(u32 index_offset) {
+void Rasterizer::ResolveIndexBuffer(u32 index_offset, std::span<const u8>* stream_data) {
     const auto& regs = Regs();
 
     // Figure out index type and size.
@@ -2360,8 +2442,9 @@ void Rasterizer::ResolveIndexBuffer(u32 index_offset) {
 
     // Bind index buffer.
     const u32 index_buffer_size = regs.num_indices * index_size;
-    const auto [buffer, offset] =
-        buffer_cache.ObtainBuffer(index_address, index_buffer_size, false);
+    const auto [buffer, offset] = stream_data
+        ? buffer_cache.ObtainIndexBuffer(index_address, index_buffer_size, *stream_data)
+        : buffer_cache.ObtainBuffer(index_address, index_buffer_size, false);
     needs_barrier |= runtime.IsBufferAccessed(buffer, offset, index_buffer_size);
     index_bind = {buffer->Handle(), offset, index_type};
 }

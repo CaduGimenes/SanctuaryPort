@@ -62,6 +62,7 @@ struct UniqueImage {
         return *this;
     }
 
+    [[nodiscard]] vk::Result TryCreate(const vk::ImageCreateInfo& image_ci);
     void Create(const vk::ImageCreateInfo& image_ci);
 
     void Destroy();

@@ -305,14 +305,23 @@ Vulkan has no portable way to resolve with coverage samples.
 ## GTAO
 
 `gtao=low` or `gtao=high` in sanctuary.ini (`SANCTUARY_GTAO=off|low|high`, launcher Graphics >
-Ambient occlusion, in-game menu Image; off by default) runs four compute passes
+Ambient occlusion, in-game menu Image; off by default) uses a compute pipeline
 (`host_shaders/gtao_*.comp`, `renderer_vulkan/vk_gtao.cpp`: depth pyramid prefilter,
 visibility-bitmask GTAO evaluation, plane-aware a-trous denoise, and full-edge store) right
-after Diablo III's SSAO upscale draw writes the full-size R8 visibility target. `low` uses 3×4 taps
-and a 3×3 denoiser; `high` uses 8×8 taps and a 5×5 denoiser. The pass is matched structurally by
+after Diablo III's SSAO upscale draw writes the full-size R8 visibility target. Low uses three
+slices with five staggered samples per side and applies 90% of the computed occlusion. High
+uses five slices with eight samples per side and applies 85% of the computed occlusion.
+Both presets use the full scene resolution and a 5×5 denoiser. The pass is matched structurally by
 attachments and sampled inputs (no hardcoded shader hashes) and takes the projection from
 `CameraMotion::OnObjectBlock`; the stock SSAO draw completes first and is kept untouched whenever
 any input, viewport, projection, or device limit does not match.
+
+Both presets start checking depth history after twelve consecutive evaluations with a compatible
+preset, projection, and sample count. The first cache evaluation builds fresh history. Later
+evaluations can reuse visibility and denoising where every contributing depth sample matches.
+The cache requires the active scene to cover the entire AO target with both dimensions divisible
+by 16. GTAO evaluates all pixels at other sizes, including a 1920×1080 scene, and when the device
+or a history allocation cannot support caching.
 
 The store pass writes GTAO visibility straight to the stock SSAO output without applying Diablo
 III's 64x64 screen-edge vignette mask: `gtao_evaluate.comp` stops rays at the viewport edges rather

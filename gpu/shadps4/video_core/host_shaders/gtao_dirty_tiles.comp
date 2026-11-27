@@ -1,0 +1,80 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+// Compare each GTAO depth sample. One group owns one 16x16 tile.
+#version 450
+#ifdef GTAO_FINE_SUBGROUP
+#extension GL_KHR_shader_subgroup_basic : require
+#extension GL_KHR_shader_subgroup_arithmetic : require
+#endif
+layout(local_size_x = 8, local_size_y = 8) in;
+layout(push_constant) uniform Params {
+    vec4 projection, dims, p0, p1, p2;
+} pc;
+#ifdef GTAO_MSAA
+layout(binding = 0) uniform sampler2DMS sourceDepth;
+#else
+layout(binding = 0) uniform sampler2D sourceDepth;
+#endif
+layout(binding = 2, r32ui) uniform uimage2D previousDepth;
+layout(binding = 3, r32f) uniform writeonly image2D dirtyTiles;
+shared uint changed;
+shared uint nearestDepth;
+
+void compare_depth(ivec2 pixel, inout uint nearestBits, inout uint flags) {
+    if (any(greaterThanEqual(pixel, ivec2(pc.dims.xy)))) return;
+    float value = texelFetch(sourceDepth, pixel, 0).r;
+    uint bits = floatBitsToUint(value);
+    if (!(value >= 0.0 && value <= 1.0)) {
+        flags |= 3u; // invalid inputs cannot provide a conservative local radius
+    } else {
+        // The admitted perspective depth transform grows with the depth sample.
+        nearestBits = min(nearestBits, value == 0.0 ? 0u : bits);
+    }
+    if (pc.p2.w == 0.0 || bits != imageLoad(previousDepth, pixel).r) {
+        flags |= 1u;
+        imageStore(previousDepth, pixel, uvec4(bits));
+    }
+}
+
+void main() {
+    if (gl_LocalInvocationIndex == 0u) {
+        changed = 0u;
+        nearestDepth = floatBitsToUint(1.0);
+    }
+    barrier();
+    ivec2 tile = ivec2(gl_WorkGroupID.xy);
+    ivec2 pixel = tile * 16 + ivec2(gl_LocalInvocationID.xy);
+    uint nearestBits = floatBitsToUint(1.0);
+    uint flags = 0u;
+    compare_depth(pixel, nearestBits, flags);
+    compare_depth(pixel + ivec2(8, 0), nearestBits, flags);
+    compare_depth(pixel + ivec2(0, 8), nearestBits, flags);
+    compare_depth(pixel + ivec2(8, 8), nearestBits, flags);
+#ifdef GTAO_FINE_SUBGROUP
+    nearestBits = subgroupMin(nearestBits);
+    flags = subgroupOr(flags);
+    if (subgroupElect()) {
+#endif
+        atomicMin(nearestDepth, nearestBits);
+        if (flags != 0u) atomicOr(changed, flags);
+#ifdef GTAO_FINE_SUBGROUP
+    }
+#endif
+    barrier();
+    if (gl_LocalInvocationIndex == 0u) {
+        float distance = clamp(pc.projection.w / (uintBitsToFloat(nearestDepth) - pc.projection.z),
+                               0.0, pc.p2.z);
+        float radius = pc.p0.z * pc.dims.y;
+        if ((changed & 2u) == 0u && !isnan(distance) && !isinf(distance)) {
+            if (distance >= pc.p2.z * 0.999) {
+                radius = 0.0; // every pixel exits the evaluator before reading a neighbor
+            } else if (distance > 0.0) {
+                radius = max(8.0, min(radius, pc.p0.x /
+                             (abs(1.0 / pc.projection.y) * distance) * 0.5 * pc.dims.y));
+            }
+        }
+        // The magnitude contains the padded radius and the sign encodes depth changes.
+        if (radius > 0.0) radius = ceil(radius) + 2.0;
+        float packed = radius + 1.0;
+        imageStore(dirtyTiles, tile, vec4(changed == 0u ? packed : -packed));
+    }
+}
