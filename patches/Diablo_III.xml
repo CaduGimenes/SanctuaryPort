@@ -203,6 +203,20 @@
             <Line Type="bytes" Address="0x004be4fe" Value="c7433010000000" Pattern="c7 43 30 04 00 00 00 41 8b 46 54 89 43 34" At="0"/>
         </PatchList>
     </Metadata>
+     <!-- The empty-list path restores the scene render target and skips the world outline composite. -->
+    <Metadata Title="Diablo III" Name="Disable Target Outline" Note="Hides the world-space outline around targeted actors and objects." PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x0002e296" Value="6690" Pattern="be 11 00 00 00 48 89 df e8 ?? ?? ?? ?? 85 c0 74 28 41 8b be 38 01 00 00 31 f6 e8 ?? ?? ?? ?? 48 8d bd 00 ff ff ff" At="15"/>
+        </PatchList>
+    </Metadata>
+    <!-- Skip the standard and low-detail g_hitFlash_topology effect spawns in the hit effect
+         handler. The low-detail path has already restored the stack before its tail call. -->
+    <Metadata Title="Diablo III" Name="Disable Hit Flash" Note="Suppresses the default flash on hit." PatchVer="1.0" AppVer="01.47" AppElf="eboot.bin" isEnabled="false">
+        <PatchList>
+            <Line Type="bytes" Address="0x002ac4a3" Value="c30f1f4000" Pattern="45 31 c0 89 c7 48 83 c4 38 5b 41 5c 41 5d 41 5e 41 5f 5d e9 ?? ?? ?? ?? 8b 4d c4 89 c8 83 f9 06" At="19"/>
+            <Line Type="bytes" Address="0x002ac69f" Value="0f1f440000" Pattern="bf ce 01 00 00 e8 ?? ?? ?? ?? 41 8b 37 31 d2 31 c9 45 31 c0 89 c7 e8 ?? ?? ?? ?? 48 8b 05" At="22"/>
+        </PatchList>
+    </Metadata>
     <!-- Offline seasons, community events and Challenge Rifts (d3hack-style, no cheats). The game asks the
          online pubfile service for Seasons.txt and Config.txt; offline the answer never comes. The base patch
          "Offline Seasons" hooks the per-user lobby update (eboot 0x43528) and feeds both files once to the
