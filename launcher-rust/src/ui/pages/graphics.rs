@@ -47,6 +47,8 @@ pub const GTAO_HINT: &str =
     "Adds contact shadows in the 3D scene; Low is lighter for integrated GPUs.";
 /// The note under the MSAA samples choice.
 pub const GAME_MSAA_HINT: &str = "2x and 4x smooth edges more; 4x costs about a quarter of the FPS.";
+pub const TARGET_OUTLINE_PATCH: &str = "Disable Target Outline";
+pub const HIT_FLASH_PATCH: &str = "Disable Hit Flash";
 
 /// The Upscaling choices: (id, English label, hint).
 pub const UPSCALING: [(&str, &str, &str); 3] = [
@@ -304,6 +306,20 @@ pub fn view(state: &State) -> Element<'_, Message> {
                     "Pulls the gameplay camera back to the PC version's distance and angle.",
                 )),
             ));
+        for (name, description) in [
+            (TARGET_OUTLINE_PATCH, "Hides the outline around targeted actors and objects."),
+            (HIT_FLASH_PATCH, "Suppresses the default flash on hit."),
+        ] {
+            if state.patches.selectable.iter().any(|m| m.name == name) {
+                page = page.push(toggle_row(
+                    state.rtl,
+                    &restart(name),
+                    state.patches.chosen.contains(name),
+                    Some(move |on| Message::PatchToggled(name.to_string(), on)),
+                    Some(&hint(description)),
+                ));
+            }
+        }
     }
     page.into()
 }
