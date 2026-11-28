@@ -128,6 +128,44 @@ fn the_smooth_motion_switch_picks_its_patch() {
 }
 
 #[test]
+fn graphics_more_options_toggles_the_target_outline_patch() {
+    use sanctuaryport_launcher::ui::pages::graphics::{HIT_FLASH_PATCH, TARGET_OUTLINE_PATCH};
+
+    let dir = tempfile::tempdir().unwrap();
+    let dump = common::dump_with_patches(dir.path());
+    std::fs::write(
+        dir.path().join("patches").join("Diablo_III.xml"),
+        include_str!("../../patches/Diablo_III.xml"),
+    )
+    .unwrap();
+    let mut state = state(dir.path());
+    common::browsed(&mut state, "game_dir", &dump);
+    open(&mut state, Page::Graphics);
+    let _ = app::update(
+        &mut state,
+        Message::Tick(iced::time::Instant::now() + std::time::Duration::from_secs(1)),
+    );
+    for patch in [TARGET_OUTLINE_PATCH, HIT_FLASH_PATCH] {
+        assert!(!state.patches.chosen.contains(patch));
+        for enabled in [true, false] {
+            click_tall(&mut state, &format!("{patch}  ↻"));
+            assert_eq!(state.patches.chosen.contains(patch), enabled);
+            let env = game_environment(
+                state.store.app(),
+                &state.paths,
+                "en",
+                &indexmap::IndexMap::new(),
+                true,
+            );
+            assert_eq!(
+                env["SANCTUARY_PATCHES"].split(';').any(|name| name == patch),
+                enabled,
+            );
+        }
+    }
+}
+
+#[test]
 fn the_mystic_switch_picks_its_patch() {
     // GitHub #79: off by default, one check box on the Game page that ticks the game patch.
     use sanctuaryport_launcher::ui::pages::game::{MYSTIC_HINT, MYSTIC_PATCH};
